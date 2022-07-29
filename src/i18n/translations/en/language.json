@@ -1,0 +1,11 @@
+{
+  "confirmEmail": "Confirm email",
+  "resetPassword": "Reset password",
+  "reset_pass_text1": "Trouble signing in?",
+  "reset_pass_text2": "Resetting your password is easy.",
+  "reset_pass_text3": "Just press the button below and follow the instructions. We’ll have you up and running in no time.",
+  "reset_pass_text4": "If you did not make this request then please ignore this email.",
+  "activation_text1": "Hey!",
+  "activation_text2": "You’re almost ready to start enjoying",
+  "activation_text3": "Simply click the big green button below to verify your email address."
+}

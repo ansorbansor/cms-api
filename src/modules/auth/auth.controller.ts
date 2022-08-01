@@ -102,7 +102,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   public async me(@Request() request) {
-    return await this.service.me(request.user);
+    return this.service.me(request.user);
   }
 
   @ApiBearerAuth()

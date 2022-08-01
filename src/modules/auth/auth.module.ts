@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { MailModule } from '../mail/mail.module';
 import { AnonymousStrategy, JwtStrategy } from 'src/utils/strategies';
 import { ForgotPasswordModule } from '../forgot-password/forgot-password.module';
+import { RedisConfigService } from 'src/config/redis-config.service';
 
 @Module({
   imports: [
@@ -25,9 +26,12 @@ import { ForgotPasswordModule } from '../forgot-password/forgot-password.module'
         },
       }),
     }),
+    CacheModule.registerAsync({
+      useClass: RedisConfigService,
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, AnonymousStrategy],
-  exports: [AuthService],
+  exports: [AuthService, CacheModule],
 })
 export class AuthModule {}

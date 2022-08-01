@@ -1,5 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule, HeaderResolver, I18nJsonParser } from 'nestjs-i18n';
@@ -11,6 +11,8 @@ import fileConfig from './config/file.config';
 import googleConfig from './config/google.config';
 import { MailConfigService } from './config/mail-config.service';
 import mailConfig from './config/mail.config';
+import { RedisConfigService } from './config/redis-config.service';
+import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { FilesModule } from './modules/files/files.module';
@@ -29,8 +31,12 @@ import { UsersModule } from './modules/users/users.module';
         fileConfig,
         googleConfig,
         mailConfig,
+        redisConfig,
       ],
       envFilePath: ['.env'],
+    }),
+    CacheModule.registerAsync({
+      useClass: RedisConfigService,
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -61,5 +67,6 @@ import { UsersModule } from './modules/users/users.module';
     MailModule,
     UsersModule,
   ],
+  exports: [CacheModule],
 })
 export class AppModule {}

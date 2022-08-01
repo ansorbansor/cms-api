@@ -17,3 +17,7 @@ export enum FileTypeEnum {
   video = 2,
   audio = 3,
 }
+
+export enum RedisKeyEnum {
+  user = 'User:',
+}

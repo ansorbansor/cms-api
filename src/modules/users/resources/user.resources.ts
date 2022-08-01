@@ -10,6 +10,9 @@ export const UserResource = (user: User): any => {
     }
   }) : [];
 
+  console.log(`xxxx ${mapRole}`);
+  
+
   return {
     id: user.id,
     name: user.name,

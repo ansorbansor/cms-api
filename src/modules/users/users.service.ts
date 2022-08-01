@@ -65,7 +65,7 @@ export class UsersService {
       );
     }
 
-    return await UserResource(data);
+    return UserResource(data);
   }
 
   async findOneFull(fields: EntityCondition<User>) {

@@ -32,4 +32,15 @@ async function bootstrap() {
 
   await app.listen(configService.get('app.port'));
 }
+
+databaseInfo();
 bootstrap();
+
+function databaseInfo() {
+  console.log('========================');
+  console.log('========DATABASE========');
+  console.log(`type: ${process.env.DATABASE_TYPE}`);
+  console.log(`host: ${process.env.DATABASE_HOST}`);
+  console.log(`port: ${process.env.DATABASE_PORT}`);
+  console.log(`database: ${process.env.DATABASE_NAME}`);
+}

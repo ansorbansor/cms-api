@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
@@ -8,7 +8,7 @@ import { UsersService } from '../users/users.service';
 import { ForgotPasswordService } from '../forgot-password/forgot-password.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
-import { AuthProvidersEnum, RoleEnum } from 'src/utils/enums';
+import { AuthProvidersEnum, RedisKeyEnum, RoleEnum } from 'src/utils/enums';
 import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
 import { Role } from 'src/entities/role.entity';
 import { UserRoles } from 'src/entities/user-role.entity';
@@ -25,6 +25,7 @@ import { AuthFacebookLoginDto } from './dtos/auth-facebook-login.dto';
 import { Facebook } from 'fb';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +38,7 @@ export class AuthService {
     private forgotService: ForgotPasswordService,
     private mailService: MailService,
     private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.google = new OAuth2Client(
       configService.get('google.clientId'),
@@ -289,10 +291,21 @@ export class AuthService {
     await this.forgotService.softDelete(forgot.id);
   }
 
-  async me(user: User): Promise<User> {
-    return this.usersService.findOne({
-      id: user.id,
-    });
+  async me(user: User) {
+    const value = await this.cacheManager.get<typeof UserResource>(
+      `${RedisKeyEnum.user}${user.id}`,
+    );
+    if (value != null) {
+      return value;
+    }
+
+    const me = await this.usersService.findOne({ id: user.id });
+
+    await this.cacheManager.set<typeof UserResource>(
+      `${RedisKeyEnum.user}${user.id}`,
+      me,
+    );
+    return me;
   }
 
   async update(user: User, userDto: AuthUpdateDto): Promise<User> {

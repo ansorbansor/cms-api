@@ -115,5 +115,11 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Upload FOlder
+# Upload Folder
 uploads
+
+# Docker Data
+.data/
+
+# Others
+.DS_Store

@@ -27,7 +27,10 @@ NestJS REST API boilerplate
 - [x] File uploads. Support local and Amazon S3 drivers.
 - [x] Swagger.
 - [x] E2E and units tests.
-- [x] Docker (On Progress).
+- [x] Docker.
+- [x] Adminer.
+- [x] Redis.
+- [x] Redis Commander.
 
 ## Comfortable development
 

@@ -22,6 +22,9 @@ export class User extends EntityHelper {
   name: string | null;
 
   @Column({ unique: true })
+  nip: string;
+
+  @Column({ unique: true })
   email: string | null;
 
   @Column()

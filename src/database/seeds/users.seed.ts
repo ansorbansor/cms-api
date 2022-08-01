@@ -19,6 +19,7 @@ export default class CreateAdmin implements Seeder {
 
       const user = new User();
 
+      user.nip = '1';
       user.name = 'John Tor';
       user.email = 'john.tor@example.com';
       user.password = 'Password9';

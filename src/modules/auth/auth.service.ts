@@ -235,7 +235,7 @@ export class AuthService {
   }
 
   async confirmEmail(hash: string): Promise<void> {
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneFull({
       hash,
     });
 

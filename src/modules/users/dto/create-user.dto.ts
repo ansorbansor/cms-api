@@ -11,6 +11,10 @@ import { IsNotExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 
 export class CreateUserDto {
+  @ApiProperty({ example: '1234567890' })
+  @IsNotEmpty()
+  nip: string | null;
+
   @ApiProperty({ example: 'John' })
   @IsNotEmpty()
   name: string | null;
@@ -46,6 +50,15 @@ export class CreateUserDto {
 
   @ApiProperty()
   role_id: number;
+
+  @ApiProperty()
+  unit_id: number;
+
+  @ApiProperty()
+  level_id: number;
+
+  @ApiProperty()
+  position_id: number;
 
   hash?: string | null;
 }

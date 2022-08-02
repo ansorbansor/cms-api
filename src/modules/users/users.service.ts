@@ -27,7 +27,7 @@ export class UsersService {
     await this.userRolesRepository.save(
       this.userRolesRepository.create({
         user_id: user.id,
-        role_id: createProfileDto.role.id,
+        role_id: createProfileDto.role_id,
       }),
     );
 
@@ -52,8 +52,6 @@ export class UsersService {
     const data = await this.usersRepository.findOne({
       where: fields,
     });
-
-    console.log(data);
 
     if (!data) {
       throw failedResponse(

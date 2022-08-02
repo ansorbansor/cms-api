@@ -1,10 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, MinLength, Validate } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  MinLength,
+  Validate,
+} from 'class-validator';
 import { IsNotExist } from 'src/utils/validators';
 import { Transform } from 'class-transformer';
 import { FileEntity } from 'src/entities/file.entity';
 
 export class AuthRegisterLoginDto {
+  @ApiProperty({ example: '1234567890' })
+  @IsNotEmpty()
+  nip: string | null;
+
   @ApiProperty({ example: 'John' })
   @IsNotEmpty()
   name: string | null;
@@ -40,6 +50,15 @@ export class AuthRegisterLoginDto {
 
   @ApiProperty()
   role_id: number;
+
+  @ApiProperty()
+  unit_id: number;
+
+  @ApiProperty()
+  level_id: number;
+
+  @ApiProperty()
+  position_id: number;
 
   hash?: string | null;
 }

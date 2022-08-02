@@ -3,15 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import * as crypto from 'crypto';
-import { plainToClass } from 'class-transformer';
 import { UsersService } from '../users/users.service';
 import { ForgotPasswordService } from '../forgot-password/forgot-password.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
 import { AuthProvidersEnum, RedisKeyEnum, RoleEnum } from 'src/utils/enums';
 import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
-import { Role } from 'src/entities/role.entity';
-import { UserRoles } from 'src/entities/user-role.entity';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
 import { AuthUpdateDto } from './dtos/auth-update.dto';
@@ -168,7 +165,7 @@ export class AuthService {
   ): Promise<{ token: string; user: User }> {
     const socialEmail = socialData.email?.toLowerCase();
 
-    let user = await this.usersService.findOne({
+    const user = await this.usersService.findOne({
       email: socialEmail,
     });
 
@@ -176,23 +173,7 @@ export class AuthService {
       user.provider = authProvider;
       await this.usersService.update(user.id, user);
     } else {
-      const role = plainToClass(UserRoles, {
-        user_id: user.id,
-        role_id: RoleEnum.user,
-      });
-
-      user = await this.usersService.create({
-        email: socialEmail,
-        name: socialData.lastName,
-        provider: authProvider,
-        status: true,
-        notification_token: null,
-        role: role,
-      });
-
-      user = await this.usersService.findOne({
-        id: user.id,
-      });
+      throw failedResponse(HttpStatus.NOT_FOUND, 'Pengguna tidak ditemukan');
     }
 
     const jwtToken = await this.jwtService.sign({
@@ -215,9 +196,7 @@ export class AuthService {
     const user = await this.usersService.create({
       ...dto,
       email: dto.email,
-      role: {
-        id: RoleEnum.user,
-      } as Role,
+      role_id: RoleEnum.user,
       status: true,
       name: dto.name,
       provider: AuthProvidersEnum.email,

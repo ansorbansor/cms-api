@@ -53,6 +53,8 @@ export class UsersService {
       where: fields,
     });
 
+    console.log(data);
+
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

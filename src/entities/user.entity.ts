@@ -8,6 +8,7 @@ import {
   JoinColumn,
   OneToOne,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { EntityHelper } from 'src/utils/entity-helper';
@@ -89,7 +90,9 @@ export class User extends EntityHelper {
   @JoinColumn()
   userRole?: UserRoles[];
 
-  @OneToOne(() => EmployeeUnit)
+  @ManyToOne(() => EmployeeUnit, (employeeUnit) => employeeUnit.id, {
+    eager: true,
+  })
   @JoinColumn({ name: 'unit_id' })
   employeeUnit?: EmployeeUnit | null;
 }

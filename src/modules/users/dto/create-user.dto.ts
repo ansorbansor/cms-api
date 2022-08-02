@@ -7,7 +7,7 @@ import {
   MinLength,
   Validate,
 } from 'class-validator';
-import { IsNotExist } from 'src/utils/validators';
+import { IsExist, IsNotExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 
 export class CreateUserDto {
@@ -33,10 +33,10 @@ export class CreateUserDto {
   password?: string;
 
   @ApiProperty({ default: 'email' })
+  @IsNotEmpty()
   provider?: string;
 
   @IsOptional()
-  @ApiProperty({ required: false })
   photo?: FileEntity | null;
 
   @ApiProperty({ default: true })
@@ -49,6 +49,9 @@ export class CreateUserDto {
   notification_token: string | null;
 
   @ApiProperty()
+  @Validate(IsExist, ['Role', 'id'], {
+    message: 'Role Tidak Tersedia',
+  })
   role_id: number;
 
   @ApiProperty()

@@ -16,6 +16,8 @@ import { AuthProvidersEnum } from 'src/utils/enums';
 import { FileEntity } from './file.entity';
 import { UserRoles } from './user-role.entity';
 import { EmployeeUnit } from './employee-unit.entity';
+import { EmployeeLevel } from './employee-level.entity';
+import { EmployeePosition } from './employee-position.entity';
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
@@ -95,4 +97,20 @@ export class User extends EntityHelper {
   })
   @JoinColumn({ name: 'unit_id' })
   employeeUnit?: EmployeeUnit | null;
+
+  @ManyToOne(() => EmployeeLevel, (employeeLevel) => employeeLevel.id, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'level_id' })
+  employeeLevel?: EmployeeLevel | null;
+
+  @ManyToOne(
+    () => EmployeePosition,
+    (employeePosition) => employeePosition.id,
+    {
+      eager: true,
+    },
+  )
+  @JoinColumn({ name: 'unit_id' })
+  employeePosition?: EmployeePosition | null;
 }

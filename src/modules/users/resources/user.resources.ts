@@ -19,9 +19,19 @@ export const UserResource = (user: User): any => {
     notification_token: user.notification_token,
     photo: user.photo ? user.photo.path : null,
     roles: mapRole,
+    course_level: user.course_level,
+    blacklist: user.blacklist,
     unit: {
       id: user.employeeUnit ? user.employeeUnit.id : null,
       name: user.employeeUnit ? user.employeeUnit.name : null
+    },
+    level: {
+      id: user.employeeLevel ? user.employeeLevel.id : null,
+      name: user.employeeLevel ? user.employeeLevel.name : null
+    },
+    position: {
+      id: user.employeePosition ? user.employeePosition.id : null,
+      name: user.employeePosition ? user.employeePosition.name : null
     }
   };
 };

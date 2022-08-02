@@ -14,6 +14,7 @@ import { EntityHelper } from 'src/utils/entity-helper';
 import { AuthProvidersEnum } from 'src/utils/enums';
 import { FileEntity } from './file.entity';
 import { UserRoles } from './user-role.entity';
+import { EmployeeUnit } from './employee-unit.entity';
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
@@ -55,9 +56,25 @@ export class User extends EntityHelper {
   @JoinColumn({ name: 'photo' })
   photo?: FileEntity;
 
+  @Column({})
+  unit_id: number;
+
+  @Column({})
+  level_id: number;
+
+  @Column({})
+  position_id: number;
+
+  @Column({})
+  course_level: number;
+
   @Column({ default: true })
   @Index()
   status: boolean;
+
+  @Column({ default: false })
+  @Index()
+  blacklist: boolean;
 
   @Column({ nullable: true })
   notification_token: string | null;
@@ -71,4 +88,8 @@ export class User extends EntityHelper {
   })
   @JoinColumn()
   userRole?: UserRoles[];
+
+  @OneToOne(() => EmployeeUnit)
+  @JoinColumn({ name: 'unit_id' })
+  employeeUnit?: EmployeeUnit | null;
 }

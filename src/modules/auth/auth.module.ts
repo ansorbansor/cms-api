@@ -9,6 +9,7 @@ import { MailModule } from '../mail/mail.module';
 import { AnonymousStrategy, JwtStrategy } from 'src/utils/strategies';
 import { ForgotPasswordModule } from '../forgot-password/forgot-password.module';
 import { RedisConfigService } from 'src/config/redis-config.service';
+import { RedisService } from '../redis/redis.service';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { RedisConfigService } from 'src/config/redis-config.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, AnonymousStrategy],
-  exports: [AuthService, CacheModule],
+  providers: [AuthService, JwtStrategy, AnonymousStrategy, RedisService],
+  exports: [AuthService],
 })
 export class AuthModule {}

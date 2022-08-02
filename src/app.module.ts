@@ -1,5 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { CacheModule, Module } from '@nestjs/common';
+import { CacheModule, CACHE_MANAGER, Inject, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule, HeaderResolver, I18nJsonParser } from 'nestjs-i18n';
@@ -67,6 +67,13 @@ import { UsersModule } from './modules/users/users.module';
     MailModule,
     UsersModule,
   ],
-  exports: [CacheModule],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(@Inject(CACHE_MANAGER) cacheManager) {
+    const client = cacheManager.store.getClient();
+    client.on('error', (error) => {
+      console.error(error);
+      return null;
+    });
+  }
+}

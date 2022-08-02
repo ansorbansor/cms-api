@@ -1,4 +1,4 @@
-import { CACHE_MANAGER, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
@@ -25,8 +25,7 @@ import { AuthFacebookLoginDto } from './dtos/auth-facebook-login.dto';
 import { Facebook } from 'fb';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
-import { Cache } from 'cache-manager';
-
+import { RedisService } from '../redis/redis.service';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -38,7 +37,7 @@ export class AuthService {
     private forgotService: ForgotPasswordService,
     private mailService: MailService,
     private configService: ConfigService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private redisService: RedisService,
   ) {
     this.google = new OAuth2Client(
       configService.get('google.clientId'),
@@ -292,8 +291,9 @@ export class AuthService {
   }
 
   async me(user: User) {
-    const value = await this.cacheManager.get<typeof UserResource>(
+    const value = await this.redisService.get(
       `${RedisKeyEnum.user}${user.id}`,
+      typeof UserResource,
     );
     if (value != null) {
       return value;
@@ -301,10 +301,7 @@ export class AuthService {
 
     const me = await this.usersService.findOne({ id: user.id });
 
-    await this.cacheManager.set<typeof UserResource>(
-      `${RedisKeyEnum.user}${user.id}`,
-      me,
-    );
+    this.redisService.set(`${RedisKeyEnum.user}${user.id}`, me);
     return me;
   }
 

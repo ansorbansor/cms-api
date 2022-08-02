@@ -9,7 +9,6 @@ import {
 } from 'class-validator';
 import { IsNotExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
-import { Role } from 'src/entities/role.entity';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John' })
@@ -29,10 +28,11 @@ export class CreateUserDto {
   @MinLength(6)
   password?: string;
 
+  @ApiProperty({ default: 'email' })
   provider?: string;
 
   @IsOptional()
-  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @ApiProperty({ required: false })
   photo?: FileEntity | null;
 
   @ApiProperty({ default: true })
@@ -45,7 +45,7 @@ export class CreateUserDto {
   notification_token: string | null;
 
   @ApiProperty()
-  role: Role;
+  role_id: number;
 
   hash?: string | null;
 }

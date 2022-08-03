@@ -20,7 +20,7 @@ export class CreateUserDto {
   @Transform(({ value }) => value?.toLowerCase().trim())
   @IsNotEmpty()
   @Validate(IsNotExist, ['User'], {
-    message: 'emailAlreadyExists',
+    message: 'Email telah digunakan',
   })
   @IsEmail()
   email: string | null;

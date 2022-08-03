@@ -23,7 +23,7 @@ export class AuthRegisterLoginDto {
   @Transform(({ value }) => value?.toLowerCase().trim())
   @IsNotEmpty()
   @Validate(IsNotExist, ['User'], {
-    message: 'emailAlreadyExists',
+    message: 'Email telah digunakan',
   })
   @IsEmail()
   email: string | null;
@@ -55,12 +55,21 @@ export class AuthRegisterLoginDto {
   role_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeeUnit', 'id'], {
+    message: 'Satuan Kerja Tidak Tersedia',
+  })
   unit_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeeLevel', 'id'], {
+    message: 'Pangkat Tidak Tersedia',
+  })
   level_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeePosition', 'id'], {
+    message: 'Jabatan Tidak Tersedia',
+  })
   position_id: number;
 
   hash?: string | null;

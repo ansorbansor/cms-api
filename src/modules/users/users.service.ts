@@ -31,7 +31,7 @@ export class UsersService {
       }),
     );
 
-    return UserResource(user);
+    return this.findOne({ id: user.id });
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
@@ -108,7 +108,7 @@ export class UsersService {
       }),
     });
 
-    return UserResource(await this.findOne({ id: id }));
+    return await this.findOne({ id: id });
   }
 
   async softDelete(id: number): Promise<void> {

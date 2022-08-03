@@ -33,6 +33,7 @@ export const UserResource = (user: User): any => {
     position: {
       id: user.employeePosition ? user.employeePosition.id : null,
       name: user.employeePosition ? user.employeePosition.name : null
-    }
+    },
+    lesson_hour: user.total_lesson_hours,
   };
 };

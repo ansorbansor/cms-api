@@ -18,6 +18,7 @@ import { UserRoles } from './user-role.entity';
 import { EmployeeUnit } from './employee-unit.entity';
 import { EmployeeLevel } from './employee-level.entity';
 import { EmployeePosition } from './employee-position.entity';
+import { UserCourse } from './user-course.entity';
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
@@ -111,6 +112,23 @@ export class User extends EntityHelper {
       eager: true,
     },
   )
-  @JoinColumn({ name: 'unit_id' })
+  @JoinColumn({ name: 'position_id' })
   employeePosition?: EmployeePosition | null;
+
+  @OneToMany(() => UserCourse, (userCourse) => userCourse.user)
+  @JoinColumn()
+  userCourse?: UserCourse[] | null;
+
+  total_lesson_hours = 0;
+
+  @AfterLoad()
+  setLessonHours() {
+    if (this.userCourse && this.userCourse.length > 1) {
+      this.total_lesson_hours = 0;
+      this.userCourse.forEach((element) => {
+        this.total_lesson_hours =
+          this.total_lesson_hours + element.course.lesson_hours;
+      });
+    }
+  }
 }

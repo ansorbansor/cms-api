@@ -13,6 +13,9 @@ import { FileEntity } from 'src/entities/file.entity';
 export class CreateUserDto {
   @ApiProperty({ example: '1234567890' })
   @IsNotEmpty()
+  @Validate(IsNotExist, ['User'], {
+    message: 'NIP telah terdaftar',
+  })
   nip: string | null;
 
   @ApiProperty({ example: 'John' })
@@ -55,12 +58,21 @@ export class CreateUserDto {
   role_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeeUnit', 'id'], {
+    message: 'Satuan Kerja Tidak Tersedia',
+  })
   unit_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeeLevel', 'id'], {
+    message: 'Pangkat Tidak Tersedia',
+  })
   level_id: number;
 
   @ApiProperty()
+  @Validate(IsExist, ['EmployeePosition', 'id'], {
+    message: 'Jabatan Tidak Tersedia',
+  })
   position_id: number;
 
   hash?: string | null;

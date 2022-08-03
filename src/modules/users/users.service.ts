@@ -8,6 +8,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
+import { RedisService } from '../redis/redis.service';
+import { RedisKeyEnum } from 'src/utils/enums';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +19,8 @@ export class UsersService {
 
     @InjectRepository(UserRoles)
     private userRolesRepository: Repository<UserRoles>,
+
+    private redisService: RedisService,
   ) {}
 
   async create(createProfileDto: CreateUserDto) {
@@ -122,6 +126,8 @@ export class UsersService {
     await this.usersRepository.update(id, {
       ...updateProfileDto,
     });
+
+    this.redisService.del(`${RedisKeyEnum.user}${id}`);
 
     return await this.findOne({ id: id });
   }

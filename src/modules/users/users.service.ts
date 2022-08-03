@@ -58,11 +58,6 @@ export class UsersService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         'User tidak ditemukan',
       );
-    } else if (!data.userRole || data.userRole.length == 0) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'User tidak memiliki role',
-      );
     }
 
     return UserResource(data);
@@ -98,14 +93,34 @@ export class UsersService {
       );
     }
 
+    if (updateProfileDto.email) {
+      const userWithEmail = await this.findOne({
+        email: updateProfileDto.email.toLocaleLowerCase(),
+      });
+
+      if (userWithEmail && userWithEmail.id != exists.id) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Email telah digunakan',
+        );
+      }
+    }
+
+    if (updateProfileDto.nip) {
+      const userWithNIP = await this.findOne({
+        nip: updateProfileDto.nip,
+      });
+
+      if (userWithNIP && userWithNIP.id != exists.id) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'NIP telah digunakan',
+        );
+      }
+    }
+
     await this.usersRepository.update(id, {
-      ...(updateProfileDto.name && { name: updateProfileDto.name }),
-      ...(updateProfileDto.password && { password: updateProfileDto.password }),
-      ...(updateProfileDto.provider && { provider: updateProfileDto.provider }),
-      ...(updateProfileDto.status && { status: updateProfileDto.status }),
-      ...(updateProfileDto.notification_token && {
-        notification_token: updateProfileDto.notification_token,
-      }),
+      ...updateProfileDto,
     });
 
     return await this.findOne({ id: id });

@@ -310,7 +310,9 @@ export class AuthService {
       }
     }
 
-    await this.usersService.update(user.id, userDto);
+    await this.usersService.update(user.id, {
+      ...userDto,
+    });
 
     return UserResource(
       await this.usersService.findOne({

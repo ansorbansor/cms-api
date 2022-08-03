@@ -12,6 +12,7 @@ export const UserResource = (user: User): any => {
 
   return {
     id: user.id,
+    nip: user.nip,
     name: user.name,
     email: user.email,
     provider: user.provider,

@@ -37,6 +37,9 @@ export class AuthRegisterLoginDto {
   provider?: string;
 
   @IsOptional()
+  @Validate(IsExist, ['FileEntity', 'id'], {
+    message: 'imageNotExists',
+  })
   photo?: FileEntity | null;
 
   @ApiProperty({ default: true })

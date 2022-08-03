@@ -26,4 +26,10 @@ export class RedisService {
     }
     return null;
   }
+
+  public del(key: string) {
+    if (redisConfig().status == 'true') {
+      this.cacheManager.del(key);
+    }
+  }
 }

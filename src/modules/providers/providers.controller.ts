@@ -32,7 +32,7 @@ export class ProvidersController {
   constructor(private readonly providerServices: ProvidersService) {}
 
   @Post()
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProfileDto: CreateProviderDto) {
@@ -67,7 +67,7 @@ export class ProvidersController {
   }
 
   @Patch(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   update(@Param('id') id: number, @Body() updateProfileDto: UpdateProviderDto) {
@@ -75,7 +75,7 @@ export class ProvidersController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
     return this.providerServices.softDelete(id);

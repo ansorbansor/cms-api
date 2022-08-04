@@ -18,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
+import { ProvidersModule } from './modules/providers/providers.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -66,6 +67,7 @@ import { UsersModule } from './modules/users/users.module';
     ForgotPasswordModule,
     MailModule,
     UsersModule,
+    ProvidersModule,
   ],
 })
 export class AppModule {

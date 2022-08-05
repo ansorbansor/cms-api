@@ -314,6 +314,8 @@ export class AuthService {
       ...userDto,
     });
 
+    this.redisService.del(`${RedisKeyEnum.user}${user.id}`);
+
     return UserResource(
       await this.usersService.findOne({
         id: user.id,
@@ -322,6 +324,7 @@ export class AuthService {
   }
 
   async softDelete(user: User): Promise<void> {
+    this.redisService.del(`${RedisKeyEnum.user}${user.id}`);
     await this.usersService.softDelete(user.id);
   }
 }

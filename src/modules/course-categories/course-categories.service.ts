@@ -54,6 +54,14 @@ export class CourseCategoriesService {
   }
 
   async findOne(fields: EntityCondition<Category>) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.category}${fields.id}`,
+      typeof CourseCategoryResource,
+    );
+    if (value != null) {
+      return value;
+    }
+
     const data = await this.categoryRepository.findOne({
       where: fields,
     });
@@ -64,6 +72,8 @@ export class CourseCategoriesService {
         'Kategori tidak ditemukan',
       );
     }
+
+    this.redisService.set(`${RedisKeyEnum.category}${fields.id}`, data);
 
     return CourseCategoryResource(data);
   }
@@ -97,6 +107,7 @@ export class CourseCategoriesService {
   }
 
   async softDelete(id: number): Promise<void> {
+    this.redisService.del(`${RedisKeyEnum.category}${id}`);
     await this.categoryRepository.softDelete(id);
   }
 }

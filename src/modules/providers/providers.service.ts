@@ -53,6 +53,14 @@ export class ProvidersService {
   }
 
   async findOne(fields: EntityCondition<Provider>) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.provider}${fields.id}`,
+      typeof ProviderResource,
+    );
+    if (value != null) {
+      return value;
+    }
+
     const data = await this.providerRepository.findOne({
       where: fields,
     });
@@ -63,6 +71,8 @@ export class ProvidersService {
         'Penyedia tidak ditemukan',
       );
     }
+
+    this.redisService.set(`${RedisKeyEnum.provider}${fields.id}`, data);
 
     return ProviderResource(data);
   }
@@ -88,12 +98,13 @@ export class ProvidersService {
       photo: img.id,
     });
 
-    this.redisService.del(`${RedisKeyEnum.user}${updateProfileDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.provider}${updateProfileDto.id}`);
 
     return await this.findOne({ id: updateProfileDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
+    this.redisService.del(`${RedisKeyEnum.provider}${id}`);
     await this.providerRepository.softDelete(id);
   }
 }

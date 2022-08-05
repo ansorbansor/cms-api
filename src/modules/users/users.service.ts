@@ -53,6 +53,14 @@ export class UsersService {
   }
 
   async findOne(fields: EntityCondition<User>) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.user}${fields.id}`,
+      typeof UserResource,
+    );
+    if (value != null) {
+      return value;
+    }
+
     const data = await this.usersRepository.findOne({
       where: fields,
     });
@@ -63,6 +71,8 @@ export class UsersService {
         'User tidak ditemukan',
       );
     }
+
+    this.redisService.set(`${RedisKeyEnum.user}${fields.id}`, data);
 
     return UserResource(data);
   }
@@ -134,5 +144,6 @@ export class UsersService {
 
   async softDelete(id: number): Promise<void> {
     await this.usersRepository.softDelete(id);
+    this.redisService.del(`${RedisKeyEnum.user}${id}`);
   }
 }

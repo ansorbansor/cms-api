@@ -21,6 +21,8 @@ export enum FileTypeEnum {
 export enum RedisKeyEnum {
   user = 'User:',
   category = 'Category:',
+  provider = 'Provider:',
+  topic = 'Topic:',
 }
 
 export enum MaxFileSize {

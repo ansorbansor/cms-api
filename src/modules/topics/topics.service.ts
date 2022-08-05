@@ -43,6 +43,14 @@ export class TopicsService {
   }
 
   async findOne(fields: EntityCondition<Topic>) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.topic}${fields.id}`,
+      typeof TopicResource,
+    );
+    if (value != null) {
+      return value;
+    }
+
     const data = await this.topicRepository.findOne({
       where: fields,
     });
@@ -53,6 +61,8 @@ export class TopicsService {
         'Topic tidak ditemukan',
       );
     }
+
+    this.redisService.set(`${RedisKeyEnum.topic}${fields.id}`, data);
 
     return TopicResource(data);
   }
@@ -71,12 +81,13 @@ export class TopicsService {
       ...updateProfileDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.user}${updateProfileDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.topic}${updateProfileDto.id}`);
 
     return await this.findOne({ id: updateProfileDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
     await this.topicRepository.softDelete(id);
+    this.redisService.del(`${RedisKeyEnum.topic}${id}`);
   }
 }

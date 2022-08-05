@@ -17,6 +17,7 @@ import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/course-categories/course-categories.module';
+import { CourseLevelsModule } from './modules/course-levels/course-levels.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -74,6 +75,7 @@ import { UsersModule } from './modules/users/users.module';
     ProvidersModule,
     CategoriesModule,
     TopicsModule,
+    CourseLevelsModule,
   ],
 })
 export class AppModule {

@@ -2,13 +2,13 @@ import { CacheModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RedisService } from '../redis/redis.service';
 import { RedisConfigService } from 'src/config/redis-config.service';
-import { Category } from 'src/entities/category.entity';
 import { CourseCategoriesController } from './course-categories.controller';
 import { CourseCategoriesService } from './course-categories.service';
+import { CourseCategory } from 'src/entities/course-category.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Category]),
+    TypeOrmModule.forFeature([CourseCategory]),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),

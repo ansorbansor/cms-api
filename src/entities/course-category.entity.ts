@@ -2,7 +2,7 @@ import { Column, Entity } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 
 @Entity({ name: 'categories' })
-export class Category extends EntityHelper {
+export class CourseCategory extends EntityHelper {
   @Column()
   name: string;
 

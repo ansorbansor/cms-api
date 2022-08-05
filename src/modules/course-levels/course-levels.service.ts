@@ -1,0 +1,93 @@
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityCondition, IPaginationOptions } from 'src/utils/types';
+import { Repository } from 'typeorm';
+import { failedResponse, infinityPagination } from 'src/utils/responses';
+import { RedisService } from '../redis/redis.service';
+import { RedisKeyEnum } from 'src/utils/enums';
+import { CourseLevel } from 'src/entities/course-level.entity';
+import { CreateCourseLevelDto } from './dto/create-course-level.dto';
+import { CourseLevelResource } from './resources/course-level.resources';
+import { UpdateCourseLevelDto } from './dto/update-course-level.dto';
+
+@Injectable()
+export class CourseLevelsService {
+  constructor(
+    @InjectRepository(CourseLevel)
+    private courseLevelRepository: Repository<CourseLevel>,
+    private redisService: RedisService,
+  ) {}
+
+  async create(createCourseCategoryDto: CreateCourseLevelDto) {
+    const category = await this.courseLevelRepository.save(
+      this.courseLevelRepository.create({
+        ...createCourseCategoryDto,
+      }),
+    );
+
+    return this.findOne({ id: category.id });
+  }
+
+  async findManyWithPagination(paginationOptions: IPaginationOptions) {
+    const total = await this.courseLevelRepository.count();
+    paginationOptions.total = total;
+
+    return infinityPagination(
+      await this.courseLevelRepository.find({
+        skip: (paginationOptions.page - 1) * paginationOptions.limit,
+        take: paginationOptions.limit,
+      }),
+      CourseLevelResource,
+      paginationOptions,
+    );
+  }
+
+  async findOne(fields: EntityCondition<CourseLevel>) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.category}${fields.id}`,
+      typeof CourseLevelResource,
+    );
+    if (value != null) {
+      return value;
+    }
+
+    const data = await this.courseLevelRepository.findOne({
+      where: fields,
+    });
+
+    if (!data) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Kategori tidak ditemukan',
+      );
+    }
+
+    this.redisService.set(`${RedisKeyEnum.category}${fields.id}`, data);
+
+    return CourseLevelResource(data);
+  }
+
+  async update(updateCourseLevelDto: UpdateCourseLevelDto) {
+    const exists = await this.findOne({ id: updateCourseLevelDto.id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Kategori tidak ditemukan',
+      );
+    }
+
+    await this.courseLevelRepository.update(updateCourseLevelDto.id, {
+      ...updateCourseLevelDto,
+    });
+
+    this.redisService.del(`${RedisKeyEnum.category}${updateCourseLevelDto.id}`);
+
+    return await this.findOne({ id: updateCourseLevelDto.id });
+  }
+
+  async softDelete(id: number): Promise<void> {
+    this.redisService.del(`${RedisKeyEnum.category}${id}`);
+    await this.courseLevelRepository.softDelete(id);
+  }
+}

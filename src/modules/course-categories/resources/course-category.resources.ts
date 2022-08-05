@@ -1,6 +1,6 @@
-import { Category } from 'src/entities/category.entity';
+import { CourseCategory } from 'src/entities/course-category.entity';
 
-export const CourseCategoryResource = (category: Category): any => {
+export const CourseCategoryResource = (category: CourseCategory): any => {
   return {
     id: category.id,
     name: category.name,

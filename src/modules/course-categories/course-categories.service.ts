@@ -5,18 +5,18 @@ import { Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
-import { Category } from 'src/entities/category.entity';
 import { CourseCategoryResource } from './resources/course-category.resources';
 import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
 import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
+import { CourseCategory } from 'src/entities/course-category.entity';
 
 @Injectable()
 export class CourseCategoriesService {
   constructor(
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
+    @InjectRepository(CourseCategory)
+    private categoryRepository: Repository<CourseCategory>,
 
     private redisService: RedisService,
     private fileService: FilesService,
@@ -53,7 +53,7 @@ export class CourseCategoriesService {
     );
   }
 
-  async findOne(fields: EntityCondition<Category>) {
+  async findOne(fields: EntityCondition<CourseCategory>) {
     const value = await this.redisService.get(
       `${RedisKeyEnum.category}${fields.id}`,
       typeof CourseCategoryResource,

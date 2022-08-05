@@ -25,7 +25,7 @@ import { UpdateCourseLevelDto } from './dto/update-course-level.dto';
 @ApiBearerAuth()
 @ApiTags('Course Level')
 @Controller({
-  path: 'levels',
+  path: 'course/levels',
   version: '1',
 })
 export class CourseLevelsController {

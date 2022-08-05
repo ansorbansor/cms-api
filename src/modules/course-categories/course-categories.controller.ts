@@ -30,7 +30,7 @@ import { multerOptions } from 'src/utils/file-helper';
 @ApiBearerAuth()
 @ApiTags('Categories')
 @Controller({
-  path: 'categories',
+  path: 'course/categories',
   version: '1',
 })
 export class CourseCategoriesController {

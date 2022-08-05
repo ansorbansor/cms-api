@@ -6,14 +6,17 @@ import {
   Patch,
   Param,
   Delete,
+  Request,
   UseGuards,
   Query,
   DefaultValuePipe,
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
 import { ProvidersService } from './providers.service';
@@ -21,6 +24,8 @@ import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/utils/file-helper';
 
 @ApiBearerAuth()
 @ApiTags('Providers')
@@ -35,8 +40,14 @@ export class ProvidersController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProfileDto: CreateProviderDto) {
-    return this.providerServices.create(createProfileDto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  create(
+    @Body() createProviderDto: CreateProviderDto,
+    @UploadedFile() photo: Express.Multer.File,
+    @Request() request,
+  ) {
+    return this.providerServices.create(createProviderDto, photo, request.user);
   }
 
   @Get()
@@ -66,12 +77,18 @@ export class ProvidersController {
     return this.providerServices.findOne({ id: +id });
   }
 
-  @Patch(':id')
+  @Patch()
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: number, @Body() updateProfileDto: UpdateProviderDto) {
-    return this.providerServices.update(id, updateProfileDto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  update(
+    @Body() updateProviderDto: UpdateProviderDto,
+    @UploadedFile() photo: Express.Multer.File,
+    @Request() request,
+  ) {
+    return this.providerServices.update(updateProviderDto, photo, request.user);
   }
 
   @Delete(':id')

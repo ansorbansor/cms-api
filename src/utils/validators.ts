@@ -2,7 +2,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { getRepository } from 'typeorm';
+import { FindOperator, getRepository, ILike, Like } from 'typeorm';
 import { ValidationArguments } from 'class-validator/types/validation/ValidationArguments';
 
 type ValidationNotExistsEntity =
@@ -35,25 +35,32 @@ export class IsNotExist implements ValidatorConstraintInterface {
     const repository = validationArguments.constraints[0] as string;
     const currentValue =
       validationArguments.object as ValidationNotExistsEntity;
-    let where = {
+    let where: { [x: string]: string | FindOperator<string> } = {
       [validationArguments.property]: value,
     };
 
     if (currentValue.name && currentValue.id) {
       where = {
         id: currentValue.id.toString(),
-        [validationArguments.property]: value,
+        [validationArguments.property]: ILike(`%${value}%`),
       };
     }
     const entity = (await getRepository(repository).findOne(
       where,
     )) as ValidationNotExistsEntity;
 
+    console.log(entity);
+    
+
+    console.log(`${currentValue.name} | ${currentValue.id}`);
+    console.log(`${entity?.name} | ${entity?.id}`);
+    
+
     if (
       currentValue.name &&
       currentValue.id &&
       entity?.id == currentValue?.id &&
-      entity?.name == currentValue?.name
+      entity?.name.toLowerCase() === currentValue?.name.toLowerCase()
     ) {
       return true;
     } else if (entity?.id === currentValue?.id) {

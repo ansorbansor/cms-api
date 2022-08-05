@@ -9,22 +9,33 @@ import { Provider } from 'src/entities/provider.entity';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { ProviderResource } from './resources/provider.resources';
 import { UpdateProviderDto } from './dto/update-provider.dto';
+import { User } from 'src/entities/user.entity';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class ProvidersService {
   constructor(
     @InjectRepository(Provider)
     private providerRepository: Repository<Provider>,
-
     private redisService: RedisService,
+    private fileService: FilesService,
   ) {}
 
-  async create(createProviderDto: CreateProviderDto) {
-    const user = await this.providerRepository.save(
-      this.providerRepository.create(createProviderDto),
+  async create(
+    createProviderDto: CreateProviderDto,
+    photo: Express.Multer.File,
+    user: User,
+  ) {
+    const img = await this.fileService.uploadFile(photo, user);
+
+    const provider = await this.providerRepository.save(
+      this.providerRepository.create({
+        ...createProviderDto,
+        photo: img.id,
+      }),
     );
 
-    return this.findOne({ id: user.id });
+    return this.findOne({ id: provider.id });
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
@@ -56,8 +67,12 @@ export class ProvidersService {
     return ProviderResource(data);
   }
 
-  async update(id: number, updateProfileDto: UpdateProviderDto) {
-    const exists = await this.findOne({ id: id });
+  async update(
+    updateProfileDto: UpdateProviderDto,
+    photo: Express.Multer.File,
+    user: User,
+  ) {
+    const exists = await this.findOne({ id: updateProfileDto.id });
 
     if (!exists) {
       throw failedResponse(
@@ -66,13 +81,16 @@ export class ProvidersService {
       );
     }
 
-    await this.providerRepository.update(id, {
+    const img = await this.fileService.uploadFile(photo, user);
+
+    await this.providerRepository.update(updateProfileDto.id, {
       ...updateProfileDto,
+      photo: img.id,
     });
 
-    this.redisService.del(`${RedisKeyEnum.user}${id}`);
+    this.redisService.del(`${RedisKeyEnum.user}${updateProfileDto.id}`);
 
-    return await this.findOne({ id: id });
+    return await this.findOne({ id: updateProfileDto.id });
   }
 
   async softDelete(id: number): Promise<void> {

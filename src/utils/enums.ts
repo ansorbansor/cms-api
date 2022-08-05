@@ -23,6 +23,7 @@ export enum RedisKeyEnum {
   category = 'Category:',
   provider = 'Provider:',
   topic = 'Topic:',
+  language = 'Language:',
 }
 
 export enum MaxFileSize {

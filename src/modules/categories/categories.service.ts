@@ -61,30 +61,37 @@ export class CategoriesService {
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Penyedia tidak ditemukan',
+        'Kategori tidak ditemukan',
       );
     }
 
     return CategoryResource(data);
   }
 
-  async update(id: number, UpdateCategoryDto: UpdateCategoryDto) {
-    const exists = await this.findOne({ id: id });
+  async update(
+    updateCategoryDto: UpdateCategoryDto,
+    photo: Express.Multer.File,
+    user: User,
+  ) {
+    const exists = await this.findOne({ id: updateCategoryDto.id });
 
     if (!exists) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Penyedia tidak ditemukan',
+        'Kategori tidak ditemukan',
       );
     }
 
-    await this.categoryRepository.update(id, {
+    const img = await this.fileService.uploadFile(photo, user);
+
+    await this.categoryRepository.update(updateCategoryDto.id, {
       ...UpdateCategoryDto,
+      photo: img.id,
     });
 
-    this.redisService.del(`${RedisKeyEnum.category}${id}`);
+    this.redisService.del(`${RedisKeyEnum.category}${updateCategoryDto.id}`);
 
-    return await this.findOne({ id: id });
+    return await this.findOne({ id: updateCategoryDto.id });
   }
 
   async softDelete(id: number): Promise<void> {

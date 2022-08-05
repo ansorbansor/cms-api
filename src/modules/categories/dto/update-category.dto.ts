@@ -1,8 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, Validate } from 'class-validator';
+import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateCategoryDto {
-  @ApiProperty({ example: 'Category A' })
+  @ApiProperty()
   @IsNotEmpty()
-  name?: string | null;
+  id: number;
+
+  @ApiProperty({ example: 'Category A' })
+  @Validate(IsNotExist, ['Category', 'name', 'id'], {
+    message: 'Nama kategori sudah ada',
+  })
+  @IsNotEmpty()
+  name: string | null;
+
+  @ApiProperty({ type: 'string', format: 'binary' })
+  photo: any;
 }

@@ -8,6 +8,7 @@ import { ValidationArguments } from 'class-validator/types/validation/Validation
 type ValidationNotExistsEntity =
   | {
       id?: number | string;
+      name?: string;
     }
   | undefined;
 
@@ -34,14 +35,31 @@ export class IsNotExist implements ValidatorConstraintInterface {
     const repository = validationArguments.constraints[0] as string;
     const currentValue =
       validationArguments.object as ValidationNotExistsEntity;
-    const entity = (await getRepository(repository).findOne({
+    let where = {
       [validationArguments.property]: value,
-    })) as ValidationNotExistsEntity;
+    };
 
-    if (entity?.id === currentValue?.id) {
+    if (currentValue.name && currentValue.id) {
+      where = {
+        id: currentValue.id.toString(),
+        [validationArguments.property]: value,
+      };
+    }
+    const entity = (await getRepository(repository).findOne(
+      where,
+    )) as ValidationNotExistsEntity;
+
+    if (
+      currentValue.name &&
+      currentValue.id &&
+      entity?.id == currentValue?.id &&
+      entity?.name == currentValue?.name
+    ) {
+      return true;
+    } else if (entity?.id === currentValue?.id) {
       return true;
     }
 
-    return !entity;
+    return false;
   }
 }

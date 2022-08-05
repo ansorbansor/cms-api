@@ -77,15 +77,18 @@ export class CategoriesController {
     return this.categoryServices.findOne({ id: +id });
   }
 
-  @Patch(':id')
+  @Patch()
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo', multerOptions))
   update(
-    @Param('id') id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @UploadedFile() photo: Express.Multer.File,
+    @Request() request,
   ) {
-    return this.categoryServices.update(id, updateCategoryDto);
+    return this.categoryServices.update(updateCategoryDto, photo, request.user);
   }
 
   @Delete(':id')

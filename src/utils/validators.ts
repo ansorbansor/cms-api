@@ -2,7 +2,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { FindOperator, getRepository, ILike, Like } from 'typeorm';
+import { FindOperator, getRepository, ILike } from 'typeorm';
 import { ValidationArguments } from 'class-validator/types/validation/ValidationArguments';
 
 type ValidationNotExistsEntity =

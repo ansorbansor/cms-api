@@ -28,7 +28,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/utils/file-helper';
 
 @ApiBearerAuth()
-@ApiTags('Categories')
+@ApiTags('Course Categories')
 @Controller({
   path: 'course/categories',
   version: '1',

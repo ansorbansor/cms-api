@@ -12,12 +12,21 @@ export enum RoleEnum {
 }
 
 export enum FileTypeEnum {
-  image = 0,
-  document = 1,
-  video = 2,
-  audio = 3,
+  image = 1,
+  document = 2,
+  video = 3,
+  audio = 4,
 }
 
 export enum RedisKeyEnum {
   user = 'User:',
+  category = 'Category:',
+}
+
+export enum MaxFileSize {
+  IMAGE = 200,
+  AUDIO = 3000,
+  VIDEO = 200000,
+  DOCUMENT = 1500,
+  JSON = 200,
 }

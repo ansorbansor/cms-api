@@ -11,10 +11,12 @@ import fileConfig from './config/file.config';
 import googleConfig from './config/google.config';
 import { MailConfigService } from './config/mail-config.service';
 import mailConfig from './config/mail.config';
+import multerConfig from './config/multer.config';
 import { RedisConfigService } from './config/redis-config.service';
 import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -33,6 +35,7 @@ import { UsersModule } from './modules/users/users.module';
         googleConfig,
         mailConfig,
         redisConfig,
+        multerConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -68,6 +71,7 @@ import { UsersModule } from './modules/users/users.module';
     MailModule,
     UsersModule,
     ProvidersModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {

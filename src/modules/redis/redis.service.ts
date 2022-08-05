@@ -13,14 +13,6 @@ export class RedisService {
   }
 
   public async get(key: string, value: any) {
-    // this.cacheManager.get<typeof value>(key, (err, res) => {
-    //   if (redisConfig().status != 'true' || err != null) {
-    //     console.log('asd1');
-    //     return null;
-    //   }
-    //   console.log(`asd2 ${res}`);
-    //   return res;
-    // });
     if (redisConfig().status == 'true') {
       return this.cacheManager.get<typeof value>(key);
     }

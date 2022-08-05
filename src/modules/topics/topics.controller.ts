@@ -12,15 +12,12 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
-  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
 import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from 'src/utils/file-helper';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
@@ -38,8 +35,6 @@ export class TopicsController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
   create(@Body() createTopicDto: CreateTopicDto) {
     return this.topicService.create(createTopicDto);
   }
@@ -75,8 +70,6 @@ export class TopicsController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
   update(@Body() updateTopicDto: UpdateTopicDto) {
     return this.topicService.update(updateTopicDto);
   }

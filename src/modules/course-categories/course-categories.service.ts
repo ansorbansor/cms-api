@@ -6,14 +6,14 @@ import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
 import { Category } from 'src/entities/category.entity';
-import { CategoryResource } from './resources/category.resources';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CourseCategoryResource } from './resources/course-category.resources';
+import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
+import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 
 @Injectable()
-export class CategoriesService {
+export class CourseCategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
@@ -23,7 +23,7 @@ export class CategoriesService {
   ) {}
 
   async create(
-    createCategoryDto: CreateCategoryDto,
+    createCourseCategoryDto: CreateCourseCategoryDto,
     photo: Express.Multer.File,
     user: User,
   ) {
@@ -31,7 +31,7 @@ export class CategoriesService {
 
     const category = await this.categoryRepository.save(
       this.categoryRepository.create({
-        name: createCategoryDto.name,
+        name: createCourseCategoryDto.name,
         photo: img.id,
       }),
     );
@@ -48,7 +48,7 @@ export class CategoriesService {
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
       }),
-      CategoryResource,
+      CourseCategoryResource,
       paginationOptions,
     );
   }
@@ -65,15 +65,15 @@ export class CategoriesService {
       );
     }
 
-    return CategoryResource(data);
+    return CourseCategoryResource(data);
   }
 
   async update(
-    updateCategoryDto: UpdateCategoryDto,
+    updateCourseCategoryDto: UpdateCourseCategoryDto,
     photo: Express.Multer.File,
     user: User,
   ) {
-    const exists = await this.findOne({ id: updateCategoryDto.id });
+    const exists = await this.findOne({ id: updateCourseCategoryDto.id });
 
     if (!exists) {
       throw failedResponse(
@@ -84,14 +84,16 @@ export class CategoriesService {
 
     const img = await this.fileService.uploadFile(photo, user);
 
-    await this.categoryRepository.update(updateCategoryDto.id, {
-      ...UpdateCategoryDto,
+    await this.categoryRepository.update(updateCourseCategoryDto.id, {
+      ...UpdateCourseCategoryDto,
       photo: img.id,
     });
 
-    this.redisService.del(`${RedisKeyEnum.category}${updateCategoryDto.id}`);
+    this.redisService.del(
+      `${RedisKeyEnum.category}${updateCourseCategoryDto.id}`,
+    );
 
-    return await this.findOne({ id: updateCategoryDto.id });
+    return await this.findOne({ id: updateCourseCategoryDto.id });
   }
 
   async softDelete(id: number): Promise<void> {

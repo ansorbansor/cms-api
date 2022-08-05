@@ -21,9 +21,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
 import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
-import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CourseCategoriesService } from './course-categories.service';
+import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
+import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/utils/file-helper';
 
@@ -33,8 +33,8 @@ import { multerOptions } from 'src/utils/file-helper';
   path: 'categories',
   version: '1',
 })
-export class CategoriesController {
-  constructor(private readonly categoryServices: CategoriesService) {}
+export class CourseCategoriesController {
+  constructor(private readonly categoryServices: CourseCategoriesService) {}
 
   @Post()
   @Roles(RoleEnum.admin)
@@ -43,11 +43,15 @@ export class CategoriesController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
   create(
-    @Body() createCategoryDto: CreateCategoryDto,
+    @Body() createCourseCategoryDto: CreateCourseCategoryDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.categoryServices.create(createCategoryDto, photo, request.user);
+    return this.categoryServices.create(
+      createCourseCategoryDto,
+      photo,
+      request.user,
+    );
   }
 
   @Get()
@@ -84,11 +88,15 @@ export class CategoriesController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
   update(
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Body() updateCourseCategoryDto: UpdateCourseCategoryDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.categoryServices.update(updateCategoryDto, photo, request.user);
+    return this.categoryServices.update(
+      updateCourseCategoryDto,
+      photo,
+      request.user,
+    );
   }
 
   @Delete(':id')

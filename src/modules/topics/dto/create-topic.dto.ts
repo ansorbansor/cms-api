@@ -11,7 +11,7 @@ export class CreateTopicDto {
   name: string | null;
 
   @ApiProperty()
-  @Validate(IsExist, ['Category', 'id'], {
+  @Validate(IsExist, ['CourseCategory', 'id'], {
     message: 'Kategori tidak tersedia',
   })
   category_id: number;

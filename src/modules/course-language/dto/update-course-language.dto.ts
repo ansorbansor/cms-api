@@ -8,7 +8,7 @@ export class UpdateCourseLanguageDto {
   id: number;
 
   @ApiProperty({ example: 'Language A' })
-  @Validate(IsNotExist, ['Language', 'name', 'id'], {
+  @Validate(IsNotExist, ['CourseLanguage', 'name', 'id'], {
     message: 'Nama bahasa sudah ada',
   })
   @IsNotEmpty()

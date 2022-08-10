@@ -8,7 +8,7 @@ export class UpdateCourseCategoryDto {
   id: number;
 
   @ApiProperty({ example: 'Category A' })
-  @Validate(IsNotExist, ['Category', 'name', 'id'], {
+  @Validate(IsNotExist, ['CourseCategory', 'name', 'id'], {
     message: 'Nama kategori sudah ada',
   })
   @IsNotEmpty()

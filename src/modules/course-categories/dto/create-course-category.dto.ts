@@ -4,7 +4,7 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class CreateCourseCategoryDto {
   @ApiProperty({ example: 'Category A' })
-  @Validate(IsNotExist, ['Category', 'name'], {
+  @Validate(IsNotExist, ['CourseCategory', 'name'], {
     message: 'Nama kategori sudah ada',
   })
   @IsNotEmpty()

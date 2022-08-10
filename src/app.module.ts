@@ -21,6 +21,7 @@ import { CourseLanguageModule } from './modules/course-language/course-language.
 import { CourseLevelsModule } from './modules/course-levels/course-levels.module';
 import { CoursePriceModule } from './modules/course-price/course-price.module';
 import { CourseRatingModule } from './modules/course-rating/course-rating.module';
+import { CourseModule } from './modules/course/course.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -82,6 +83,7 @@ import { UsersModule } from './modules/users/users.module';
     CourseLanguageModule,
     CourseRatingModule,
     CoursePriceModule,
+    CourseModule,
   ],
 })
 export class AppModule {

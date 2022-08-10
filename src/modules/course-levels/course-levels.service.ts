@@ -62,7 +62,7 @@ export class CourseLevelsService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.category}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.level}${fields.id}`, data);
 
     return CourseLevelResource(data);
   }
@@ -81,13 +81,13 @@ export class CourseLevelsService {
       ...updateCourseLevelDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.category}${updateCourseLevelDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.level}${updateCourseLevelDto.id}`);
 
     return await this.findOne({ id: updateCourseLevelDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.category}${id}`);
+    this.redisService.del(`${RedisKeyEnum.level}${id}`);
     await this.courseLevelRepository.softDelete(id);
   }
 }

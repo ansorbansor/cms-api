@@ -4,7 +4,7 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class CreateCourseLanguageDto {
   @ApiProperty({ example: 'Language A' })
-  @Validate(IsNotExist, ['Language', 'name'], {
+  @Validate(IsNotExist, ['CourseLanguage', 'name'], {
     message: 'Nama bahasa sudah ada',
   })
   @IsNotEmpty()

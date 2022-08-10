@@ -58,7 +58,7 @@ export class CourseLanguageService {
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Bahasa tidak ditemukan',
       );
     }
 
@@ -73,7 +73,7 @@ export class CourseLanguageService {
     if (!exists) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Bahasa tidak ditemukan',
       );
     }
 

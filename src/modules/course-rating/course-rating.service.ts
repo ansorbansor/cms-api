@@ -58,7 +58,7 @@ export class CourseRatingService {
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Rating tidak ditemukan',
       );
     }
 
@@ -73,7 +73,7 @@ export class CourseRatingService {
     if (!exists) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Rating tidak ditemukan',
       );
     }
 

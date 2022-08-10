@@ -58,7 +58,7 @@ export class CourseLevelsService {
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Level tidak ditemukan',
       );
     }
 
@@ -73,7 +73,7 @@ export class CourseLevelsService {
     if (!exists) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Kategori tidak ditemukan',
+        'Level tidak ditemukan',
       );
     }
 

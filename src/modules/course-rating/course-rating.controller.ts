@@ -21,6 +21,7 @@ import { Roles } from 'src/utils/decorator';
 import { CourseRatingService } from './course-rating.service';
 import { UpdateCourseRatingDto } from './dto/update-course-rating.dto';
 import { CreateCourseRatingDto } from './dto/create-course-rating.dto';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Course Rating')
@@ -36,14 +37,17 @@ export class CourseRatingController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createCourseRatingDto: CreateCourseRatingDto) {
-    return this.courseRatingServices.create(createCourseRatingDto);
+    return successResponse(
+      this.courseRatingServices.create(createCourseRatingDto),
+      'success',
+    );
   }
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -51,11 +55,14 @@ export class CourseRatingController {
       limit = 50;
     }
 
-    return this.courseRatingServices.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.courseRatingServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -63,7 +70,10 @@ export class CourseRatingController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.courseRatingServices.findOne({ id: +id });
+    return successResponse(
+      this.courseRatingServices.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch()
@@ -71,13 +81,16 @@ export class CourseRatingController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   update(@Body() updateCourseRatingDto: UpdateCourseRatingDto) {
-    return this.courseRatingServices.update(updateCourseRatingDto);
+    return successResponse(
+      this.courseRatingServices.update(updateCourseRatingDto),
+      'success',
+    );
   }
 
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.courseRatingServices.softDelete(id);
+    return successResponse(this.courseRatingServices.softDelete(id), 'success');
   }
 }

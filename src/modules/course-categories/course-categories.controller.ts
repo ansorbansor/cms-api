@@ -26,6 +26,7 @@ import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
 import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/utils/file-helper';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Course Categories')
@@ -47,10 +48,13 @@ export class CourseCategoriesController {
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.categoryServices.create(
-      createCourseCategoryDto,
-      photo,
-      request.user,
+    return successResponse(
+      this.categoryServices.create(
+        createCourseCategoryDto,
+        photo,
+        request.user,
+      ),
+      'success',
     );
   }
 
@@ -58,7 +62,7 @@ export class CourseCategoriesController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -66,11 +70,14 @@ export class CourseCategoriesController {
       limit = 50;
     }
 
-    return this.categoryServices.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.categoryServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -78,7 +85,10 @@ export class CourseCategoriesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.categoryServices.findOne({ id: +id });
+    return successResponse(
+      this.categoryServices.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch()
@@ -92,10 +102,13 @@ export class CourseCategoriesController {
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.categoryServices.update(
-      updateCourseCategoryDto,
-      photo,
-      request.user,
+    return successResponse(
+      this.categoryServices.update(
+        updateCourseCategoryDto,
+        photo,
+        request.user,
+      ),
+      'success',
     );
   }
 
@@ -103,6 +116,6 @@ export class CourseCategoriesController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.categoryServices.softDelete(id);
+    return successResponse(this.categoryServices.softDelete(id), 'success');
   }
 }

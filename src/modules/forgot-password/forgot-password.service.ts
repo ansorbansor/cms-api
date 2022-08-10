@@ -17,7 +17,7 @@ export class ForgotPasswordService {
     });
   }
 
-  async findMany(options: FindOptions<ForgotPassword>) {
+  async findManyWithPagination(options: FindOptions<ForgotPassword>) {
     return this.forgotRepository.find({
       where: options.where,
     });

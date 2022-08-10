@@ -23,6 +23,7 @@ import { AuthResource } from './resources/auth.resources';
 import { AuthGoogleLoginDto } from './dtos/auth-google-login.dto';
 import { AuthFacebookLoginDto } from './dtos/auth-facebook-login.dto';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
+import { successResponse } from 'src/utils/responses';
 
 @ApiTags('Auth')
 @Controller({
@@ -36,14 +37,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async login(@Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, false);
-    return AuthResource(data.token, data.user);
+    return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
   @Post('admin/email/login')
   @HttpCode(HttpStatus.OK)
   public async adminLogin(@Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, true);
-    return AuthResource(data.token, data.user);
+    return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
   @Post('google/login')
@@ -51,7 +52,10 @@ export class AuthController {
   async loginGoogle(@Body() loginDto: AuthGoogleLoginDto) {
     const socialData = await this.service.getProfileByTokenGoogle(loginDto);
 
-    return this.service.validateSocialLogin('google', socialData);
+    return successResponse(
+      this.service.validateSocialLogin('google', socialData),
+      'success',
+    );
   }
 
   @Post('facebook/login')
@@ -59,7 +63,10 @@ export class AuthController {
   async loginFacebook(@Body() loginDto: AuthFacebookLoginDto) {
     const socialData = await this.service.getProfileByTokenFacebook(loginDto);
 
-    return this.service.validateSocialLogin('facebook', socialData);
+    return successResponse(
+      this.service.validateSocialLogin('facebook', socialData),
+      'success',
+    );
   }
 
   @Post('apple/login')
@@ -67,33 +74,45 @@ export class AuthController {
   async loginApple(@Body() loginDto: AuthAppleLoginDto) {
     const socialData = await this.service.getProfileByTokenApple(loginDto);
 
-    return this.service.validateSocialLogin('apple', socialData);
+    return successResponse(
+      this.service.validateSocialLogin('apple', socialData),
+      'success',
+    );
   }
 
   @Post('email/register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() createUserDto: AuthRegisterLoginDto) {
-    return this.service.register(createUserDto);
+    return successResponse(this.service.register(createUserDto), 'success');
   }
 
   @Post('email/confirm')
   @HttpCode(HttpStatus.OK)
   async confirmEmail(@Body() confirmEmailDto: AuthConfirmEmailDto) {
-    return this.service.confirmEmail(confirmEmailDto.hash);
+    return successResponse(
+      this.service.confirmEmail(confirmEmailDto.hash),
+      'success',
+    );
   }
 
   @Post('forgot/password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
-    return this.service.forgotPassword(forgotPasswordDto.email);
+    return successResponse(
+      this.service.forgotPassword(forgotPasswordDto.email),
+      'success',
+    );
   }
 
   @Post('reset/password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto) {
-    return this.service.resetPassword(
-      resetPasswordDto.hash,
-      resetPasswordDto.password,
+    return successResponse(
+      this.service.resetPassword(
+        resetPasswordDto.hash,
+        resetPasswordDto.password,
+      ),
+      'success',
     );
   }
 
@@ -102,7 +121,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   public async me(@Request() request) {
-    return await this.service.me(request.user);
+    return successResponse(await this.service.me(request.user), 'success');
   }
 
   @ApiBearerAuth()
@@ -110,7 +129,10 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   public async update(@Request() request, @Body() userDto: AuthUpdateDto) {
-    return this.service.update(request.user, userDto);
+    return successResponse(
+      this.service.update(request.user, userDto),
+      'success',
+    );
   }
 
   @ApiBearerAuth()
@@ -118,6 +140,6 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   public async delete(@Request() request) {
-    return this.service.softDelete(request.user);
+    return successResponse(this.service.softDelete(request.user), 'success');
   }
 }

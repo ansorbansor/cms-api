@@ -21,6 +21,7 @@ import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from 'src/utils/decorator';
 import { RoleEnum } from 'src/utils/enums';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @Roles(RoleEnum.admin)
@@ -36,12 +37,15 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProfileDto: CreateUserDto) {
-    return this.usersService.create(createProfileDto);
+    return successResponse(
+      this.usersService.create(createProfileDto),
+      'success',
+    );
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -49,27 +53,33 @@ export class UsersController {
       limit = 50;
     }
 
-    return this.usersService.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.usersService.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'successsss',
+    );
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne({ id: +id });
+    return successResponse(this.usersService.findOne({ id: +id }), 'success');
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   update(@Param('id') id: number, @Body() updateProfileDto: UpdateUserDto) {
-    return this.usersService.update(id, updateProfileDto);
+    return successResponse(
+      this.usersService.update(id, updateProfileDto),
+      'success',
+    );
   }
 
   @Delete(':id')
   remove(@Param('id') id: number) {
-    return this.usersService.softDelete(id);
+    return successResponse(this.usersService.softDelete(id), 'success');
   }
 }

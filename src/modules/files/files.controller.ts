@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesService } from 'src/modules/files/files.service';
+import { successResponse } from 'src/utils/responses';
 
 @ApiTags('Files')
 @Controller({
@@ -48,7 +49,10 @@ export class FilesController {
     @UploadedFile() file: Express.Multer.File,
     @Request() request,
   ) {
-    return this.filesService.uploadFile(file, request.user);
+    return successResponse(
+      this.filesService.uploadFile(file, request.user),
+      'success',
+    );
   }
 
   @ApiBearerAuth()
@@ -71,12 +75,18 @@ export class FilesController {
     @UploadedFile() file: Express.Multer.File,
     @Request() request,
   ) {
-    return this.filesService.uploadPhotoProfile(file, request.user);
+    return successResponse(
+      this.filesService.uploadPhotoProfile(file, request.user),
+      'success',
+    );
   }
 
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
   download(@Param('path') path, @Response() response) {
-    return response.sendFile(path, { root: './uploads' });
+    return successResponse(
+      response.sendFile(path, { root: './uploads' }),
+      'success',
+    );
   }
 }

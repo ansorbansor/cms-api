@@ -1,9 +1,10 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { IPaginationOptions } from './types';
 
 export const successResponse = <T>(data: T, message: string) => {
   return {
     meta: {
+      code: HttpStatus.OK,
       message: message,
     },
     data: data,
@@ -13,13 +14,26 @@ export const successResponse = <T>(data: T, message: string) => {
 export const failedResponse = (status: number, message: string) => {
   return new HttpException(
     {
-      errors: {
-        status: status,
+      meta: {
+        code: status,
         message: message,
       },
+      data: null,
     },
     status,
   );
+};
+
+export const successResponseList = (datax: any, message: string) => {
+  return {
+    meta: {
+      code: HttpStatus.OK,
+      message: message,
+    },
+    data: datax.data,
+    page: datax.page,
+    hasNextPage: datax.hasNextPage,
+  };
 };
 
 export const infinityPagination = <T>(

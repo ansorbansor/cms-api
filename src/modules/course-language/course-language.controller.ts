@@ -21,6 +21,7 @@ import { Roles } from 'src/utils/decorator';
 import { CourseLanguageService } from './course-language.service';
 import { CreateCourseLanguageDto } from './dto/create-course-language.dto';
 import { UpdateCourseLanguageDto } from './dto/update-course-language.dto';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Course Language')
@@ -36,14 +37,17 @@ export class CourseLanguageController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createCourseLanguageDto: CreateCourseLanguageDto) {
-    return this.courseLanguageServices.create(createCourseLanguageDto);
+    return successResponse(
+      this.courseLanguageServices.create(createCourseLanguageDto),
+      'success',
+    );
   }
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -51,11 +55,14 @@ export class CourseLanguageController {
       limit = 50;
     }
 
-    return this.courseLanguageServices.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.courseLanguageServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -63,7 +70,10 @@ export class CourseLanguageController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.courseLanguageServices.findOne({ id: +id });
+    return successResponse(
+      this.courseLanguageServices.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch()
@@ -71,13 +81,19 @@ export class CourseLanguageController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   update(@Body() updateCourseLanguageDto: UpdateCourseLanguageDto) {
-    return this.courseLanguageServices.update(updateCourseLanguageDto);
+    return successResponse(
+      this.courseLanguageServices.update(updateCourseLanguageDto),
+      'success',
+    );
   }
 
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.courseLanguageServices.softDelete(id);
+    return successResponse(
+      this.courseLanguageServices.softDelete(id),
+      'success',
+    );
   }
 }

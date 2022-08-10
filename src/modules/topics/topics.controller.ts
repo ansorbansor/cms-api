@@ -21,6 +21,7 @@ import { Roles } from 'src/utils/decorator';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Topics')
@@ -36,14 +37,14 @@ export class TopicsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTopicDto: CreateTopicDto) {
-    return this.topicService.create(createTopicDto);
+    return successResponse(this.topicService.create(createTopicDto), 'success');
   }
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -51,11 +52,14 @@ export class TopicsController {
       limit = 50;
     }
 
-    return this.topicService.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.topicService.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -63,7 +67,7 @@ export class TopicsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.topicService.findOne({ id: +id });
+    return successResponse(this.topicService.findOne({ id: +id }), 'success');
   }
 
   @Patch()
@@ -71,13 +75,13 @@ export class TopicsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   update(@Body() updateTopicDto: UpdateTopicDto) {
-    return this.topicService.update(updateTopicDto);
+    return successResponse(this.topicService.update(updateTopicDto), 'success');
   }
 
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.topicService.softDelete(id);
+    return successResponse(this.topicService.softDelete(id), 'success');
   }
 }

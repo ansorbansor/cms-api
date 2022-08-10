@@ -26,6 +26,7 @@ import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/utils/file-helper';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Providers')
@@ -47,14 +48,17 @@ export class ProvidersController {
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.providerServices.create(createProviderDto, photo, request.user);
+    return successResponse(
+      this.providerServices.create(createProviderDto, photo, request.user),
+      'success',
+    );
   }
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -62,11 +66,14 @@ export class ProvidersController {
       limit = 50;
     }
 
-    return this.providerServices.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.providerServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -74,7 +81,10 @@ export class ProvidersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.providerServices.findOne({ id: +id });
+    return successResponse(
+      this.providerServices.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch()
@@ -88,13 +98,16 @@ export class ProvidersController {
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
-    return this.providerServices.update(updateProviderDto, photo, request.user);
+    return successResponse(
+      this.providerServices.update(updateProviderDto, photo, request.user),
+      'success',
+    );
   }
 
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.providerServices.softDelete(id);
+    return successResponse(this.providerServices.softDelete(id), 'success');
   }
 }

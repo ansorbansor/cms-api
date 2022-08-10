@@ -21,6 +21,7 @@ import { Roles } from 'src/utils/decorator';
 import { CourseLevelsService } from './course-levels.service';
 import { CreateCourseLevelDto } from './dto/create-course-level.dto';
 import { UpdateCourseLevelDto } from './dto/update-course-level.dto';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Course Level')
@@ -36,14 +37,17 @@ export class CourseLevelsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createCourseLevelDto: CreateCourseLevelDto) {
-    return this.courseLevelServices.create(createCourseLevelDto);
+    return successResponse(
+      this.courseLevelServices.create(createCourseLevelDto),
+      'success',
+    );
   }
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findAll(
+  async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
@@ -51,11 +55,14 @@ export class CourseLevelsController {
       limit = 50;
     }
 
-    return this.courseLevelServices.findManyWithPagination({
-      page,
-      limit,
-      total: 0,
-    });
+    return successResponseList(
+      await this.courseLevelServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
   }
 
   @Get(':id')
@@ -63,7 +70,10 @@ export class CourseLevelsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.courseLevelServices.findOne({ id: +id });
+    return successResponse(
+      this.courseLevelServices.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch()
@@ -71,13 +81,16 @@ export class CourseLevelsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   update(@Body() updateCourseLevelDto: UpdateCourseLevelDto) {
-    return this.courseLevelServices.update(updateCourseLevelDto);
+    return successResponse(
+      this.courseLevelServices.update(updateCourseLevelDto),
+      'success',
+    );
   }
 
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(@Param('id') id: number) {
-    return this.courseLevelServices.softDelete(id);
+    return successResponse(this.courseLevelServices.softDelete(id), 'success');
   }
 }

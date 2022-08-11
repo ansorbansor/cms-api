@@ -43,13 +43,13 @@ export class CourseController {
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  create(
+  async create(
     @Body() createCourseDto: CreateCourseDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.courseServices.create(createCourseDto, photo, request.user),
+      await this.courseServices.create(createCourseDto, photo, request.user),
       'success',
     );
   }
@@ -93,13 +93,13 @@ export class CourseController {
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  update(
+  async update(
     @Body() updateCourseDto: UpdateCourseDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.courseServices.update(updateCourseDto, photo, request.user),
+      await this.courseServices.update(updateCourseDto, photo, request.user),
       'success',
     );
   }
@@ -107,7 +107,7 @@ export class CourseController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
-    return successResponse(this.courseServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(await this.courseServices.softDelete(id), 'success');
   }
 }

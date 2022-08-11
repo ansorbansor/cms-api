@@ -43,13 +43,17 @@ export class ProvidersController {
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  create(
+  async create(
     @Body() createProviderDto: CreateProviderDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.providerServices.create(createProviderDto, photo, request.user),
+      await this.providerServices.create(
+        createProviderDto,
+        photo,
+        request.user,
+      ),
       'success',
     );
   }
@@ -80,9 +84,9 @@ export class ProvidersController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return successResponse(
-      this.providerServices.findOne({ id: +id }),
+      await this.providerServices.findOne({ id: +id }),
       'success',
     );
   }
@@ -93,13 +97,17 @@ export class ProvidersController {
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  update(
+  async update(
     @Body() updateProviderDto: UpdateProviderDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.providerServices.update(updateProviderDto, photo, request.user),
+      await this.providerServices.update(
+        updateProviderDto,
+        photo,
+        request.user,
+      ),
       'success',
     );
   }
@@ -107,7 +115,10 @@ export class ProvidersController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
-    return successResponse(this.providerServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(
+      await this.providerServices.softDelete(id),
+      'success',
+    );
   }
 }

@@ -36,9 +36,9 @@ export class CoursePriceController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createCoursePriceDto: CreateCoursePriceDto) {
+  async create(@Body() createCoursePriceDto: CreateCoursePriceDto) {
     return successResponse(
-      this.coursePriceervices.create(createCoursePriceDto),
+      await this.coursePriceervices.create(createCoursePriceDto),
       'success',
     );
   }
@@ -69,9 +69,9 @@ export class CoursePriceController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return successResponse(
-      this.coursePriceervices.findOne({ id: +id }),
+      await this.coursePriceervices.findOne({ id: +id }),
       'success',
     );
   }
@@ -80,9 +80,9 @@ export class CoursePriceController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  update(@Body() updateCoursePriceDto: UpdateCoursePriceDto) {
+  async update(@Body() updateCoursePriceDto: UpdateCoursePriceDto) {
     return successResponse(
-      this.coursePriceervices.update(updateCoursePriceDto),
+      await this.coursePriceervices.update(updateCoursePriceDto),
       'success',
     );
   }
@@ -90,7 +90,10 @@ export class CoursePriceController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
-    return successResponse(this.coursePriceervices.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(
+      await this.coursePriceervices.softDelete(id),
+      'success',
+    );
   }
 }

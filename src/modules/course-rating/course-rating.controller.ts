@@ -36,9 +36,9 @@ export class CourseRatingController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createCourseRatingDto: CreateCourseRatingDto) {
+  async create(@Body() createCourseRatingDto: CreateCourseRatingDto) {
     return successResponse(
-      this.courseRatingServices.create(createCourseRatingDto),
+      await this.courseRatingServices.create(createCourseRatingDto),
       'success',
     );
   }
@@ -69,9 +69,9 @@ export class CourseRatingController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return successResponse(
-      this.courseRatingServices.findOne({ id: +id }),
+      await this.courseRatingServices.findOne({ id: +id }),
       'success',
     );
   }
@@ -80,9 +80,9 @@ export class CourseRatingController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  update(@Body() updateCourseRatingDto: UpdateCourseRatingDto) {
+  async update(@Body() updateCourseRatingDto: UpdateCourseRatingDto) {
     return successResponse(
-      this.courseRatingServices.update(updateCourseRatingDto),
+      await this.courseRatingServices.update(updateCourseRatingDto),
       'success',
     );
   }
@@ -90,7 +90,10 @@ export class CourseRatingController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
-    return successResponse(this.courseRatingServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(
+      await this.courseRatingServices.softDelete(id),
+      'success',
+    );
   }
 }

@@ -36,9 +36,9 @@ export class CourseLanguageController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createCourseLanguageDto: CreateCourseLanguageDto) {
+  async create(@Body() createCourseLanguageDto: CreateCourseLanguageDto) {
     return successResponse(
-      this.courseLanguageServices.create(createCourseLanguageDto),
+      await this.courseLanguageServices.create(createCourseLanguageDto),
       'success',
     );
   }
@@ -69,9 +69,9 @@ export class CourseLanguageController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return successResponse(
-      this.courseLanguageServices.findOne({ id: +id }),
+      await this.courseLanguageServices.findOne({ id: +id }),
       'success',
     );
   }
@@ -80,9 +80,9 @@ export class CourseLanguageController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  update(@Body() updateCourseLanguageDto: UpdateCourseLanguageDto) {
+  async update(@Body() updateCourseLanguageDto: UpdateCourseLanguageDto) {
     return successResponse(
-      this.courseLanguageServices.update(updateCourseLanguageDto),
+      await this.courseLanguageServices.update(updateCourseLanguageDto),
       'success',
     );
   }
@@ -90,9 +90,9 @@ export class CourseLanguageController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
+  async remove(@Param('id') id: number) {
     return successResponse(
-      this.courseLanguageServices.softDelete(id),
+      await this.courseLanguageServices.softDelete(id),
       'success',
     );
   }

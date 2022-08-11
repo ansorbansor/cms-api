@@ -50,7 +50,7 @@ export class FilesController {
     @Request() request,
   ) {
     return successResponse(
-      this.filesService.uploadFile(file, request.user),
+      await this.filesService.uploadFile(file, request.user),
       'success',
     );
   }
@@ -76,16 +76,16 @@ export class FilesController {
     @Request() request,
   ) {
     return successResponse(
-      this.filesService.uploadPhotoProfile(file, request.user),
+      await this.filesService.uploadPhotoProfile(file, request.user),
       'success',
     );
   }
 
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
-  download(@Param('path') path, @Response() response) {
+  async download(@Param('path') path, @Response() response) {
     return successResponse(
-      response.sendFile(path, { root: './uploads' }),
+      await response.sendFile(path, { root: './uploads' }),
       'success',
     );
   }

@@ -43,13 +43,13 @@ export class CourseCategoriesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  create(
+  async create(
     @Body() createCourseCategoryDto: CreateCourseCategoryDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.categoryServices.create(
+      await this.categoryServices.create(
         createCourseCategoryDto,
         photo,
         request.user,
@@ -84,9 +84,9 @@ export class CourseCategoriesController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return successResponse(
-      this.categoryServices.findOne({ id: +id }),
+      await this.categoryServices.findOne({ id: +id }),
       'success',
     );
   }
@@ -97,13 +97,13 @@ export class CourseCategoriesController {
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo', multerOptions))
-  update(
+  async update(
     @Body() updateCourseCategoryDto: UpdateCourseCategoryDto,
     @UploadedFile() photo: Express.Multer.File,
     @Request() request,
   ) {
     return successResponse(
-      this.categoryServices.update(
+      await this.categoryServices.update(
         updateCourseCategoryDto,
         photo,
         request.user,
@@ -115,7 +115,10 @@ export class CourseCategoriesController {
   @Delete(':id')
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  remove(@Param('id') id: number) {
-    return successResponse(this.categoryServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(
+      await this.categoryServices.softDelete(id),
+      'success',
+    );
   }
 }

@@ -36,9 +36,9 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProfileDto: CreateUserDto) {
+  async create(@Body() createProfileDto: CreateUserDto) {
     return successResponse(
-      this.usersService.create(createProfileDto),
+      await this.usersService.create(createProfileDto),
       'success',
     );
   }
@@ -65,21 +65,27 @@ export class UsersController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
-    return successResponse(this.usersService.findOne({ id: +id }), 'success');
+  async findOne(@Param('id') id: string) {
+    return successResponse(
+      await this.usersService.findOne({ id: +id }),
+      'success',
+    );
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: number, @Body() updateProfileDto: UpdateUserDto) {
+  async update(
+    @Param('id') id: number,
+    @Body() updateProfileDto: UpdateUserDto,
+  ) {
     return successResponse(
-      this.usersService.update(id, updateProfileDto),
+      await this.usersService.update(id, updateProfileDto),
       'success',
     );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
-    return successResponse(this.usersService.softDelete(id), 'success');
+  async remove(@Param('id') id: number) {
+    return successResponse(await this.usersService.softDelete(id), 'success');
   }
 }

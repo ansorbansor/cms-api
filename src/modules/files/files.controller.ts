@@ -10,16 +10,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesService } from 'src/modules/files/files.service';
 import { successResponse } from 'src/utils/responses';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @ApiTags('Files')
 @Controller({
@@ -33,24 +28,10 @@ export class FilesController {
   @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Request() request,
-  ) {
+  async uploadFile(@UploadedFile() file: BufferedFile, @Request() request) {
     return successResponse(
-      await this.filesService.uploadFile(file, request.user),
+      await this.filesService.uploadWithMinio(file, request.user),
       'success',
     );
   }
@@ -59,24 +40,13 @@ export class FilesController {
   @UseGuards(AuthGuard('jwt'))
   @Post('upload/profile')
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   @UseInterceptors(FileInterceptor('file'))
   async uploadPhotoProfile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: BufferedFile,
     @Request() request,
   ) {
     return successResponse(
-      await this.filesService.uploadPhotoProfile(file, request.user),
+      await this.filesService.uploadWithMinio(file, request.user),
       'success',
     );
   }

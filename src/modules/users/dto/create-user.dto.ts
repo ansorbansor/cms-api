@@ -40,6 +40,7 @@ export class CreateUserDto {
   provider?: string;
 
   @IsOptional()
+  @ApiProperty({ type: 'string', format: 'binary' })
   @Validate(IsExist, ['FileEntity', 'id'], {
     message: 'imageNotExists',
   })

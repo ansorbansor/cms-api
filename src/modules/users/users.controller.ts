@@ -12,8 +12,10 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
@@ -22,6 +24,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from 'src/utils/decorator';
 import { RoleEnum } from 'src/utils/enums';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @ApiBearerAuth()
 @Roles(RoleEnum.admin)
@@ -36,9 +40,14 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createProfileDto: CreateUserDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo'))
+  async create(
+    @UploadedFile() file: BufferedFile,
+    @Body() createProfileDto: CreateUserDto,
+  ) {
     return successResponse(
-      await this.usersService.create(createProfileDto),
+      await this.usersService.create(file, createProfileDto),
       'success',
     );
   }

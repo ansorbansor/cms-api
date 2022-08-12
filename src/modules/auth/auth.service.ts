@@ -23,6 +23,7 @@ import { Facebook } from 'fb';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
 import { RedisService } from '../redis/redis.service';
+import { BufferedFile } from 'src/utils/file-helper';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -187,13 +188,16 @@ export class AuthService {
     };
   }
 
-  async register(dto: AuthRegisterLoginDto): Promise<void> {
+  async register(
+    photo: BufferedFile,
+    dto: AuthRegisterLoginDto,
+  ): Promise<void> {
     const hash = crypto
       .createHash('sha256')
       .update(randomStringGenerator())
       .digest('hex');
 
-    const user = await this.usersService.create({
+    const user = await this.usersService.create(photo, {
       ...dto,
       email: dto.email,
       role_id: RoleEnum.user,

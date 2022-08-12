@@ -10,6 +10,8 @@ import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
+import { FilesService } from '../files/files.service';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @Injectable()
 export class UsersService {
@@ -21,12 +23,20 @@ export class UsersService {
     private userRolesRepository: Repository<UserRoles>,
 
     private redisService: RedisService,
+
+    private fileService: FilesService,
   ) {}
 
-  async create(createProfileDto: CreateUserDto) {
+  async create(photo: BufferedFile, createProfileDto: CreateUserDto) {
     const user = await this.usersRepository.save(
       this.usersRepository.create(createProfileDto),
     );
+
+    const uploadedPhoto = await this.fileService.uploadWithMinio(photo, user);
+
+    await this.usersRepository.update(user.id, {
+      photo: uploadedPhoto,
+    });
 
     await this.userRolesRepository.save(
       this.userRolesRepository.create({

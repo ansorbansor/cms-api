@@ -11,6 +11,7 @@ import { ProviderResource } from './resources/provider.resources';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { User } from 'src/entities/user.entity';
 import { FilesService } from '../files/files.service';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @Injectable()
 export class ProvidersService {
@@ -23,10 +24,10 @@ export class ProvidersService {
 
   async create(
     createProviderDto: CreateProviderDto,
-    photo: Express.Multer.File,
+    photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadFile(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user);
 
     const provider = await this.providerRepository.save(
       this.providerRepository.create({
@@ -79,7 +80,7 @@ export class ProvidersService {
 
   async update(
     updateProfileDto: UpdateProviderDto,
-    photo: Express.Multer.File,
+    photo: BufferedFile,
     user: User,
   ) {
     const exists = await this.findOne({ id: updateProfileDto.id });
@@ -91,7 +92,7 @@ export class ProvidersService {
       );
     }
 
-    const img = await this.fileService.uploadFile(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user);
 
     await this.providerRepository.update(updateProfileDto.id, {
       ...updateProfileDto,

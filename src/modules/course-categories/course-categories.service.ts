@@ -11,6 +11,7 @@ import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { CourseCategory } from 'src/entities/course-category.entity';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @Injectable()
 export class CourseCategoriesService {
@@ -24,10 +25,10 @@ export class CourseCategoriesService {
 
   async create(
     createCourseCategoryDto: CreateCourseCategoryDto,
-    photo: Express.Multer.File,
+    photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadFile(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user);
 
     const category = await this.categoryRepository.save(
       this.categoryRepository.create({
@@ -80,7 +81,7 @@ export class CourseCategoriesService {
 
   async update(
     updateCourseCategoryDto: UpdateCourseCategoryDto,
-    photo: Express.Multer.File,
+    photo: BufferedFile,
     user: User,
   ) {
     const exists = await this.findOne({ id: updateCourseCategoryDto.id });
@@ -92,7 +93,7 @@ export class CourseCategoriesService {
       );
     }
 
-    const img = await this.fileService.uploadFile(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user);
 
     await this.categoryRepository.update(updateCourseCategoryDto.id, {
       ...UpdateCourseCategoryDto,

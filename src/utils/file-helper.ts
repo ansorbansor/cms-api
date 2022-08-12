@@ -139,3 +139,73 @@ export const getFileName = (
   const fileName = rand + '.' + extension;
   return fileName;
 };
+
+// Minio
+export interface BufferedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: AppMimeType;
+  size: number;
+  buffer: Buffer | string;
+  path: string;
+}
+
+export interface StoredFile extends HasFile, StoredFileMetadata {}
+
+export interface HasFile {
+  file: Buffer | string;
+}
+
+export interface StoredFileMetadata {
+  id: string;
+  name: string;
+  encoding: string;
+  mimetype: AppMimeType;
+  size: number;
+  updatedAt: Date;
+  fileSrc?: string;
+}
+
+export type AppMimeType = 'image/png' | 'image/jpeg';
+
+export function policy(minioConfig) {
+  return {
+    Version: process.env.MINIO_BUCKET_VERSION,
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: {
+          AWS: ['*'],
+        },
+        Action: [
+          's3:ListBucketMultipartUploads',
+          's3:GetBucketLocation',
+          's3:ListBucket',
+        ],
+        Resource: [`arn:aws:s3:::${minioConfig.bucketName}`], // Change this according to your bucket name
+      },
+      {
+        Effect: 'Allow',
+        Principal: {
+          AWS: ['*'],
+        },
+        Action: [
+          's3:PutObject',
+          's3:AbortMultipartUpload',
+          's3:DeleteObject',
+          's3:GetObject',
+          's3:ListMultipartUploadParts',
+        ],
+        Resource: [`arn:aws:s3:::${minioConfig.bucketName}/*`], // Change this according to your bucket name
+      },
+      {
+        Sid: 'PublicRead',
+        Effect: 'Allow',
+        Principal: '*',
+        Action: ['s3:GetObject', 's3:GetObjectVersion'],
+        Resource: [`arn:aws:s3:::${minioConfig.bucketName}/*`], // Change this according to your bucket name
+      },
+    ],
+  };
+}

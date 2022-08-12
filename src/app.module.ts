@@ -11,7 +11,7 @@ import fileConfig from './config/file.config';
 import googleConfig from './config/google.config';
 import { MailConfigService } from './config/mail-config.service';
 import mailConfig from './config/mail.config';
-import multerConfig from './config/multer.config';
+import minioConfig from './config/minio.config';
 import { RedisConfigService } from './config/redis-config.service';
 import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
@@ -41,7 +41,7 @@ import { UsersModule } from './modules/users/users.module';
         googleConfig,
         mailConfig,
         redisConfig,
-        multerConfig,
+        minioConfig,
       ],
       envFilePath: ['.env'],
     }),

@@ -9,8 +9,10 @@ import {
   UseGuards,
   Patch,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthConfirmEmailDto } from 'src/modules/auth/dtos/auth-confirm-email.dto';
@@ -24,6 +26,8 @@ import { AuthGoogleLoginDto } from './dtos/auth-google-login.dto';
 import { AuthFacebookLoginDto } from './dtos/auth-facebook-login.dto';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import { successResponse } from 'src/utils/responses';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { BufferedFile } from 'src/utils/file-helper';
 
 @ApiTags('Auth')
 @Controller({
@@ -82,8 +86,16 @@ export class AuthController {
 
   @Post('email/register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() createUserDto: AuthRegisterLoginDto) {
-    return successResponse(this.service.register(createUserDto), 'success');
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo'))
+  async register(
+    @UploadedFile() file: BufferedFile,
+    @Body() createUserDto: AuthRegisterLoginDto,
+  ) {
+    return successResponse(
+      this.service.register(file, createUserDto),
+      'success',
+    );
   }
 
   @Post('email/confirm')

@@ -25,7 +25,7 @@ import { UpdateProviderDto } from './dto/update-provider.dto';
 import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from 'src/utils/file-helper';
+import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
@@ -42,10 +42,10 @@ export class ProvidersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async create(
     @Body() createProviderDto: CreateProviderDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(
@@ -96,10 +96,10 @@ export class ProvidersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async update(
     @Body() updateProviderDto: UpdateProviderDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(

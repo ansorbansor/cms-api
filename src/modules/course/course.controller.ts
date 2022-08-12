@@ -22,7 +22,7 @@ import { RolesGuard } from 'src/utils/guards';
 import { RoleEnum } from 'src/utils/enums';
 import { Roles } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from 'src/utils/file-helper';
+import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -42,10 +42,10 @@ export class CourseController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async create(
     @Body() createCourseDto: CreateCourseDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(
@@ -92,10 +92,10 @@ export class CourseController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async update(
     @Body() updateCourseDto: UpdateCourseDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(

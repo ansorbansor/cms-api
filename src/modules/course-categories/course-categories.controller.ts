@@ -25,7 +25,7 @@ import { CourseCategoriesService } from './course-categories.service';
 import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
 import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerOptions } from 'src/utils/file-helper';
+import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
@@ -42,10 +42,10 @@ export class CourseCategoriesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async create(
     @Body() createCourseCategoryDto: CreateCourseCategoryDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(
@@ -96,10 +96,10 @@ export class CourseCategoriesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo', multerOptions))
+  @UseInterceptors(FileInterceptor('photo'))
   async update(
     @Body() updateCourseCategoryDto: UpdateCourseCategoryDto,
-    @UploadedFile() photo: Express.Multer.File,
+    @UploadedFile() photo: BufferedFile,
     @Request() request,
   ) {
     return successResponse(

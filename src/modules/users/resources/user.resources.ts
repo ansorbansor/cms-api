@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 
+import minioConfig from "src/config/minio.config";
 import { User } from "src/entities/user.entity";
 
 export const UserResource = (user: User): any => {
@@ -18,7 +19,7 @@ export const UserResource = (user: User): any => {
     provider: user.provider,
     status: user.status,
     notification_token: user.notification_token,
-    photo: user.photo ? user.photo.path : null,
+    photo: user.photo ? minioConfig().fullUrl + user.photo.path : null,
     roles: mapRole,
     course_level: user.course_level,
     blacklist: user.blacklist,

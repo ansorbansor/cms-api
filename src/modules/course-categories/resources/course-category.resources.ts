@@ -16,11 +16,7 @@ export const CourseCategoryResource = (category: CourseCategory): any => {
     id: category.id,
     name: category.name,
     photo: category.photoFile
-      ? minioConfig().baseUrl +
-        ':' +
-        minioConfig().port +
-        '/' +
-        category.photoFile?.path
+      ? minioConfig().fullUrl + category.photoFile?.path
       : null,
     topic: mapTopic,
   };

@@ -1,6 +1,7 @@
-import { Column, Entity, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Topic } from './topic.entity';
+import { FileEntity } from './file.entity';
 
 @Entity({ name: 'categories' })
 export class CourseCategory extends EntityHelper {
@@ -13,4 +14,10 @@ export class CourseCategory extends EntityHelper {
   @OneToMany(() => Topic, (topics) => topics.category)
   @JoinColumn()
   topic?: Topic[];
+
+  @OneToOne(() => FileEntity, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'photo' })
+  photoFile: FileEntity;
 }

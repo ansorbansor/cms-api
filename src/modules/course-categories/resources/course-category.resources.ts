@@ -1,3 +1,4 @@
+import minioConfig from 'src/config/minio.config';
 import { CourseCategory } from 'src/entities/course-category.entity';
 
 export const CourseCategoryResource = (category: CourseCategory): any => {
@@ -14,7 +15,13 @@ export const CourseCategoryResource = (category: CourseCategory): any => {
   return {
     id: category.id,
     name: category.name,
-    photo: category.photo,
+    photo: category.photoFile
+      ? minioConfig().baseUrl +
+        ':' +
+        minioConfig().port +
+        '/' +
+        category.photoFile?.path
+      : null,
     topic: mapTopic,
   };
 };

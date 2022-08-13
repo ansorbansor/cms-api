@@ -15,6 +15,7 @@ import {
   UseInterceptors,
   Request,
   UploadedFile,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -27,7 +28,6 @@ import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
-
 @ApiBearerAuth()
 @ApiTags('Course Categories')
 @Controller({
@@ -65,17 +65,22 @@ export class CourseCategoriesController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
+    withTopics: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
     }
 
     return successResponseList(
-      await this.categoryServices.findManyWithPagination({
-        page,
-        limit,
-        total: 0,
-      }),
+      await this.categoryServices.findManyWithPagination(
+        {
+          page,
+          limit,
+          total: 0,
+        },
+        withTopics,
+      ),
       'success',
     );
   }
@@ -84,9 +89,13 @@ export class CourseCategoriesController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
+    withTopics: boolean,
+  ) {
     return successResponse(
-      await this.categoryServices.findOne({ id: +id }),
+      await this.categoryServices.findOne({ id: +id }, withTopics),
       'success',
     );
   }

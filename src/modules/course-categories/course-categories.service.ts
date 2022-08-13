@@ -37,24 +37,33 @@ export class CourseCategoriesService {
       }),
     );
 
-    return this.findOne({ id: category.id });
+    return this.findOne({ id: category.id }, false);
   }
 
-  async findManyWithPagination(paginationOptions: IPaginationOptions) {
+  async findManyWithPagination(
+    paginationOptions: IPaginationOptions,
+    withTopics: boolean,
+  ) {
     const total = await this.categoryRepository.count();
     paginationOptions.total = total;
+
+    const relation = [];
+    if (withTopics) {
+      relation.push('topic');
+    }
 
     return infinityPagination(
       await this.categoryRepository.find({
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
+        relations: relation,
       }),
       CourseCategoryResource,
       paginationOptions,
     );
   }
 
-  async findOne(fields: EntityCondition<CourseCategory>) {
+  async findOne(fields: EntityCondition<CourseCategory>, withTopics: boolean) {
     const value = await this.redisService.get(
       `${RedisKeyEnum.category}${fields.id}`,
       typeof CourseCategoryResource,
@@ -63,8 +72,14 @@ export class CourseCategoriesService {
       return value;
     }
 
+    const relation = [];
+    if (withTopics) {
+      relation.push('topic');
+    }
+
     const data = await this.categoryRepository.findOne({
       where: fields,
+      relations: relation,
     });
 
     if (!data) {
@@ -84,7 +99,10 @@ export class CourseCategoriesService {
     photo: BufferedFile,
     user: User,
   ) {
-    const exists = await this.findOne({ id: updateCourseCategoryDto.id });
+    const exists = await this.findOne(
+      { id: updateCourseCategoryDto.id },
+      false,
+    );
 
     if (!exists) {
       throw failedResponse(
@@ -104,7 +122,7 @@ export class CourseCategoriesService {
       `${RedisKeyEnum.category}${updateCourseCategoryDto.id}`,
     );
 
-    return await this.findOne({ id: updateCourseCategoryDto.id });
+    return await this.findOne({ id: updateCourseCategoryDto.id }, true);
   }
 
   async softDelete(id: number): Promise<void> {

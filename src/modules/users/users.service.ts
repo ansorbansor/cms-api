@@ -12,6 +12,8 @@ import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
+import { CreateUserTopicDto } from './dto/create-user-topic.dto';
+import { UserTopic } from 'src/entities/user-topic.entity';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +23,9 @@ export class UsersService {
 
     @InjectRepository(UserRoles)
     private userRolesRepository: Repository<UserRoles>,
+
+    @InjectRepository(UserTopic)
+    private userTopicsRepository: Repository<UserTopic>,
 
     private redisService: RedisService,
 
@@ -155,5 +160,24 @@ export class UsersService {
   async softDelete(id: number): Promise<void> {
     await this.usersRepository.softDelete(id);
     this.redisService.del(`${RedisKeyEnum.user}${id}`);
+  }
+
+  async createUserTopic(createUserTopicDto: CreateUserTopicDto[], user: User) {
+    const saveData = [];
+    createUserTopicDto.map((data) => {
+      data.topic_id.map((dataa) => {
+        saveData.push({
+          user_id: user.id,
+          category_id: data.category_id,
+          topic_id: dataa,
+        });
+      });
+    });
+
+    await this.userTopicsRepository.save(
+      this.userTopicsRepository.create(saveData),
+    );
+
+    return 'success';
   }
 }

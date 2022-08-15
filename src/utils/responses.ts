@@ -25,14 +25,38 @@ export const failedResponse = (status: number, message: string) => {
 };
 
 export const successResponseList = (datax: any, message: string) => {
+  const count = datax.total;
+  const currentPage = datax.page;
+  const limitRow = datax.limit;
+  const totalPage = Math.ceil(count / limitRow);
+  const nextPage =
+    currentPage < totalPage
+      ? currentPage + 1
+      : currentPage == totalPage
+      ? currentPage
+      : null;
+  const prevPage =
+    currentPage > 1 ? currentPage - 1 : currentPage <= 1 ? 1 : null;
+  const firstPage = 1;
+  const lastPage = totalPage;
+  const total = count;
+
   return {
     meta: {
       code: HttpStatus.OK,
       message: message,
     },
     data: datax.data,
-    page: datax.page,
-    hasNextPage: datax.hasNextPage,
+    pagination: {
+      current_page: currentPage,
+      next_page: nextPage,
+      prev_page: prevPage,
+      first_page: firstPage,
+      last_page: lastPage,
+      limit: limitRow,
+      total: total,
+      total_page: totalPage,
+    },
   };
 };
 
@@ -48,6 +72,7 @@ export const infinityPagination = <T>(
   return {
     data: returnedData,
     page: options.page,
-    hasNextPage: returnedData.length === options.limit,
+    limit: options.limit,
+    total: options.total,
   };
 };

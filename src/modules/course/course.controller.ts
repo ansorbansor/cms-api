@@ -55,8 +55,6 @@ export class CourseController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -77,8 +75,6 @@ export class CourseController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(

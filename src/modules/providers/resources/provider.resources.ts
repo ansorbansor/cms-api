@@ -9,5 +9,6 @@ export const ProviderResource = (provider: Provider): any => {
     fetch_data: provider.fetch_data,
     photo: provider.photo,
     last_update: provider.last_update,
+    url: provider.url,
   };
 };

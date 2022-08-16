@@ -14,4 +14,7 @@ export class Provider extends EntityHelper {
 
   @Column()
   last_update: Date | null;
+
+  @Column()
+  url: string;
 }

@@ -26,11 +26,20 @@ export class ActivityLogService {
     const total = await this.activityLogRepository.count();
     paginationOptions.total = total;
 
+    const data = this.activityLogRepository
+      .createQueryBuilder('acl')
+      .leftJoinAndSelect('acl.user', 'user');
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    if (paginationOptions.search) {
+      data.where(
+        `LOWER(acl.description) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
     return infinityPagination(
-      await this.activityLogRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
+      await data.getMany(),
       ActivityLogResource,
       paginationOptions,
     );

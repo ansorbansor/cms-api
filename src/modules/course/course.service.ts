@@ -41,6 +41,14 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
+    const value = await this.redisService.get(
+      `${RedisKeyEnum.course}Search:${paginationOptions.search}`,
+      typeof CourseResource,
+    );
+    if (value != null) {
+      return infinityPagination(value, CourseResource, paginationOptions);
+    }
+
     const total = await this.courseRepository.count();
     paginationOptions.total = total;
 
@@ -63,11 +71,14 @@ export class CourseService {
       );
     }
 
-    return infinityPagination(
-      await data.getMany(),
-      CourseResource,
-      paginationOptions,
+    const getData = await data.getMany();
+
+    this.redisService.set(
+      `${RedisKeyEnum.course}Search:${paginationOptions.search}`,
+      getData,
     );
+
+    return infinityPagination(getData, CourseResource, paginationOptions);
   }
 
   async findOne(fields: EntityCondition<Course>) {

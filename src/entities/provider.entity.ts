@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
+import { FileEntity } from './file.entity';
 
 @Entity({ name: 'providers' })
 export class Provider extends EntityHelper {
@@ -17,4 +18,10 @@ export class Provider extends EntityHelper {
 
   @Column()
   url: string;
+
+  @OneToOne(() => FileEntity, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'photo' })
+  photoFile: FileEntity;
 }

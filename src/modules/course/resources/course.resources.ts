@@ -7,7 +7,7 @@ export const CourseResource = (course: Course): any => {
     name: course.name,
     coach: course.coach,
     duration: course.duration,
-    provider: course.provider.name,
+    provider: course.provider.name ? course.provider.name : null,
     category: course.courseCategory ? course.courseCategory.name : null,
     topic: course.topic ? course.topic.name : null,
     level: course.courseLevel ? course.courseLevel.name : null,

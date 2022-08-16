@@ -27,6 +27,7 @@ export enum RedisKeyEnum {
   course = 'Course',
   level = 'Level',
   price = 'Price',
+  banner = 'Banner',
 }
 
 export enum MaxFileSize {
@@ -35,4 +36,10 @@ export enum MaxFileSize {
   VIDEO = 200000,
   DOCUMENT = 1500,
   JSON = 200,
+}
+
+export enum BannerType {
+  COURSE = '0',
+  ANNOUNCEMENT = '1',
+  EXTERNAL_URL = '2',
 }

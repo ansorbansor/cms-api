@@ -17,6 +17,7 @@ import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BannerModule } from './modules/banner/banner.module';
 import { CategoriesModule } from './modules/course-categories/course-categories.module';
 import { CourseLanguageModule } from './modules/course-language/course-language.module';
 import { CourseLevelsModule } from './modules/course-levels/course-levels.module';
@@ -84,6 +85,7 @@ import { UsersModule } from './modules/users/users.module';
     CoursePriceModule,
     CourseModule,
     ActivityLogModule,
+    BannerModule,
   ],
 })
 export class AppModule {

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, Validate } from 'class-validator';
+import { Equals, IsNotEmpty, Validate } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseDto {

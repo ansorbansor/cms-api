@@ -21,4 +21,5 @@ export interface IPaginationOptions {
   search?: string;
   start_date?: string;
   end_date?: string;
+  role?: number[];
 }

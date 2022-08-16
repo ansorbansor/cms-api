@@ -36,6 +36,7 @@ export class ActivityLogController {
     @Query('search') search: string,
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
+    @Query('role') role: number[],
   ) {
     if (limit > 50) {
       limit = 50;
@@ -49,6 +50,7 @@ export class ActivityLogController {
         search: search,
         start_date: startDate,
         end_date: endDate,
+        role: role,
       }),
       'success',
     );

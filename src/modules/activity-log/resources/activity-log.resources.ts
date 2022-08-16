@@ -6,7 +6,7 @@ export const ActivityLogResource = (activityLog: ActivityLog): any => {
   const mapRole = activityLog.user.userRole != null ? activityLog.user.userRole.map((role) => {
     return {
       id: role.role.id,
-      name: role.role.name
+      name: role.role.name,
     }
   }) : [];
 

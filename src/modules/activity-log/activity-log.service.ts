@@ -28,7 +28,9 @@ export class ActivityLogService {
 
     const data = this.activityLogRepository
       .createQueryBuilder('acl')
-      .leftJoinAndSelect('acl.user', 'user');
+      .leftJoinAndSelect('acl.user', 'user')
+      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role');
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
 
@@ -41,6 +43,12 @@ export class ActivityLogService {
     if (paginationOptions.start_date && paginationOptions.end_date) {
       data.andWhere(`acl.created_at >= '${paginationOptions.start_date}'`);
       data.andWhere(`acl.created_at <= '${paginationOptions.end_date}'`);
+    }
+
+    if (paginationOptions.role && paginationOptions.role.length > 0) {
+      data.andWhere(`role.id IN (:role)`, {
+        role: paginationOptions.role,
+      });
     }
 
     return infinityPagination(

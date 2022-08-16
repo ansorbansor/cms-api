@@ -66,6 +66,9 @@ export class UpdateCourseDto {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
+  @Equals([1, 2, 3, 4, 5], {
+    message: 'Rating hanya 1-5',
+  })
   rating: number;
 
   @ApiProperty({ example: 'Lorem Ipsum' })

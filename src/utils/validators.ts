@@ -39,9 +39,8 @@ export class IsNotExist implements ValidatorConstraintInterface {
       [validationArguments.property]: value,
     };
 
-    if (currentValue.name && currentValue.id) {
+    if (currentValue.name) {
       where = {
-        id: currentValue.id.toString(),
         [validationArguments.property]: ILike(`%${value}%`),
       };
     }

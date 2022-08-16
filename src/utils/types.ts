@@ -19,4 +19,6 @@ export interface IPaginationOptions {
   limit: number;
   total?: number;
   search?: string;
+  start_date?: string;
+  end_date?: string;
 }

@@ -33,9 +33,14 @@ export class ActivityLogService {
     data.take(paginationOptions.limit);
 
     if (paginationOptions.search) {
-      data.where(
+      data.andWhere(
         `LOWER(acl.description) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
       );
+    }
+
+    if (paginationOptions.start_date && paginationOptions.end_date) {
+      data.andWhere(`acl.created_at >= '${paginationOptions.start_date}'`);
+      data.andWhere(`acl.created_at <= '${paginationOptions.end_date}'`);
     }
 
     return infinityPagination(

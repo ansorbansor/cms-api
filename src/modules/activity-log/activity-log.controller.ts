@@ -34,6 +34,8 @@ export class ActivityLogController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -45,6 +47,8 @@ export class ActivityLogController {
         limit,
         total: 0,
         search: search,
+        start_date: startDate,
+        end_date: endDate,
       }),
       'success',
     );

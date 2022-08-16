@@ -19,5 +19,6 @@ export const ActivityLogResource = (activityLog: ActivityLog): any => {
       roles: mapRole,
     } : null,
     description: activityLog.description,
+    ip: activityLog.ip,
   };
 };

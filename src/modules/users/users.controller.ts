@@ -45,11 +45,12 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async create(
-    @UploadedFile() file: BufferedFile,
+    @Request() req,
     @Body() createProfileDto: CreateUserDto,
+    @UploadedFile() file?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.create(file, createProfileDto),
+      await this.usersService.create(createProfileDto, req.user.id, file),
       'success',
     );
   }

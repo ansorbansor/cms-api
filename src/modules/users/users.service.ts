@@ -32,19 +32,34 @@ export class UsersService {
     private fileService: FilesService,
   ) {}
 
-  async create(photo: BufferedFile, createProfileDto: CreateUserDto) {
+  async create(
+    createProfileDto: CreateUserDto,
+    user_id?: number,
+    photo?: BufferedFile,
+  ) {
+    if (photo && user_id) {
+      const uploadedPhoto = await this.fileService.uploadWithMinio(
+        photo,
+        user_id,
+      );
+
+      createProfileDto.photoFile = uploadedPhoto;
+    }
+
     const user = await this.usersRepository.save(
       this.usersRepository.create(createProfileDto),
     );
 
-    const uploadedPhoto = await this.fileService.uploadWithMinio(
-      photo,
-      user.id,
-    );
+    if (photo && !user_id) {
+      const uploadedPhoto = await this.fileService.uploadWithMinio(
+        photo,
+        user_id,
+      );
 
-    await this.usersRepository.update(user.id, {
-      photo: uploadedPhoto.id,
-    });
+      await this.usersRepository.update(user.id, {
+        photo: uploadedPhoto.id,
+      });
+    }
 
     await this.userRolesRepository.save(
       this.userRolesRepository.create({

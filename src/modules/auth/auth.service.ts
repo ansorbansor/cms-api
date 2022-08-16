@@ -206,16 +206,20 @@ export class AuthService {
       .update(randomStringGenerator())
       .digest('hex');
 
-    const user = await this.usersService.create(photo, {
-      ...dto,
-      email: dto.email,
-      role_id: RoleEnum.user,
-      status: true,
-      name: dto.name,
-      provider: AuthProvidersEnum.email,
-      notification_token: null,
-      hash: hash,
-    });
+    const user = await this.usersService.create(
+      {
+        ...dto,
+        email: dto.email,
+        role_id: RoleEnum.user,
+        status: true,
+        name: dto.name,
+        provider: AuthProvidersEnum.email,
+        notification_token: null,
+        hash: hash,
+      },
+      null,
+      photo,
+    );
 
     await this.mailService.userSignUp({
       to: user.email,

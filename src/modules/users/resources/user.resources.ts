@@ -19,7 +19,7 @@ export const UserResource = (user: User): any => {
     provider: user.provider,
     status: user.status,
     notification_token: user.notification_token,
-    photo: user.photo ? minioConfig().fullUrl + user.photo.path : null,
+    photo: user.photoFile ? minioConfig().fullUrl + user.photoFile.path : null,
     roles: mapRole,
     course_level: user.course_level,
     blacklist: user.blacklist,

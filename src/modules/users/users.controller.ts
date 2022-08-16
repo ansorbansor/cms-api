@@ -91,12 +91,15 @@ export class UsersController {
   @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo'))
   async update(
     @Param('id') id: number,
     @Body() updateProfileDto: UpdateUserDto,
+    @UploadedFile() photo?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.update(id, updateProfileDto),
+      await this.usersService.update(id, updateProfileDto, photo),
       'success',
     );
   }

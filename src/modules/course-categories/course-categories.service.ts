@@ -28,7 +28,7 @@ export class CourseCategoriesService {
     photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     const category = await this.categoryRepository.save(
       this.categoryRepository.create({
@@ -111,7 +111,7 @@ export class CourseCategoriesService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     await this.categoryRepository.update(updateCourseCategoryDto.id, {
       ...UpdateCourseCategoryDto,

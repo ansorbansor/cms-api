@@ -37,10 +37,13 @@ export class UsersService {
       this.usersRepository.create(createProfileDto),
     );
 
-    const uploadedPhoto = await this.fileService.uploadWithMinio(photo, user);
+    const uploadedPhoto = await this.fileService.uploadWithMinio(
+      photo,
+      user.id,
+    );
 
     await this.usersRepository.update(user.id, {
-      photo: uploadedPhoto,
+      photo: uploadedPhoto.id,
     });
 
     await this.userRolesRepository.save(
@@ -112,7 +115,11 @@ export class UsersService {
     return data;
   }
 
-  async update(id: number, updateProfileDto: UpdateUserDto) {
+  async update(
+    id: number,
+    updateProfileDto: UpdateUserDto,
+    photo?: BufferedFile,
+  ) {
     const exists = await this.findOne({ id: id });
 
     if (!exists) {
@@ -148,9 +155,17 @@ export class UsersService {
       }
     }
 
-    await this.usersRepository.update(id, {
-      ...updateProfileDto,
-    });
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, id);
+      updateProfileDto.photo = img.id;
+    }
+
+    await this.usersRepository.save(
+      this.usersRepository.create({
+        id,
+        ...updateProfileDto,
+      }),
+    );
 
     this.redisService.del(`${RedisKeyEnum.user}:${id}`);
 

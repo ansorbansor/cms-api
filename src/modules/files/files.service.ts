@@ -46,7 +46,7 @@ export class FilesService {
     );
   }
 
-  public async uploadWithMinio(file: BufferedFile, user: User) {
+  public async uploadWithMinio(file: BufferedFile, userId: number) {
     if (!(file.mimetype.includes('jpeg') || file.mimetype.includes('png'))) {
       throw new HttpException(
         'File type not supported',
@@ -93,7 +93,7 @@ export class FilesService {
         file_type: getFileType(file.mimetype),
         extension: getFileExtension(file.originalname),
         description: 'user file',
-        user: user,
+        user_id: userId,
       }),
     );
   }
@@ -137,16 +137,16 @@ export class FilesService {
 
   async uploadPhotoProfile(
     file: BufferedFile,
-    user: User,
+    userId: number,
   ): Promise<FileEntity> {
     if (!file) {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'selectFile');
     }
 
-    const uploadedFile = await this.uploadWithMinio(file, user);
+    const uploadedFile = await this.uploadWithMinio(file, userId);
 
-    await this.userRepository.update(user.id, {
-      photo: uploadedFile,
+    await this.userRepository.update(userId, {
+      photo: uploadedFile.id,
     });
 
     return uploadedFile;

@@ -3,6 +3,7 @@ import { IsEmail, IsOptional, MinLength, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 import { Transform } from 'class-transformer';
+import { Role } from 'src/entities/role.entity';
 
 export class UpdateUserDto {
   @ApiProperty({ example: '1234567890' })
@@ -32,7 +33,10 @@ export class UpdateUserDto {
   @Validate(IsExist, ['FileEntity', 'id'], {
     message: 'imageNotExists',
   })
-  photo?: FileEntity | null;
+  photoFile?: FileEntity | null;
+
+  @IsOptional()
+  photo?: number;
 
   @ApiProperty({ default: true })
   @IsOptional()
@@ -48,7 +52,7 @@ export class UpdateUserDto {
   @Validate(IsExist, ['Role', 'id'], {
     message: 'Role Tidak Tersedia',
   })
-  role_id?: number;
+  role?: Role | null;
 
   @ApiProperty()
   @IsOptional()

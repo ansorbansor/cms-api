@@ -54,11 +54,14 @@ export class User extends EntityHelper {
   @Column({ default: AuthProvidersEnum.email })
   provider: string;
 
+  @Column()
+  photo?: number;
+
   @OneToOne(() => FileEntity, {
     eager: true,
   })
   @JoinColumn({ name: 'photo' })
-  photo?: FileEntity;
+  photoFile?: FileEntity;
 
   @Column({})
   unit_id: number;

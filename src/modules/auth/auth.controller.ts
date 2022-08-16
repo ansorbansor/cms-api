@@ -140,9 +140,15 @@ export class AuthController {
   @Patch('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  public async update(@Request() request, @Body() userDto: AuthUpdateDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo'))
+  public async update(
+    @Request() request,
+    @Body() userDto: AuthUpdateDto,
+    @UploadedFile() photo?: BufferedFile,
+  ) {
     return successResponse(
-      this.service.update(request.user, userDto),
+      await this.service.update(request.user, userDto, photo),
       'success',
     );
   }

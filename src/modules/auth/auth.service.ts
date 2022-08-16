@@ -288,10 +288,14 @@ export class AuthService {
     return me;
   }
 
-  async update(user: User, userDto: AuthUpdateDto): Promise<User> {
+  async update(
+    user: User,
+    userDto: AuthUpdateDto,
+    photo?: BufferedFile,
+  ): Promise<User> {
     if (userDto.password) {
       if (userDto.oldPassword) {
-        const currentUser = await this.usersService.findOne({
+        const currentUser = await this.usersService.findOneFull({
           id: user.id,
         });
 
@@ -314,17 +318,13 @@ export class AuthService {
       }
     }
 
-    await this.usersService.update(user.id, {
-      ...userDto,
-    });
+    await this.usersService.update(user.id, userDto, photo);
 
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 
-    return UserResource(
-      await this.usersService.findOne({
-        id: user.id,
-      }),
-    );
+    return await this.usersService.findOne({
+      id: user.id,
+    });
   }
 
   async softDelete(user: User): Promise<void> {

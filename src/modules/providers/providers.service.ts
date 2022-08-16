@@ -27,7 +27,7 @@ export class ProvidersService {
     photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     const provider = await this.providerRepository.save(
       this.providerRepository.create({
@@ -94,7 +94,7 @@ export class ProvidersService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     await this.providerRepository.update(updateProfileDto.id, {
       ...updateProfileDto,

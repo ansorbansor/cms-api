@@ -49,8 +49,6 @@ export class IsNotExist implements ValidatorConstraintInterface {
       where,
     )) as ValidationNotExistsEntity;
 
-    console.log(`${entity?.id} | ${currentValue?.id}`);
-
     if (
       (currentValue.name &&
         currentValue.id &&

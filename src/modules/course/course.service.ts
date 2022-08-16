@@ -28,7 +28,7 @@ export class CourseService {
     photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     const course = await this.courseRepository.save(
       this.courseRepository.create({
@@ -120,7 +120,7 @@ export class CourseService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user);
+    const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     await this.courseRepository.update(updateCourseDto.id, {
       ...UpdateCourseDto,

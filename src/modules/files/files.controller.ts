@@ -31,7 +31,7 @@ export class FilesController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: BufferedFile, @Request() request) {
     return successResponse(
-      await this.filesService.uploadWithMinio(file, request.user),
+      await this.filesService.uploadWithMinio(file, request.user.id),
       'success',
     );
   }
@@ -46,7 +46,7 @@ export class FilesController {
     @Request() request,
   ) {
     return successResponse(
-      await this.filesService.uploadWithMinio(file, request.user),
+      await this.filesService.uploadWithMinio(file, request.user.id),
       'success',
     );
   }

@@ -42,7 +42,7 @@ export class CourseService {
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.course}Search:${paginationOptions.search}`,
+      `${RedisKeyEnum.course}Search:${paginationOptions.search}${paginationOptions.page}${paginationOptions.limit}`,
       typeof CourseResource,
     );
     if (value != null) {
@@ -74,7 +74,7 @@ export class CourseService {
     const getData = await data.getMany();
 
     this.redisService.set(
-      `${RedisKeyEnum.course}Search:${paginationOptions.search}`,
+      `${RedisKeyEnum.course}Search:${paginationOptions.search}${paginationOptions.page}${paginationOptions.limit}`,
       getData,
     );
 

@@ -1,3 +1,4 @@
+import minioConfig from 'src/config/minio.config';
 import { Course } from 'src/entities/course.entity';
 
 export const CourseResource = (course: Course): any => {
@@ -7,17 +8,19 @@ export const CourseResource = (course: Course): any => {
     coach: course.coach,
     duration: course.duration,
     provider: course.provider.name,
-    category: course.courseCategory.name,
-    topic: course.topic.name,
-    level: course.courseLevel.name,
-    language: course.courseLanguage.name,
+    category: course.courseCategory ? course.courseCategory.name : null,
+    topic: course.topic ? course.topic.name : null,
+    level: course.courseLevel ? course.courseLevel.name : null,
+    language: course.courseLanguage ? course.courseLanguage.name : null,
     date_course: course.date_course,
-    rating: course.courseRating.name,
+    rating: course.courseRating ? course.courseRating.name : null,
     description: course.description,
     url: course.url,
-    price_name: course.coursePrice.name,
+    price_name: course.coursePrice ? course.coursePrice.name : null,
     price: course.price,
     freemium_code: course.freemium_code,
-    photo: course.photoFile.path,
+    photo: course.photoFile
+      ? minioConfig().fullUrl + course.photoFile.path
+      : null,
   };
 };

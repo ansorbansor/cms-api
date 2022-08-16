@@ -45,6 +45,7 @@ export class ProvidersService {
 
     return infinityPagination(
       await this.providerRepository.find({
+        relations: ['course'],
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
       }),
@@ -63,6 +64,7 @@ export class ProvidersService {
     }
 
     const data = await this.providerRepository.findOne({
+      relations: ['course'],
       where: fields,
     });
 

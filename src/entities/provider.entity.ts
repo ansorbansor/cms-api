@@ -1,6 +1,14 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  AfterLoad,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { FileEntity } from './file.entity';
+import { Course } from './course.entity';
 
 @Entity({ name: 'providers' })
 export class Provider extends EntityHelper {
@@ -24,4 +32,16 @@ export class Provider extends EntityHelper {
   })
   @JoinColumn({ name: 'photo' })
   photoFile: FileEntity;
+
+  @OneToMany(() => Course, (c) => c.provider)
+  course: Course[];
+  courseCount: number;
+
+  @AfterLoad()
+  countArticleComment() {
+    this.courseCount = 0;
+    if (this.course) {
+      this.courseCount = this.course.length;
+    }
+  }
 }

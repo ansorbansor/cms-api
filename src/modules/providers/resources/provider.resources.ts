@@ -11,5 +11,6 @@ export const ProviderResource = (provider: Provider): any => {
     photo: provider.photo ? minioConfig().fullUrl + provider.photoFile.path : null,
     last_update: provider.last_update,
     url: provider.url,
+    course_count: provider.courseCount,
   };
 };

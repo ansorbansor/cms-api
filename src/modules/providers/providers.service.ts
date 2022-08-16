@@ -27,12 +27,14 @@ export class ProvidersService {
     photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      createProviderDto.photo = img;
+    }
 
     const provider = await this.providerRepository.save(
       this.providerRepository.create({
         ...createProviderDto,
-        photo: img.id,
       }),
     );
 
@@ -94,11 +96,13 @@ export class ProvidersService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      updateProfileDto.photo = img;
+    }
 
     await this.providerRepository.update(updateProfileDto.id, {
       ...updateProfileDto,
-      photo: img.id,
     });
 
     this.redisService.del(`${RedisKeyEnum.provider}:${updateProfileDto.id}`);

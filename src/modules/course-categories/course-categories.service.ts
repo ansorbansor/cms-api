@@ -28,12 +28,19 @@ export class CourseCategoriesService {
     photo: BufferedFile,
     user: User,
   ) {
+    if (!photo) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Photo tidak boleh kosong',
+      );
+    }
+
     const img = await this.fileService.uploadWithMinio(photo, user.id);
+    createCourseCategoryDto.photo = img;
 
     const category = await this.categoryRepository.save(
       this.categoryRepository.create({
-        name: createCourseCategoryDto.name,
-        photo: img.id,
+        ...createCourseCategoryDto,
       }),
     );
 

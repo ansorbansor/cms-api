@@ -28,12 +28,14 @@ export class CourseService {
     photo: BufferedFile,
     user: User,
   ) {
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      createCourseDto.photo = img;
+    }
 
     const course = await this.courseRepository.save(
       this.courseRepository.create({
         ...createCourseDto,
-        photo: img.id,
       }),
     );
 
@@ -110,20 +112,15 @@ export class CourseService {
     photo: BufferedFile,
     user: User,
   ) {
-    const exists = await this.findOne({ id: updateCourseDto.id });
+    await this.findOne({ id: updateCourseDto.id });
 
-    if (!exists) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pelatihan tidak ditemukan',
-      );
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      updateCourseDto.photo = img;
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
-
     await this.courseRepository.update(updateCourseDto.id, {
-      ...UpdateCourseDto,
-      photo: img.id,
+      ...updateCourseDto,
     });
 
     this.redisService.del(`${RedisKeyEnum.course}:${updateCourseDto.id}`);

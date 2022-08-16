@@ -44,11 +44,27 @@ export class CourseService {
     const total = await this.courseRepository.count();
     paginationOptions.total = total;
 
+    const data = this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.provider', 'provider')
+      .leftJoinAndSelect('course.courseCategory', 'category')
+      .leftJoinAndSelect('course.topic', 'topic')
+      .leftJoinAndSelect('course.courseLevel', 'courseLevel')
+      .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
+      .leftJoinAndSelect('course.courseRating', 'courseRating')
+      .leftJoinAndSelect('course.coursePrice', 'coursePrice')
+      .leftJoinAndSelect('course.photoFile', 'photoFile');
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    if (paginationOptions.search) {
+      data.where(
+        `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
     return infinityPagination(
-      await this.courseRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
+      await data.getMany(),
       CourseResource,
       paginationOptions,
     );

@@ -24,6 +24,7 @@ import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
 import { RedisService } from '../redis/redis.service';
 import { BufferedFile } from 'src/utils/file-helper';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -36,6 +37,7 @@ export class AuthService {
     private mailService: MailService,
     private configService: ConfigService,
     private redisService: RedisService,
+    private activityLogService: ActivityLogService,
   ) {
     this.google = new OAuth2Client(
       configService.get('google.clientId'),
@@ -51,6 +53,7 @@ export class AuthService {
   async validateLogin(
     loginDto: AuthEmailLoginDto,
     onlyAdmin: boolean,
+    ip: string,
   ): Promise<{ token: string; user: User }> {
     const user = await this.usersService.findOneFull({
       email: loginDto.email,
@@ -84,6 +87,12 @@ export class AuthService {
         role: user.userRole.filter(function (e) {
           return e.role.id === (onlyAdmin ? RoleEnum.admin : RoleEnum.user);
         }),
+      });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: 'Melakukan Login',
+        ip: ip,
       });
 
       return { token, user: user };

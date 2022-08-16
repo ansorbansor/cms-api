@@ -39,15 +39,15 @@ export class AuthController {
 
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
-  public async login(@Body() loginDto: AuthEmailLoginDto) {
-    const data = await this.service.validateLogin(loginDto, false);
+  public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
+    const data = await this.service.validateLogin(loginDto, false, req.ip);
     return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
   @Post('admin/email/login')
   @HttpCode(HttpStatus.OK)
-  public async adminLogin(@Body() loginDto: AuthEmailLoginDto) {
-    const data = await this.service.validateLogin(loginDto, true);
+  public async adminLogin(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
+    const data = await this.service.validateLogin(loginDto, true, req.ip);
     return successResponse(AuthResource(data.token, data.user), 'success');
   }
 

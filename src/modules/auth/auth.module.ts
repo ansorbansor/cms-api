@@ -10,6 +10,7 @@ import { AnonymousStrategy, JwtStrategy } from 'src/utils/strategies';
 import { ForgotPasswordModule } from '../forgot-password/forgot-password.module';
 import { RedisConfigService } from 'src/config/redis-config.service';
 import { RedisService } from '../redis/redis.service';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RedisService } from '../redis/redis.service';
     ForgotPasswordModule,
     PassportModule,
     MailModule,
+    ActivityLogModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

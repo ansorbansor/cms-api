@@ -12,7 +12,7 @@ export const ActivityLogResource = (activityLog: ActivityLog): any => {
 
   return {
     id: activityLog.id,
-    created_at: activityLog.created_at,
+    created_at: activityLog.createdAtParseDate,
     user: activityLog.user ? {
       id: activityLog.user.id,
       name: activityLog.user.name,

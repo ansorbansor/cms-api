@@ -5,7 +5,6 @@ import { CourseCategory } from './course-category.entity';
 import { Topic } from './topic.entity';
 import { CourseLevel } from './course-level.entity';
 import { CourseLanguage } from './course-language.entity';
-import { CourseRating } from './course-rating.entity';
 import { CoursePrice } from './course-price.entity';
 import { FileEntity } from './file.entity';
 
@@ -42,7 +41,7 @@ export class Course extends EntityHelper {
   date_course: Date;
 
   @Column()
-  rating_id: number;
+  rating: number;
 
   @Column()
   description: string;
@@ -93,12 +92,6 @@ export class Course extends EntityHelper {
   })
   @JoinColumn({ name: 'language_id' })
   courseLanguage?: CourseLanguage;
-
-  @ManyToOne(() => CourseRating, {
-    eager: true,
-  })
-  @JoinColumn({ name: 'rating_id' })
-  courseRating?: CourseRating;
 
   @ManyToOne(() => CoursePrice, {
     eager: true,

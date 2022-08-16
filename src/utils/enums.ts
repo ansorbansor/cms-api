@@ -24,7 +24,6 @@ export enum RedisKeyEnum {
   provider = 'Provider',
   topic = 'Topic',
   language = 'Language',
-  rating = 'Rating',
   course = 'Course',
   level = 'Level',
   price = 'Price',

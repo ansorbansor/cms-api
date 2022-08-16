@@ -59,7 +59,6 @@ export class CourseService {
       .leftJoinAndSelect('course.topic', 'topic')
       .leftJoinAndSelect('course.courseLevel', 'courseLevel')
       .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
-      .leftJoinAndSelect('course.courseRating', 'courseRating')
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile');
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);

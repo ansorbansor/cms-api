@@ -66,10 +66,7 @@ export class UpdateCourseDto {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
-  @Validate(IsExist, ['CourseRating', 'id'], {
-    message: 'Rating tidak tersedia',
-  })
-  rating_id: number;
+  rating: number;
 
   @ApiProperty({ example: 'Lorem Ipsum' })
   @IsNotEmpty()

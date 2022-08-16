@@ -13,7 +13,7 @@ export const CourseResource = (course: Course): any => {
     level: course.courseLevel ? course.courseLevel.name : null,
     language: course.courseLanguage ? course.courseLanguage.name : null,
     date_course: course.date_course,
-    rating: course.courseRating ? course.courseRating.name : null,
+    rating: course.rating ? course.rating : null,
     description: course.description,
     url: course.url,
     price_name: course.coursePrice ? course.coursePrice.name : null,

@@ -44,7 +44,7 @@ export class CourseRatingService {
 
   async findOne(fields: EntityCondition<CourseRating>) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.rating}${fields.id}`,
+      `${RedisKeyEnum.rating}:${fields.id}`,
       typeof CourseRatingResource,
     );
     if (value != null) {
@@ -62,7 +62,7 @@ export class CourseRatingService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.rating}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.rating}:${fields.id}`, data);
 
     return CourseRatingResource(data);
   }
@@ -81,13 +81,13 @@ export class CourseRatingService {
       ...updateCourseRatingDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.rating}${updateCourseRatingDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.rating}:${updateCourseRatingDto.id}`);
 
     return await this.findOne({ id: updateCourseRatingDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.rating}${id}`);
+    this.redisService.del(`${RedisKeyEnum.rating}:${id}`);
     await this.courseRatingRepository.softDelete(id);
   }
 }

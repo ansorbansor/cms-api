@@ -69,7 +69,7 @@ export class UsersService {
 
   async findOne(fields: EntityCondition<User>) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.user}${fields.id}`,
+      `${RedisKeyEnum.user}:${fields.id}`,
       typeof UserResource,
     );
     if (value != null) {
@@ -87,7 +87,7 @@ export class UsersService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.user}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.user}:${fields.id}`, data);
 
     return UserResource(data);
   }
@@ -152,14 +152,14 @@ export class UsersService {
       ...updateProfileDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.user}${id}`);
+    this.redisService.del(`${RedisKeyEnum.user}:${id}`);
 
     return await this.findOne({ id: id });
   }
 
   async softDelete(id: number): Promise<void> {
     await this.usersRepository.softDelete(id);
-    this.redisService.del(`${RedisKeyEnum.user}${id}`);
+    this.redisService.del(`${RedisKeyEnum.user}:${id}`);
   }
 
   async createUserTopic(createUserTopicDto: CreateUserTopicDto[], user: User) {

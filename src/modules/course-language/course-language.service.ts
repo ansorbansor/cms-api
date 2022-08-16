@@ -44,7 +44,7 @@ export class CourseLanguageService {
 
   async findOne(fields: EntityCondition<CourseLanguage>) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.language}${fields.id}`,
+      `${RedisKeyEnum.language}:${fields.id}`,
       typeof CourseLanguageResource,
     );
     if (value != null) {
@@ -62,7 +62,7 @@ export class CourseLanguageService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.language}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.language}:${fields.id}`, data);
 
     return CourseLanguageResource(data);
   }
@@ -82,14 +82,14 @@ export class CourseLanguageService {
     });
 
     this.redisService.del(
-      `${RedisKeyEnum.language}${updateCourseLanguageDto.id}`,
+      `${RedisKeyEnum.language}:${updateCourseLanguageDto.id}`,
     );
 
     return await this.findOne({ id: updateCourseLanguageDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.language}${id}`);
+    this.redisService.del(`${RedisKeyEnum.language}:${id}`);
     await this.courseLanguageRepository.softDelete(id);
   }
 }

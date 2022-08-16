@@ -65,7 +65,7 @@ export class CourseCategoriesService {
 
   async findOne(fields: EntityCondition<CourseCategory>, withTopics: boolean) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.category}${fields.id}`,
+      `${RedisKeyEnum.category}:${fields.id}`,
       typeof CourseCategoryResource,
     );
     if (value != null) {
@@ -89,7 +89,7 @@ export class CourseCategoriesService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.category}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.category}:${fields.id}`, data);
 
     return CourseCategoryResource(data);
   }
@@ -119,14 +119,14 @@ export class CourseCategoriesService {
     });
 
     this.redisService.del(
-      `${RedisKeyEnum.category}${updateCourseCategoryDto.id}`,
+      `${RedisKeyEnum.category}:${updateCourseCategoryDto.id}`,
     );
 
     return await this.findOne({ id: updateCourseCategoryDto.id }, true);
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.category}${id}`);
+    this.redisService.del(`${RedisKeyEnum.category}:${id}`);
     await this.categoryRepository.softDelete(id);
   }
 }

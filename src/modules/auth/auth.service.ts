@@ -275,7 +275,7 @@ export class AuthService {
 
   async me(user: User) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.user}${user.id}`,
+      `${RedisKeyEnum.user}:${user.id}`,
       typeof UserResource,
     );
     if (value != null) {
@@ -284,7 +284,7 @@ export class AuthService {
 
     const me = await this.usersService.findOne({ id: user.id });
 
-    this.redisService.set(`${RedisKeyEnum.user}${user.id}`, me);
+    this.redisService.set(`${RedisKeyEnum.user}:${user.id}`, me);
     return me;
   }
 
@@ -318,7 +318,7 @@ export class AuthService {
       ...userDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.user}${user.id}`);
+    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 
     return UserResource(
       await this.usersService.findOne({
@@ -328,7 +328,7 @@ export class AuthService {
   }
 
   async softDelete(user: User): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.user}${user.id}`);
+    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
     await this.usersService.softDelete(user.id);
   }
 }

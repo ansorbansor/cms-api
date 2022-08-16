@@ -44,7 +44,7 @@ export class CourseLevelsService {
 
   async findOne(fields: EntityCondition<CourseLevel>) {
     const value = await this.redisService.get(
-      `${RedisKeyEnum.category}${fields.id}`,
+      `${RedisKeyEnum.level}:${fields.id}`,
       typeof CourseLevelResource,
     );
     if (value != null) {
@@ -62,7 +62,7 @@ export class CourseLevelsService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.level}${fields.id}`, data);
+    this.redisService.set(`${RedisKeyEnum.level}:${fields.id}`, data);
 
     return CourseLevelResource(data);
   }
@@ -81,13 +81,13 @@ export class CourseLevelsService {
       ...updateCourseLevelDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.level}${updateCourseLevelDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.level}:${updateCourseLevelDto.id}`);
 
     return await this.findOne({ id: updateCourseLevelDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.level}${id}`);
+    this.redisService.del(`${RedisKeyEnum.level}:${id}`);
     await this.courseLevelRepository.softDelete(id);
   }
 }

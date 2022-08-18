@@ -45,12 +45,20 @@ export class ProvidersService {
     const total = await this.providerRepository.count();
     paginationOptions.total = total;
 
+    const data = this.providerRepository
+      .createQueryBuilder('provider')
+      .leftJoinAndSelect('provider.photoFile', 'photoFile');
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    if (paginationOptions.search) {
+      data.where(
+        `LOWER(provider.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
     return infinityPagination(
-      await this.providerRepository.find({
-        relations: ['course'],
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
+      await data.getMany(),
       ProviderResource,
       paginationOptions,
     );

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, NotEquals, Validate } from 'class-validator';
 import { BannerType } from 'src/utils/enums';
-import { IsExist, IsNotExist } from 'src/utils/validators';
+import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateBannerDto {
   @ApiProperty()

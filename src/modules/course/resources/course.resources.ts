@@ -7,16 +7,49 @@ export const CourseResource = (course: Course): any => {
     name: course.name,
     coach: course.coach,
     duration: course.duration,
-    provider: course.provider.name ? course.provider.name : null,
-    category: course.courseCategory ? course.courseCategory.name : null,
-    topic: course.topic ? course.topic.name : null,
-    level: course.courseLevel ? course.courseLevel.name : null,
-    language: course.courseLanguage ? course.courseLanguage.name : null,
-    date_course: course.date_course,
+    provider: course.provider
+      ? {
+          id: course.provider.id ? course.provider.id : null,
+          name: course.provider.name ? course.provider.name : null,
+        }
+      : null,
+    category: course.courseCategory
+      ? {
+          id: course.courseCategory.id ? course.courseCategory.id : null,
+          name: course.courseCategory.name ? course.courseCategory.name : null,
+        }
+      : null,
+    topic: course.topic
+      ? {
+          id: course.topic.id ? course.topic.id : null,
+          name: course.topic.name ? course.topic.name : null,
+        }
+      : null,
+    level: course.courseLevel
+      ? {
+          id: course.courseLevel.id ? course.courseLevel.id : null,
+          name: course.courseLevel.name ? course.courseLevel.name : null,
+        }
+      : null,
+    language: course.courseLanguage
+      ? {
+          id: course.courseLanguage.id ? course.courseLanguage.id : null,
+          name: course.courseLanguage.name ? course.courseLanguage.name : null,
+        }
+      : null,
+    date_course: {
+      name: course.dateCourseParse ? 'Terjadwal' : 'Mandiri',
+      value: course.dateCourseParse,
+    },
     rating: course.rating ? course.rating : null,
     description: course.description,
     url: course.url,
-    price_name: course.coursePrice ? course.coursePrice.name : null,
+    price_name: course.coursePrice
+      ? {
+          id: course.coursePrice.id ? course.coursePrice.id : null,
+          name: course.coursePrice.name ? course.coursePrice.name : null,
+        }
+      : null,
     price: course.price,
     freemium_code: course.freemium_code,
     photo: course.photoFile

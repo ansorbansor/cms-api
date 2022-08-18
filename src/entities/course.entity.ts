@@ -7,6 +7,7 @@ import { CourseLevel } from './course-level.entity';
 import { CourseLanguage } from './course-language.entity';
 import { CoursePrice } from './course-price.entity';
 import { FileEntity } from './file.entity';
+import * as moment from 'moment';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -39,6 +40,7 @@ export class Course extends EntityHelper {
 
   @Column()
   date_course: Date;
+  dateCourseParse?: string;
 
   @Column()
   rating: number;
@@ -107,6 +109,9 @@ export class Course extends EntityHelper {
 
   @AfterLoad()
   setLessonHours() {
+    this.dateCourseParse = this.date_course
+      ? moment(this.created_at).format('yyyy-MM-D HH:mm:ss')
+      : null;
     this.lesson_hours = Math.round(this.duration / 40);
   }
 }

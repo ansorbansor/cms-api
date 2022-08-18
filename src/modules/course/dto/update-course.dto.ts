@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Equals, IsNotEmpty, Validate } from 'class-validator';
+import { IsNotEmpty, IsOptional, NotEquals, Validate } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseDto {
@@ -61,12 +61,12 @@ export class UpdateCourseDto {
   language_id: number;
 
   @ApiProperty({ example: '2022-01-1 00:00' })
-  @IsNotEmpty()
+  @IsOptional()
   date_course?: Date;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
-  @Equals([1, 2, 3, 4, 5], {
+  @NotEquals([1, 2, 3, 4, 5], {
     message: 'Rating hanya 1-5',
   })
   rating: number;

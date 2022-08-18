@@ -2,7 +2,11 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Repository } from 'typeorm';
-import { failedResponse, infinityPagination } from 'src/utils/responses';
+import {
+  failedResponse,
+  infinityPagination,
+  successResponse,
+} from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
@@ -12,12 +16,15 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CourseResource } from './resources/course.resources';
 import { BufferedFile } from 'src/utils/file-helper';
+import { UserLike } from 'src/entities/user-like.entity';
 
 @Injectable()
 export class CourseService {
   constructor(
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
+    @InjectRepository(UserLike)
+    private userLikeRepository: Repository<UserLike>,
 
     private redisService: RedisService,
     private fileService: FilesService,
@@ -171,5 +178,35 @@ export class CourseService {
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.course}:${id}`);
     await this.courseRepository.softDelete(id);
+  }
+
+  async postLike(courseId: number, user: User) {
+    const data = await this.userLikeRepository.findOne({
+      withDeleted: true,
+      where: {
+        user_id: user.id,
+        course_id: courseId,
+      },
+    });
+
+    if (data) {
+      if (data.deleted_at) {
+        await this.userLikeRepository.update(data.id, {
+          deleted_at: null,
+        });
+        return successResponse(null, 'Pelatihan berhasil disukai');
+      } else {
+        await this.userLikeRepository.softDelete(data.id);
+        return successResponse(null, 'Pelatihan tidak disukai');
+      }
+    } else {
+      await this.userLikeRepository.save(
+        this.userLikeRepository.create({
+          user_id: user.id,
+          course_id: courseId,
+        }),
+      );
+      return successResponse(null, 'Pelatihan berhasil disukai');
+    }
   }
 }

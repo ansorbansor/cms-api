@@ -126,4 +126,12 @@ export class CourseController {
   async remove(@Param('id') id: number) {
     return successResponse(await this.courseServices.softDelete(id), 'success');
   }
+
+  @Post('like')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async postUserLike(@Query('course_id') courseId: number, @Request() request) {
+    return await this.courseServices.postLike(courseId, request.user);
+  }
 }

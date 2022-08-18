@@ -16,4 +16,8 @@ export class UpdateProviderDto {
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;
+
+  @ApiProperty({ example: 'https://www.udemy.com' })
+  @IsNotEmpty()
+  url: string;
 }

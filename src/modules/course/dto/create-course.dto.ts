@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, NotEquals, Validate } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, Validate } from 'class-validator';
+import { Rating } from 'src/utils/enums';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class CreateCourseDto {
@@ -63,7 +64,7 @@ export class CreateCourseDto {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
-  @NotEquals([1, 2, 3, 4, 5], {
+  @IsEnum(Rating, {
     message: 'Rating hanya 1-5',
   })
   rating: number;

@@ -43,3 +43,11 @@ export enum BannerType {
   ANNOUNCEMENT = '1',
   EXTERNAL_URL = '2',
 }
+
+export enum Rating {
+  A = '1',
+  B = '2',
+  C = '3',
+  D = '4',
+  E = '5',
+}

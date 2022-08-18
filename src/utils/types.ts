@@ -22,4 +22,13 @@ export interface IPaginationOptions {
   start_date?: string;
   end_date?: string;
   role?: number[];
+  provider?: number[];
+  category?: number[];
+  topic?: number[];
+  level?: number[];
+  duration?: number[];
+  language?: number[];
+  price?: number[];
+  schedule?: number[];
+  rating?: number[];
 }

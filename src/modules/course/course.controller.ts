@@ -59,7 +59,16 @@ export class CourseController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('search') search: string,
+    @Query('search') search?: string,
+    @Query('provider') provider?: number[],
+    @Query('category') category?: number[],
+    @Query('topic') topic?: number[],
+    @Query('level') level?: number[],
+    @Query('duration') duration?: number[],
+    @Query('language') language?: number[],
+    @Query('price') price?: number[],
+    @Query('schedule') schedule?: number[],
+    @Query('rating') rating?: number[],
   ) {
     if (limit > 50) {
       limit = 50;
@@ -71,6 +80,15 @@ export class CourseController {
         limit,
         total: 0,
         search: search,
+        provider: provider,
+        category: category,
+        topic: topic,
+        level: level,
+        duration: duration,
+        language: language,
+        price: price,
+        schedule: schedule,
+        rating: rating,
       }),
       'success',
     );

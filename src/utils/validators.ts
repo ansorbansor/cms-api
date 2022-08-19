@@ -63,3 +63,11 @@ export class IsNotExist implements ValidatorConstraintInterface {
     return false;
   }
 }
+
+@ValidatorConstraint({ name: 'IsArrayValid', async: true })
+export class IsArrayValid implements ValidatorConstraintInterface {
+  async validate(value: any[], validationArguments: ValidationArguments) {
+    const validArray = validationArguments.constraints;
+    return value.every((r) => validArray.includes(r));
+  }
+}

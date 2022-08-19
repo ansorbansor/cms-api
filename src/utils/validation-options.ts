@@ -13,7 +13,13 @@ const validationOptions: ValidationPipeOptions = {
     return failedResponse(
       HttpStatus.UNPROCESSABLE_ENTITY,
       errors.length > 0
-        ? Object.values(errors[0].constraints).join(', ')
+        ? errors[0].constraints
+          ? Object.values(errors[0].constraints).join(', ')
+          : errors[0].children[0]
+          ? Object.values(errors[0].children[0].children[0].constraints).join(
+              ', ',
+            )
+          : 'Terjadi kesalahan pada server'
         : 'Terjadi kesalahan pada server',
     );
   },

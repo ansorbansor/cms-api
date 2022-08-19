@@ -17,5 +17,7 @@ export const RoleResource = (role: Role): any => {
     id: role.id,
     name: role.name,
     menu: mapMenu,
+    user_count: role.userCount,
+    admin_access: mapMenu.length > 0,
   };
 };

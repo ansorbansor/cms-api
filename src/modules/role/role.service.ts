@@ -44,15 +44,23 @@ export class RoleService {
     const total = await this.roleRepository.count();
     paginationOptions.total = total;
 
-    return infinityPagination(
-      await this.roleRepository.find({
-        relations: ['roleAccess', 'roleAccess.menu', 'roleAccess.role'],
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
-      RoleResource,
-      paginationOptions,
-    );
+    const data = this.roleRepository
+      .createQueryBuilder('role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('role.userRole', 'userRole')
+      .leftJoinAndSelect('roleAccess.menu', 'menu');
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    if (paginationOptions.search) {
+      data.andWhere(
+        `LOWER(role.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
+    const getData = await data.getMany();
+
+    return infinityPagination(getData, RoleResource, paginationOptions);
   }
 
   async findOne(fields: EntityCondition<Role>) {

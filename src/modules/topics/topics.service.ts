@@ -82,6 +82,7 @@ export class TopicsService {
     });
 
     this.redisService.del(`${RedisKeyEnum.topic}:${updateProfileDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateProfileDto.id });
   }
@@ -89,5 +90,6 @@ export class TopicsService {
   async softDelete(id: number): Promise<void> {
     await this.topicRepository.softDelete(id);
     this.redisService.del(`${RedisKeyEnum.topic}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
   }
 }

@@ -82,12 +82,14 @@ export class CourseLevelsService {
     });
 
     this.redisService.del(`${RedisKeyEnum.level}:${updateCourseLevelDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateCourseLevelDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.level}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
     await this.courseLevelRepository.softDelete(id);
   }
 }

@@ -31,4 +31,6 @@ export interface IPaginationOptions {
   price?: number[];
   schedule?: number[];
   rating?: number[];
+  liked_by?: number;
+  user_id?: number;
 }

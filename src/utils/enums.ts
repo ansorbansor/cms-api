@@ -23,10 +23,10 @@ export enum RedisKeyEnum {
   category = 'Category',
   provider = 'Provider',
   topic = 'Topic',
-  language = 'Language',
+  language = 'CourseLanguage',
   course = 'Course',
-  level = 'Level',
-  price = 'Price',
+  level = 'CourseLevel',
+  price = 'CoursePrice',
   banner = 'Banner',
 }
 

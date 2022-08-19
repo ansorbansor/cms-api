@@ -114,12 +114,14 @@ export class ProvidersService {
     });
 
     this.redisService.del(`${RedisKeyEnum.provider}:${updateProfileDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateProfileDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.provider}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
     await this.providerRepository.softDelete(id);
   }
 }

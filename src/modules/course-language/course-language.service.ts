@@ -84,12 +84,14 @@ export class CourseLanguageService {
     this.redisService.del(
       `${RedisKeyEnum.language}:${updateCourseLanguageDto.id}`,
     );
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateCourseLanguageDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.language}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
     await this.courseLanguageRepository.softDelete(id);
   }
 }

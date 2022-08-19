@@ -1,4 +1,11 @@
-import { Column, Entity, AfterLoad, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  AfterLoad,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Provider } from './provider.entity';
 import { CourseCategory } from './course-category.entity';
@@ -8,6 +15,7 @@ import { CourseLanguage } from './course-language.entity';
 import { CoursePrice } from './course-price.entity';
 import { FileEntity } from './file.entity';
 import * as moment from 'moment';
+import { UserLike } from './user-like.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -106,6 +114,10 @@ export class Course extends EntityHelper {
   })
   @JoinColumn({ name: 'photo' })
   photoFile?: FileEntity;
+
+  @OneToMany(() => UserLike, (userLike) => userLike.course)
+  @JoinColumn()
+  userLike?: UserLike;
 
   @AfterLoad()
   setLessonHours() {

@@ -51,6 +51,20 @@ export class CourseCategoriesService {
     paginationOptions: IPaginationOptions,
     withTopics: boolean,
   ) {
+    const redisKey = `${RedisKeyEnum.category}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}`;
+
+    const value = await this.redisService.get(
+      redisKey,
+      typeof CourseCategoryResource,
+    );
+    if (value != null) {
+      return infinityPagination(
+        value,
+        CourseCategoryResource,
+        paginationOptions,
+      );
+    }
+
     const total = await this.categoryRepository.count();
     paginationOptions.total = total;
 
@@ -59,12 +73,16 @@ export class CourseCategoriesService {
       relation.push('topic');
     }
 
+    const getData = await this.categoryRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      relations: relation,
+    });
+
+    this.redisService.set(redisKey, getData);
+
     return infinityPagination(
-      await this.categoryRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-        relations: relation,
-      }),
+      getData,
       CourseCategoryResource,
       paginationOptions,
     );
@@ -121,19 +139,19 @@ export class CourseCategoriesService {
     const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     await this.categoryRepository.update(updateCourseCategoryDto.id, {
-      ...UpdateCourseCategoryDto,
+      ...updateCourseCategoryDto,
       photo: img.id,
     });
 
-    this.redisService.del(
-      `${RedisKeyEnum.category}:${updateCourseCategoryDto.id}`,
-    );
+    this.redisService.del(`${RedisKeyEnum.category}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateCourseCategoryDto.id }, true);
   }
 
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.category}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
     await this.categoryRepository.softDelete(id);
   }
 }

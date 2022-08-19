@@ -9,7 +9,6 @@ import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { RedisKeyEnum } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
@@ -86,14 +85,6 @@ export class UsersService {
   }
 
   async findOne(fields: EntityCondition<User>) {
-    const value = await this.redisService.get(
-      `${RedisKeyEnum.user}:${fields.id}`,
-      typeof UserResource,
-    );
-    if (value != null) {
-      return value;
-    }
-
     const data = await this.usersRepository.findOne({
       where: fields,
     });
@@ -104,8 +95,6 @@ export class UsersService {
         'User tidak ditemukan',
       );
     }
-
-    this.redisService.set(`${RedisKeyEnum.user}:${fields.id}`, data);
 
     return UserResource(data);
   }
@@ -182,14 +171,11 @@ export class UsersService {
       }),
     );
 
-    this.redisService.del(`${RedisKeyEnum.user}:${id}`);
-
     return await this.findOne({ id: id });
   }
 
   async softDelete(id: number): Promise<void> {
     await this.usersRepository.softDelete(id);
-    this.redisService.del(`${RedisKeyEnum.user}:${id}`);
   }
 
   async createUserTopic(createUserTopicDto: CreateUserTopicDto[], user: User) {

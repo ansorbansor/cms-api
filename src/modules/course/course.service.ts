@@ -50,10 +50,9 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const value = await this.redisService.get(
-      `${RedisKeyEnum.course}Search:${paginationOptions.search}-Page${paginationOptions.page}-Limit${paginationOptions.limit}`,
-      typeof CourseResource,
-    );
+    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}`;
+
+    const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
       return infinityPagination(value, CourseResource, paginationOptions);
     }
@@ -121,10 +120,7 @@ export class CourseService {
 
     const getData = await data.getMany();
 
-    this.redisService.set(
-      `${RedisKeyEnum.course}Search:${paginationOptions.search}-Page${paginationOptions.page}-Limit${paginationOptions.limit}`,
-      getData,
-    );
+    this.redisService.set(redisKey, getData);
 
     return infinityPagination(getData, CourseResource, paginationOptions);
   }

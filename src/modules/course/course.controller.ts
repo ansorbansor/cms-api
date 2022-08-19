@@ -57,6 +57,7 @@ export class CourseController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
+    @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
@@ -89,6 +90,7 @@ export class CourseController {
         price: price,
         schedule: schedule,
         rating: rating,
+        user_id: req.id,
       }),
       'success',
     );

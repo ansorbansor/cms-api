@@ -26,6 +26,7 @@ import { CourseModule } from './modules/course/course.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
+import { MenuModule } from './modules/menu/menu.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
@@ -86,6 +87,7 @@ import { UsersModule } from './modules/users/users.module';
     CourseModule,
     ActivityLogModule,
     BannerModule,
+    MenuModule,
   ],
 })
 export class AppModule {

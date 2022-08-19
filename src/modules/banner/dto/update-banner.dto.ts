@@ -41,8 +41,10 @@ export class UpdateBannerDto {
   photo: any;
 
   @ApiProperty({ example: 1 })
+  @IsOptional()
   position: number;
 
   @ApiProperty({ example: true })
+  @IsNotEmpty()
   status: boolean;
 }

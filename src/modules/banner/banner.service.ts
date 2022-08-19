@@ -205,7 +205,7 @@ export class BannerService {
       ...updateBannerDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.banner}:${updateBannerDto.id}`);
+    await this.redisService.del(`${RedisKeyEnum.banner}:${updateBannerDto.id}`);
 
     return await this.findOne({ id: updateBannerDto.id });
   }

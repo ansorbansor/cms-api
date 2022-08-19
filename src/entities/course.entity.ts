@@ -73,45 +73,31 @@ export class Course extends EntityHelper {
 
   lesson_hours = 0;
 
-  @ManyToOne(() => Provider, {
-    eager: true,
-  })
+  @ManyToOne(() => Provider)
   @JoinColumn({ name: 'provider_id' })
   provider?: Provider;
 
-  @ManyToOne(() => CourseCategory, {
-    eager: true,
-  })
+  @ManyToOne(() => CourseCategory)
   @JoinColumn({ name: 'category_id' })
   courseCategory?: CourseCategory;
 
-  @ManyToOne(() => Topic, {
-    eager: true,
-  })
+  @ManyToOne(() => Topic)
   @JoinColumn({ name: 'topic_id' })
   topic?: Topic;
 
-  @ManyToOne(() => CourseLevel, {
-    eager: true,
-  })
+  @ManyToOne(() => CourseLevel)
   @JoinColumn({ name: 'level_id' })
   courseLevel?: CourseLevel;
 
-  @ManyToOne(() => CourseLanguage, {
-    eager: true,
-  })
+  @ManyToOne(() => CourseLanguage)
   @JoinColumn({ name: 'language_id' })
   courseLanguage?: CourseLanguage;
 
-  @ManyToOne(() => CoursePrice, {
-    eager: true,
-  })
+  @ManyToOne(() => CoursePrice)
   @JoinColumn({ name: 'price_id' })
   coursePrice?: CoursePrice;
 
-  @ManyToOne(() => FileEntity, {
-    eager: true,
-  })
+  @ManyToOne(() => FileEntity)
   @JoinColumn({ name: 'photo' })
   photoFile?: FileEntity;
 

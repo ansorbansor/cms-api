@@ -136,6 +136,15 @@ export class CourseService {
 
     const data = await this.courseRepository.findOne({
       where: fields,
+      relations: [
+        'provider',
+        'courseCategory',
+        'topic',
+        'courseLevel',
+        'courseLanguage',
+        'coursePrice',
+        'photoFile',
+      ],
     });
 
     if (!data) {

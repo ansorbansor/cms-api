@@ -1,0 +1,119 @@
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityCondition, IPaginationOptions } from 'src/utils/types';
+import { Repository } from 'typeorm';
+import { failedResponse, infinityPagination } from 'src/utils/responses';
+import { RoleResource } from './resource/role.resources';
+import { Role } from 'src/entities/role.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { RoleAccess } from 'src/entities/role-access.entity';
+import { UpdateRoleDto } from './dto/update-role.dto';
+
+@Injectable()
+export class RoleService {
+  constructor(
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(RoleAccess)
+    private roleAccessRepository: Repository<RoleAccess>,
+  ) {}
+
+  async create(createRoleDto: CreateRoleDto) {
+    const role = await this.roleRepository.save(
+      this.roleRepository.create({
+        ...createRoleDto,
+      }),
+    );
+
+    createRoleDto.menu.forEach(async (element) => {
+      element.access.forEach(async (element2) => {
+        await this.roleAccessRepository.save(
+          this.roleAccessRepository.create({
+            role_id: role.id,
+            menu_id: element.id,
+            menu_access: element2,
+          }),
+        );
+      });
+    });
+
+    return this.findOne({ id: role.id });
+  }
+
+  async findManyWithPagination(paginationOptions: IPaginationOptions) {
+    const total = await this.roleRepository.count();
+    paginationOptions.total = total;
+
+    return infinityPagination(
+      await this.roleRepository.find({
+        relations: ['roleAccess', 'roleAccess.menu', 'roleAccess.role'],
+        skip: (paginationOptions.page - 1) * paginationOptions.limit,
+        take: paginationOptions.limit,
+      }),
+      RoleResource,
+      paginationOptions,
+    );
+  }
+
+  async findOne(fields: EntityCondition<Role>) {
+    const data = await this.roleRepository.findOne({
+      relations: ['roleAccess', 'roleAccess.menu', 'roleAccess.role'],
+      where: fields,
+    });
+
+    if (!data) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Role tidak ditemukan',
+      );
+    }
+
+    return RoleResource(data);
+  }
+
+  async update(updateRoleDto: UpdateRoleDto) {
+    const exists = await this.findOne({ id: updateRoleDto.id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Role tidak ditemukan',
+      );
+    }
+
+    const existsMenu = [];
+    if (exists.menu.length > 0) {
+      exists.menu.forEach((element) => {
+        existsMenu.push(element.role_access_id);
+      });
+
+      await this.roleAccessRepository.softDelete(existsMenu);
+    }
+
+    await this.roleRepository.update(updateRoleDto.id, {
+      name: updateRoleDto.name,
+    });
+
+    const roleAccess = [];
+
+    updateRoleDto.menu.forEach(async (element) => {
+      element.access.forEach(async (element2) => {
+        roleAccess.push(
+          this.roleAccessRepository.create({
+            role_id: exists.id,
+            menu_id: element.id,
+            menu_access: element2,
+          }),
+        );
+      });
+    });
+
+    await this.roleAccessRepository.save(roleAccess);
+
+    return await this.findOne({ id: updateRoleDto.id });
+  }
+
+  async softDelete(id: number): Promise<void> {
+    await this.roleRepository.softDelete(id);
+  }
+}

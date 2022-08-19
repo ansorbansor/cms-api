@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from './role.entity';
@@ -16,13 +16,11 @@ export class RoleAccess extends EntityHelper {
   @Column()
   menu_access?: number;
 
-  @ManyToOne(() => Role, {
-    eager: true,
-  })
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
   role?: Role;
 
-  @ManyToOne(() => Menu, {
-    eager: true,
-  })
+  @ManyToOne(() => Menu)
+  @JoinColumn({ name: 'menu_id' })
   menu?: Menu;
 }

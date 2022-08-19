@@ -51,3 +51,10 @@ export enum Rating {
   D = '4',
   E = '5',
 }
+
+export enum MenuAccess {
+  CREATE = 0,
+  READ = 1,
+  UPDATE = 2,
+  DELETE = 3,
+}

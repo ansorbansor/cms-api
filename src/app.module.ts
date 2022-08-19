@@ -28,6 +28,7 @@ import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.
 import { MailModule } from './modules/mail/mail.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { ProvidersModule } from './modules/providers/providers.module';
+import { RoleModule } from './modules/role/role.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -88,6 +89,7 @@ import { UsersModule } from './modules/users/users.module';
     ActivityLogModule,
     BannerModule,
     MenuModule,
+    RoleModule,
   ],
 })
 export class AppModule {

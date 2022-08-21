@@ -11,10 +11,38 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
     ]);
 
+    const controllers = this.reflector.getAllAndOverride<string[]>(
+      'controllers',
+      [context.getClass(), context.getHandler()],
+    );
+
+    const permissions = this.reflector.getAllAndOverride<number[]>(
+      'permissions',
+      [context.getClass(), context.getHandler()],
+    );
+
     const request = context.switchToHttp().getRequest();
 
-    return (
-      roles.filter((a) => request.user?.role.some((b) => a === b.id)).length > 0
-    );
+    const canAccess = function (data) {
+      return data.some(function (e) {
+        return e.role.roleAccess.some(function (x) {
+          if (
+            controllers == x.menu.be_controller &&
+            permissions == x.menu_access
+          ) {
+            return true;
+          }
+        });
+      });
+    };
+
+    if (controllers && permissions) {
+      return canAccess(request.user.role);
+    } else {
+      return (
+        roles.filter((a) => request.user?.role.some((b) => a === b.id)).length >
+        0
+      );
+    }
   }
 }

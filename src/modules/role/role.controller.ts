@@ -16,8 +16,8 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { MenuPermission, RoleEnum } from 'src/utils/enums';
+import { Controllers, Permissions, Roles } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -45,6 +45,8 @@ export class RoleController {
 
   @Get()
   @Roles(RoleEnum.admin, RoleEnum.user)
+  @Permissions(MenuPermission.READ)
+  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(

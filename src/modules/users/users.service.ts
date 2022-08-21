@@ -100,9 +100,14 @@ export class UsersService {
   }
 
   async findOneFull(fields: EntityCondition<User>) {
-    const data = await this.usersRepository.findOne({
-      where: fields,
-    });
+    const data = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('roleAccess.menu', 'menu')
+      .where(fields)
+      .getOne();
 
     if (!data) {
       throw failedResponse(

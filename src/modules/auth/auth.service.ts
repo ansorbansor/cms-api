@@ -59,13 +59,7 @@ export class AuthService {
       email: loginDto.email,
     });
 
-    if (
-      !user ||
-      (user &&
-        !user.userRole.some(
-          (e) => e.role.id === (onlyAdmin ? RoleEnum.admin : RoleEnum.user),
-        ))
-    ) {
+    if (!user || (user && user.userRole.length == 0)) {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'not found');
     }
 
@@ -84,9 +78,7 @@ export class AuthService {
     if (isValidPassword) {
       const token = await this.jwtService.sign({
         id: user.id,
-        role: user.userRole.filter(function (e) {
-          return e.role.id === (onlyAdmin ? RoleEnum.admin : RoleEnum.user);
-        }),
+        role: user.userRole,
       });
 
       await this.activityLogService.create({

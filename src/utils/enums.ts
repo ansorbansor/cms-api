@@ -52,7 +52,7 @@ export enum Rating {
   E = '5',
 }
 
-export enum MenuAccess {
+export enum MenuPermission {
   CREATE = 0,
   READ = 1,
   UPDATE = 2,

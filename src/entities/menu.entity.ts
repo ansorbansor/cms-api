@@ -7,4 +7,8 @@ export class Menu extends EntityHelper {
   @ApiProperty({ example: 'Home' })
   @Column()
   name?: string;
+
+  @ApiProperty({ example: 'XController' })
+  @Column()
+  be_controller?: string;
 }

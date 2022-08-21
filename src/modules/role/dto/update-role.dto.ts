@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, Validate, ValidateNested } from 'class-validator';
-import { MenuAccess } from 'src/utils/enums';
+import { MenuPermission } from 'src/utils/enums';
 import { IsArrayValid, IsExist, IsNotExist } from 'src/utils/validators';
 
 export class UpdateRoleDto {
@@ -37,7 +37,12 @@ class Menu {
   @IsNotEmpty()
   @Validate(
     IsArrayValid,
-    [MenuAccess.CREATE, MenuAccess.READ, MenuAccess.UPDATE, MenuAccess.DELETE],
+    [
+      MenuPermission.CREATE,
+      MenuPermission.READ,
+      MenuPermission.UPDATE,
+      MenuPermission.DELETE,
+    ],
     { message: 'Akses menu tidak sesuai' },
   )
   access: number[];

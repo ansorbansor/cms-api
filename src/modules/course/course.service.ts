@@ -50,7 +50,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}`;
+    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -71,6 +71,11 @@ export class CourseService {
       .leftJoinAndSelect('course.photoFile', 'photoFile');
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
+
+    if (paginationOptions.owned && paginationOptions.user_id) {
+      data.leftJoinAndSelect('course.userCourse', 'userCourse');
+      data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
+    }
 
     if (paginationOptions.search) {
       data.andWhere(

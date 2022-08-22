@@ -23,15 +23,11 @@ export class UserCourse extends EntityHelper {
   @Column()
   certificate_image: string;
 
-  @ManyToOne(() => User, {
-    eager: true,
-  })
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user?: User | null;
 
-  @ManyToOne(() => Course, {
-    eager: true,
-  })
+  @ManyToOne(() => Course)
   @JoinColumn({ name: 'course_id' })
   course?: Course;
 }

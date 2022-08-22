@@ -27,6 +27,7 @@ import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { MenuPermission } from 'src/utils/enums';
+import { OptionalJwtAuthGuard } from 'src/utils/custom-auth-guard';
 
 @ApiBearerAuth()
 @ApiTags('Course')
@@ -55,6 +56,7 @@ export class CourseController {
   }
 
   @Get('courses')
+  @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Request() req,
@@ -70,6 +72,7 @@ export class CourseController {
     @Query('price') price?: number[],
     @Query('schedule') schedule?: number[],
     @Query('rating') rating?: number[],
+    @Query('owned') owned?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -90,7 +93,8 @@ export class CourseController {
         price: price,
         schedule: schedule,
         rating: rating,
-        user_id: req.id,
+        user_id: req.user?.id,
+        owned: owned,
       }),
       'success',
     );

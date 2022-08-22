@@ -16,6 +16,7 @@ import { CoursePrice } from './course-price.entity';
 import { FileEntity } from './file.entity';
 import * as moment from 'moment';
 import { UserLike } from './user-like.entity';
+import { UserCourse } from './user-course.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -104,6 +105,10 @@ export class Course extends EntityHelper {
   @OneToMany(() => UserLike, (userLike) => userLike.course)
   @JoinColumn()
   userLike?: UserLike;
+
+  @OneToMany(() => UserCourse, (userCourse) => userCourse.course)
+  @JoinColumn()
+  userCourse?: UserCourse;
 
   @AfterLoad()
   setLessonHours() {

@@ -19,8 +19,8 @@ export default class CreateAdmin implements Seeder {
         .into(Role)
         .values([
           plainToClass(Role, {
-            id: RoleEnum.admin,
-            name: 'Admin',
+            id: RoleEnum.superadmin,
+            name: 'Super Admin',
           }),
         ])
         .execute();

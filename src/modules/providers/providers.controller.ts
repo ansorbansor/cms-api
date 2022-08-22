@@ -22,8 +22,8 @@ import { RolesGuard } from 'src/utils/guards';
 import { ProvidersService } from './providers.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -38,7 +38,8 @@ export class ProvidersController {
   constructor(private readonly providerServices: ProvidersService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(ProvidersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -59,8 +60,6 @@ export class ProvidersController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -83,8 +82,6 @@ export class ProvidersController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -94,7 +91,8 @@ export class ProvidersController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(ProvidersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
@@ -115,7 +113,8 @@ export class ProvidersController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(ProvidersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(

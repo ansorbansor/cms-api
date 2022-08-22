@@ -23,12 +23,12 @@ import { RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Roles } from 'src/utils/decorator';
-import { RoleEnum } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
+import { MenuPermission } from 'src/utils/enums';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -39,7 +39,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('users')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -56,7 +57,8 @@ export class UsersController {
   }
 
   @Get('users')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.READ)
+  @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -78,7 +80,8 @@ export class UsersController {
   }
 
   @Get('users/:id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.READ)
+  @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
@@ -89,7 +92,8 @@ export class UsersController {
   }
 
   @Patch('users/:id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
@@ -106,15 +110,15 @@ export class UsersController {
   }
 
   @Delete('users/:id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.usersService.softDelete(id), 'success');
   }
 
   @Post('user/topics')
-  @Roles(RoleEnum.user, RoleEnum.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async createUserTopic(
     @Body(new ParseArrayPipe({ items: CreateUserTopicDto, whitelist: true }))

@@ -19,8 +19,8 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
@@ -38,7 +38,8 @@ export class BannerController {
   constructor(private readonly bannerServices: BannerService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -55,8 +56,6 @@ export class BannerController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -77,8 +76,6 @@ export class BannerController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -88,7 +85,8 @@ export class BannerController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -105,7 +103,8 @@ export class BannerController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.bannerServices.softDelete(id), 'success');

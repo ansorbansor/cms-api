@@ -12,14 +12,13 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { ActivityLogService } from './activity-log.service';
 
 @ApiBearerAuth()
 @ApiTags('ActivityLogs')
-@Roles(RoleEnum.admin)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller({
   path: 'acl',
@@ -29,6 +28,8 @@ export class ActivityLogController {
   constructor(private readonly activityLogService: ActivityLogService) {}
 
   @Get()
+  @Permissions(MenuPermission.READ)
+  @Controllers(ActivityLogController.name)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -57,6 +58,8 @@ export class ActivityLogController {
   }
 
   @Get(':id')
+  @Permissions(MenuPermission.READ)
+  @Controllers(ActivityLogController.name)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(

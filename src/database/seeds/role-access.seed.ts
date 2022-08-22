@@ -1,13 +1,14 @@
 import { Connection } from 'typeorm';
 import type { Factory, Seeder } from 'typeorm-seeding';
 import { Menu } from 'src/entities/menu.entity';
+import { RoleAccess } from 'src/entities/role-access.entity';
 
 export default class CreateMenu implements Seeder {
   public async run(factory: Factory, connection: Connection): Promise<void> {
     const countMenu = await connection
       .createQueryBuilder()
       .select()
-      .from(Menu, 'menu')
+      .from(RoleAccess, 'roleAccess')
       .getCount();
 
     if (countMenu === 0) {

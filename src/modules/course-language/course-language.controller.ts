@@ -16,8 +16,6 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
 import { CourseLanguageService } from './course-language.service';
 import { CreateCourseLanguageDto } from './dto/create-course-language.dto';
 import { UpdateCourseLanguageDto } from './dto/update-course-language.dto';
@@ -33,7 +31,6 @@ export class CourseLanguageController {
   constructor(private readonly courseLanguageServices: CourseLanguageService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCourseLanguageDto: CreateCourseLanguageDto) {
@@ -44,8 +41,6 @@ export class CourseLanguageController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -66,8 +61,6 @@ export class CourseLanguageController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -77,7 +70,6 @@ export class CourseLanguageController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCourseLanguageDto: UpdateCourseLanguageDto) {
@@ -88,7 +80,6 @@ export class CourseLanguageController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(

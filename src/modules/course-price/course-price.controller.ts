@@ -16,8 +16,6 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { CoursePriceService } from './course-price.service';
 import { CreateCoursePriceDto } from './dto/create-course-price.dto';
@@ -33,7 +31,6 @@ export class CoursePriceController {
   constructor(private readonly coursePriceervices: CoursePriceService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCoursePriceDto: CreateCoursePriceDto) {
@@ -44,8 +41,6 @@ export class CoursePriceController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -66,8 +61,6 @@ export class CoursePriceController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -77,7 +70,6 @@ export class CoursePriceController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCoursePriceDto: UpdateCoursePriceDto) {
@@ -88,7 +80,6 @@ export class CoursePriceController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(

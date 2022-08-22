@@ -16,8 +16,8 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
@@ -33,7 +33,8 @@ export class TopicsController {
   constructor(private readonly topicService: TopicsService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(TopicsController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createTopicDto: CreateTopicDto) {
@@ -44,8 +45,6 @@ export class TopicsController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -66,8 +65,6 @@ export class TopicsController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -77,7 +74,8 @@ export class TopicsController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(TopicsController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateTopicDto: UpdateTopicDto) {
@@ -88,7 +86,8 @@ export class TopicsController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(TopicsController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.topicService.softDelete(id), 'success');

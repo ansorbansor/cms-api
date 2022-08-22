@@ -7,7 +7,7 @@ export enum AuthProvidersEnum {
 }
 
 export enum RoleEnum {
-  'admin' = 1,
+  'superadmin' = 1,
   'user' = 2,
 }
 

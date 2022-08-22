@@ -16,8 +16,8 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { MenuPermission, RoleEnum } from 'src/utils/enums';
-import { Controllers, Permissions, Roles } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -33,7 +33,8 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createRoleDto: CreateRoleDto) {
@@ -44,7 +45,6 @@ export class RoleController {
   }
 
   @Get()
-  @Roles(RoleEnum.admin, RoleEnum.user)
   @Permissions(MenuPermission.READ)
   @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -70,7 +70,8 @@ export class RoleController {
   }
 
   @Get(':id')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Permissions(MenuPermission.READ)
+  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
@@ -81,7 +82,8 @@ export class RoleController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.OK)
@@ -93,7 +95,8 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.roleService.softDelete(id), 'success');

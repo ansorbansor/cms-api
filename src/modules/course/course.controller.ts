@@ -19,14 +19,14 @@ import {
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
-import { RoleEnum } from 'src/utils/enums';
-import { Roles } from 'src/utils/decorator';
+import { Controllers, Permissions } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { MenuPermission } from 'src/utils/enums';
 
 @ApiBearerAuth()
 @ApiTags('Course')
@@ -38,7 +38,8 @@ export class CourseController {
   constructor(private readonly courseServices: CourseService) {}
 
   @Post()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -106,7 +107,8 @@ export class CourseController {
   }
 
   @Patch()
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
@@ -123,15 +125,15 @@ export class CourseController {
   }
 
   @Delete(':id')
-  @Roles(RoleEnum.admin)
+  @Permissions(MenuPermission.DELETE)
+  @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.courseServices.softDelete(id), 'success');
   }
 
   @Post('like')
-  @Roles(RoleEnum.admin, RoleEnum.user)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {
     return await this.courseServices.postLike(courseId, request.user);

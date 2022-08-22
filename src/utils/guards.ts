@@ -37,7 +37,7 @@ export class RolesGuard implements CanActivate {
       });
     };
 
-    if (request.user.role == RoleEnum.superadmin) {
+    if (request.user?.role.some((b) => RoleEnum.superadmin === b.id)) {
       return true;
     } else if (controllers && permissions) {
       return canAccess(request.user.role);

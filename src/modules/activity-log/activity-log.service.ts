@@ -23,16 +23,11 @@ export class ActivityLogService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const total = await this.activityLogRepository.count();
-    paginationOptions.total = total;
-
     const data = this.activityLogRepository
       .createQueryBuilder('acl')
       .leftJoinAndSelect('acl.user', 'user')
       .leftJoinAndSelect('user.userRole', 'userRole')
       .leftJoinAndSelect('userRole.role', 'role');
-    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.take(paginationOptions.limit);
 
     if (paginationOptions.search) {
       data.andWhere(
@@ -50,6 +45,12 @@ export class ActivityLogService {
         role: paginationOptions.role,
       });
     }
+
+    const total = await this.activityLogRepository.count();
+    paginationOptions.total = total;
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
 
     return infinityPagination(
       await data.getMany(),

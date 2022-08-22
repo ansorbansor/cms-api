@@ -57,9 +57,6 @@ export class CourseService {
       return infinityPagination(value, CourseResource, paginationOptions);
     }
 
-    const total = await this.courseRepository.count();
-    paginationOptions.total = total;
-
     const data = this.courseRepository
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.provider', 'provider')
@@ -69,8 +66,6 @@ export class CourseService {
       .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile');
-    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.take(paginationOptions.limit);
 
     if (paginationOptions.owned && paginationOptions.user_id) {
       data.leftJoinAndSelect('course.userCourse', 'userCourse');
@@ -123,6 +118,11 @@ export class CourseService {
       data.andWhere(`course.rating IN (${paginationOptions.rating})`);
     }
 
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
     const getData = await data.getMany();
 
     this.redisService.set(redisKey, getData);

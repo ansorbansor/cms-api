@@ -31,13 +31,12 @@ import { MenuPermission } from 'src/utils/enums';
 @ApiBearerAuth()
 @ApiTags('Course')
 @Controller({
-  path: 'courses',
   version: '1',
 })
 export class CourseController {
   constructor(private readonly courseServices: CourseService) {}
 
-  @Post()
+  @Post('courses')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -55,7 +54,7 @@ export class CourseController {
     );
   }
 
-  @Get()
+  @Get('courses')
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Request() req,
@@ -97,7 +96,7 @@ export class CourseController {
     );
   }
 
-  @Get(':id')
+  @Get('courses/:id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -106,7 +105,7 @@ export class CourseController {
     );
   }
 
-  @Patch()
+  @Patch('courses')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -124,7 +123,7 @@ export class CourseController {
     );
   }
 
-  @Delete(':id')
+  @Delete('courses:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -132,7 +131,7 @@ export class CourseController {
     return successResponse(await this.courseServices.softDelete(id), 'success');
   }
 
-  @Post('like')
+  @Post('course/like')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {

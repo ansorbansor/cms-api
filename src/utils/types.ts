@@ -34,4 +34,5 @@ export interface IPaginationOptions {
   liked_by?: number;
   user_id?: number;
   owned?: boolean;
+  liked?: boolean;
 }

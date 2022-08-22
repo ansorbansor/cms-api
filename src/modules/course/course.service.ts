@@ -50,7 +50,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}`;
+    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -70,6 +70,11 @@ export class CourseService {
     if (paginationOptions.owned && paginationOptions.user_id) {
       data.leftJoinAndSelect('course.userCourse', 'userCourse');
       data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
+    }
+
+    if (paginationOptions.liked && paginationOptions.user_id) {
+      data.leftJoinAndSelect('course.userLike', 'userLike');
+      data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
     }
 
     if (paginationOptions.search) {

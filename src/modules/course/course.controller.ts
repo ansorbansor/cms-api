@@ -73,6 +73,7 @@ export class CourseController {
     @Query('schedule') schedule?: number[],
     @Query('rating') rating?: number[],
     @Query('owned') owned?: boolean,
+    @Query('liked') liked?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -95,6 +96,7 @@ export class CourseController {
         rating: rating,
         user_id: req.user?.id,
         owned: owned,
+        liked: liked,
       }),
       'success',
     );

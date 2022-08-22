@@ -41,22 +41,23 @@ export class RoleService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const total = await this.roleRepository.count();
-    paginationOptions.total = total;
-
     const data = this.roleRepository
       .createQueryBuilder('role')
       .leftJoinAndSelect('role.roleAccess', 'roleAccess')
       .leftJoinAndSelect('role.userRole', 'userRole')
       .leftJoinAndSelect('roleAccess.menu', 'menu');
-    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.take(paginationOptions.limit);
 
     if (paginationOptions.search) {
       data.andWhere(
         `LOWER(role.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
       );
     }
+
+    const total = await this.roleRepository.count();
+    paginationOptions.total = total;
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
 
     const getData = await data.getMany();
 

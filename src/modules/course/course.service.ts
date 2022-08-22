@@ -67,14 +67,16 @@ export class CourseService {
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile');
 
-    if (paginationOptions.owned && paginationOptions.user_id) {
-      data.leftJoinAndSelect('course.userCourse', 'userCourse');
-      data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
-    }
+    if (paginationOptions.user_id) {
+      if (paginationOptions.owned) {
+        data.leftJoinAndSelect('course.userCourse', 'userCourse');
+        data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
+      }
 
-    if (paginationOptions.liked && paginationOptions.user_id) {
-      data.leftJoinAndSelect('course.userLike', 'userLike');
-      data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
+      if (paginationOptions.liked) {
+        data.leftJoinAndSelect('course.userLike', 'userLike');
+        data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
+      }
     }
 
     if (paginationOptions.search) {

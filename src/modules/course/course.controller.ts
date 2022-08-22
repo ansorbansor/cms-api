@@ -102,6 +102,55 @@ export class CourseController {
     );
   }
 
+  @Get('admin/courses')
+  @Permissions(MenuPermission.READ)
+  @Controllers(CourseController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findAllAdmin(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+    @Query('provider') provider?: number[],
+    @Query('category') category?: number[],
+    @Query('topic') topic?: number[],
+    @Query('level') level?: number[],
+    @Query('duration') duration?: number[],
+    @Query('language') language?: number[],
+    @Query('price') price?: number[],
+    @Query('schedule') schedule?: number[],
+    @Query('rating') rating?: number[],
+    @Query('liked') liked?: boolean,
+    @Query('user_id') userId?: number,
+  ) {
+    if (limit > 50) {
+      limit = 50;
+    }
+
+    return successResponseList(
+      await this.courseServices.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+        search: search,
+        provider: provider,
+        category: category,
+        topic: topic,
+        level: level,
+        duration: duration,
+        language: language,
+        price: price,
+        schedule: schedule,
+        rating: rating,
+        owned: true,
+        liked: liked,
+        user_id: userId,
+      }),
+      'success',
+    );
+  }
+
   @Get('courses/:id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {

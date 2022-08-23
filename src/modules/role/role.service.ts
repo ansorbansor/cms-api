@@ -8,6 +8,7 @@ import { Role } from 'src/entities/role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { RoleAccess } from 'src/entities/role-access.entity';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { RoleEnum } from 'src/utils/enums';
 
 @Injectable()
 export class RoleService {
@@ -123,6 +124,12 @@ export class RoleService {
   }
 
   async softDelete(id: number): Promise<void> {
+    if (id == RoleEnum.superadmin) {
+      throw failedResponse(
+        HttpStatus.FORBIDDEN,
+        'Superadmin tidak bisa dihapus',
+      );
+    }
     await this.roleRepository.softDelete(id);
   }
 }

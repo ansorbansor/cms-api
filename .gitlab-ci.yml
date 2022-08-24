@@ -1,6 +1,6 @@
 image: docker:latest
 services:
-  - docker:20.10.16-dind
+  - docker:latest
 
 stages:
   - build

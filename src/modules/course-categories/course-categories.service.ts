@@ -65,19 +65,27 @@ export class CourseCategoriesService {
       );
     }
 
-    const total = await this.categoryRepository.count();
-    paginationOptions.total = total;
+    const data = this.categoryRepository
+      .createQueryBuilder('category')
+      .leftJoinAndSelect('category.photoFile', 'photoFile');
 
-    const relation = ['course'];
     if (withTopics) {
-      relation.push('topic');
+      data.leftJoinAndSelect('category.topic', 'topic');
     }
 
-    const getData = await this.categoryRepository.find({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      relations: relation,
-    });
+    if (paginationOptions.search) {
+      data.andWhere(
+        `LOWER(category.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    const getData = await data.getMany();
 
     this.redisService.set(redisKey, getData);
 

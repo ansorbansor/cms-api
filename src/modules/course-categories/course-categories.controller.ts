@@ -66,6 +66,7 @@ export class CourseCategoriesController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
     withTopics?: boolean,
+    @Query('search') search?: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -77,6 +78,7 @@ export class CourseCategoriesController {
           page,
           limit,
           total: 0,
+          search: search,
         },
         withTopics,
       ),

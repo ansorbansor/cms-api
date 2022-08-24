@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, MinLength, Validate } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  MinLength,
+  Validate,
+} from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 import { Transform } from 'class-transformer';
@@ -74,6 +80,11 @@ export class UpdateUserDto {
     message: 'Jabatan Tidak Tersedia',
   })
   position_id?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  blacklist?: boolean;
 
   hash?: string | null;
 }

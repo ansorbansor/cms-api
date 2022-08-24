@@ -11,7 +11,7 @@ export type FindOptions<T> = {
 };
 
 export type EntityCondition<T> = {
-  [key in keyof DeepPartial<T>]: number | string | EntityCondition<T>;
+  [key in keyof DeepPartial<T>]: number | string | boolean | EntityCondition<T>;
 };
 
 export interface IPaginationOptions {
@@ -35,4 +35,5 @@ export interface IPaginationOptions {
   user_id?: number;
   owned?: boolean;
   liked?: boolean;
+  blacklist?: boolean;
 }

@@ -32,6 +32,7 @@ import { ProvidersModule } from './modules/providers/providers.module';
 import { RoleModule } from './modules/role/role.module';
 import { TopicsModule } from './modules/topics/topics.module';
 import { UsersModule } from './modules/users/users.module';
+import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { UsersModule } from './modules/users/users.module';
     MenuModule,
     RoleModule,
     EditorChoiceCourseModule,
+    UserBlacklistsModule,
   ],
 })
 export class AppModule {

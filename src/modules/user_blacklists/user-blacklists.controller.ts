@@ -1,11 +1,9 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
   Query,
   DefaultValuePipe,
@@ -14,51 +12,30 @@ import {
   HttpCode,
   UseInterceptors,
   UploadedFile,
-  ParseArrayPipe,
-  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
-import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
-import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { MenuPermission } from 'src/utils/enums';
+import { UpdateBlacklistUserDto } from './dto/update-blacklist-user.dto';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('Users')
 @Controller({
   version: '1',
 })
-export class UsersController {
+export class BlacklistController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('users')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
-  async create(
-    @Request() req,
-    @Body() createProfileDto: CreateUserDto,
-    @UploadedFile() file?: BufferedFile,
-  ) {
-    return successResponse(
-      await this.usersService.create(createProfileDto, req.user.id, file),
-      'success',
-    );
-  }
-
-  @Get('users')
+  @Get('blacklist/users')
   @Permissions(MenuPermission.READ)
-  @Controllers(UsersController.name)
+  @Controllers(BlacklistController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -74,63 +51,44 @@ export class UsersController {
         page,
         limit,
         total: 0,
-        blacklist: false,
+        blacklist: true,
       }),
       'success',
     );
   }
 
-  @Get('users/:id')
+  @Get('blacklist/users/:id')
   @Permissions(MenuPermission.READ)
-  @Controllers(UsersController.name)
+  @Controllers(BlacklistController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
       await this.usersService.findOne({
         id: +id,
-        blacklist: false,
+        blacklist: true,
       }),
       'success',
     );
   }
 
-  @Patch('users/:id')
+  @Patch('blacklist/users/:id')
   @Permissions(MenuPermission.UPDATE)
-  @Controllers(UsersController.name)
+  @Controllers(BlacklistController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
     @Param('id') id: number,
-    @Body() updateProfileDto: UpdateUserDto,
+    @Body() updateBlacklistUserDto: UpdateBlacklistUserDto,
     @UploadedFile() photo?: BufferedFile,
   ) {
+    const updateProfileDto = new UpdateUserDto();
+    updateProfileDto.blacklist = updateBlacklistUserDto.blacklist;
+
     return successResponse(
       await this.usersService.update(id, updateProfileDto, photo),
-      'success',
-    );
-  }
-
-  @Delete('users/:id')
-  @Permissions(MenuPermission.DELETE)
-  @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.usersService.softDelete(id), 'success');
-  }
-
-  @Post('user/topics')
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.CREATED)
-  async createUserTopic(
-    @Body(new ParseArrayPipe({ items: CreateUserTopicDto, whitelist: true }))
-    createUserTopicDto: CreateUserTopicDto[],
-    @Request() request,
-  ) {
-    return successResponse(
-      await this.usersService.createUserTopic(createUserTopicDto, request.user),
       'success',
     );
   }

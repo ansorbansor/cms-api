@@ -71,14 +71,25 @@ export class UsersService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const total = await this.usersRepository.count();
+    const data = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.photoFile', 'photoFile')
+      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
+      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
+      .leftJoinAndSelect('userRole.role', 'role');
+
+    data.where(`user.blacklist = ${paginationOptions.blacklist}`);
+
+    const total = await data.getCount();
     paginationOptions.total = total;
 
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
     return infinityPagination(
-      await this.usersRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
+      await data.getMany(),
       UserResource,
       paginationOptions,
     );

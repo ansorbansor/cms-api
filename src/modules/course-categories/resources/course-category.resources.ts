@@ -19,5 +19,7 @@ export const CourseCategoryResource = (category: CourseCategory): any => {
       ? minioConfig().fullUrl + category.photoFile?.path
       : null,
     topic: mapTopic,
+    topic_count: category.topic_count,
+    course_count: category.course_count,
   };
 };

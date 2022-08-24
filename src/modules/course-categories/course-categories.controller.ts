@@ -65,7 +65,7 @@ export class CourseCategoriesController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
-    withTopics: boolean,
+    withTopics?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -89,7 +89,7 @@ export class CourseCategoriesController {
   async findOne(
     @Param('id') id: string,
     @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
-    withTopics: boolean,
+    withTopics?: boolean,
   ) {
     return successResponse(
       await this.categoryServices.findOne({ id: +id }, withTopics),

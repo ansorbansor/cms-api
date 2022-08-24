@@ -49,7 +49,7 @@ export class CourseCategoriesService {
 
   async findManyWithPagination(
     paginationOptions: IPaginationOptions,
-    withTopics: boolean,
+    withTopics?: boolean,
   ) {
     const redisKey = `${RedisKeyEnum.category}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}`;
 
@@ -68,7 +68,7 @@ export class CourseCategoriesService {
     const total = await this.categoryRepository.count();
     paginationOptions.total = total;
 
-    const relation = [];
+    const relation = ['course'];
     if (withTopics) {
       relation.push('topic');
     }
@@ -88,7 +88,7 @@ export class CourseCategoriesService {
     );
   }
 
-  async findOne(fields: EntityCondition<CourseCategory>, withTopics: boolean) {
+  async findOne(fields: EntityCondition<CourseCategory>, withTopics?: boolean) {
     const value = await this.redisService.get(
       `${RedisKeyEnum.category}:${fields.id}`,
       typeof CourseCategoryResource,
@@ -97,7 +97,7 @@ export class CourseCategoriesService {
       return value;
     }
 
-    const relation = [];
+    const relation = ['course'];
     if (withTopics) {
       relation.push('topic');
     }

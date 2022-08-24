@@ -15,6 +15,7 @@ export const CourseCategoryResource = (category: CourseCategory): any => {
   return {
     id: category.id,
     name: category.name,
+    pkasn_program: category.pkasn_program,
     photo: category.photoFile
       ? minioConfig().fullUrl + category.photoFile?.path
       : null,

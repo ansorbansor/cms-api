@@ -18,17 +18,21 @@ before_script:
 
 build:
   stage: build
-  tags: build
+  tags: 
+    - build
   script:
     - cp $ENV_API_DEV .env
     - docker build --pull -t $CONTAINER_RELEASE_IMAGE .
     - docker push $CONTAINER_RELEASE_IMAGE
   only:
     - tags
+  except:
+    - branches
 
 release-image:
   stage: release
-  tags: build
+  tags: 
+    - build
   script:
     - docker tag $CONTAINER_RELEASE_IMAGE $CONTAINER_RELEASE_IMAGE
     - docker push $CONTAINER_RELEASE_IMAGE
@@ -41,7 +45,8 @@ release-image:
 deploy:
   stage: deploy
   image: kroniak/ssh-client
-  tags: build
+  tags: 
+    - build
   before_script:
     - echo "Start deploying to server"
   script:
@@ -51,3 +56,5 @@ deploy:
     - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker run --network=api_default -p 3000:3000 -d --name playbook-api registry.gitlab.com/playbook-ppkasn/api:latest"
   only:
     - tags
+  except:
+    - branches

@@ -19,6 +19,7 @@ x-minio-common: &minio-common
 services:
   postgres:
     image: postgres:14.2
+    container_name: postgres
     ports:
       - ${DATABASE_PORT}:5432
     volumes:
@@ -30,12 +31,14 @@ services:
 
   adminer:
     image: adminer
+    container_name: adminer
     restart: always
     ports:
       - 8080:8080
 
   redis:
     image: redis:7-alpine
+    container_name: redis
     ports:
       - 6479:6379
     depends_on:
@@ -43,6 +46,7 @@ services:
   
   redis-commander:
     image: rediscommander/redis-commander:latest
+    container_name: redis-commander
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:
@@ -90,6 +94,7 @@ services:
   nginx:
     image: nginx:1.19.2-alpine
     hostname: nginx
+    container_name: nginx
     volumes:
       - ./minio/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:

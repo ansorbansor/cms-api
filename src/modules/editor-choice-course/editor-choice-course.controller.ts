@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +20,7 @@ import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { EditorChoiceCourseService } from './editor-choice-course.service';
 import { CreateEditorChoiceCourseDto } from './dto/create-editor-choice-course.dto';
+import { validationArrayOptions } from 'src/utils/validation-options';
 
 @ApiBearerAuth()
 @ApiTags('Editor Choice Course')
@@ -34,7 +36,13 @@ export class EditorChoiceCourseController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createEditorChoiceCourseDto: CreateEditorChoiceCourseDto[],
+    @Body(
+      new ParseArrayPipe({
+        items: CreateEditorChoiceCourseDto,
+        ...validationArrayOptions,
+      }),
+    )
+    createEditorChoiceCourseDto: CreateEditorChoiceCourseDto[],
     @Request() req,
   ) {
     return successResponse(

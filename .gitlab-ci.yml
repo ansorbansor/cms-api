@@ -29,11 +29,15 @@ release-image:
     - docker push $CONTAINER_RELEASE_IMAGE
   only:
     - main
-
     - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-# deploy:
-#   stage: deploy
-#   script:
-#     - ./deploy.sh
-#   only:
-#     - main
+
+deploy:
+  stage: deploy
+  image: kroniak/ssh-client
+  before_script:
+    - echo "Start deploying to server"
+  script:
+    - chmod 400 $SSH_API_DEV_PRIVATE_KEY
+    - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker pull registry.gitlab.com/playbook-ppkasn/api:latest"
+    - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker stop playbook-api || true && docker rm playbook-api || true"
+    - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker run -p 3000:3000 -d --name playbook-api registry.gitlab.com/playbook-ppkasn/api:latest"

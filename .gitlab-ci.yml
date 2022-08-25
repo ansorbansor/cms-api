@@ -41,4 +41,4 @@ deploy:
     - chmod 400 $SSH_API_DEV_PRIVATE_KEY
     - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker pull registry.gitlab.com/playbook-ppkasn/api:latest"
     - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker stop playbook-api || true && docker rm playbook-api || true"
-    - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker run -p 3000:3000 -d --name playbook-api registry.gitlab.com/playbook-ppkasn/api:latest"
+    - ssh -o StrictHostKeyChecking=no -i $SSH_API_DEV_PRIVATE_KEY root@$IP_DEV "docker run --network=api_default -p 3000:3000 -d --name playbook-api registry.gitlab.com/playbook-ppkasn/api:latest"

@@ -19,6 +19,7 @@ before_script:
 build:
   stage: build
   script:
+    - cp $ENV_API_DEV .env
     - docker build --pull -t $CONTAINER_RELEASE_IMAGE .
     - docker push $CONTAINER_RELEASE_IMAGE
 

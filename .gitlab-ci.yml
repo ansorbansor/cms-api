@@ -18,6 +18,7 @@ before_script:
 
 build:
   stage: build
+  tags: build
   script:
     - cp $ENV_API_DEV .env
     - docker build --pull -t $CONTAINER_RELEASE_IMAGE .
@@ -27,6 +28,7 @@ build:
 
 release-image:
   stage: release
+  tags: build
   script:
     - docker tag $CONTAINER_RELEASE_IMAGE $CONTAINER_RELEASE_IMAGE
     - docker push $CONTAINER_RELEASE_IMAGE
@@ -39,6 +41,7 @@ release-image:
 deploy:
   stage: deploy
   image: kroniak/ssh-client
+  tags: build
   before_script:
     - echo "Start deploying to server"
   script:

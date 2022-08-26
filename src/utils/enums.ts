@@ -58,3 +58,14 @@ export enum MenuPermission {
   UPDATE = 2,
   DELETE = 3,
 }
+
+export enum CouponType {
+  GENERAL = 0,
+  SPECIFIC = 1,
+}
+
+export enum CouponStatus {
+  AVAILABLE = 0,
+  USED = 1,
+  NOT_AVAILABLE = 2,
+}

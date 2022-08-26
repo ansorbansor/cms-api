@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { Coupon } from 'src/entities/coupon.entity';
 import { CreateCouponDto } from './dto/create-coupon.dto';
@@ -34,11 +34,30 @@ export class CouponService {
 
     if (paginationOptions.search) {
       data.andWhere(
-        `LOWER(coupon.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(coupon.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          ).orWhere(
+            `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          );
+        }),
       );
-      data.orWhere(
-        `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-      );
+    }
+
+    if (paginationOptions.start_date) {
+      data.andWhere(`coupon.start_date >= '${paginationOptions.start_date}'`);
+    }
+
+    if (paginationOptions.end_date) {
+      data.andWhere(`coupon.end_date <= '${paginationOptions.end_date}'`);
+    }
+
+    if (paginationOptions.provider) {
+      data.andWhere(`coupon.provider_id IN (${paginationOptions.provider})`);
+    }
+
+    if (paginationOptions.status) {
+      data.andWhere(`coupon.status = ${paginationOptions.status}`);
     }
 
     const total = await data.getCount();

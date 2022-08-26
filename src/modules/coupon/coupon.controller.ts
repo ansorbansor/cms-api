@@ -52,6 +52,10 @@ export class CouponController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+    @Query('provider') provider?: number[],
+    @Query('status') status?: number,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -63,6 +67,10 @@ export class CouponController {
         limit,
         total: 0,
         search: search,
+        start_date: start_date,
+        end_date: end_date,
+        provider: provider,
+        status: status,
       }),
       'success',
     );

@@ -1,7 +1,7 @@
 import minioConfig from 'src/config/minio.config';
 import { Course } from 'src/entities/course.entity';
 
-export const CourseResource = (course: Course): any => {
+export const CourseAdminResource = (course: Course): any => {
   if (course) {
     return {
       id: course.id,
@@ -48,6 +48,7 @@ export const CourseResource = (course: Course): any => {
       },
       rating: course.rating ? course.rating : null,
       description: course.description,
+      url: course.url,
       price_name: course.coursePrice
         ? {
             id: course.coursePrice.id ? course.coursePrice.id : null,

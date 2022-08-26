@@ -69,3 +69,9 @@ export enum CouponStatus {
   USED = 1,
   NOT_AVAILABLE = 2,
 }
+
+export enum CouponSubmissionStatus {
+  PENDING = 0,
+  APPROVED = 1,
+  REJECTED = 2,
+}

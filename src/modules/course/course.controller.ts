@@ -146,7 +146,17 @@ export class CourseController {
         owned: true,
         liked: liked,
         user_id: userId,
+        is_admin: true,
       }),
+      'success',
+    );
+  }
+
+  @Get('admin/courses/:id')
+  @HttpCode(HttpStatus.OK)
+  async findOneAdmin(@Param('id') id: string) {
+    return successResponse(
+      await this.courseServices.findOneAdmin({ id: +id }),
       'success',
     );
   }
@@ -191,5 +201,12 @@ export class CourseController {
   @HttpCode(HttpStatus.CREATED)
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {
     return await this.courseServices.postLike(courseId, request.user);
+  }
+
+  @Post('course/start')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async startCourse(@Query('course_id') courseId: number, @Request() request) {
+    return await this.courseServices.start(courseId, request.user);
   }
 }

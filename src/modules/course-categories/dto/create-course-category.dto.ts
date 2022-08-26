@@ -16,4 +16,8 @@ export class CreateCourseCategoryDto {
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;
+
+  @ApiProperty({ example: 'Topic A' })
+  @IsOptional()
+  topic: string[];
 }

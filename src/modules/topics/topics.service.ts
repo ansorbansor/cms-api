@@ -28,6 +28,12 @@ export class TopicsService {
     return this.findOne({ id: topic.id });
   }
 
+  async createBulk(createTopicDto: CreateTopicDto[]) {
+    await this.topicRepository.save(
+      this.topicRepository.create(createTopicDto),
+    );
+  }
+
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const total = await this.topicRepository.count();
     paginationOptions.total = total;
@@ -83,6 +89,7 @@ export class TopicsService {
 
     this.redisService.del(`${RedisKeyEnum.topic}:${updateProfileDto.id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
+    this.redisService.del(`${RedisKeyEnum.category}`);
 
     return await this.findOne({ id: updateProfileDto.id });
   }
@@ -91,5 +98,15 @@ export class TopicsService {
     await this.topicRepository.softDelete(id);
     this.redisService.del(`${RedisKeyEnum.topic}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
+    this.redisService.del(`${RedisKeyEnum.category}`);
+  }
+
+  async softDeleteByCategory(id: number): Promise<void> {
+    await this.topicRepository.softDelete({
+      category_id: id,
+    });
+    this.redisService.del(`${RedisKeyEnum.topic}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
+    this.redisService.del(`${RedisKeyEnum.category}`);
   }
 }

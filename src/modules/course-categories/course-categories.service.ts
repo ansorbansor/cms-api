@@ -12,15 +12,17 @@ import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { CourseCategory } from 'src/entities/course-category.entity';
 import { BufferedFile } from 'src/utils/file-helper';
+import { CreateTopicDto } from '../topics/dto/create-topic.dto';
+import { TopicsService } from '../topics/topics.service';
 
 @Injectable()
 export class CourseCategoriesService {
   constructor(
     @InjectRepository(CourseCategory)
     private categoryRepository: Repository<CourseCategory>,
-
     private redisService: RedisService,
     private fileService: FilesService,
+    private topicService: TopicsService,
   ) {}
 
   async create(
@@ -40,11 +42,25 @@ export class CourseCategoriesService {
 
     const category = await this.categoryRepository.save(
       this.categoryRepository.create({
-        ...createCourseCategoryDto,
+        name: createCourseCategoryDto.name,
+        pkasn_program: createCourseCategoryDto.pkasn_program,
+        photo: img.id,
       }),
     );
 
-    return this.findOne({ id: category.id }, false);
+    if (createCourseCategoryDto.topic) {
+      const topics = [];
+      createCourseCategoryDto.topic.forEach((element) => {
+        const topic = new CreateTopicDto();
+        topic.name = element;
+        topic.category_id = category.id;
+        topics.push(topic);
+      });
+
+      await this.topicService.createBulk(topics);
+    }
+
+    return this.findOne({ id: category.id }, true);
   }
 
   async findManyWithPagination(
@@ -147,9 +163,22 @@ export class CourseCategoriesService {
     const img = await this.fileService.uploadWithMinio(photo, user.id);
 
     await this.categoryRepository.update(updateCourseCategoryDto.id, {
-      ...updateCourseCategoryDto,
+      name: updateCourseCategoryDto.name,
+      pkasn_program: updateCourseCategoryDto.pkasn_program,
       photo: img.id,
     });
+
+    if (updateCourseCategoryDto.topic) {
+      const topics = [];
+      updateCourseCategoryDto.topic.forEach((element) => {
+        const topic = new CreateTopicDto();
+        topic.name = element;
+        topic.category_id = updateCourseCategoryDto.id;
+        topics.push(topic);
+      });
+      await this.topicService.softDeleteByCategory(updateCourseCategoryDto.id);
+      await this.topicService.createBulk(topics);
+    }
 
     this.redisService.del(`${RedisKeyEnum.category}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
@@ -160,6 +189,7 @@ export class CourseCategoriesService {
   async softDelete(id: number): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.category}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
+    await this.topicService.softDeleteByCategory(id);
     await this.categoryRepository.softDelete(id);
   }
 }

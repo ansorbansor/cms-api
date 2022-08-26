@@ -20,4 +20,8 @@ export class UpdateCourseCategoryDto {
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;
+
+  @ApiProperty({ example: 'Topic A' })
+  @IsOptional()
+  topic: string[];
 }

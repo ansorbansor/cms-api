@@ -5,6 +5,7 @@ import { RedisConfigService } from 'src/config/redis-config.service';
 import { CourseCategoriesController } from './course-categories.controller';
 import { CourseCategoriesService } from './course-categories.service';
 import { CourseCategory } from 'src/entities/course-category.entity';
+import { TopicsModule } from '../topics/topics.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CourseCategory } from 'src/entities/course-category.entity';
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
+    TopicsModule,
   ],
   controllers: [CourseCategoriesController],
   providers: [CourseCategoriesService, RedisService],

@@ -104,11 +104,11 @@ export class Course extends EntityHelper {
 
   @OneToMany(() => UserLike, (userLike) => userLike.course)
   @JoinColumn()
-  userLike?: UserLike;
+  userLike?: UserLike[];
 
   @OneToMany(() => UserCourse, (userCourse) => userCourse.course)
   @JoinColumn()
-  userCourse?: UserCourse;
+  userCourse?: UserCourse[];
 
   @AfterLoad()
   setLessonHours() {

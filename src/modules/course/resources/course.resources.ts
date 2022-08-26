@@ -1,8 +1,14 @@
 import minioConfig from 'src/config/minio.config';
 import { Course } from 'src/entities/course.entity';
 
-export const CourseResource = (course: Course): any => {
+export const CourseResource = (course: Course, userId?: number): any => {
   if (course) {
+    const progress = userId
+      ? course.userCourse
+        ? course.userCourse.find((e) => (e.user_id === userId ? e.progress : 0))
+        : null
+      : null;
+
     return {
       id: course.id,
       name: course.name,
@@ -59,6 +65,12 @@ export const CourseResource = (course: Course): any => {
       photo: course.photoFile
         ? minioConfig().fullUrl + course.photoFile.path
         : null,
+      liked: userId
+        ? course.userLike
+          ? course.userLike.some((e) => e.user_id == userId)
+          : false
+        : false,
+      progress: progress ? progress.progress : 0,
     };
   }
 

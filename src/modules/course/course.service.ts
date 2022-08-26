@@ -80,13 +80,12 @@ export class CourseService {
       .leftJoinAndSelect('course.photoFile', 'photoFile');
 
     if (paginationOptions.user_id) {
+      data.leftJoinAndSelect('course.userCourse', 'userCourse');
+      data.leftJoinAndSelect('course.userLike', 'userLike');
       if (paginationOptions.owned) {
-        data.leftJoinAndSelect('course.userCourse', 'userCourse');
         data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
       }
-
       if (paginationOptions.liked) {
-        data.leftJoinAndSelect('course.userLike', 'userLike');
         data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
       }
     }

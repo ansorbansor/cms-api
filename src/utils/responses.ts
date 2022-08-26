@@ -62,11 +62,11 @@ export const successResponseList = (datax: any, message: string) => {
 
 export const infinityPagination = <T>(
   datas: T[],
-  resourcex: { (any): any },
+  resourcex: { (any, any1): any },
   options: IPaginationOptions,
 ) => {
   const returnedData = datas.map((data) => {
-    return resourcex(data);
+    return resourcex(data, options.user_id);
   });
 
   return {

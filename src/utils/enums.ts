@@ -75,3 +75,9 @@ export enum CouponSubmissionStatus {
   APPROVED = 1,
   REJECTED = 2,
 }
+
+export enum CourseUserStatus {
+  REDIRECT = 0,
+  PENDING_VOUCHER = 1,
+  REJECTED_VOUCHER = 2,
+}

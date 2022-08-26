@@ -8,7 +8,11 @@ import {
   successResponse,
 } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { CouponSubmissionStatus, RedisKeyEnum } from 'src/utils/enums';
+import {
+  CouponSubmissionStatus,
+  CourseUserStatus,
+  RedisKeyEnum,
+} from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { Course } from 'src/entities/course.entity';
@@ -302,14 +306,14 @@ export class CourseService {
       }
 
       return successResponse(
-        StartCourseResource(course),
+        StartCourseResource(course, CourseUserStatus.REDIRECT),
         `Anda akan otomatis diarahkan ke ${course.provider.name}`,
       );
     }
 
     if (data) {
       return successResponse(
-        StartCourseResource(course),
+        StartCourseResource(course, CourseUserStatus.REDIRECT),
         `Anda akan otomatis diarahkan ke ${course.provider.name}`,
       );
     }
@@ -333,12 +337,18 @@ export class CourseService {
       return successResponse(null, `Pengajuan kupon sedang dalam proses`);
     } else {
       if (couponSubmission.status == CouponSubmissionStatus.PENDING) {
-        return successResponse(null, `Pengajuan kupon sedang dalam proses`);
+        return successResponse(
+          StartCourseResource(null, CourseUserStatus.PENDING_VOUCHER),
+          `Pengajuan kupon sedang dalam proses`,
+        );
       } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
-        return successResponse(null, `Pengajuan kupon anda ditolak!`);
+        return successResponse(
+          StartCourseResource(null, CourseUserStatus.REJECTED_VOUCHER),
+          `Pengajuan kupon anda ditolak!`,
+        );
       } else {
         return successResponse(
-          StartCourseResource(course),
+          StartCourseResource(course, CourseUserStatus.REDIRECT),
           `Anda akan otomatis diarahkan ke ${course.provider.name}`,
         );
       }

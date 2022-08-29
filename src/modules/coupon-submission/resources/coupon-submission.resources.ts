@@ -12,5 +12,6 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
     },
     price: couponSubmission.course_price,
     total_submission: couponSubmission.total_submissions,
+    total_submission_approved: couponSubmission.total_submissions_approved,
   };
 };

@@ -26,7 +26,7 @@ export class CouponService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const data = await this.couponRepository
+    const data = this.couponRepository
       .createQueryBuilder('coupon')
       .leftJoinAndSelect('coupon.provider', 'provider')
       .leftJoinAndSelect('coupon.course', 'course')

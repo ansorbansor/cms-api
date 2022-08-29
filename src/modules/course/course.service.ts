@@ -8,11 +8,7 @@ import {
   successResponse,
 } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import {
-  CouponSubmissionStatus,
-  CourseUserStatus,
-  RedisKeyEnum,
-} from 'src/utils/enums';
+import { RedisKeyEnum } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { Course } from 'src/entities/course.entity';
@@ -21,10 +17,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { CourseResource } from './resources/course.resources';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UserLike } from 'src/entities/user-like.entity';
-import { UserCourse } from 'src/entities/user-course.entity';
 import { CourseAdminResource } from './resources/course-admin.resources';
-import { StartCourseResource } from './resources/start-course.resources';
-import { CouponSubmission } from 'src/entities/coupon-submission.entity';
 
 @Injectable()
 export class CourseService {
@@ -33,10 +26,6 @@ export class CourseService {
     private courseRepository: Repository<Course>,
     @InjectRepository(UserLike)
     private userLikeRepository: Repository<UserLike>,
-    @InjectRepository(UserCourse)
-    private userCourseRepository: Repository<UserCourse>,
-    @InjectRepository(CouponSubmission)
-    private couponSubmissionRepository: Repository<CouponSubmission>,
 
     private redisService: RedisService,
     private fileService: FilesService,
@@ -273,94 +262,6 @@ export class CourseService {
       const redisKey = `${RedisKeyEnum.course}:${courseId}-${RedisKeyEnum.user}${user.id}`;
       this.redisService.del(redisKey);
       return successResponse(null, 'Pelatihan berhasil disukai');
-    }
-  }
-
-  async start(courseId: number, user: User) {
-    const course = await this.courseRepository
-      .createQueryBuilder('course')
-      .leftJoinAndSelect('course.provider', 'provider')
-      .leftJoinAndSelect('course.courseCategory', 'category')
-      .leftJoinAndSelect('course.topic', 'topic')
-      .leftJoinAndSelect('course.courseLevel', 'courseLevel')
-      .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
-      .leftJoinAndSelect('course.coursePrice', 'coursePrice')
-      .leftJoinAndSelect('course.photoFile', 'photoFile')
-      .where({ id: courseId })
-      .getOne();
-
-    if (!course) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'Course tidak ditemukan',
-      );
-    }
-
-    const data = await this.userCourseRepository.findOne({
-      where: {
-        course_id: courseId,
-        user_id: user.id,
-      },
-    });
-
-    if (course.price == 0) {
-      if (!data) {
-        await this.userCourseRepository.save(
-          this.userCourseRepository.create({
-            user_id: user.id,
-            course_id: courseId,
-            progress: 50,
-          }),
-        );
-      }
-
-      return successResponse(
-        StartCourseResource(course, CourseUserStatus.REDIRECT),
-        `Anda akan otomatis diarahkan ke ${course.provider.name}`,
-      );
-    }
-
-    if (data) {
-      return successResponse(
-        StartCourseResource(course, CourseUserStatus.REDIRECT),
-        `Anda akan otomatis diarahkan ke ${course.provider.name}`,
-      );
-    }
-
-    const couponSubmission = await this.couponSubmissionRepository.findOne({
-      where: {
-        course_id: courseId,
-        user_id: user.id,
-      },
-    });
-
-    if (!couponSubmission) {
-      await this.couponSubmissionRepository.save(
-        this.couponSubmissionRepository.create({
-          user_id: user.id,
-          course_id: courseId,
-          status: CouponSubmissionStatus.PENDING,
-        }),
-      );
-
-      return successResponse(null, `Pengajuan kupon sedang dalam proses`);
-    } else {
-      if (couponSubmission.status == CouponSubmissionStatus.PENDING) {
-        return successResponse(
-          StartCourseResource(null, CourseUserStatus.PENDING_VOUCHER),
-          `Pengajuan kupon sedang dalam proses`,
-        );
-      } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
-        return successResponse(
-          StartCourseResource(null, CourseUserStatus.REJECTED_VOUCHER),
-          `Pengajuan kupon anda ditolak!`,
-        );
-      } else {
-        return successResponse(
-          StartCourseResource(course, CourseUserStatus.REDIRECT),
-          `Anda akan otomatis diarahkan ke ${course.provider.name}`,
-        );
-      }
     }
   }
 }

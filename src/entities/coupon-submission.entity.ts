@@ -32,4 +32,6 @@ export class CouponSubmission extends EntityHelper {
   @OneToOne(() => Coupon)
   @JoinColumn({ name: 'coupon_id' })
   coupon?: Coupon;
+
+  total_submissions: number;
 }

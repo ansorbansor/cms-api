@@ -202,11 +202,4 @@ export class CourseController {
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {
     return await this.courseServices.postLike(courseId, request.user);
   }
-
-  @Post('course/start')
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.OK)
-  async startCourse(@Query('course_id') courseId: number, @Request() request) {
-    return await this.courseServices.start(courseId, request.user);
-  }
 }

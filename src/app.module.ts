@@ -18,6 +18,7 @@ import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BannerModule } from './modules/banner/banner.module';
+import { CouponSubmissionModule } from './modules/coupon-submission/coupon-submission.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { CategoriesModule } from './modules/course-categories/course-categories.module';
 import { CourseLanguageModule } from './modules/course-language/course-language.module';
@@ -98,6 +99,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     UserBlacklistsModule,
     CouponModule,
     CourseDurationModule,
+    CouponSubmissionModule,
   ],
 })
 export class AppModule {

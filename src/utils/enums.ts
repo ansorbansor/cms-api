@@ -28,6 +28,7 @@ export enum RedisKeyEnum {
   level = 'CourseLevel',
   price = 'CoursePrice',
   banner = 'Banner',
+  duration = 'Duration',
 }
 
 export enum MaxFileSize {

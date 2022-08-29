@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import {
   failedResponse,
   infinityPagination,
@@ -62,7 +62,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}`;
+    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -113,7 +113,14 @@ export class CourseService {
     }
 
     if (paginationOptions.duration) {
-      data.andWhere(`course.lesson_hours IN (${paginationOptions.duration})`);
+      const dur = await getManager().query(
+        `SELECT MIN(minimum) as min, MAX(maximum) as max FROM course_durations WHERE id IN (${paginationOptions.duration})`,
+      );
+
+      if (dur[0] && dur[0].min && dur[0].max) {
+        data.andWhere(`course.duration >= ${dur[0].min}`);
+        data.andWhere(`course.duration <= ${dur[0].max}`);
+      }
     }
 
     if (paginationOptions.language) {

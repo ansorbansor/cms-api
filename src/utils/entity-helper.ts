@@ -33,12 +33,12 @@ export class EntityHelper extends BaseEntity {
     this.createdAtParseDate = moment(this.created_at).format(
       'yyyy-MM-D HH:mm:ss',
     );
-    this.updatedAtParseDate = moment(this.created_at).format(
+    this.updatedAtParseDate = moment(this.updated_at).format(
       'yyyy-MM-D HH:mm:ss',
     );
-    this.deletedAtParseDate = moment(this.created_at).format(
-      'yyyy-MM-D HH:mm:ss',
-    );
+    this.deletedAtParseDate = this.deleted_at
+      ? moment(this.deleted_at).format('yyyy-MM-D HH:mm:ss')
+      : null;
     this.__entity = this.constructor.name;
   }
 }

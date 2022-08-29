@@ -36,6 +36,7 @@ export class CoursePriceService {
       await this.coursePriceRepository.find({
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
+        relations: ['course'],
       }),
       CoursePriceResource,
       paginationOptions,

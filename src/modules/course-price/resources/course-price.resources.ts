@@ -4,5 +4,6 @@ export const CoursePriceResource = (price: CoursePrice): any => {
   return {
     id: price.id,
     name: price.name,
+    course_count: price.course_count,
   };
 };

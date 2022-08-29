@@ -36,6 +36,7 @@ export class CourseLevelsService {
       await this.courseLevelRepository.find({
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
+        relations: ['course'],
       }),
       CourseLevelResource,
       paginationOptions,

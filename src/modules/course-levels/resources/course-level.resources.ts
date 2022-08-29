@@ -4,5 +4,6 @@ export const CourseLevelResource = (level: CourseLevel): any => {
   return {
     id: level.id,
     name: level.name,
+    course_count: level.course_count,
   };
 };

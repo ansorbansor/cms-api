@@ -36,6 +36,7 @@ export class CourseLanguageService {
       await this.courseLanguageRepository.find({
         skip: (paginationOptions.page - 1) * paginationOptions.limit,
         take: paginationOptions.limit,
+        relations: ['course'],
       }),
       CourseLanguageResource,
       paginationOptions,

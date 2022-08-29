@@ -4,5 +4,6 @@ export const CourseLanguageResource = (language: CourseLanguage): any => {
   return {
     id: language.id,
     name: language.name,
+    course_count: language.course_count,
   };
 };

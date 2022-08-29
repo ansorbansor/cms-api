@@ -62,7 +62,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}`;
+    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-Duration${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -152,11 +152,9 @@ export class CourseService {
     );
   }
 
-  async findOne(fields: EntityCondition<Course>) {
-    const value = await this.redisService.get(
-      `${RedisKeyEnum.course}:${fields.id}`,
-      typeof CourseResource,
-    );
+  async findOne(fields: EntityCondition<Course>, user?: User) {
+    const redisKey = `${RedisKeyEnum.course}:${fields.id}-${RedisKeyEnum.user}${user?.id}`;
+    const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
       return value;
     }
@@ -181,7 +179,7 @@ export class CourseService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.course}:${fields.id}`, data);
+    this.redisService.set(redisKey, data);
 
     return CourseResource(data);
   }
@@ -226,13 +224,13 @@ export class CourseService {
       ...updateCourseDto,
     });
 
-    this.redisService.del(`${RedisKeyEnum.course}:${updateCourseDto.id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
 
     return await this.findOne({ id: updateCourseDto.id });
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.course}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
     await this.courseRepository.softDelete(id);
   }
 
@@ -253,6 +251,8 @@ export class CourseService {
         return successResponse(null, 'Pelatihan berhasil disukai');
       } else {
         await this.userLikeRepository.softDelete(data.id);
+        const redisKey = `${RedisKeyEnum.course}:${courseId}-${RedisKeyEnum.user}${user.id}`;
+        this.redisService.del(redisKey);
         return successResponse(null, 'Pelatihan tidak disukai');
       }
     } else {
@@ -262,6 +262,9 @@ export class CourseService {
           course_id: courseId,
         }),
       );
+
+      const redisKey = `${RedisKeyEnum.course}:${courseId}-${RedisKeyEnum.user}${user.id}`;
+      this.redisService.del(redisKey);
       return successResponse(null, 'Pelatihan berhasil disukai');
     }
   }

@@ -49,6 +49,13 @@ export class CouponSubmissionController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search: string,
+    @Query('position_id') position: number,
+    @Query('level_id') level: number,
+    @Query('blacklist') blacklist: boolean,
+    @Query('status') status: number,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -59,6 +66,13 @@ export class CouponSubmissionController {
         page,
         limit,
         total: 0,
+        search: search,
+        employeePosition: position,
+        employeeLevel: level,
+        blacklist: blacklist,
+        status: status,
+        start_date: startDate,
+        end_date: endDate,
       }),
       'success',
     );

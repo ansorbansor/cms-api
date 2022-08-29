@@ -146,6 +146,39 @@ export class CouponSubmissionService {
         '"couponSubmission".user_id = "couponSubmissionTotal".user_id',
       );
 
+    if (paginationOptions.search) {
+      data.andWhere(
+        `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
+    if (paginationOptions.start_date && paginationOptions.end_date) {
+      data.andWhere(
+        `couponSubmission.created_at >= '${paginationOptions.start_date}'`,
+      );
+      data.andWhere(
+        `couponSubmission.created_at <= '${paginationOptions.end_date}'`,
+      );
+    }
+
+    if (paginationOptions.employeePosition) {
+      data.andWhere(
+        `employeePosition.id = ${paginationOptions.employeePosition}`,
+      );
+    }
+
+    if (paginationOptions.employeeLevel) {
+      data.andWhere(`employeeLevel.id = ${paginationOptions.employeeLevel}`);
+    }
+
+    if (paginationOptions.blacklist != null) {
+      data.andWhere(`user.blacklist = ${paginationOptions.blacklist}`);
+    }
+
+    if (paginationOptions.status) {
+      data.andWhere(`couponSubmission.status = ${paginationOptions.status}`);
+    }
+
     const total = await data.getCount();
     paginationOptions.total = total;
 

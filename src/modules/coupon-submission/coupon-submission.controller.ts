@@ -11,6 +11,7 @@ import {
   HttpStatus,
   HttpCode,
   Request,
+  Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -93,5 +94,13 @@ export class CouponSubmissionController {
       await this.couponSubmissionServices.softDelete(id),
       'success',
     );
+  }
+
+  @Patch(':id')
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(CouponSubmissionController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async update(@Param('id') id: number, @Query('status') status: number) {
+    return await this.couponSubmissionServices.update(id, status);
   }
 }

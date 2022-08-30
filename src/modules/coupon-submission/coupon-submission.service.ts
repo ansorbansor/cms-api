@@ -281,6 +281,61 @@ export class CouponSubmissionService {
     );
   }
 
+  async update(submissionId: number, status: number) {
+    if (!Object.values(CouponSubmissionStatus).includes(status)) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Status tidak sesuai',
+      );
+    }
+
+    if (status == CouponSubmissionStatus.PENDING) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengajuan tidak bisa diubah menjadi pending',
+      );
+    }
+
+    const exists = await this.couponSubmissionRepository
+      .createQueryBuilder('submission')
+      .where({
+        id: submissionId,
+      })
+      .getOne();
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengajuan tidak ditemukan',
+      );
+    }
+
+    if (exists.status == status) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Status tidak bisa sama dengan status sebelumnya',
+      );
+    }
+
+    await this.couponSubmissionRepository.update(submissionId, {
+      status: status,
+    });
+
+    if (status == CouponSubmissionStatus.APPROVED) {
+      await this.userCourseRepository.save(
+        this.userCourseRepository.create({
+          user_id: exists.user_id,
+          course_id: exists.course_id,
+          progress: 50,
+        }),
+      );
+
+      return successResponse(null, `Pengajuan berhasil disetujui`);
+    } else {
+      return successResponse(null, `Pengajuan telah ditolak`);
+    }
+  }
+
   async softDelete(id: number): Promise<void> {
     await this.couponSubmissionRepository.softDelete(id);
   }

@@ -29,8 +29,10 @@ export const CouponSubmissionDetailResource = (
     created_at: couponSubmission.createdAtParseDate
       ? couponSubmission.createdAtParseDate
       : null,
-    total_submission: Number(totalSubmission),
-    total_submission_approved: Number(totalSubmissionApproved),
+    total_submission: totalSubmission ? Number(totalSubmission) : 0,
+    total_submission_approved: totalSubmissionApproved
+      ? Number(totalSubmissionApproved)
+      : 0,
     user: {
       nip: couponSubmission.user.nip ? couponSubmission.user.nip : null,
       name: couponSubmission.user.name ? couponSubmission.user.name : null,

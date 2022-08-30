@@ -223,32 +223,6 @@ export class CouponSubmissionService {
   }
 
   async findOne(fields: EntityCondition<CouponSubmission>) {
-    const couponSubmissionTotal = await this.couponSubmissionRepository
-      .createQueryBuilder('couponSubmissionTotal')
-      .select('COUNT(couponSubmissionTotal.user_id)', 'total_submissions')
-      .addSelect('couponSubmissionTotal.user_id', 'user_id')
-      .groupBy('couponSubmissionTotal.user_id')
-      .where(
-        `date_part('year', couponSubmissionTotal.created_at) = date_part('year', CURRENT_DATE)`,
-      )
-      .getRawOne();
-
-    const couponSubmissionApproved = await this.couponSubmissionRepository
-      .createQueryBuilder('couponSubmissionApproved')
-      .select(
-        'COUNT(couponSubmissionApproved.user_id)',
-        'total_submissions_approved',
-      )
-      .addSelect('couponSubmissionApproved.user_id', 'user_id')
-      .groupBy('couponSubmissionApproved.user_id')
-      .where(
-        `date_part('year', couponSubmissionApproved.created_at) = date_part('year', CURRENT_DATE)`,
-      )
-      .andWhere(
-        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
-      )
-      .getRawOne();
-
     const data = await this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
       .leftJoinAndSelect('couponSubmission.user', 'user')
@@ -275,12 +249,41 @@ export class CouponSubmissionService {
       );
     }
 
+    const couponSubmissionTotal = await this.couponSubmissionRepository
+      .createQueryBuilder('couponSubmissionTotal')
+      .select('COUNT(couponSubmissionTotal.user_id)', 'total_submissions')
+      .addSelect('couponSubmissionTotal.user_id', 'user_id')
+      .groupBy('couponSubmissionTotal.user_id')
+      .where(
+        `date_part('year', couponSubmissionTotal.created_at) = date_part('year', CURRENT_DATE)`,
+      )
+      .andWhere(`couponSubmissionTotal.user_id = ${data.user_id}`)
+      .getRawOne();
+
+    const couponSubmissionApproved = await this.couponSubmissionRepository
+      .createQueryBuilder('couponSubmissionApproved')
+      .select(
+        'COUNT(couponSubmissionApproved.user_id)',
+        'total_submissions_approved',
+      )
+      .addSelect('couponSubmissionApproved.user_id', 'user_id')
+      .groupBy('couponSubmissionApproved.user_id')
+      .where(
+        `date_part('year', couponSubmissionApproved.created_at) = date_part('year', CURRENT_DATE)`,
+      )
+      .andWhere(
+        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
+      )
+      .andWhere(`couponSubmissionApproved.user_id = ${data.user_id}`)
+      .getRawOne();
+
     return CouponSubmissionDetailResource(
       data,
-      couponSubmissionTotal.total_submissions
+      couponSubmissionTotal && couponSubmissionTotal.total_submissions
         ? couponSubmissionTotal.total_submissions
         : 0,
-      couponSubmissionApproved.total_submissions_approved
+      couponSubmissionApproved &&
+        couponSubmissionApproved.total_submissions_approved
         ? couponSubmissionApproved.total_submissions_approved
         : 0,
     );

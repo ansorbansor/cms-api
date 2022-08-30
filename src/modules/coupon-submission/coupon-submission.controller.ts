@@ -100,7 +100,11 @@ export class CouponSubmissionController {
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CouponSubmissionController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async update(@Param('id') id: number, @Query('status') status: number) {
-    return await this.couponSubmissionServices.update(id, status);
+  async update(
+    @Param('id') id: number,
+    @Query('status') status: number,
+    @Query('coupon_id') couponId: number,
+  ) {
+    return await this.couponSubmissionServices.update(id, status, couponId);
   }
 }

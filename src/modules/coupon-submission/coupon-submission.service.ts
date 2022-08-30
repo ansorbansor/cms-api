@@ -8,12 +8,17 @@ import {
   successResponse,
 } from 'src/utils/responses';
 import { CouponSubmission } from 'src/entities/coupon-submission.entity';
-import { CouponSubmissionStatus, CourseUserStatus } from 'src/utils/enums';
+import {
+  CouponStatus,
+  CouponSubmissionStatus,
+  CourseUserStatus,
+} from 'src/utils/enums';
 import { CouponSubmissionResource } from './resources/coupon-submission.resources';
 import { Course } from 'src/entities/course.entity';
 import { UserCourse } from 'src/entities/user-course.entity';
 import { StartCourseResource } from './resources/start-course.resources';
 import { CouponSubmissionDetailResource } from './resources/coupon-submission-detail.resources';
+import { Coupon } from 'src/entities/coupon.entity';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -24,6 +29,8 @@ export class CouponSubmissionService {
     private courseRepository: Repository<Course>,
     @InjectRepository(UserCourse)
     private userCourseRepository: Repository<UserCourse>,
+    @InjectRepository(Coupon)
+    private couponRepository: Repository<Coupon>,
   ) {}
 
   async create(userId: number, courseId: number) {
@@ -289,7 +296,7 @@ export class CouponSubmissionService {
     );
   }
 
-  async update(submissionId: number, status: number) {
+  async update(submissionId: number, status: number, couponId: number) {
     if (!Object.values(CouponSubmissionStatus).includes(status)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
@@ -306,6 +313,7 @@ export class CouponSubmissionService {
 
     const exists = await this.couponSubmissionRepository
       .createQueryBuilder('submission')
+      .leftJoinAndSelect('submission.course', 'course')
       .where({
         id: submissionId,
       })
@@ -325,11 +333,43 @@ export class CouponSubmissionService {
       );
     }
 
-    await this.couponSubmissionRepository.update(submissionId, {
-      status: status,
-    });
-
     if (status == CouponSubmissionStatus.APPROVED) {
+      if (!couponId) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Kupon tidak boleh kosong',
+        );
+      }
+
+      const coupon = await this.couponRepository
+        .createQueryBuilder('coupon')
+        .where({
+          id: couponId,
+          status: CouponStatus.AVAILABLE,
+        })
+        .getOne();
+
+      if (!coupon) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Kupon tidak ditemukan',
+        );
+      } else if (coupon.provider_id != exists.course.provider_id) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Kupon tidak berlaku untuk pelatihan dari penyelenggara ini',
+        );
+      } else if (coupon.course_id && coupon.course_id != exists.course.id) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Kupon tidak berlaku untuk pelatihan ini',
+        );
+      }
+
+      await this.couponSubmissionRepository.update(submissionId, {
+        coupon_id: coupon.id,
+        status: status,
+      });
       await this.userCourseRepository.save(
         this.userCourseRepository.create({
           user_id: exists.user_id,
@@ -340,6 +380,9 @@ export class CouponSubmissionService {
 
       return successResponse(null, `Pengajuan berhasil disetujui`);
     } else {
+      await this.couponSubmissionRepository.update(submissionId, {
+        status: status,
+      });
       return successResponse(null, `Pengajuan telah ditolak`);
     }
   }

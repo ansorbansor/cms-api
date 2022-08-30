@@ -326,6 +326,13 @@ export class CouponSubmissionService {
       );
     }
 
+    if (exists.status == CouponSubmissionStatus.APPROVED) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Permintaan yang telah disetujui tidab bisa diubah',
+      );
+    }
+
     if (exists.status == status) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

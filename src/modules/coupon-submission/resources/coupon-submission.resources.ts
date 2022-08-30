@@ -1,6 +1,10 @@
+import * as moment from 'moment';
 export const CouponSubmissionResource = (couponSubmission: any): any => {
   return {
-    created_at: couponSubmission.createdAtParseDate,
+    id: couponSubmission.id,
+    created_at: couponSubmission.created_at
+      ? moment(couponSubmission.created_at).format('yyyy-MM-D HH:mm:ss')
+      : null,
     user: {
       nip: couponSubmission.user_nip ? couponSubmission.user_nip : null,
       name: couponSubmission.user_name ? couponSubmission.user_name : null,
@@ -11,7 +15,10 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
       blacklist: couponSubmission.user_blacklist,
     },
     price: couponSubmission.course_price,
-    total_submission: couponSubmission.total_submissions,
-    total_submission_approved: couponSubmission.total_submissions_approved,
+    total_submission: Number(couponSubmission.total_submissions),
+    total_submission_approved: Number(
+      couponSubmission.total_submissions_approved,
+    ),
+    status: couponSubmission.status,
   };
 };

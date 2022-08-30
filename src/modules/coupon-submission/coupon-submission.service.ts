@@ -13,6 +13,7 @@ import { CouponSubmissionResource } from './resources/coupon-submission.resource
 import { Course } from 'src/entities/course.entity';
 import { UserCourse } from 'src/entities/user-course.entity';
 import { StartCourseResource } from './resources/start-course.resources';
+import { CouponSubmissionDetailResource } from './resources/coupon-submission-detail.resources';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -141,6 +142,8 @@ export class CouponSubmissionService {
     const data = this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
       .select('couponSubmission.created_at', 'created_at')
+      .addSelect('couponSubmission.id', 'id')
+      .addSelect('couponSubmission.status', 'status')
       .addSelect('user.nip', 'user_nip')
       .addSelect('user.name', 'user_name')
       .addSelect('course.price', 'course_price')
@@ -219,16 +222,17 @@ export class CouponSubmissionService {
   }
 
   async findOne(fields: EntityCondition<CouponSubmission>) {
-    const subquery = this.couponSubmissionRepository
+    const couponSubmissionTotal = await this.couponSubmissionRepository
       .createQueryBuilder('couponSubmissionTotal')
       .select('COUNT(couponSubmissionTotal.user_id)', 'total_submissions')
       .addSelect('couponSubmissionTotal.user_id', 'user_id')
       .groupBy('couponSubmissionTotal.user_id')
       .where(
         `date_part('year', couponSubmissionTotal.created_at) = date_part('year', CURRENT_DATE)`,
-      );
+      )
+      .getRawOne();
 
-    const subqueryApprovedCoupon = this.couponSubmissionRepository
+    const couponSubmissionApproved = await this.couponSubmissionRepository
       .createQueryBuilder('couponSubmissionApproved')
       .select(
         'COUNT(couponSubmissionApproved.user_id)',
@@ -241,41 +245,27 @@ export class CouponSubmissionService {
       )
       .andWhere(
         `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
-      );
+      )
+      .getRawOne();
 
     const data = await this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
-      .select('couponSubmission.created_at', 'created_at')
-      .addSelect('user.nip', 'user_nip')
-      .addSelect('user.name', 'user_name')
-      .addSelect('course.price', 'course_price')
-      .addSelect('employeePosition.name', 'user_position')
-      .addSelect('employeeLevel.name', 'user_level')
-      .addSelect('user.blacklist', 'user_blacklist')
-      .addSelect(
-        '"couponSubmissionTotal".total_submissions',
-        'total_submissions',
-      )
-      .addSelect(
-        '"couponSubmissionApproved".total_submissions_approved',
-        'total_submissions_approved',
-      )
-      .leftJoin('couponSubmission.user', 'user')
-      .leftJoin('couponSubmission.course', 'course')
-      .leftJoin('user.employeePosition', 'employeePosition')
-      .leftJoin('user.employeeLevel', 'employeeLevel')
-      .leftJoin(
-        '(' + subquery.getQuery() + ')',
-        'couponSubmissionTotal',
-        '"couponSubmission".user_id = "couponSubmissionTotal".user_id',
-      )
-      .leftJoin(
-        '(' + subqueryApprovedCoupon.getQuery() + ')',
-        'couponSubmissionApproved',
-        '"couponSubmission".user_id = "couponSubmissionApproved".user_id',
-      )
+      .leftJoinAndSelect('couponSubmission.user', 'user')
+      .leftJoinAndSelect('couponSubmission.course', 'course')
+      .leftJoinAndSelect('couponSubmission.coupon', 'coupon')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
+      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
+      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
+      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('user.photoFile', 'photoFile')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('coupon.provider', 'provider')
+      .leftJoinAndSelect('coupon.course', 'couponCourse')
+      .leftJoinAndSelect('user.userTopic', 'userTopic')
+      .leftJoinAndSelect('userTopic.category', 'category')
+      .leftJoinAndSelect('userTopic.topic', 'topic')
       .where(fields)
-      .getRawOne();
+      .getOne();
 
     if (!data) {
       throw failedResponse(
@@ -284,7 +274,11 @@ export class CouponSubmissionService {
       );
     }
 
-    return CouponSubmissionResource(data);
+    return CouponSubmissionDetailResource(
+      data,
+      couponSubmissionTotal.total_submissions,
+      couponSubmissionApproved.total_submissions_approved,
+    );
   }
 
   async softDelete(id: number): Promise<void> {

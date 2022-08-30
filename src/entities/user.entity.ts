@@ -19,6 +19,7 @@ import { EmployeeUnit } from './employee-unit.entity';
 import { EmployeeLevel } from './employee-level.entity';
 import { EmployeePosition } from './employee-position.entity';
 import { UserCourse } from './user-course.entity';
+import { UserTopic } from './user-topic.entity';
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
@@ -121,6 +122,10 @@ export class User extends EntityHelper {
   @OneToMany(() => UserCourse, (userCourse) => userCourse.user)
   @JoinColumn()
   userCourse?: UserCourse[] | null;
+
+  @OneToMany(() => UserTopic, (userTopic) => userTopic.user)
+  @JoinColumn()
+  userTopic?: UserTopic[] | null;
 
   total_lesson_hours = 0;
 

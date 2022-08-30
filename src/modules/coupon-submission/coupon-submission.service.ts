@@ -276,8 +276,12 @@ export class CouponSubmissionService {
 
     return CouponSubmissionDetailResource(
       data,
-      couponSubmissionTotal.total_submissions,
-      couponSubmissionApproved.total_submissions_approved,
+      couponSubmissionTotal.total_submissions
+        ? couponSubmissionTotal.total_submissions
+        : 0,
+      couponSubmissionApproved.total_submissions_approved
+        ? couponSubmissionApproved.total_submissions_approved
+        : 0,
     );
   }
 

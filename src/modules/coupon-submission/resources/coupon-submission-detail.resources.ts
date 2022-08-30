@@ -34,46 +34,84 @@ export const CouponSubmissionDetailResource = (
       ? Number(totalSubmissionApproved)
       : 0,
     user: {
-      nip: couponSubmission.user.nip ? couponSubmission.user.nip : null,
-      name: couponSubmission.user.name ? couponSubmission.user.name : null,
-      position: couponSubmission.user.employeePosition.name
-        ? couponSubmission.user.employeePosition.name
-        : null,
-      level: couponSubmission.user.employeeLevel.name
-        ? couponSubmission.user.employeeLevel.name
-        : null,
-      blacklist: couponSubmission.user.blacklist,
-      photo: couponSubmission.user.photoFile
-        ? minioConfig().fullUrl + couponSubmission.user.photoFile.path
-        : null,
-      unit: couponSubmission.user.employeeUnit
-        ? couponSubmission.user.employeeUnit.name
-        : null,
-      role: couponSubmission.user.userRole
-        ? couponSubmission.user.userRole[0].role.name
-        : null,
-      email: couponSubmission.user.email ? couponSubmission.user.email : null,
+      nip:
+        couponSubmission.user && couponSubmission.user.nip
+          ? couponSubmission.user.nip
+          : null,
+      name:
+        couponSubmission.user && couponSubmission.user.name
+          ? couponSubmission.user.name
+          : null,
+      position:
+        couponSubmission.user &&
+        couponSubmission.user.employeePosition &&
+        couponSubmission.user.employeePosition.name
+          ? couponSubmission.user.employeePosition.name
+          : null,
+      level:
+        couponSubmission.user &&
+        couponSubmission.user.employeeLevel &&
+        couponSubmission.user.employeeLevel.name
+          ? couponSubmission.user.employeeLevel.name
+          : null,
+      blacklist: couponSubmission.user
+        ? couponSubmission.user.blacklist
+        : false,
+      photo:
+        couponSubmission.user &&
+        couponSubmission.user.photoFile &&
+        couponSubmission.user.photoFile
+          ? minioConfig().fullUrl + couponSubmission.user.photoFile.path
+          : null,
+      unit:
+        couponSubmission.user &&
+        couponSubmission.user.employeeUnit &&
+        couponSubmission.user.employeeUnit
+          ? couponSubmission.user.employeeUnit.name
+          : null,
+      role:
+        couponSubmission.user &&
+        couponSubmission.user.userRole &&
+        couponSubmission.user.userRole > 0 &&
+        couponSubmission.user.userRole
+          ? couponSubmission.user.userRole[0].role.name
+          : null,
+      email:
+        couponSubmission.user && couponSubmission.user.email
+          ? couponSubmission.user.email
+          : null,
       categories: mapCat ? mapCat : [],
     },
     coupon: {
-      name: couponSubmission.coupon.name ? couponSubmission.coupon.name : null,
-      code: couponSubmission.coupon.code ? couponSubmission.coupon.code : null,
-      amount: couponSubmission.coupon.amount
-        ? couponSubmission.coupon.amount
-        : null,
-      start_date: couponSubmission.coupon.startDateParseDate
-        ? couponSubmission.coupon.startDateParseDate
-        : null,
-      end_date: couponSubmission.coupon.endDateParseDate
-        ? couponSubmission.coupon.endDateParseDate
-        : null,
-      provider: couponSubmission.coupon.provider
-        ? couponSubmission.coupon.provider.name
-        : null,
-      type: couponSubmission.coupon.type,
-      course: couponSubmission.coupon.course
-        ? couponSubmission.coupon.course.name
-        : null,
+      name:
+        couponSubmission.coupon && couponSubmission.coupon.name
+          ? couponSubmission.coupon.name
+          : null,
+      code:
+        couponSubmission.coupon && couponSubmission.coupon.code
+          ? couponSubmission.coupon.code
+          : null,
+      amount:
+        couponSubmission.coupon && couponSubmission.coupon.amount
+          ? couponSubmission.coupon.amount
+          : null,
+      start_date:
+        couponSubmission.coupon && couponSubmission.coupon.startDateParseDate
+          ? couponSubmission.coupon.startDateParseDate
+          : null,
+      end_date:
+        couponSubmission.coupon && couponSubmission.coupon.endDateParseDate
+          ? couponSubmission.coupon.endDateParseDate
+          : null,
+      provider:
+        couponSubmission.coupon && couponSubmission.coupon.provider
+          ? couponSubmission.coupon.provider.name
+          : null,
+      type: couponSubmission.coupon && couponSubmission.coupon.type,
+      course:
+        couponSubmission.coupon && couponSubmission.coupon.course
+          ? couponSubmission.coupon.course.name
+          : null,
     },
     price: couponSubmission.course_price,
     status: couponSubmission.status,

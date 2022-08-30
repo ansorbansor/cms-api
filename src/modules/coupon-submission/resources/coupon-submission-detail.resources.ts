@@ -1,3 +1,5 @@
+import minioConfig from 'src/config/minio.config';
+
 export const CouponSubmissionDetailResource = (
   couponSubmission: any,
   totalSubmission: number,
@@ -40,7 +42,7 @@ export const CouponSubmissionDetailResource = (
         : null,
       blacklist: couponSubmission.user.blacklist,
       photo: couponSubmission.user.photoFile
-        ? couponSubmission.user.photoFile.path
+        ? minioConfig().fullUrl + couponSubmission.user.photoFile.path
         : null,
       unit: couponSubmission.user.employeeUnit
         ? couponSubmission.user.employeeUnit.name

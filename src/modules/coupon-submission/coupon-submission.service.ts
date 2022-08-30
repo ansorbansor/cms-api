@@ -211,6 +211,7 @@ export class CouponSubmissionService {
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
+    data.orderBy('id', 'DESC');
 
     const getData = await data.getRawMany();
 

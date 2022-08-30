@@ -96,12 +96,12 @@ export class CouponSubmissionService {
     } else {
       if (couponSubmission.status == CouponSubmissionStatus.PENDING) {
         return successResponse(
-          StartCourseResource(null, CourseUserStatus.PENDING_VOUCHER),
+          StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
           `Pengajuan kupon sedang dalam proses`,
         );
       } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
         return successResponse(
-          StartCourseResource(null, CourseUserStatus.REJECTED_VOUCHER),
+          StartCourseResource(course, CourseUserStatus.REJECTED_VOUCHER),
           `Pengajuan kupon anda ditolak!`,
         );
       } else {

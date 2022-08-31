@@ -104,7 +104,13 @@ export class CouponSubmissionController {
     @Param('id') id: number,
     @Query('status') status: number,
     @Query('coupon_id') couponId: number,
+    @Query('reason') reason: string,
   ) {
-    return await this.couponSubmissionServices.update(id, status, couponId);
+    return await this.couponSubmissionServices.update(
+      id,
+      status,
+      couponId,
+      reason,
+    );
   }
 }

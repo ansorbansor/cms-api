@@ -20,5 +20,6 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
       couponSubmission.total_submissions_approved,
     ),
     status: couponSubmission.status,
+    reason: couponSubmission.reason ? couponSubmission.reason : null,
   };
 };

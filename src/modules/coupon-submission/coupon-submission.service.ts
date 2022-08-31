@@ -151,6 +151,7 @@ export class CouponSubmissionService {
       .select('couponSubmission.created_at', 'created_at')
       .addSelect('couponSubmission.id', 'id')
       .addSelect('couponSubmission.status', 'status')
+      .addSelect('couponSubmission.reason', 'reason')
       .addSelect('user.nip', 'user_nip')
       .addSelect('user.name', 'user_name')
       .addSelect('course.price', 'course_price')
@@ -296,7 +297,12 @@ export class CouponSubmissionService {
     );
   }
 
-  async update(submissionId: number, status: number, couponId: number) {
+  async update(
+    submissionId: number,
+    status: number,
+    couponId: number,
+    reason: string,
+  ) {
     if (!Object.values(CouponSubmissionStatus).includes(status)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
@@ -377,6 +383,7 @@ export class CouponSubmissionService {
         coupon_id: coupon.id,
         status: status,
       });
+
       await this.userCourseRepository.save(
         this.userCourseRepository.create({
           user_id: exists.user_id,
@@ -389,6 +396,7 @@ export class CouponSubmissionService {
     } else {
       await this.couponSubmissionRepository.update(submissionId, {
         status: status,
+        reason: reason,
       });
       return successResponse(null, `Pengajuan telah ditolak`);
     }

@@ -33,6 +33,7 @@ export const CouponSubmissionDetailResource = (
     total_submission_approved: totalSubmissionApproved
       ? Number(totalSubmissionApproved)
       : 0,
+    reason: couponSubmission.reason ? couponSubmission.reason : null,
     user: {
       nip:
         couponSubmission.user && couponSubmission.user.nip

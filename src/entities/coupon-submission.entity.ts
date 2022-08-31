@@ -21,6 +21,9 @@ export class CouponSubmission extends EntityHelper {
   @Column()
   status_by: number;
 
+  @Column()
+  reason: string;
+
   @OneToOne(() => Course)
   @JoinColumn({ name: 'course_id' })
   course?: Course;

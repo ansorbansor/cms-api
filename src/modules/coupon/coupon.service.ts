@@ -52,8 +52,8 @@ export class CouponService {
       data.andWhere(`coupon.end_date <= '${paginationOptions.end_date}'`);
     }
 
-    if (paginationOptions.provider) {
-      data.andWhere(`coupon.provider_id IN (${paginationOptions.provider})`);
+    if (paginationOptions.provider_id) {
+      data.andWhere(`provider.id = ${paginationOptions.provider_id}`);
     }
 
     if (paginationOptions.status) {

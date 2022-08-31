@@ -40,4 +40,5 @@ export interface IPaginationOptions {
   is_admin?: boolean;
   employeePosition?: number;
   employeeLevel?: number;
+  provider_id?: number;
 }

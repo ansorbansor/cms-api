@@ -240,25 +240,21 @@ export class AuthService {
       email,
     });
 
-    if (!user) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'emailNotExists');
-    } else {
-      const hash = crypto
-        .createHash('sha256')
-        .update(randomStringGenerator())
-        .digest('hex');
-      await this.forgotService.create({
-        hash,
-        user,
-      });
+    const hash = crypto
+      .createHash('sha256')
+      .update(randomStringGenerator())
+      .digest('hex');
+    await this.forgotService.create({
+      hash,
+      user,
+    });
 
-      await this.mailService.forgotPassword({
-        to: email,
-        data: {
-          hash,
-        },
-      });
-    }
+    await this.mailService.forgotPassword({
+      to: email,
+      data: {
+        hash,
+      },
+    });
   }
 
   async resetPassword(hash: string, password: string): Promise<void> {

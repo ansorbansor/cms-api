@@ -63,6 +63,14 @@ services:
     depends_on:
       - redis
 
+  maildev:
+    build:
+      context: .
+      dockerfile: Dockerfile.maildev
+    ports:
+      - ${MAIL_CLIENT_PORT}:1080
+      - ${MAIL_PORT}:1025
+
   minio1:
     <<: *minio-common
     hostname: minio1

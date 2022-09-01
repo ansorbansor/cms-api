@@ -111,7 +111,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
     return successResponse(
-      this.service.forgotPassword(forgotPasswordDto.email),
+      await this.service.forgotPassword(forgotPasswordDto.email),
       'success',
     );
   }

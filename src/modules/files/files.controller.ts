@@ -55,7 +55,7 @@ export class FilesController {
   @ApiParam({ name: 'path', example: 'background.png' })
   async download(@Param('path') path, @Response() response) {
     return successResponse(
-      await response.sendFile(path, { root: './uploads' }),
+      await response.sendFile(path, { root: './public' }),
       'success',
     );
   }

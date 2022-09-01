@@ -53,10 +53,11 @@ export class MailService {
           )}/password-change/${mailData.data.hash}`,
           actionTitle: await this.i18n.t('language.resetPassword'),
           app_name: this.configService.get('app.name'),
-          forgot_pass_text1: await this.i18n.t('language.forgot_pass_text1'),
-          forgot_pass_text2: await this.i18n.t('language.forgot_pass_text2'),
-          forgot_pass_text3: await this.i18n.t('language.forgot_pass_text3'),
-          forgot_pass_text4: await this.i18n.t('language.forgot_pass_text4'),
+          baseUrl: `${this.configService.get(
+            'minio.fullUrl',
+          )}${this.configService.get('minio.bucketName')}/systems/`,
+          frontendUrl: this.configService.get('app.frontendDomain'),
+          hash: mailData.data.hash,
         },
       });
   }

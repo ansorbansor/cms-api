@@ -82,3 +82,9 @@ export enum CourseUserStatus {
   PENDING_VOUCHER = 1,
   REJECTED_VOUCHER = 2,
 }
+
+export enum MailSubject {
+  FORGOT_PASSWORD = 'Setneg Playbook - Lupa Password',
+  APPROVED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Disetujui',
+  REJECTED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Ditolak',
+}

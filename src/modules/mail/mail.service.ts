@@ -2,6 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
+import { MailSubject } from 'src/utils/enums';
 import { MailData } from 'src/utils/interfaces';
 
 @Injectable()
@@ -39,25 +40,37 @@ export class MailService {
     if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
       await this.mailerService.sendMail({
         to: mailData.to,
-        subject: await this.i18n.t('language.resetPassword'),
-        text: `${this.configService.get(
-          'app.frontendDomain',
-        )}/password-change/${mailData.data.hash} ${await this.i18n.t(
-          'language.resetPassword',
-        )}`,
+        subject: MailSubject.FORGOT_PASSWORD,
         template: './reset-password',
         context: {
-          title: await this.i18n.t('language.resetPassword'),
           url: `${this.configService.get(
             'app.frontendDomain',
           )}/password-change/${mailData.data.hash}`,
-          actionTitle: await this.i18n.t('language.resetPassword'),
-          app_name: this.configService.get('app.name'),
           baseUrl: `${this.configService.get(
             'minio.fullUrl',
           )}${this.configService.get('minio.bucketName')}/systems/`,
           frontendUrl: this.configService.get('app.frontendDomain'),
           hash: mailData.data.hash,
+        },
+      });
+  }
+
+  async approveSubmission(
+    mailData: MailData<{
+      courseUrl: string;
+      courseTitle: string;
+      couponCode: string;
+    }>,
+  ) {
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: MailSubject.APPROVED_COUPON_SUBMISSION,
+        template: './approve-coupon-submission',
+        context: {
+          courseUrl: mailData.data.courseUrl,
+          courseTitle: mailData.data.courseTitle,
+          couponCode: mailData.data.couponCode,
         },
       });
   }

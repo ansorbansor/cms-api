@@ -14,7 +14,7 @@ export class RedisService {
 
   public async get(key: string, value: any) {
     if (redisConfig().status == 'true') {
-      return this.cacheManager.get<typeof value>(key);
+      return this.cacheManager.get<typeof value>(key) as typeof value;
     }
     return null;
   }

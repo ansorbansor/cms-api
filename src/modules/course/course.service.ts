@@ -175,7 +175,7 @@ export class CourseService {
       );
     }
 
-    this.redisService.set(redisKey, data);
+    this.redisService.set(redisKey, CourseResource(data));
 
     return CourseResource(data);
   }

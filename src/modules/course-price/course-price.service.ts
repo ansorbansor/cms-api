@@ -63,7 +63,10 @@ export class CoursePriceService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.price}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.price}:${fields.id}`,
+      CoursePriceResource(data),
+    );
 
     return CoursePriceResource(data);
   }

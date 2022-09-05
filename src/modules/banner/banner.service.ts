@@ -95,17 +95,24 @@ export class BannerService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
+    const redisKey = `${RedisKeyEnum.banner}:`;
+
+    const value = await this.redisService.get(redisKey, typeof BannerResource);
+    if (value != null) {
+      return infinityPagination(value, BannerResource, paginationOptions);
+    }
+
     const total = await this.bannerRepository.count();
     paginationOptions.total = total;
 
-    return infinityPagination(
-      await this.bannerRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-      }),
-      BannerResource,
-      paginationOptions,
-    );
+    const getData = await this.bannerRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+    });
+
+    this.redisService.set(redisKey, getData);
+
+    return infinityPagination(getData, BannerResource, paginationOptions);
   }
 
   async findOne(fields: EntityCondition<Banner>) {
@@ -128,7 +135,10 @@ export class BannerService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.banner}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.banner}:${fields.id}`,
+      BannerResource(data),
+    );
 
     return BannerResource(data);
   }

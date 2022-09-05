@@ -63,7 +63,10 @@ export class CourseLanguageService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.language}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.language}:${fields.id}`,
+      CourseLanguageResource(data),
+    );
 
     return CourseLanguageResource(data);
   }

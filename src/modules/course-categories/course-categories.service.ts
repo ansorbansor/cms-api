@@ -138,7 +138,10 @@ export class CourseCategoriesService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.category}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.category}:${fields.id}`,
+      CourseCategoryResource(data),
+    );
 
     return CourseCategoryResource(data);
   }

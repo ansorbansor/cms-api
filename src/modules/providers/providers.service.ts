@@ -86,7 +86,10 @@ export class ProvidersService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.provider}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.provider}:${fields.id}`,
+      ProviderResource(data),
+    );
 
     return ProviderResource(data);
   }

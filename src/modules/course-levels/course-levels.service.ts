@@ -63,7 +63,10 @@ export class CourseLevelsService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.level}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.level}:${fields.id}`,
+      CourseLevelResource(data),
+    );
 
     return CourseLevelResource(data);
   }

@@ -68,7 +68,10 @@ export class TopicsService {
       );
     }
 
-    this.redisService.set(`${RedisKeyEnum.topic}:${fields.id}`, data);
+    this.redisService.set(
+      `${RedisKeyEnum.topic}:${fields.id}`,
+      TopicResource(data),
+    );
 
     return TopicResource(data);
   }

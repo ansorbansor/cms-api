@@ -99,7 +99,7 @@ export class BannerService {
 
     const value = await this.redisService.get(redisKey, typeof BannerResource);
     if (value != null) {
-      return infinityPagination(value, BannerResource, paginationOptions);
+      return value;
     }
 
     const data = this.bannerRepository
@@ -120,9 +120,15 @@ export class BannerService {
     data.take(paginationOptions.limit);
     const getData = await data.getMany();
 
-    this.redisService.set(redisKey, getData);
+    const returnData = infinityPagination(
+      getData,
+      BannerResource,
+      paginationOptions,
+    );
 
-    return infinityPagination(getData, BannerResource, paginationOptions);
+    this.redisService.set(redisKey, returnData);
+
+    return returnData;
   }
 
   async findOne(fields: EntityCondition<Banner>) {

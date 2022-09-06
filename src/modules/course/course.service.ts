@@ -55,7 +55,7 @@ export class CourseService {
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
-      return infinityPagination(value, CourseResource, paginationOptions);
+      return value;
     }
 
     const data = this.courseRepository
@@ -139,13 +139,15 @@ export class CourseService {
     data.take(paginationOptions.limit);
     const getData = await data.getMany();
 
-    this.redisService.set(redisKey, getData);
-
-    return infinityPagination(
+    const returnData = infinityPagination(
       getData,
       paginationOptions.is_admin ? CourseAdminResource : CourseResource,
       paginationOptions,
     );
+
+    this.redisService.set(redisKey, returnData);
+
+    return returnData;
   }
 
   async findOne(fields: EntityCondition<Course>, user?: User) {

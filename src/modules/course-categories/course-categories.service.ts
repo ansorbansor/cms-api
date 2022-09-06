@@ -74,11 +74,7 @@ export class CourseCategoriesService {
       typeof CourseCategoryResource,
     );
     if (value != null) {
-      return infinityPagination(
-        value,
-        CourseCategoryResource,
-        paginationOptions,
-      );
+      return value;
     }
 
     const data = this.categoryRepository
@@ -103,13 +99,15 @@ export class CourseCategoriesService {
 
     const getData = await data.getMany();
 
-    this.redisService.set(redisKey, getData);
-
-    return infinityPagination(
+    const returnData = infinityPagination(
       getData,
       CourseCategoryResource,
       paginationOptions,
     );
+
+    this.redisService.set(redisKey, returnData);
+
+    return returnData;
   }
 
   async findOne(fields: EntityCondition<CourseCategory>, withTopics?: boolean) {

@@ -113,11 +113,12 @@ export class BannerService {
       );
     }
 
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
     const getData = await data.getMany();
-
-    paginationOptions.total = getData.length;
 
     this.redisService.set(redisKey, getData);
 

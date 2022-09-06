@@ -4,10 +4,13 @@ import minioConfig from "src/config/minio.config";
 import { User } from "src/entities/user.entity";
 
 export const UserResource = (user: User): any => {
-  const mapRole = user.userRole != null ? user.userRole.map((role) => {
-    return {
-      id: role.role ? role.role.id : null,
-      name: role.role ? role.role.name: null
+  const mapRole = [];
+  user.userRole != null ? user.userRole.map((role) => {
+    if (role.role) {
+      mapRole.push({
+        id: role.role ? role.role.id : null,
+        name: role.role ? role.role.name: null
+      });
     }
   }) : [];
 

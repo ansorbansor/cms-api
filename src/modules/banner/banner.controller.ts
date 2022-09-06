@@ -60,6 +60,7 @@ export class BannerController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -70,6 +71,7 @@ export class BannerController {
         page,
         limit,
         total: 0,
+        search: search,
       }),
       'success',
     );

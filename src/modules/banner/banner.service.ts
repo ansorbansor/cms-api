@@ -95,20 +95,29 @@ export class BannerService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.banner}:`;
+    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}`;
 
     const value = await this.redisService.get(redisKey, typeof BannerResource);
     if (value != null) {
       return infinityPagination(value, BannerResource, paginationOptions);
     }
 
-    const total = await this.bannerRepository.count();
-    paginationOptions.total = total;
+    const data = this.bannerRepository
+      .createQueryBuilder('banner')
+      .leftJoinAndSelect('banner.photoFile', 'photoFile')
+      .leftJoinAndSelect('banner.course', 'course');
 
-    const getData = await this.bannerRepository.find({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-    });
+    if (paginationOptions.search) {
+      data.andWhere(
+        `LOWER(banner.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+    }
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+    const getData = await data.getMany();
+
+    paginationOptions.total = getData.length;
 
     this.redisService.set(redisKey, getData);
 

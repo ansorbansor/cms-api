@@ -21,8 +21,10 @@ export class RedisService {
 
   public async del(key: string) {
     if (redisConfig().status == 'true') {
-      const keys = await this.cacheManager.store.keys(`*${key}*`);
-      await this.cacheManager.store.del(keys);
+      const keys = (await this.cacheManager.store.keys(`*${key}*`)) as any[];
+      if (keys.length > 0) {
+        await this.cacheManager.store.del(keys);
+      }
     }
   }
 }

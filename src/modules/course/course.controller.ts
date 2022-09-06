@@ -188,7 +188,7 @@ export class CourseController {
     );
   }
 
-  @Delete('courses:id')
+  @Delete('courses/:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)

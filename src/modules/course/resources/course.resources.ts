@@ -9,6 +9,22 @@ export const CourseResource = (course: Course, userId?: number): any => {
         : null
       : null;
 
+    const mapLanguage =
+      course.courseLanguage != null
+        ? course.courseLanguage.map((language) => {
+            return {
+              id:
+                language.language && language.language.id
+                  ? language.language.id
+                  : null,
+              name:
+                language.language && language.language.name
+                  ? language.language.name
+                  : null,
+            };
+          })
+        : [];
+
     return {
       id: course.id,
       name: course.name,
@@ -40,14 +56,7 @@ export const CourseResource = (course: Course, userId?: number): any => {
             name: course.courseLevel.name ? course.courseLevel.name : null,
           }
         : null,
-      language: course.courseLanguage
-        ? {
-            id: course.courseLanguage.id ? course.courseLanguage.id : null,
-            name: course.courseLanguage.name
-              ? course.courseLanguage.name
-              : null,
-          }
-        : null,
+      language: mapLanguage,
       date_course: {
         name: course.dateCourseParse ? 'Terjadwal' : 'Mandiri',
         value: course.dateCourseParse,

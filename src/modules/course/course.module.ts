@@ -6,10 +6,11 @@ import { Course } from 'src/entities/course.entity';
 import { CourseController } from './course.controller';
 import { CourseService } from './course.service';
 import { UserLike } from 'src/entities/user-like.entity';
+import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Course, UserLike]),
+    TypeOrmModule.forFeature([Course, UserLike, CourseLanguageTransaction]),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),

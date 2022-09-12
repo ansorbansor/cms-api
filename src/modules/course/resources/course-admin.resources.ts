@@ -3,6 +3,16 @@ import { Course } from 'src/entities/course.entity';
 
 export const CourseAdminResource = (course: Course, userId?: number): any => {
   if (course) {
+    const mapLanguage =
+      course.courseLanguage != null
+        ? course.courseLanguage.map((language) => {
+            return {
+              id: language.language.id ? language.language.id : null,
+              name: language.language.name ? language.language.name : null,
+            };
+          })
+        : [];
+
     return {
       id: course.id,
       name: course.name,
@@ -34,14 +44,7 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
             name: course.courseLevel.name ? course.courseLevel.name : null,
           }
         : null,
-      language: course.courseLanguage
-        ? {
-            id: course.courseLanguage.id ? course.courseLanguage.id : null,
-            name: course.courseLanguage.name
-              ? course.courseLanguage.name
-              : null,
-          }
-        : null,
+      language: mapLanguage,
       date_course: {
         name: course.dateCourseParse ? 'Terjadwal' : 'Mandiri',
         value: course.dateCourseParse,

@@ -5,6 +5,16 @@ export const EditorChoiceCourseResource = (
   editorChoiceCourse: EditorChoiceCourse,
 ): any => {
   if (editorChoiceCourse) {
+    const mapLanguage =
+      editorChoiceCourse.course.courseLanguage != null
+        ? editorChoiceCourse.course.courseLanguage.map((language) => {
+            return {
+              id: language.language.id ? language.language.id : null,
+              name: language.language.name ? language.language.name : null,
+            };
+          })
+        : [];
+
     return {
       id: editorChoiceCourse.course.id,
       name: editorChoiceCourse.course.name,
@@ -51,16 +61,7 @@ export const EditorChoiceCourseResource = (
               : null,
           }
         : null,
-      language: editorChoiceCourse.course.courseLanguage
-        ? {
-            id: editorChoiceCourse.course.courseLanguage.id
-              ? editorChoiceCourse.course.courseLanguage.id
-              : null,
-            name: editorChoiceCourse.course.courseLanguage.name
-              ? editorChoiceCourse.course.courseLanguage.name
-              : null,
-          }
-        : null,
+      language: mapLanguage,
       date_course: {
         name: editorChoiceCourse.course.dateCourseParse
           ? 'Terjadwal'

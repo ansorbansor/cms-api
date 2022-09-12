@@ -18,6 +18,7 @@ import { CourseResource } from './resources/course.resources';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UserLike } from 'src/entities/user-like.entity';
 import { CourseAdminResource } from './resources/course-admin.resources';
+import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 
 @Injectable()
 export class CourseService {
@@ -26,6 +27,8 @@ export class CourseService {
     private courseRepository: Repository<Course>,
     @InjectRepository(UserLike)
     private userLikeRepository: Repository<UserLike>,
+    @InjectRepository(CourseLanguageTransaction)
+    private courseLanguageTransactionRepository: Repository<CourseLanguageTransaction>,
 
     private redisService: RedisService,
     private fileService: FilesService,
@@ -68,7 +71,16 @@ export class CourseService {
       }),
     );
 
-    return this.findOne({ id: course.id });
+    createCourseDto.language_id.forEach(async (element) => {
+      await this.courseLanguageTransactionRepository.save(
+        this.courseLanguageTransactionRepository.create({
+          course_id: course.id,
+          language_id: element,
+        }),
+      );
+    });
+
+    return this.findOneAdmin({ id: course.id });
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
@@ -188,6 +200,7 @@ export class CourseService {
         'courseLanguage',
         'coursePrice',
         'photoFile',
+        'courseLanguage.language',
       ],
     });
 
@@ -214,6 +227,7 @@ export class CourseService {
         'courseLanguage',
         'coursePrice',
         'photoFile',
+        'courseLanguage.language',
       ],
     });
 
@@ -232,20 +246,36 @@ export class CourseService {
     photo: BufferedFile,
     user: User,
   ) {
-    await this.findOne({ id: updateCourseDto.id });
-
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, user.id);
       updateCourseDto.photo = img;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { language_id, ...saveData } = updateCourseDto;
+
     await this.courseRepository.update(updateCourseDto.id, {
-      ...updateCourseDto,
+      ...saveData,
     });
 
-    this.redisService.del(`${RedisKeyEnum.course}`);
+    if (updateCourseDto.language_id) {
+      await this.courseLanguageTransactionRepository.softDelete({
+        course_id: updateCourseDto.id,
+      });
 
-    return await this.findOne({ id: updateCourseDto.id });
+      updateCourseDto.language_id.forEach(async (element) => {
+        await this.courseLanguageTransactionRepository.save(
+          this.courseLanguageTransactionRepository.create({
+            course_id: updateCourseDto.id,
+            language_id: element,
+          }),
+        );
+      });
+    }
+
+    this.redisService.del(`${RedisKeyEnum.course}:`);
+
+    return await this.findOneAdmin({ id: updateCourseDto.id });
   }
 
   async softDelete(id: number): Promise<void> {

@@ -2,7 +2,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { FindOperator, getRepository, ILike } from 'typeorm';
+import { FindOperator, getRepository, ILike, In } from 'typeorm';
 import { ValidationArguments } from 'class-validator/types/validation/ValidationArguments';
 
 type ValidationNotExistsEntity =
@@ -15,18 +15,24 @@ type ValidationNotExistsEntity =
 
 @ValidatorConstraint({ name: 'IsExist', async: true })
 export class IsExist implements ValidatorConstraintInterface {
-  async validate(value: string, validationArguments: ValidationArguments) {
+  async validate(value: any, validationArguments: ValidationArguments) {
     const repository = validationArguments.constraints[0];
     const pathToProperty = validationArguments.constraints[1];
-    const entity = await getRepository(repository).findOne({
-      [pathToProperty ? pathToProperty : validationArguments.property]: value?.[
-        pathToProperty
-      ]
-        ? value?.[pathToProperty]
-        : value,
-    });
 
-    return Boolean(entity);
+    if (Array.isArray(value)) {
+      const entity = await getRepository(repository).find({
+        [pathToProperty ? pathToProperty : validationArguments.property]: In(
+          value?.[pathToProperty] ? value?.[pathToProperty] : value,
+        ),
+      });
+      return Boolean(entity.length == value.length);
+    } else {
+      const entity = await getRepository(repository).findOne({
+        [pathToProperty ? pathToProperty : validationArguments.property]:
+          value?.[pathToProperty] ? value?.[pathToProperty] : value,
+      });
+      return Boolean(entity);
+    }
   }
 }
 

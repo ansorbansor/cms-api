@@ -11,12 +11,12 @@ import { Provider } from './provider.entity';
 import { CourseCategory } from './course-category.entity';
 import { Topic } from './topic.entity';
 import { CourseLevel } from './course-level.entity';
-import { CourseLanguage } from './course-language.entity';
 import { CoursePrice } from './course-price.entity';
 import { FileEntity } from './file.entity';
 import * as moment from 'moment';
 import { UserLike } from './user-like.entity';
 import { UserCourse } from './user-course.entity';
+import { CourseLanguageTransaction } from './course-language-transaction.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -43,9 +43,6 @@ export class Course extends EntityHelper {
 
   @Column()
   level_id: number;
-
-  @Column()
-  language_id: number;
 
   @Column()
   date_course: Date;
@@ -90,10 +87,6 @@ export class Course extends EntityHelper {
   @JoinColumn({ name: 'level_id' })
   courseLevel?: CourseLevel;
 
-  @ManyToOne(() => CourseLanguage)
-  @JoinColumn({ name: 'language_id' })
-  courseLanguage?: CourseLanguage;
-
   @ManyToOne(() => CoursePrice)
   @JoinColumn({ name: 'price_id' })
   coursePrice?: CoursePrice;
@@ -101,6 +94,13 @@ export class Course extends EntityHelper {
   @ManyToOne(() => FileEntity)
   @JoinColumn({ name: 'photo' })
   photoFile?: FileEntity;
+
+  @OneToMany(
+    () => CourseLanguageTransaction,
+    (courseLanguage) => courseLanguage.course,
+  )
+  @JoinColumn()
+  courseLanguage?: CourseLanguageTransaction[];
 
   @OneToMany(() => UserLike, (userLike) => userLike.course)
   @JoinColumn()

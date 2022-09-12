@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, Validate } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  Validate,
+} from 'class-validator';
 import { Rating } from 'src/utils/enums';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 
@@ -53,10 +59,11 @@ export class CreateCourseDto {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
+  @IsArray()
   @Validate(IsExist, ['CourseLanguage', 'id'], {
     message: 'Bahasa tidak tersedia',
   })
-  language_id: number;
+  language_id: number[];
 
   @ApiProperty({ example: '2022-01-1 00:00' })
   @IsOptional()

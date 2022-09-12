@@ -8,7 +8,7 @@ import {
   successResponse,
 } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { RedisKeyEnum } from 'src/utils/enums';
+import { CoursePriceType, RedisKeyEnum } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { Course } from 'src/entities/course.entity';
@@ -39,6 +39,27 @@ export class CourseService {
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, user.id);
       createCourseDto.photo = img;
+    }
+
+    if (createCourseDto.price_id == CoursePriceType.FREE) {
+      createCourseDto.price = 0;
+      createCourseDto.freemium_code = null;
+    } else if (createCourseDto.price_id == CoursePriceType.PAID) {
+      createCourseDto.freemium_code = null;
+      if (!createCourseDto.price || createCourseDto.price == 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Harga tidak boleh kosong.',
+        );
+      }
+    } else if (createCourseDto.price_id == CoursePriceType.FREEMIUM) {
+      createCourseDto.price = 0;
+      if (!createCourseDto.freemium_code) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Freemium Code tidak boleh kosong.',
+        );
+      }
     }
 
     const course = await this.courseRepository.save(

@@ -88,3 +88,9 @@ export enum MailSubject {
   APPROVED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Disetujui',
   REJECTED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Ditolak',
 }
+
+export enum CoursePriceType {
+  FREE = 1,
+  PAID = 2,
+  FREEMIUM = 3,
+}

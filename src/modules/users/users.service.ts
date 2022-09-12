@@ -96,9 +96,17 @@ export class UsersService {
   }
 
   async findOne(fields: EntityCondition<User>) {
-    const data = await this.usersRepository.findOne({
-      where: fields,
-    });
+    const data = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('roleAccess.menu', 'menu')
+      .leftJoinAndSelect('user.userTopic', 'userTopic')
+      .leftJoinAndSelect('userTopic.category', 'category')
+      .leftJoinAndSelect('userTopic.topic', 'topic')
+      .where(fields)
+      .getOne();
 
     if (!data) {
       throw failedResponse(
@@ -117,6 +125,9 @@ export class UsersService {
       .leftJoinAndSelect('userRole.role', 'role')
       .leftJoinAndSelect('role.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
+      .leftJoinAndSelect('user.userTopic', 'userTopic')
+      .leftJoinAndSelect('userTopic.category', 'category')
+      .leftJoinAndSelect('userTopic.topic', 'topic')
       .where(fields)
       .getOne();
 

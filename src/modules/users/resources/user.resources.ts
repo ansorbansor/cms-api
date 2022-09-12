@@ -5,12 +5,35 @@ import { User } from "src/entities/user.entity";
 
 export const UserResource = (user: User): any => {
   const mapRole = [];
+  const mapUserTopic = [];
+
   user.userRole != null ? user.userRole.map((role) => {
     if (role.role) {
       mapRole.push({
         id: role.role ? role.role.id : null,
         name: role.role ? role.role.name: null
       });
+    }
+  }) : [];
+
+  user.userTopic != null ? user.userTopic.map((category) => {
+    if (!mapUserTopic.some((e) => e.category_id == category.category_id)) {
+      const mapTopic = user.userTopic.filter(
+        (topic) => topic.category_id == category.category_id,
+      );
+
+      if(category.category){
+        mapUserTopic.push({
+          category_id: category.category.id ? category.category.id : null,
+          category_name: category.category.name ? category.category.name : null,
+          topics: mapTopic.map((topic) => {
+            return {
+              topic_id: topic.topic && topic.topic.id ? topic.topic.id : null,
+              topic_name: topic.topic && topic.topic.name ? topic.topic.name : null,
+            };
+          }),
+        });
+      }
     }
   }) : [];
 
@@ -39,5 +62,6 @@ export const UserResource = (user: User): any => {
       name: user.employeePosition ? user.employeePosition.name : null
     },
     lesson_hour: user.total_lesson_hours,
+    user_categories: mapUserTopic,
   };
 };

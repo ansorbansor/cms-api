@@ -7,7 +7,7 @@ export class CourseLanguage extends EntityHelper {
   @Column()
   name: string;
 
-  @OneToMany(() => CourseLanguageTransaction, (course) => course.course_id)
+  @OneToMany(() => CourseLanguageTransaction, (course) => course.language)
   @JoinColumn()
   course?: CourseLanguageTransaction[];
   course_count: number;

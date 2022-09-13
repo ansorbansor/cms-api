@@ -3,15 +3,17 @@ import { Course } from 'src/entities/course.entity';
 
 export const CourseAdminResource = (course: Course, userId?: number): any => {
   if (course) {
-    const mapLanguage =
-      course.courseLanguage != null
-        ? course.courseLanguage.map((language) => {
-            return {
+    const mapLanguage = [];
+    course.courseLanguage != null
+      ? course.courseLanguage.map((language) => {
+          if (language.language && language.language.id) {
+            mapLanguage.push({
               id: language.language.id ? language.language.id : null,
               name: language.language.name ? language.language.name : null,
-            };
-          })
-        : [];
+            });
+          }
+        })
+      : [];
 
     return {
       id: course.id,

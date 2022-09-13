@@ -28,6 +28,7 @@ import { CourseModule } from './modules/course/course.module';
 import { CourseDurationModule } from './modules/course_duration/course-duration.module';
 import { EditorChoiceCourseModule } from './modules/editor-choice-course/editor-choice-course.module';
 import { EmployeeLevelModule } from './modules/employee-level/employee-level.module';
+import { EmployeePositionModule } from './modules/employee-position/employee-level.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -102,6 +103,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     CourseDurationModule,
     CouponSubmissionModule,
     EmployeeLevelModule,
+    EmployeePositionModule,
   ],
 })
 export class AppModule {

@@ -251,6 +251,27 @@ export class CourseService {
       updateCourseDto.photo = img;
     }
 
+    if (updateCourseDto.price_id == CoursePriceType.FREE) {
+      updateCourseDto.price = 0;
+      updateCourseDto.freemium_code = null;
+    } else if (updateCourseDto.price_id == CoursePriceType.PAID) {
+      updateCourseDto.freemium_code = null;
+      if (!updateCourseDto.price || updateCourseDto.price == 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Harga tidak boleh kosong.',
+        );
+      }
+    } else if (updateCourseDto.price_id == CoursePriceType.FREEMIUM) {
+      updateCourseDto.price = 0;
+      if (!updateCourseDto.freemium_code) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Freemium Code tidak boleh kosong.',
+        );
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { language_id, ...saveData } = updateCourseDto;
 

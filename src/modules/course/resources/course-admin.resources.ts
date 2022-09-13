@@ -75,6 +75,7 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
             )
           : 0
         : 0,
+      status: course.status,
     };
   }
 

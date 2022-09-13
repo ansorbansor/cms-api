@@ -13,6 +13,7 @@ import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { UserTopic } from 'src/entities/user-topic.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +30,8 @@ export class UsersService {
     private redisService: RedisService,
 
     private fileService: FilesService,
+
+    private mailService: MailService,
   ) {}
 
   async create(
@@ -66,6 +69,14 @@ export class UsersService {
         role_id: createProfileDto.role_id,
       }),
     );
+
+    await this.mailService.welcome({
+      to: user.email,
+      data: {
+        email: user.email,
+        password: createProfileDto.password,
+      },
+    });
 
     return this.findOne({ id: user.id });
   }

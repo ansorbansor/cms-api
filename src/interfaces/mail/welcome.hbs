@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{baseUrl}}style.css">
-    <title>Course Penolakan</title>
+    <title>Selamat Datang di Setneg</title>
   </head>
   <body>
     <main class="main-wrapper">
@@ -26,19 +26,39 @@
             </div>
             <div class="content">
                 <h4>
-                    Mohon Maaf
+                    Selamat Datang di Setneg Playbook
                 </h4>
                 <p>
-                    Pengajuan pendaftaran course <span><a href="{{courseUrl}}">{{courseTitle}}</a></span>, telah ditolak.
+                    Anda bisa mengakses Setneg Playbook menggunakan akun :
                 </p>
+                <div class="user-auth">
+                    <p>
+                        Email :
+                        <span>{{email}}</span>
+                    </p>
+                    <p>
+                        Password :
+                        <span>{{password}}</span>
+                    </p>
+                </div>
                 <p>
-                    Alasan :<br/>
-                    {{reason}}
+                    Selanjutnya, Anda bisa mengakses Setneg Playbook melalui tombol di bawah ini.
                 </p>
+                <a class="btn btn-primary" href="{{frontendUrl}}" role="button">
+                    Login Setneg Playbook
+                </a>
                 <p>
-                    Hubungi CS kami untuk informasi lebih lanjut. Terimakasih.
+                    Jika Anda mengalami kendala dengan tombol di atas, Anda bisa klik link di bawah ini. <br/>
+                    <span>
+                        <a href="{{frontendUrl}}">
+                            {{frontendUrl}}
+                        </a>
+                    </span>
                 </p>
-                <div class="regards" style="margin-bottom: 40px;">
+                <div class="regards">
+                    <p>
+                        Terimakasih.
+                    </p>
                     <h6>
                         Setneg Playbook<br/>The Ultimate Learning Hub
                     </h6>

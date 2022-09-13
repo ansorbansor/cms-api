@@ -87,6 +87,7 @@ export enum MailSubject {
   FORGOT_PASSWORD = 'Setneg Playbook - Lupa Password',
   APPROVED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Disetujui',
   REJECTED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Ditolak',
+  WELCOME = 'Setneg Playbook - Selamat Datang di Playbook',
 }
 
 export enum CoursePriceType {

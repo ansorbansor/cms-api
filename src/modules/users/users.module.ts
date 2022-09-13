@@ -7,6 +7,7 @@ import { UserRoles } from 'src/entities/user-role.entity';
 import { RedisService } from '../redis/redis.service';
 import { RedisConfigService } from 'src/config/redis-config.service';
 import { UserTopic } from 'src/entities/user-topic.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UserTopic } from 'src/entities/user-topic.entity';
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
+    MailModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, RedisService],

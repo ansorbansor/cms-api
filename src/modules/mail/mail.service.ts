@@ -102,4 +102,26 @@ export class MailService {
         },
       });
   }
+
+  async welcome(
+    mailData: MailData<{
+      email: string;
+      password: string;
+    }>,
+  ) {
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: MailSubject.WELCOME,
+        template: './welcome',
+        context: {
+          baseUrl: `${this.configService.get(
+            'minio.fullUrl',
+          )}${this.configService.get('minio.bucketName')}/systems/`,
+          frontendUrl: this.configService.get('app.frontendDomain'),
+          email: mailData.data.email,
+          password: mailData.data.password,
+        },
+      });
+  }
 }

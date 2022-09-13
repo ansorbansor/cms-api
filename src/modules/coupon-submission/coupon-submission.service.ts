@@ -19,6 +19,7 @@ import { UserCourse } from 'src/entities/user-course.entity';
 import { StartCourseResource } from './resources/start-course.resources';
 import { CouponSubmissionDetailResource } from './resources/coupon-submission-detail.resources';
 import { Coupon } from 'src/entities/coupon.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -31,6 +32,7 @@ export class CouponSubmissionService {
     private userCourseRepository: Repository<UserCourse>,
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
+    private mailService: MailService,
   ) {}
 
   async create(userId: number, courseId: number) {
@@ -320,6 +322,7 @@ export class CouponSubmissionService {
     const exists = await this.couponSubmissionRepository
       .createQueryBuilder('submission')
       .leftJoinAndSelect('submission.course', 'course')
+      .leftJoinAndSelect('submission.user', 'user')
       .where({
         id: submissionId,
       })
@@ -392,12 +395,31 @@ export class CouponSubmissionService {
         }),
       );
 
+      await this.mailService.approveSubmission({
+        to: exists.user.email,
+        data: {
+          courseUrl: exists.course.url,
+          courseTitle: exists.course.name,
+          couponCode: coupon.code,
+        },
+      });
+
       return successResponse(null, `Pengajuan berhasil disetujui`);
     } else {
       await this.couponSubmissionRepository.update(submissionId, {
         status: status,
         reason: reason,
       });
+
+      await this.mailService.rejectSubmission({
+        to: exists.user.email,
+        data: {
+          courseUrl: exists.course.url,
+          courseTitle: exists.course.name,
+          reason: reason,
+        },
+      });
+
       return successResponse(null, `Pengajuan telah ditolak`);
     }
   }

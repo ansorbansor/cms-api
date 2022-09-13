@@ -68,9 +68,37 @@ export class MailService {
         subject: MailSubject.APPROVED_COUPON_SUBMISSION,
         template: './approve-coupon-submission',
         context: {
+          baseUrl: `${this.configService.get(
+            'minio.fullUrl',
+          )}${this.configService.get('minio.bucketName')}/systems/`,
+          frontendUrl: this.configService.get('app.frontendDomain'),
           courseUrl: mailData.data.courseUrl,
           courseTitle: mailData.data.courseTitle,
           couponCode: mailData.data.couponCode,
+        },
+      });
+  }
+
+  async rejectSubmission(
+    mailData: MailData<{
+      courseUrl: string;
+      courseTitle: string;
+      reason: string;
+    }>,
+  ) {
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: MailSubject.REJECTED_COUPON_SUBMISSION,
+        template: './reject-coupon-submission',
+        context: {
+          baseUrl: `${this.configService.get(
+            'minio.fullUrl',
+          )}${this.configService.get('minio.bucketName')}/systems/`,
+          frontendUrl: this.configService.get('app.frontendDomain'),
+          courseUrl: mailData.data.courseUrl,
+          courseTitle: mailData.data.courseTitle,
+          reason: mailData.data.reason,
         },
       });
   }

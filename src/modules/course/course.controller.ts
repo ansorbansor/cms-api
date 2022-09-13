@@ -74,6 +74,8 @@ export class CourseController {
     @Query('rating') rating?: number[],
     @Query('owned') owned?: boolean,
     @Query('liked') liked?: boolean,
+    @Query('latest') latest?: boolean,
+    @Query('popular') popular?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -97,6 +99,8 @@ export class CourseController {
         user_id: req.user?.id,
         owned: owned,
         liked: liked,
+        latest: latest,
+        popular: popular,
       }),
       'success',
     );
@@ -123,6 +127,8 @@ export class CourseController {
     @Query('rating') rating?: number[],
     @Query('liked') liked?: boolean,
     @Query('user_id') userId?: number,
+    @Query('latest') latest?: boolean,
+    @Query('popular') popular?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -147,6 +153,8 @@ export class CourseController {
         liked: liked,
         user_id: userId,
         is_admin: true,
+        latest: latest,
+        popular: popular,
       }),
       'success',
     );

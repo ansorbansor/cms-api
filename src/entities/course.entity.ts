@@ -109,6 +109,7 @@ export class Course extends EntityHelper {
   @OneToMany(() => UserCourse, (userCourse) => userCourse.course)
   @JoinColumn()
   userCourse?: UserCourse[];
+  userCourseCount = 0;
 
   @AfterLoad()
   setLessonHours() {

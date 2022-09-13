@@ -41,4 +41,6 @@ export interface IPaginationOptions {
   employeePosition?: number;
   employeeLevel?: number;
   provider_id?: number;
+  latest?: boolean;
+  popular?: boolean;
 }

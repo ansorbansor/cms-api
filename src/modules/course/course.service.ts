@@ -19,6 +19,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { UserLike } from 'src/entities/user-like.entity';
 import { CourseAdminResource } from './resources/course-admin.resources';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
+import { UserCourse } from 'src/entities/user-course.entity';
 
 @Injectable()
 export class CourseService {
@@ -84,7 +85,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}`;
+    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -101,7 +102,10 @@ export class CourseService {
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile');
 
-    if (paginationOptions.user_id) {
+    if (
+      paginationOptions.user_id &&
+      (paginationOptions.owned || paginationOptions.is_admin)
+    ) {
       data.leftJoinAndSelect('course.userCourse', 'userCourse');
       data.leftJoinAndSelect('course.userLike', 'userLike');
       if (paginationOptions.owned) {
@@ -163,6 +167,26 @@ export class CourseService {
 
     if (paginationOptions.rating) {
       data.andWhere(`course.rating IN (${paginationOptions.rating})`);
+    }
+
+    if (paginationOptions.latest) {
+      data.orderBy('course.created_at', 'DESC');
+    }
+
+    if (paginationOptions.popular) {
+      data
+        .addSelect((subQuery) => {
+          return subQuery
+            .select('COUNT(uc.id)', 'count')
+            .from(UserCourse, 'uc')
+            .where('uc.course_id = course.id');
+        }, 'count')
+        .addOrderBy('count', 'DESC')
+        .loadRelationCountAndMap('course.userCourseCount', 'course.userCourse');
+
+      if (!paginationOptions.owned) {
+        data.leftJoinAndSelect('course.userCourse', 'userCourse');
+      }
     }
 
     const total = await data.getCount();

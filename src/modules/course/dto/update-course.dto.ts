@@ -98,11 +98,11 @@ export class UpdateCourseDto {
   price_id: number;
 
   @ApiProperty({ example: 100000 })
-  @IsNotEmpty()
+  @IsOptional()
   price?: number;
 
   @ApiProperty({ example: 'Lorem#123' })
-  @IsNotEmpty()
+  @IsOptional()
   freemium_code?: string;
 
   @ApiProperty({ type: 'string', format: 'binary' })

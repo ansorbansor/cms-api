@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, MinLength, Validate } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  MinLength,
+  Validate,
+  ValidateNested,
+} from 'class-validator';
 import { FileEntity } from 'src/entities/file.entity';
+import { CreateUserTopicDto } from 'src/modules/users/dto/create-user-topic.dto';
 import { IsExist } from 'src/utils/validators';
 
 export class AuthUpdateDto {
@@ -24,4 +33,12 @@ export class AuthUpdateDto {
     message: 'imageNotExists',
   })
   photoFile?: FileEntity | null;
+
+  @ApiProperty()
+  @ValidateNested({
+    each: true,
+  })
+  @IsArray()
+  @Type(() => CreateUserTopicDto)
+  categories: CreateUserTopicDto[];
 }

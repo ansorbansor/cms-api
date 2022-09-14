@@ -213,6 +213,10 @@ export class UsersService {
       }),
     );
 
+    if (updateProfileDto.categories) {
+      await this.createUserTopic(updateProfileDto.categories, id);
+    }
+
     return await this.findOne({ id: id });
   }
 
@@ -233,6 +237,10 @@ export class UsersService {
           topic_id: dataa,
         });
       });
+    });
+
+    await this.userTopicsRepository.softDelete({
+      user_id: userId,
     });
 
     await this.userTopicsRepository.save(

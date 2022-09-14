@@ -14,49 +14,59 @@ export class MailService {
   ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: await this.i18n.t('language.confirmEmail'),
-        text: `${this.configService.get('app.frontendDomain')}/confirm-email/${
-          mailData.data.hash
-        } ${await this.i18n.t('language.confirmEmail')}`,
-        template: './activation',
-        context: {
-          title: await this.i18n.t('language.confirmEmail'),
-          url: `${this.configService.get('app.frontendDomain')}/confirm-email/${
-            mailData.data.hash
-          }`,
-          actionTitle: await this.i18n.t('language.confirmEmail'),
-          app_name: this.configService.get('app.name'),
-          activation_text1: await this.i18n.t('language.activation_text1'),
-          activation_text2: await this.i18n.t('language.activation_text2'),
-          activation_text3: await this.i18n.t('language.activation_text3'),
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: await this.i18n.t('language.confirmEmail'),
+          text: `${this.configService.get(
+            'app.frontendDomain',
+          )}/confirm-email/${mailData.data.hash} ${await this.i18n.t(
+            'language.confirmEmail',
+          )}`,
+          template: './activation',
+          context: {
+            title: await this.i18n.t('language.confirmEmail'),
+            url: `${this.configService.get(
+              'app.frontendDomain',
+            )}/confirm-email/${mailData.data.hash}`,
+            actionTitle: await this.i18n.t('language.confirmEmail'),
+            app_name: this.configService.get('app.name'),
+            activation_text1: await this.i18n.t('language.activation_text1'),
+            activation_text2: await this.i18n.t('language.activation_text2'),
+            activation_text3: await this.i18n.t('language.activation_text3'),
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 
   async forgotPassword(mailData: MailData<{ hash: string }>) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: MailSubject.FORGOT_PASSWORD,
-        template: './reset-password',
-        context: {
-          url: `${this.configService.get(
-            'app.frontendDomain',
-          )}/password-change/${mailData.data.hash}`,
-          baseUrl: `${this.configService.get(
-            'minio.fullUrl',
-          )}${this.configService.get('minio.bucketName')}/systems/`,
-          frontendUrl: this.configService.get('app.frontendDomain'),
-          hash: mailData.data.hash,
-          facebookUrl: SocialMediaUrl.FACEBOOK,
-          twitterUrl: SocialMediaUrl.TWITTER,
-          instagramUrl: SocialMediaUrl.INSTAGRAM,
-          whatsappUrl: SocialMediaUrl.WHATSAPP,
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: MailSubject.FORGOT_PASSWORD,
+          template: './reset-password',
+          context: {
+            url: `${this.configService.get(
+              'app.frontendDomain',
+            )}/password-change/${mailData.data.hash}`,
+            baseUrl: `${this.configService.get(
+              'minio.fullUrl',
+            )}${this.configService.get('minio.bucketName')}/systems/`,
+            frontendUrl: this.configService.get('app.frontendDomain'),
+            hash: mailData.data.hash,
+            facebookUrl: SocialMediaUrl.FACEBOOK,
+            twitterUrl: SocialMediaUrl.TWITTER,
+            instagramUrl: SocialMediaUrl.INSTAGRAM,
+            whatsappUrl: SocialMediaUrl.WHATSAPP,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 
   async approveSubmission(
@@ -66,25 +76,29 @@ export class MailService {
       couponCode: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: MailSubject.APPROVED_COUPON_SUBMISSION,
-        template: './approve-coupon-submission',
-        context: {
-          baseUrl: `${this.configService.get(
-            'minio.fullUrl',
-          )}${this.configService.get('minio.bucketName')}/systems/`,
-          frontendUrl: this.configService.get('app.frontendDomain'),
-          courseUrl: mailData.data.courseUrl,
-          courseTitle: mailData.data.courseTitle,
-          couponCode: mailData.data.couponCode,
-          facebookUrl: SocialMediaUrl.FACEBOOK,
-          twitterUrl: SocialMediaUrl.TWITTER,
-          instagramUrl: SocialMediaUrl.INSTAGRAM,
-          whatsappUrl: SocialMediaUrl.WHATSAPP,
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: MailSubject.APPROVED_COUPON_SUBMISSION,
+          template: './approve-coupon-submission',
+          context: {
+            baseUrl: `${this.configService.get(
+              'minio.fullUrl',
+            )}${this.configService.get('minio.bucketName')}/systems/`,
+            frontendUrl: this.configService.get('app.frontendDomain'),
+            courseUrl: mailData.data.courseUrl,
+            courseTitle: mailData.data.courseTitle,
+            couponCode: mailData.data.couponCode,
+            facebookUrl: SocialMediaUrl.FACEBOOK,
+            twitterUrl: SocialMediaUrl.TWITTER,
+            instagramUrl: SocialMediaUrl.INSTAGRAM,
+            whatsappUrl: SocialMediaUrl.WHATSAPP,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 
   async rejectSubmission(
@@ -94,25 +108,29 @@ export class MailService {
       reason: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: MailSubject.REJECTED_COUPON_SUBMISSION,
-        template: './reject-coupon-submission',
-        context: {
-          baseUrl: `${this.configService.get(
-            'minio.fullUrl',
-          )}${this.configService.get('minio.bucketName')}/systems/`,
-          frontendUrl: this.configService.get('app.frontendDomain'),
-          courseUrl: mailData.data.courseUrl,
-          courseTitle: mailData.data.courseTitle,
-          reason: mailData.data.reason,
-          facebookUrl: SocialMediaUrl.FACEBOOK,
-          twitterUrl: SocialMediaUrl.TWITTER,
-          instagramUrl: SocialMediaUrl.INSTAGRAM,
-          whatsappUrl: SocialMediaUrl.WHATSAPP,
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: MailSubject.REJECTED_COUPON_SUBMISSION,
+          template: './reject-coupon-submission',
+          context: {
+            baseUrl: `${this.configService.get(
+              'minio.fullUrl',
+            )}${this.configService.get('minio.bucketName')}/systems/`,
+            frontendUrl: this.configService.get('app.frontendDomain'),
+            courseUrl: mailData.data.courseUrl,
+            courseTitle: mailData.data.courseTitle,
+            reason: mailData.data.reason,
+            facebookUrl: SocialMediaUrl.FACEBOOK,
+            twitterUrl: SocialMediaUrl.TWITTER,
+            instagramUrl: SocialMediaUrl.INSTAGRAM,
+            whatsappUrl: SocialMediaUrl.WHATSAPP,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 
   async welcome(
@@ -121,24 +139,31 @@ export class MailService {
       password: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: MailSubject.WELCOME,
-        template: './welcome',
-        context: {
-          baseUrl: `${this.configService.get(
-            'minio.fullUrl',
-          )}${this.configService.get('minio.bucketName')}/systems/`,
-          frontendUrl: this.configService.get('app.frontendDomain'),
-          email: mailData.data.email,
-          password: mailData.data.password,
-          facebookUrl: SocialMediaUrl.FACEBOOK,
-          twitterUrl: SocialMediaUrl.TWITTER,
-          instagramUrl: SocialMediaUrl.INSTAGRAM,
-          whatsappUrl: SocialMediaUrl.WHATSAPP,
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: MailSubject.WELCOME,
+          template: './welcome',
+          context: {
+            baseUrl: `${this.configService.get(
+              'minio.fullUrl',
+            )}${this.configService.get('minio.bucketName')}/systems/`,
+            frontendUrl: this.configService.get('app.frontendDomain'),
+            email: mailData.data.email,
+            password: mailData.data.password,
+            facebookUrl: SocialMediaUrl.FACEBOOK,
+            twitterUrl: SocialMediaUrl.TWITTER,
+            instagramUrl: SocialMediaUrl.INSTAGRAM,
+            whatsappUrl: SocialMediaUrl.WHATSAPP,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 
   async registerProvider(
@@ -148,24 +173,28 @@ export class MailService {
       downloadUrl: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
-      await this.mailerService.sendMail({
-        to: mailData.to,
-        subject: MailSubject.REGISTER_PROVIDER,
-        template: './register-provider',
-        context: {
-          baseUrl: `${this.configService.get(
-            'minio.fullUrl',
-          )}${this.configService.get('minio.bucketName')}/systems/`,
-          frontendUrl: this.configService.get('app.frontendDomain'),
-          providerUrl: mailData.data.providerUrl,
-          providerName: mailData.data.providerName,
-          downloadUrl: mailData.data.downloadUrl,
-          facebookUrl: SocialMediaUrl.FACEBOOK,
-          twitterUrl: SocialMediaUrl.TWITTER,
-          instagramUrl: SocialMediaUrl.INSTAGRAM,
-          whatsappUrl: SocialMediaUrl.WHATSAPP,
-        },
-      });
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+      await this.mailerService
+        .sendMail({
+          to: mailData.to,
+          subject: MailSubject.REGISTER_PROVIDER,
+          template: './register-provider',
+          context: {
+            baseUrl: `${this.configService.get(
+              'minio.fullUrl',
+            )}${this.configService.get('minio.bucketName')}/systems/`,
+            frontendUrl: this.configService.get('app.frontendDomain'),
+            providerUrl: mailData.data.providerUrl,
+            providerName: mailData.data.providerName,
+            downloadUrl: mailData.data.downloadUrl,
+            facebookUrl: SocialMediaUrl.FACEBOOK,
+            twitterUrl: SocialMediaUrl.TWITTER,
+            instagramUrl: SocialMediaUrl.INSTAGRAM,
+            whatsappUrl: SocialMediaUrl.WHATSAPP,
+          },
+        })
+        .catch((err) => {
+          console.log(err);
+        });
   }
 }

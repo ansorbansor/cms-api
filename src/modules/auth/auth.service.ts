@@ -208,10 +208,26 @@ export class AuthService {
         provider: AuthProvidersEnum.email,
         notification_token: null,
         hash: hash,
+        categories: null,
       },
       null,
       photo,
     );
+
+    if (dto.categories) {
+      const saveData = [];
+      dto.categories.map((data) => {
+        data.topic_id.map((dataa) => {
+          saveData.push({
+            user_id: user.id,
+            category_id: data.category_id,
+            topic_id: dataa,
+          });
+        });
+      });
+
+      await this.usersService.createUserTopic(saveData, user.id);
+    }
 
     await this.mailService.userSignUp({
       to: user.email,

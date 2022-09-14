@@ -1,14 +1,17 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   MinLength,
   Validate,
+  ValidateNested,
 } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
+import { CreateUserTopicDto } from './create-user-topic.dto';
 
 export class CreateUserDto {
   @ApiProperty({ example: '1234567890' })
@@ -79,5 +82,13 @@ export class CreateUserDto {
   })
   position_id: number;
 
-  hash?: string | null;
+  hash?: string;
+
+  @ApiProperty()
+  @ValidateNested({
+    each: true,
+  })
+  @IsArray()
+  @Type(() => CreateUserTopicDto)
+  categories: CreateUserTopicDto[];
 }

@@ -1,14 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   MinLength,
   Validate,
+  ValidateNested,
 } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { FileEntity } from 'src/entities/file.entity';
+import { CreateUserTopicDto } from 'src/modules/users/dto/create-user-topic.dto';
 
 export class AuthRegisterLoginDto {
   @ApiProperty({ example: '1234567890' })
@@ -76,4 +79,12 @@ export class AuthRegisterLoginDto {
   position_id: number;
 
   hash?: string | null;
+
+  @ApiProperty()
+  @ValidateNested({
+    each: true,
+  })
+  @IsArray()
+  @Type(() => CreateUserTopicDto)
+  categories: CreateUserTopicDto[];
 }

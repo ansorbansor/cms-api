@@ -130,7 +130,10 @@ export class UsersController {
     @Request() request,
   ) {
     return successResponse(
-      await this.usersService.createUserTopic(createUserTopicDto, request.user),
+      await this.usersService.createUserTopic(
+        createUserTopicDto,
+        request.user.id,
+      ),
       'success',
     );
   }

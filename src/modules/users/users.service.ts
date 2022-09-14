@@ -70,6 +70,10 @@ export class UsersService {
       }),
     );
 
+    if (createProfileDto.categories) {
+      await this.createUserTopic(createProfileDto.categories, user.id);
+    }
+
     await this.mailService.welcome({
       to: user.email,
       data: {
@@ -216,12 +220,15 @@ export class UsersService {
     await this.usersRepository.softDelete(id);
   }
 
-  async createUserTopic(createUserTopicDto: CreateUserTopicDto[], user: User) {
+  async createUserTopic(
+    createUserTopicDto: CreateUserTopicDto[],
+    userId: number,
+  ) {
     const saveData = [];
     createUserTopicDto.map((data) => {
       data.topic_id.map((dataa) => {
         saveData.push({
-          user_id: user.id,
+          user_id: userId,
           category_id: data.category_id,
           topic_id: dataa,
         });

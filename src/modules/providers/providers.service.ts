@@ -12,14 +12,18 @@ import { UpdateProviderDto } from './dto/update-provider.dto';
 import { User } from 'src/entities/user.entity';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ProvidersService {
   constructor(
     @InjectRepository(Provider)
     private providerRepository: Repository<Provider>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private redisService: RedisService,
     private fileService: FilesService,
+    private mailService: MailService,
   ) {}
 
   async create(
@@ -127,5 +131,32 @@ export class ProvidersService {
     this.redisService.del(`${RedisKeyEnum.provider}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
     await this.providerRepository.softDelete(id);
+  }
+
+  async sendMailRegisterProvider(providerId: number, userId: number) {
+    const provider = await this.providerRepository.findOne({ id: providerId });
+    if (!provider) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Penyedia tidak ditemukan',
+      );
+    }
+
+    const user = await this.userRepository.findOne({ id: userId });
+    if (!user) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengguna tidak ditemukan',
+      );
+    }
+
+    await this.mailService.registerProvider({
+      to: user.email,
+      data: {
+        providerName: provider.name,
+        providerUrl: provider.url,
+        downloadUrl: 'https://google.com',
+      },
+    });
   }
 }

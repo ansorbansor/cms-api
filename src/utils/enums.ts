@@ -88,10 +88,18 @@ export enum MailSubject {
   APPROVED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Disetujui',
   REJECTED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Ditolak',
   WELCOME = 'Setneg Playbook - Selamat Datang di Playbook',
+  REGISTER_PROVIDER = 'Setneg Playbook - Register',
 }
 
 export enum CoursePriceType {
   FREE = 1,
   PAID = 2,
   FREEMIUM = 3,
+}
+
+export enum SocialMediaUrl {
+  FACEBOOK = 'https://www.facebook.com/ppkasn.setneg',
+  TWITTER = 'https://twitter.com/ppkasn_setneg',
+  INSTAGRAM = 'https://www.instagram.com/ppkasn.kemensetneg',
+  WHATSAPP = 'https://wa.me/082110002114',
 }

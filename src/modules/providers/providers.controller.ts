@@ -37,6 +37,22 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 export class ProvidersController {
   constructor(private readonly providerServices: ProvidersService) {}
 
+  @Get('register/:id')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.CREATED)
+  async sendMailRegisterProvider(
+    @Param('id') providerId: number,
+    @Request() request,
+  ) {
+    return successResponse(
+      await this.providerServices.sendMailRegisterProvider(
+        providerId,
+        request.user.id,
+      ),
+      'Berhasil mengirim email',
+    );
+  }
+
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(ProvidersController.name)

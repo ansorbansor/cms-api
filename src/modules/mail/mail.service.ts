@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nService } from 'nestjs-i18n';
-import { MailSubject } from 'src/utils/enums';
+import { MailSubject, SocialMediaUrl } from 'src/utils/enums';
 import { MailData } from 'src/utils/interfaces';
 
 @Injectable()
@@ -51,6 +51,10 @@ export class MailService {
           )}${this.configService.get('minio.bucketName')}/systems/`,
           frontendUrl: this.configService.get('app.frontendDomain'),
           hash: mailData.data.hash,
+          facebookUrl: SocialMediaUrl.FACEBOOK,
+          twitterUrl: SocialMediaUrl.TWITTER,
+          instagramUrl: SocialMediaUrl.INSTAGRAM,
+          whatsappUrl: SocialMediaUrl.WHATSAPP,
         },
       });
   }
@@ -75,6 +79,10 @@ export class MailService {
           courseUrl: mailData.data.courseUrl,
           courseTitle: mailData.data.courseTitle,
           couponCode: mailData.data.couponCode,
+          facebookUrl: SocialMediaUrl.FACEBOOK,
+          twitterUrl: SocialMediaUrl.TWITTER,
+          instagramUrl: SocialMediaUrl.INSTAGRAM,
+          whatsappUrl: SocialMediaUrl.WHATSAPP,
         },
       });
   }
@@ -99,6 +107,10 @@ export class MailService {
           courseUrl: mailData.data.courseUrl,
           courseTitle: mailData.data.courseTitle,
           reason: mailData.data.reason,
+          facebookUrl: SocialMediaUrl.FACEBOOK,
+          twitterUrl: SocialMediaUrl.TWITTER,
+          instagramUrl: SocialMediaUrl.INSTAGRAM,
+          whatsappUrl: SocialMediaUrl.WHATSAPP,
         },
       });
   }
@@ -121,6 +133,38 @@ export class MailService {
           frontendUrl: this.configService.get('app.frontendDomain'),
           email: mailData.data.email,
           password: mailData.data.password,
+          facebookUrl: SocialMediaUrl.FACEBOOK,
+          twitterUrl: SocialMediaUrl.TWITTER,
+          instagramUrl: SocialMediaUrl.INSTAGRAM,
+          whatsappUrl: SocialMediaUrl.WHATSAPP,
+        },
+      });
+  }
+
+  async registerProvider(
+    mailData: MailData<{
+      providerUrl: string;
+      providerName: string;
+      downloadUrl: string;
+    }>,
+  ) {
+    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION)
+      await this.mailerService.sendMail({
+        to: mailData.to,
+        subject: MailSubject.REGISTER_PROVIDER,
+        template: './register-provider',
+        context: {
+          baseUrl: `${this.configService.get(
+            'minio.fullUrl',
+          )}${this.configService.get('minio.bucketName')}/systems/`,
+          frontendUrl: this.configService.get('app.frontendDomain'),
+          providerUrl: mailData.data.providerUrl,
+          providerName: mailData.data.providerName,
+          downloadUrl: mailData.data.downloadUrl,
+          facebookUrl: SocialMediaUrl.FACEBOOK,
+          twitterUrl: SocialMediaUrl.TWITTER,
+          instagramUrl: SocialMediaUrl.INSTAGRAM,
+          whatsappUrl: SocialMediaUrl.WHATSAPP,
         },
       });
   }

@@ -131,14 +131,21 @@ export class User extends EntityHelper {
 
   total_lesson_hours = 0;
 
+  total_lesson = 0;
+
   @AfterLoad()
   setLessonHours() {
     if (this.userCourse && this.userCourse.length > 1) {
       this.total_lesson_hours = 0;
-      this.userCourse.forEach((element) => {
-        this.total_lesson_hours =
-          this.total_lesson_hours + element.course.lesson_hours;
-      });
+      this.total_lesson = 0;
+
+      if (this.userCourse) {
+        this.total_lesson = this.userCourse.length;
+        this.userCourse.forEach((element) => {
+          this.total_lesson_hours =
+            this.total_lesson_hours + element.course.lesson_hours;
+        });
+      }
     }
   }
 }

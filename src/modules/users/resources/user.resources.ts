@@ -62,6 +62,7 @@ export const UserResource = (user: User): any => {
       name: user.employeePosition ? user.employeePosition.name : null
     },
     lesson_hour: user.total_lesson_hours,
+    total_lesson: user.total_lesson,
     user_categories: mapUserTopic,
     user_level: user.level ? user.level : 0,
   };

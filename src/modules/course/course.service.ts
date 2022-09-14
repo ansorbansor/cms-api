@@ -8,7 +8,11 @@ import {
   successResponse,
 } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { CoursePriceType, RedisKeyEnum } from 'src/utils/enums';
+import {
+  CouponSubmissionStatus,
+  CoursePriceType,
+  RedisKeyEnum,
+} from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
 import { User } from 'src/entities/user.entity';
 import { Course } from 'src/entities/course.entity';
@@ -85,7 +89,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}`;
+    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -114,6 +118,17 @@ export class CourseService {
       if (paginationOptions.liked) {
         data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
       }
+    }
+
+    if (paginationOptions.submission) {
+      data.leftJoinAndSelect('course.couponSubmission', 'couponSubmission');
+      data.andWhere('couponSubmission.user_id = :userId', {
+        userId: paginationOptions.user_id,
+      });
+
+      data.andWhere('couponSubmission.status = :status', {
+        status: CouponSubmissionStatus.PENDING,
+      });
     }
 
     if (paginationOptions.search) {

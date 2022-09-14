@@ -76,6 +76,7 @@ export class CourseController {
     @Query('liked') liked?: boolean,
     @Query('latest') latest?: boolean,
     @Query('popular') popular?: boolean,
+    @Query('submission') submission?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -101,6 +102,7 @@ export class CourseController {
         liked: liked,
         latest: latest,
         popular: popular,
+        submission: submission,
       }),
       'success',
     );

@@ -43,4 +43,5 @@ export interface IPaginationOptions {
   provider_id?: number;
   latest?: boolean;
   popular?: boolean;
+  submission?: boolean;
 }

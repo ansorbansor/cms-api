@@ -17,6 +17,7 @@ import * as moment from 'moment';
 import { UserLike } from './user-like.entity';
 import { UserCourse } from './user-course.entity';
 import { CourseLanguageTransaction } from './course-language-transaction.entity';
+import { CouponSubmission } from './coupon-submission.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -94,6 +95,10 @@ export class Course extends EntityHelper {
   @ManyToOne(() => FileEntity)
   @JoinColumn({ name: 'photo' })
   photoFile?: FileEntity;
+
+  @OneToMany(() => CouponSubmission, (coupon) => coupon.course)
+  @JoinColumn()
+  couponSubmission?: CouponSubmission;
 
   @OneToMany(
     () => CourseLanguageTransaction,

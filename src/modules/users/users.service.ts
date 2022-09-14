@@ -124,6 +124,10 @@ export class UsersService {
       .leftJoinAndSelect('user.userTopic', 'userTopic')
       .leftJoinAndSelect('userTopic.category', 'category')
       .leftJoinAndSelect('userTopic.topic', 'topic')
+      .leftJoinAndSelect('user.photoFile', 'photoFile')
+      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
+      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
 
@@ -149,6 +153,10 @@ export class UsersService {
       .leftJoinAndSelect('user.userTopic', 'userTopic')
       .leftJoinAndSelect('userTopic.category', 'category')
       .leftJoinAndSelect('userTopic.topic', 'topic')
+      .leftJoinAndSelect('user.photoFile', 'photoFile')
+      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
+      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
 

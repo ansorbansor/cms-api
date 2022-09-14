@@ -86,39 +86,57 @@ export class CouponSubmissionService {
       );
     }
 
-    const couponSubmission = await this.couponSubmissionRepository.findOne({
-      where: {
-        course_id: courseId,
-        user_id: userId,
-      },
-    });
-
-    if (!couponSubmission) {
-      await this.couponSubmissionRepository.save(
-        this.couponSubmissionRepository.create({
-          user_id: userId,
-          course_id: courseId,
+    const pendingCouponSubmission =
+      await this.couponSubmissionRepository.findOne({
+        where: {
           status: CouponSubmissionStatus.PENDING,
-        }),
-      );
+          user_id: userId,
+        },
+      });
 
-      return successResponse(null, `Pengajuan kupon sedang dalam proses`);
+    if (pendingCouponSubmission) {
+      return successResponse(
+        StartCourseResource(course, CourseUserStatus.REJECTED_VOUCHER),
+        `Anda memiliki pengajuan kupon yang sedang diproses. Mohon tunggu informasi selanjutnya.`,
+      );
     } else {
-      if (couponSubmission.status == CouponSubmissionStatus.PENDING) {
-        return successResponse(
-          StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
-          `Pengajuan kupon sedang dalam proses`,
-        );
-      } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
-        return successResponse(
-          StartCourseResource(course, CourseUserStatus.REJECTED_VOUCHER),
-          `Pengajuan kupon anda ditolak!`,
-        );
+      const couponSubmission = await this.couponSubmissionRepository.findOne({
+        where: {
+          course_id: courseId,
+          user_id: userId,
+        },
+      });
+
+      if (couponSubmission) {
+        if (couponSubmission.status == CouponSubmissionStatus.PENDING) {
+          return successResponse(
+            StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
+            `Pengajuan kupon sedang dalam proses`,
+          );
+        } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
+          await this.couponSubmissionRepository.save(
+            this.couponSubmissionRepository.create({
+              user_id: userId,
+              course_id: courseId,
+              status: CouponSubmissionStatus.PENDING,
+            }),
+          );
+          return successResponse(null, `Pengajuan kupon sedang dalam proses`);
+        } else {
+          return successResponse(
+            StartCourseResource(course, CourseUserStatus.REDIRECT),
+            `Anda akan otomatis diarahkan ke ${course.provider.name}`,
+          );
+        }
       } else {
-        return successResponse(
-          StartCourseResource(course, CourseUserStatus.REDIRECT),
-          `Anda akan otomatis diarahkan ke ${course.provider.name}`,
+        await this.couponSubmissionRepository.save(
+          this.couponSubmissionRepository.create({
+            user_id: userId,
+            course_id: courseId,
+            status: CouponSubmissionStatus.PENDING,
+          }),
         );
+        return successResponse(null, `Pengajuan kupon sedang dalam proses`);
       }
     }
   }

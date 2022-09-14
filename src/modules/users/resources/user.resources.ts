@@ -63,5 +63,6 @@ export const UserResource = (user: User): any => {
     },
     lesson_hour: user.total_lesson_hours,
     user_categories: mapUserTopic,
+    user_level: user.level ? user.level : 0,
   };
 };

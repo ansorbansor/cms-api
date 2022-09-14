@@ -88,8 +88,10 @@ export class User extends EntityHelper {
   notification_token: string | null;
 
   @Column({ nullable: true })
-  @Index()
   hash: string | null;
+
+  @Column()
+  level: number;
 
   @OneToMany(() => UserRoles, (userRole) => userRole.user, {
     eager: true,

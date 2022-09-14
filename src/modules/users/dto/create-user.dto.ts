@@ -91,4 +91,7 @@ export class CreateUserDto {
   @IsArray()
   @Type(() => CreateUserTopicDto)
   categories: CreateUserTopicDto[];
+
+  @ApiProperty()
+  level: number;
 }

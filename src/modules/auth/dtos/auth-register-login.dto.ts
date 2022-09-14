@@ -87,4 +87,7 @@ export class AuthRegisterLoginDto {
   @IsArray()
   @Type(() => CreateUserTopicDto)
   categories: CreateUserTopicDto[];
+
+  @ApiProperty()
+  level: number;
 }

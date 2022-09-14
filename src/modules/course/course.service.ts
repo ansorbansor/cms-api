@@ -111,13 +111,14 @@ export class CourseService {
       (paginationOptions.owned || paginationOptions.is_admin)
     ) {
       data.leftJoinAndSelect('course.userCourse', 'userCourse');
-      data.leftJoinAndSelect('course.userLike', 'userLike');
       if (paginationOptions.owned) {
         data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
       }
-      if (paginationOptions.liked) {
-        data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
-      }
+    }
+
+    if (paginationOptions.user_id && paginationOptions.liked) {
+      data.leftJoinAndSelect('course.userLike', 'userLike');
+      data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
     }
 
     if (paginationOptions.submission) {

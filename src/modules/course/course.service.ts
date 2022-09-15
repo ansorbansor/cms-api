@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { getManager, Repository } from 'typeorm';
+import { getManager, In, Repository } from 'typeorm';
 import {
   failedResponse,
   infinityPagination,
@@ -24,6 +24,7 @@ import { UserLike } from 'src/entities/user-like.entity';
 import { CourseAdminResource } from './resources/course-admin.resources';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 import { UserCourse } from 'src/entities/user-course.entity';
+import { BulkUpdateCourseDto } from './dto/bulk-update-course.dto';
 
 @Injectable()
 export class CourseService {
@@ -337,6 +338,60 @@ export class CourseService {
     this.redisService.del(`${RedisKeyEnum.course}:`);
 
     return await this.findOneAdmin({ id: updateCourseDto.id });
+  }
+
+  async bulkUpdate(updateCourseDto: BulkUpdateCourseDto) {
+    if (updateCourseDto.price_id == CoursePriceType.FREE) {
+      updateCourseDto.price = 0;
+      updateCourseDto.freemium_code = null;
+    } else if (updateCourseDto.price_id == CoursePriceType.PAID) {
+      updateCourseDto.freemium_code = null;
+      if (!updateCourseDto.price || updateCourseDto.price == 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Harga tidak boleh kosong.',
+        );
+      }
+    } else if (updateCourseDto.price_id == CoursePriceType.FREEMIUM) {
+      updateCourseDto.price = 0;
+      if (!updateCourseDto.freemium_code) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Freemium Code tidak boleh kosong.',
+        );
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { language_id, id, ...saveData } = updateCourseDto;
+
+    await this.courseRepository.update(updateCourseDto.id, {
+      ...saveData,
+    });
+
+    if (updateCourseDto.language_id && updateCourseDto.language_id.length > 0) {
+      await this.courseLanguageTransactionRepository.softDelete({
+        course_id: In(updateCourseDto.id),
+      });
+
+      const saveLanguage = [];
+      updateCourseDto.language_id.forEach(async (element) => {
+        updateCourseDto.id.forEach(async (courseId) => {
+          saveLanguage.push(
+            this.courseLanguageTransactionRepository.create({
+              course_id: courseId,
+              language_id: element,
+            }),
+          );
+        });
+      });
+
+      await this.courseLanguageTransactionRepository.save(saveLanguage);
+    }
+
+    this.redisService.del(`${RedisKeyEnum.course}:`);
+
+    return 'success';
   }
 
   async softDelete(id: number): Promise<void> {

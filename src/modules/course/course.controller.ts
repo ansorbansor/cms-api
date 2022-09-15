@@ -28,6 +28,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { MenuPermission } from 'src/utils/enums';
 import { OptionalJwtAuthGuard } from 'src/utils/custom-auth-guard';
+import { BulkUpdateCourseDto } from './dto/bulk-update-course.dto';
 
 @ApiBearerAuth()
 @ApiTags('Course')
@@ -194,6 +195,18 @@ export class CourseController {
   ) {
     return successResponse(
       await this.courseServices.update(updateCourseDto, photo, request.user),
+      'success',
+    );
+  }
+
+  @Patch('courses-bulk')
+  @Permissions(MenuPermission.UPDATE)
+  @Controllers(CourseController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async bulkUpdate(@Body() updateCourseDto: BulkUpdateCourseDto) {
+    return successResponse(
+      await this.courseServices.bulkUpdate(updateCourseDto),
       'success',
     );
   }

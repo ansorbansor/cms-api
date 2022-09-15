@@ -142,8 +142,10 @@ export class User extends EntityHelper {
       if (this.userCourse) {
         this.total_lesson = this.userCourse.length;
         this.userCourse.forEach((element) => {
-          this.total_lesson_hours =
-            this.total_lesson_hours + element.course.lesson_hours;
+          if (element.course && element.course.lesson_hours) {
+            this.total_lesson_hours =
+              this.total_lesson_hours + element.course.lesson_hours;
+          }
         });
       }
     }

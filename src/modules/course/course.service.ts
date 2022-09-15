@@ -363,20 +363,20 @@ export class CourseService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { language_id, id, ...saveData } = updateCourseDto;
+    const { language_id, course_id, ...saveData } = updateCourseDto;
 
-    await this.courseRepository.update(updateCourseDto.id, {
+    await this.courseRepository.update(updateCourseDto.course_id, {
       ...saveData,
     });
 
     if (updateCourseDto.language_id && updateCourseDto.language_id.length > 0) {
       await this.courseLanguageTransactionRepository.softDelete({
-        course_id: In(updateCourseDto.id),
+        course_id: In(updateCourseDto.course_id),
       });
 
       const saveLanguage = [];
       updateCourseDto.language_id.forEach(async (element) => {
-        updateCourseDto.id.forEach(async (courseId) => {
+        updateCourseDto.course_id.forEach(async (courseId) => {
           saveLanguage.push(
             this.courseLanguageTransactionRepository.create({
               course_id: courseId,

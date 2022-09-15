@@ -21,7 +21,7 @@ export class BulkUpdateCourseDto {
   @Validate(IsExist, ['Course', 'id'], {
     message: 'Course tidak tersedia',
   })
-  id: number[];
+  course_id: number[];
 
   @ApiProperty({ example: 1, description: 'in minute' })
   @IsNotEmpty()

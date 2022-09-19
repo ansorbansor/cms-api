@@ -47,6 +47,7 @@
     "cache-manager-redis-store": "^2.0.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.13.2",
+    "exceljs": "^4.3.0",
     "fb": "^2.0.0",
     "google-auth-library": "8.1.1",
     "handlebars": "4.7.7",
@@ -65,6 +66,7 @@
     "rxjs": "7.2.0",
     "source-map-support": "0.5.21",
     "swagger-ui-express": "4.3.0",
+    "tmp": "^0.2.1",
     "typeorm": "0.2.43",
     "typeorm-seeding": "1.6.1"
   },

@@ -30,6 +30,7 @@ import { EditorChoiceCourseModule } from './modules/editor-choice-course/editor-
 import { EmployeeLevelModule } from './modules/employee-level/employee-level.module';
 import { EmployeePositionModule } from './modules/employee-position/employee-position.module';
 import { EmployeeUnitModule } from './modules/employee-unit/employee-unit.module';
+import { ExportModule } from './modules/exports/export.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -106,6 +107,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     EmployeeLevelModule,
     EmployeePositionModule,
     EmployeeUnitModule,
+    ExportModule,
   ],
 })
 export class AppModule {

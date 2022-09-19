@@ -37,6 +37,7 @@ export interface IPaginationOptions {
   liked?: boolean;
   blacklist?: boolean;
   status?: number;
+  status_bool?: boolean;
   is_admin?: boolean;
   employeePosition?: number;
   employeeLevel?: number;

@@ -113,6 +113,12 @@ export class BannerService {
       );
     }
 
+    if (paginationOptions.status_bool) {
+      data.andWhere('banner.status = :status', {
+        status: paginationOptions.status_bool,
+      });
+    }
+
     data.orderBy('banner.position', 'ASC');
 
     const total = await data.getCount();

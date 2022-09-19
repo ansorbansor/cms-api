@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { User } from 'src/entities/user.entity';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
@@ -98,6 +98,42 @@ export class UsersService {
       .leftJoinAndSelect('userRole.role', 'role');
 
     data.where(`user.blacklist = ${paginationOptions.blacklist}`);
+
+    if (paginationOptions.search) {
+      data.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          ).orWhere(
+            `LOWER(user.nip) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          );
+        }),
+      );
+    }
+
+    if (paginationOptions.employeeUnit) {
+      data.andWhere('employeeUnit.id = :unitId', {
+        unitId: paginationOptions.employeeUnit,
+      });
+    }
+
+    if (paginationOptions.employeeLevel) {
+      data.andWhere('employeeLevel.id = :levelId', {
+        levelId: paginationOptions.employeeLevel,
+      });
+    }
+
+    if (paginationOptions.employeePosition) {
+      data.andWhere('employeePosition.id = :positionId', {
+        positionId: paginationOptions.employeePosition,
+      });
+    }
+
+    if (paginationOptions.role) {
+      data.andWhere('role.id = :roleId', {
+        roleId: paginationOptions.role,
+      });
+    }
 
     const total = await data.getCount();
     paginationOptions.total = total;

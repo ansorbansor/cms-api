@@ -41,6 +41,7 @@ export interface IPaginationOptions {
   is_admin?: boolean;
   employeePosition?: number;
   employeeLevel?: number;
+  employeeUnit?: number;
   provider_id?: number;
   latest?: boolean;
   popular?: boolean;

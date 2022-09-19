@@ -324,13 +324,13 @@ export class AuthService {
         if (!isValidOldPassword) {
           throw failedResponse(
             HttpStatus.UNPROCESSABLE_ENTITY,
-            'incorrectOldPassword',
+            'Password lama salah',
           );
         }
       } else {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          'missingOldPassword',
+          'Password lama tidak boleh kosong',
         );
       }
     }

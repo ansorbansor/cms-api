@@ -97,7 +97,7 @@ export class UpdateUserDto {
   })
   @IsArray()
   @Type(() => CreateUserTopicDto)
-  categories: CreateUserTopicDto[];
+  categories?: CreateUserTopicDto[];
 
   @ApiProperty()
   @IsOptional()

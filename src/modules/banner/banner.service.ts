@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { BannerType, RedisKeyEnum } from 'src/utils/enums';
@@ -13,6 +13,7 @@ import { User } from 'src/entities/user.entity';
 import { BufferedFile } from 'src/utils/file-helper';
 import { FilesService } from '../files/files.service';
 import { Course } from 'src/entities/course.entity';
+import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
 
 @Injectable()
 export class BannerService {
@@ -242,6 +243,33 @@ export class BannerService {
     await this.redisService.del(`${RedisKeyEnum.banner}:`);
 
     return await this.findOne({ id: updateBannerDto.id });
+  }
+
+  async updatePosition(updateBannerPositionDto: UpdateBannerPositionDto[]) {
+    const banner_id = [];
+    updateBannerPositionDto.forEach((element) => {
+      banner_id.push(element.banner_id);
+    });
+    const checkExists = await this.bannerRepository.find({
+      where: {
+        id: In(banner_id),
+      },
+    });
+
+    if (checkExists.length != banner_id.length) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Banner tidak tersedia',
+      );
+    }
+
+    updateBannerPositionDto.forEach(async (element) => {
+      await this.bannerRepository.update(element.banner_id, {
+        position: element.position,
+      });
+    });
+
+    await this.redisService.del(`${RedisKeyEnum.banner}:`);
   }
 
   async softDelete(id: number): Promise<void> {

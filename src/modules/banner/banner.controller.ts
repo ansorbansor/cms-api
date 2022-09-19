@@ -15,6 +15,7 @@ import {
   HttpCode,
   UseInterceptors,
   UploadedFile,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -27,17 +28,17 @@ import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
+import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
 
 @ApiBearerAuth()
 @ApiTags('Banner')
 @Controller({
-  path: 'banners',
   version: '1',
 })
 export class BannerController {
   constructor(private readonly bannerServices: BannerService) {}
 
-  @Post()
+  @Post('banners')
   @Permissions(MenuPermission.CREATE)
   @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -55,7 +56,24 @@ export class BannerController {
     );
   }
 
-  @Get()
+  @Patch('banner-position')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(BannerController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async updatePosition(
+    @Body(
+      new ParseArrayPipe({ items: UpdateBannerPositionDto, whitelist: true }),
+    )
+    updateBannerPositionDto: UpdateBannerPositionDto[],
+  ) {
+    return successResponse(
+      await this.bannerServices.updatePosition(updateBannerPositionDto),
+      'Berhasil ubah posisi banner',
+    );
+  }
+
+  @Get('banners')
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -79,7 +97,7 @@ export class BannerController {
     );
   }
 
-  @Get(':id')
+  @Get('banners/:id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -88,7 +106,7 @@ export class BannerController {
     );
   }
 
-  @Patch()
+  @Patch('banners')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -106,7 +124,7 @@ export class BannerController {
     );
   }
 
-  @Delete(':id')
+  @Delete('banners/:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)

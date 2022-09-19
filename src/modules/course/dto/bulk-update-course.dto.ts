@@ -29,13 +29,6 @@ export class BulkUpdateCourseDto {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
-  @Validate(IsExist, ['Provider', 'id'], {
-    message: 'Penyelenggara tidak tersedia',
-  })
-  provider_id: number;
-
-  @ApiProperty({ example: 1 })
-  @IsNotEmpty()
   @Validate(IsExist, ['CourseCategory', 'id'], {
     message: 'Kategori tidak tersedia',
   })

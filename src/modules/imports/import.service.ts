@@ -195,4 +195,83 @@ export class ImportService {
       return `Berhasil menambah ${saveData.length} data pengguna`;
     }
   }
+
+  async importBlacklistUser(file: BufferedFile) {
+    if (!file) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
+    }
+
+    const nip = [];
+
+    const saveData = [];
+    const workbook = new Workbook();
+    const stream = new Stream.Readable();
+    stream.push(file.buffer); // file is ArrayBuffer variable
+    stream.push(null); //set end of file
+    await workbook.xlsx.read(stream).then(function () {
+      const worksheet = workbook.getWorksheet('uploads');
+      if (worksheet) {
+        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+          const currRow = worksheet.getRow(rowNumber);
+          if (rowNumber > 1 && currRow.getCell(1).value != null) {
+            console.log(
+              `${!currRow.getCell(1)} | ${!currRow.getCell(2)} | ${
+                currRow.getCell(2).toString() != 'Ya' &&
+                currRow.getCell(2).toString() != 'Tidak'
+              }`,
+            );
+
+            if (
+              !currRow.getCell(1) ||
+              !currRow.getCell(2) ||
+              (currRow.getCell(2).toString() != 'Ya' &&
+                currRow.getCell(2).toString() != 'Tidak')
+            ) {
+              throw failedResponse(
+                HttpStatus.BAD_REQUEST,
+                'Kolom tidak sesuai',
+              );
+            }
+
+            nip.push(currRow.getCell(1).value);
+            saveData.push({
+              nip: currRow.getCell(1).value,
+              blacklist:
+                currRow.getCell(2).value && currRow.getCell(2).value == 'Ya',
+            });
+          }
+        });
+      } else {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
+      }
+    });
+
+    if (saveData.length > 0) {
+      //check nip is exists
+      const dataUser = await this.usersRepository
+        .createQueryBuilder('user')
+        .where(`user.nip IN (:...nip)`, { nip: nip })
+        .getMany();
+
+      const notExistsUser = nip.find((a) => dataUser.some((b) => b.nip == a));
+
+      if (!notExistsUser) {
+        throw failedResponse(
+          HttpStatus.BAD_REQUEST,
+          `User dengan NIP ${notExistsUser} tidak tersedia`,
+        );
+      }
+
+      saveData.forEach(async (user) => {
+        await this.usersRepository.update(
+          { nip: user.nip },
+          {
+            blacklist: user.blacklist,
+          },
+        );
+      });
+
+      return `Berhasil mengubah data blacklist ${saveData.length} data pengguna`;
+    }
+  }
 }

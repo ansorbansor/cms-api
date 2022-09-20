@@ -34,8 +34,20 @@ export class ImportController {
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
   async importUser(@UploadedFile() file: BufferedFile) {
-    await this.importService.importUser(file);
+    return successResponse(null, await this.importService.importUser(file));
+  }
 
-    return successResponse(null, 'success');
+  @Get('user-blacklist')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(UsersController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importBlacklistUser(@UploadedFile() file: BufferedFile) {
+    return successResponse(
+      null,
+      await this.importService.importBlacklistUser(file),
+    );
   }
 }

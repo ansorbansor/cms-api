@@ -69,6 +69,7 @@ export class ImportService {
               level_id: currRow.getCell(8).value,
               position_id: currRow.getCell(9).value,
               provider: 'email',
+              level: currRow.getCell(10).value,
             });
           }
         });

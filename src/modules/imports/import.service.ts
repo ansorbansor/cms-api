@@ -63,9 +63,11 @@ export class ImportService {
               nip: currRow.getCell(1).value,
               name: currRow.getCell(2).value,
               email: currRow.getCell(3).value,
-              status: currRow.getCell(4).value,
+              status:
+                currRow.getCell(4).value && currRow.getCell(4).value == 'Aktif',
               role: currRow.getCell(5).value,
-              blacklist: currRow.getCell(6).value,
+              blacklist:
+                currRow.getCell(6).value && currRow.getCell(6).value == 'Ya',
               unit_id: currRow.getCell(7).value,
               level_id: currRow.getCell(8).value,
               position_id: currRow.getCell(9).value,

@@ -93,5 +93,6 @@ export class CreateUserDto {
   categories: CreateUserTopicDto[];
 
   @ApiProperty()
+  @IsOptional()
   level: number;
 }

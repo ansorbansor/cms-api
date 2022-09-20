@@ -33,6 +33,7 @@ import { EmployeeUnitModule } from './modules/employee-unit/employee-unit.module
 import { ExportModule } from './modules/exports/export.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
+import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { ProvidersModule } from './modules/providers/providers.module';
@@ -108,6 +109,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     EmployeePositionModule,
     EmployeeUnitModule,
     ExportModule,
+    ImportModule,
   ],
 })
 export class AppModule {

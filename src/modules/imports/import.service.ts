@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Workbook } from 'exceljs';
 import { EmployeeLevel } from 'src/entities/employee-level.entity';
@@ -70,6 +71,7 @@ export class ImportService {
               position_id: currRow.getCell(9).value,
               provider: 'email',
               level: currRow.getCell(10).value,
+              password: randomStringGenerator(),
             });
           }
         });
@@ -176,11 +178,9 @@ export class ImportService {
         ).id;
       });
 
-      const users = await this.usersRepository.save(
-        this.usersRepository.create(saveData),
-      );
+      await this.usersRepository.save(this.usersRepository.create(saveData));
 
-      users.forEach(async (user) => {
+      saveData.forEach(async (user) => {
         await this.mailService.welcome({
           to: user.email,
           data: {

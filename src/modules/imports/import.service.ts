@@ -103,16 +103,17 @@ export class ImportService {
         .where(`LOWER(role.name) IN (:...role)`, { role: role })
         .getMany();
 
-      const notExistsRole = role.find((a) =>
-        dataRole.some((b) => b.name.toLowerCase() != a.toLowerCase()),
-      );
-
-      if (notExistsRole) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `Role ${notExistsRole} tidak tersedia`,
+      role.forEach((element) => {
+        const check = dataRole.some(
+          (b) => b.name.toLowerCase() == element.toLowerCase(),
         );
-      }
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `Role ${element} tidak tersedia`,
+          );
+        }
+      });
 
       //check unit exists
       const dataUnit = await this.employeeUnitRepository
@@ -120,16 +121,17 @@ export class ImportService {
         .where(`LOWER(unit.name) IN (:...unit)`, { unit: unit })
         .getMany();
 
-      const notExistsUnit = unit.find((a) =>
-        dataUnit.some((b) => b.name.toLowerCase() != a.toLowerCase()),
-      );
-
-      if (notExistsUnit) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `Unit ${notExistsUnit} tidak tersedia`,
+      unit.forEach((element) => {
+        const check = dataUnit.some(
+          (b) => b.name.toLowerCase() == element.toLowerCase(),
         );
-      }
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `Unit ${element} tidak tersedia`,
+          );
+        }
+      });
 
       //check level exists
       const dataLevel = await this.employeeLevelRepository
@@ -137,16 +139,17 @@ export class ImportService {
         .where(`LOWER(level.name) IN (:...level)`, { level: level })
         .getMany();
 
-      const notExistsLevel = level.find((a) =>
-        dataLevel.some((b) => b.name.toLowerCase() != a.toLowerCase()),
-      );
-
-      if (notExistsLevel) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `Pangkat ${notExistsLevel} tidak tersedia`,
+      level.forEach((element) => {
+        const check = dataLevel.some(
+          (b) => b.name.toLowerCase() == element.toLowerCase(),
         );
-      }
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `Pangkat ${element} tidak tersedia`,
+          );
+        }
+      });
 
       //check position exists
       const dataPosition = await this.employeePositionRepository
@@ -154,16 +157,17 @@ export class ImportService {
         .where(`LOWER(position.name) IN (:...position)`, { position: position })
         .getMany();
 
-      const notExistsPosition = position.find((a) =>
-        dataPosition.some((b) => b.name.toLowerCase() != a.toLowerCase()),
-      );
-
-      if (notExistsPosition) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `Jabatan ${notExistsPosition} tidak tersedia`,
+      position.forEach((element) => {
+        const check = dataPosition.some(
+          (b) => b.name.toLowerCase() == element.toLowerCase(),
         );
-      }
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `Jabatan ${element} tidak tersedia`,
+          );
+        }
+      });
 
       saveData.forEach((element) => {
         element.role = dataRole.find((a) =>

@@ -50,4 +50,18 @@ export class ImportController {
       await this.importService.importBlacklistUser(file),
     );
   }
+
+  @Get('user-level')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(UsersController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importLevelUser(@UploadedFile() file: BufferedFile) {
+    return successResponse(
+      null,
+      await this.importService.importLevelUser(file),
+    );
+  }
 }

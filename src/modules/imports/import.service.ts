@@ -219,10 +219,10 @@ export class ImportService {
           const currRow = worksheet.getRow(rowNumber);
           if (rowNumber > 1 && currRow.getCell(1).value != null) {
             if (
-              !currRow.getCell(1) ||
-              !currRow.getCell(2) ||
-              (currRow.getCell(2).toString() != 'Ya' &&
-                currRow.getCell(2).toString() != 'Tidak')
+              !currRow.getCell(1).value ||
+              !currRow.getCell(2).value ||
+              (currRow.getCell(2).value.toString() != 'Ya' &&
+                currRow.getCell(2).value.toString() != 'Tidak')
             ) {
               throw failedResponse(
                 HttpStatus.BAD_REQUEST,
@@ -270,6 +270,78 @@ export class ImportService {
       });
 
       return `Berhasil mengubah data blacklist ${saveData.length} data pengguna`;
+    }
+  }
+
+  async importLevelUser(file: BufferedFile) {
+    if (!file) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
+    }
+
+    const nip = [];
+
+    const saveData = [];
+    const workbook = new Workbook();
+    const stream = new Stream.Readable();
+    stream.push(file.buffer); // file is ArrayBuffer variable
+    stream.push(null); //set end of file
+    await workbook.xlsx.read(stream).then(function () {
+      const worksheet = workbook.getWorksheet('uploads');
+      if (worksheet) {
+        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+          const currRow = worksheet.getRow(rowNumber);
+          if (rowNumber > 1 && currRow.getCell(1).value != null) {
+            if (
+              !Number(currRow.getCell(1).value) ||
+              !Number(currRow.getCell(2).value) ||
+              Number(currRow.getCell(2).value) < 0 ||
+              Number(currRow.getCell(2).value) > 5
+            ) {
+              throw failedResponse(
+                HttpStatus.BAD_REQUEST,
+                'Level antara 0 sampai 5',
+              );
+            }
+
+            nip.push(currRow.getCell(1).value);
+            saveData.push({
+              nip: currRow.getCell(1).value,
+              level: currRow.getCell(2).value,
+            });
+          }
+        });
+      } else {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
+      }
+    });
+
+    if (saveData.length > 0) {
+      //check nip is exists
+      const dataUser = await this.usersRepository
+        .createQueryBuilder('user')
+        .where(`user.nip IN (:...nip)`, { nip: nip })
+        .getMany();
+
+      nip.forEach((element) => {
+        const check = dataUser.some((b) => b.nip.toLowerCase() == element);
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `User dengan NIP ${element} tidak tersedia`,
+          );
+        }
+      });
+
+      saveData.forEach(async (user) => {
+        await this.usersRepository.update(
+          { nip: user.nip },
+          {
+            level: user.level,
+          },
+        );
+      });
+
+      return `Berhasil mengubah data level ${saveData.length} data pengguna`;
     }
   }
 }

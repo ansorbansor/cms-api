@@ -4,11 +4,6 @@ import { FileEntity } from 'src/entities/file.entity';
 import { IsExist } from 'src/utils/validators';
 
 export class AuthUpdateDto {
-  @ApiProperty({ example: 'Jane' })
-  @IsOptional()
-  @IsNotEmpty()
-  name?: string;
-
   @ApiProperty({ example: 'Password9' })
   @IsOptional()
   @IsNotEmpty()

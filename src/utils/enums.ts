@@ -12,10 +12,10 @@ export enum RoleEnum {
 }
 
 export enum FileTypeEnum {
-  image = 1,
-  document = 2,
-  video = 3,
-  audio = 4,
+  image = 0,
+  document = 1,
+  video = 2,
+  audio = 3,
 }
 
 export enum RedisKeyEnum {

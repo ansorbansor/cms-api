@@ -15,6 +15,7 @@ import {
 import { failedResponse } from 'src/utils/responses';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
+import { FileResource } from './resources/file.resources';
 
 @Injectable()
 export class FilesService {
@@ -44,6 +45,20 @@ export class FilesService {
         if (err) throw err;
       },
     );
+  }
+
+  public async getFiles(name: string) {
+    const getFile = await this.fileRepository.findOne({
+      where: {
+        name: name,
+      },
+    });
+
+    if (!getFile) {
+      throw new HttpException('File tidak ditemukan', HttpStatus.BAD_REQUEST);
+    }
+
+    return FileResource(getFile);
   }
 
   public async uploadWithMinio(file: BufferedFile, userId: number) {

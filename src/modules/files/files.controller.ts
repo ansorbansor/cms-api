@@ -4,7 +4,6 @@ import {
   Param,
   Post,
   Request,
-  Response,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -53,10 +52,7 @@ export class FilesController {
 
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
-  async download(@Param('path') path, @Response() response) {
-    return successResponse(
-      await response.sendFile(path, { root: './public' }),
-      'success',
-    );
+  async download(@Param('path') path) {
+    return successResponse(await this.filesService.getFiles(path), 'success');
   }
 }

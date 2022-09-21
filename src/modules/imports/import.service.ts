@@ -170,17 +170,17 @@ export class ImportService {
       });
 
       saveData.forEach((element) => {
-        element.role = dataRole.find((a) =>
-          role.some((b) => a.name.toLowerCase() == b.toLowerCase()),
+        element.role = dataRole.find(
+          (a) => a.name.toLowerCase() == element.role.toLowerCase(),
         ).id;
-        element.position_id = dataPosition.find((a) =>
-          position.some((b) => a.name.toLowerCase() == b.toLowerCase()),
+        element.position_id = dataPosition.find(
+          (a) => a.name.toLowerCase() == element.position_id.toLowerCase(),
         ).id;
-        element.unit_id = dataUnit.find((a) =>
-          unit.some((b) => a.name.toLowerCase() == b.toLowerCase()),
+        element.unit_id = dataUnit.find(
+          (a) => a.name.toLowerCase() == element.unit_id.toLowerCase(),
         ).id;
-        element.level_id = dataLevel.find((a) =>
-          level.some((b) => a.name.toLowerCase() == b.toLowerCase()),
+        element.level_id = dataLevel.find(
+          (a) => a.name.toLowerCase() == element.level_id.toLowerCase(),
         ).id;
       });
 

@@ -11,6 +11,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -124,6 +125,15 @@ export class AuthController {
         resetPasswordDto.hash,
         resetPasswordDto.password,
       ),
+      'success',
+    );
+  }
+
+  @Get('reset/password')
+  @HttpCode(HttpStatus.OK)
+  async resetPasswordData(@Query('hash') hash: string) {
+    return successResponse(
+      await this.service.resetPasswordData(hash),
       'success',
     );
   }

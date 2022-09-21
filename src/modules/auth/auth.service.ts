@@ -25,6 +25,7 @@ import appleSigninAuth from 'apple-signin-auth';
 import { RedisService } from '../redis/redis.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -281,13 +282,33 @@ export class AuthService {
     });
 
     if (!forgot) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'notFound');
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Data tidak ditemukan',
+      );
     }
 
     const user = forgot.user;
     user.password = password;
     await user.save();
     await this.forgotService.softDelete(forgot.id);
+  }
+
+  async resetPasswordData(hash: string): Promise<void> {
+    const forgot = await this.forgotService.findOne({
+      where: {
+        hash,
+      },
+    });
+
+    if (!forgot) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Data tidak ditemukan',
+      );
+    }
+
+    return ResetPasswordDataResource(forgot.user);
   }
 
   async me(user: User) {

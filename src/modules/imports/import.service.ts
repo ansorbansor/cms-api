@@ -218,13 +218,6 @@ export class ImportService {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
           if (rowNumber > 1 && currRow.getCell(1).value != null) {
-            console.log(
-              `${!currRow.getCell(1)} | ${!currRow.getCell(2)} | ${
-                currRow.getCell(2).toString() != 'Ya' &&
-                currRow.getCell(2).toString() != 'Tidak'
-              }`,
-            );
-
             if (
               !currRow.getCell(1) ||
               !currRow.getCell(2) ||

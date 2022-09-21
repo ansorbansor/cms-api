@@ -257,14 +257,15 @@ export class ImportService {
         .where(`user.nip IN (:...nip)`, { nip: nip })
         .getMany();
 
-      const notExistsUser = nip.find((a) => dataUser.some((b) => b.nip == a));
-
-      if (!notExistsUser) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `User dengan NIP ${notExistsUser} tidak tersedia`,
-        );
-      }
+      nip.forEach((element) => {
+        const check = dataUser.some((b) => b.nip.toLowerCase() == element);
+        if (!check) {
+          throw failedResponse(
+            HttpStatus.BAD_REQUEST,
+            `User dengan NIP ${element} tidak tersedia`,
+          );
+        }
+      });
 
       saveData.forEach(async (user) => {
         await this.usersRepository.update(

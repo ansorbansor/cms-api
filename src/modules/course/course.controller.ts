@@ -78,6 +78,7 @@ export class CourseController {
     @Query('latest') latest?: boolean,
     @Query('popular') popular?: boolean,
     @Query('submission') submission?: boolean,
+    @Query('editor_choice') editor_choice?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -104,6 +105,7 @@ export class CourseController {
         latest: latest,
         popular: popular,
         submission: submission,
+        editor_choice: editor_choice,
       }),
       'success',
     );
@@ -132,6 +134,8 @@ export class CourseController {
     @Query('user_id') userId?: number,
     @Query('latest') latest?: boolean,
     @Query('popular') popular?: boolean,
+    @Query('submission') submission?: boolean,
+    @Query('editor_choice') editor_choice?: boolean,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -158,6 +162,7 @@ export class CourseController {
         is_admin: true,
         latest: latest,
         popular: popular,
+        editor_choice: editor_choice,
       }),
       'success',
     );

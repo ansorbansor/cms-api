@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Course } from './course.entity';
 
@@ -13,7 +13,7 @@ export class EditorChoiceCourse extends EntityHelper {
   @Column()
   position: number;
 
-  @ManyToOne(() => Course, {
+  @OneToOne(() => Course, {
     eager: true,
   })
   @JoinColumn({ name: 'course_id' })

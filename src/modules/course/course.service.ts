@@ -90,7 +90,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}`;
+    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}-EditorChoice${paginationOptions.editor_choice}`;
 
     const value = await this.redisService.get(redisKey, typeof CourseResource);
     if (value != null) {
@@ -131,6 +131,10 @@ export class CourseService {
       data.andWhere('couponSubmission.status = :status', {
         status: CouponSubmissionStatus.PENDING,
       });
+    }
+
+    if (paginationOptions.editor_choice) {
+      data.innerJoin('course.editorChoiceCourse', 'editorChoiceCourse');
     }
 
     if (paginationOptions.search) {
@@ -186,10 +190,6 @@ export class CourseService {
       data.andWhere(`course.rating IN (${paginationOptions.rating})`);
     }
 
-    if (paginationOptions.latest) {
-      data.orderBy('course.created_at', 'DESC');
-    }
-
     if (paginationOptions.popular) {
       data
         .addSelect((subQuery) => {
@@ -205,6 +205,8 @@ export class CourseService {
         data.leftJoinAndSelect('course.userCourse', 'userCourse');
       }
     }
+
+    data.orderBy('course.created_at', 'DESC');
 
     const total = await data.getCount();
     paginationOptions.total = total;

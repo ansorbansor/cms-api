@@ -5,6 +5,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Provider } from './provider.entity';
@@ -18,6 +19,7 @@ import { UserLike } from './user-like.entity';
 import { UserCourse } from './user-course.entity';
 import { CourseLanguageTransaction } from './course-language-transaction.entity';
 import { CouponSubmission } from './coupon-submission.entity';
+import { EditorChoiceCourse } from './editor-choice-course.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
@@ -115,6 +117,12 @@ export class Course extends EntityHelper {
   @JoinColumn()
   userCourse?: UserCourse[];
   userCourseCount = 0;
+
+  @OneToOne(
+    () => EditorChoiceCourse,
+    (editorChoiceCourse) => editorChoiceCourse.course,
+  )
+  editorChoiceCourse?: EditorChoiceCourse;
 
   @AfterLoad()
   setLessonHours() {

@@ -191,12 +191,11 @@ export class BannerService {
       );
     }
 
-    if (!photo) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'Photo tidak boleh kosong',
-      );
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      updateBannerDto.photo = img;
     }
+
     switch (updateBannerDto.type.toString()) {
       case BannerType.COURSE: {
         if (!updateBannerDto.course_id) {
@@ -241,9 +240,6 @@ export class BannerService {
         break;
       }
     }
-
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
-    updateBannerDto.photo = img;
 
     await this.bannerRepository.update(updateBannerDto.id, {
       ...updateBannerDto,

@@ -27,7 +27,6 @@ import { UpdateBannerDto } from './dto/update-banner.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
-import { Transform } from 'class-transformer';
 import { GetBannerDto } from './dto/get-banner.dto';
 
 @ApiBearerAuth()

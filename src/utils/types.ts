@@ -47,4 +47,5 @@ export interface IPaginationOptions {
   popular?: boolean;
   submission?: boolean;
   editor_choice?: boolean;
+  type?: number;
 }

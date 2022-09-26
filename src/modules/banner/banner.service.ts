@@ -120,6 +120,12 @@ export class BannerService {
       });
     }
 
+    if (paginationOptions.type) {
+      data.andWhere('banner.type = :type', {
+        type: paginationOptions.type,
+      });
+    }
+
     data.orderBy('banner.position', 'ASC');
 
     const total = await data.getCount();

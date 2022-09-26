@@ -80,6 +80,7 @@ export class BannerController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search: string,
     @Query('status') status: boolean,
+    @Query('type') type: number,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -92,6 +93,7 @@ export class BannerController {
         total: 0,
         search: search,
         status_bool: status,
+        type: type,
       }),
       'success',
     );

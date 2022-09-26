@@ -117,7 +117,7 @@ export class BannerService {
       );
     }
 
-    if (paginationOptions.status_bool) {
+    if (paginationOptions.status_bool != null) {
       data.andWhere('banner.status = :status', {
         status: paginationOptions.status_bool,
       });
@@ -282,7 +282,7 @@ export class BannerService {
   }
 
   async softDelete(id: number): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.banner}:${id}`);
+    this.redisService.del(`${RedisKeyEnum.banner}:`);
     await this.bannerRepository.softDelete(id);
   }
 }

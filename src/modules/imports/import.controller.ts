@@ -1,11 +1,11 @@
 import {
   Controller,
-  Get,
   HttpStatus,
   HttpCode,
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Post,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,7 +26,7 @@ import { ImportService } from './import.service';
 })
 export class ImportController {
   constructor(private readonly importService: ImportService) {}
-  @Get('user')
+  @Post('user')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -37,7 +37,7 @@ export class ImportController {
     return successResponse(null, await this.importService.importUser(file));
   }
 
-  @Get('user-blacklist')
+  @Post('user-blacklist')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -51,7 +51,7 @@ export class ImportController {
     );
   }
 
-  @Get('user-level')
+  @Post('user-level')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)

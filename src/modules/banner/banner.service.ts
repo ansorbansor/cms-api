@@ -93,6 +93,8 @@ export class BannerService {
       }),
     );
 
+    await this.redisService.del(`${RedisKeyEnum.banner}:`);
+
     return this.findOne({ id: category.id });
   }
 

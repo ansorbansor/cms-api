@@ -9,8 +9,6 @@ import {
   UseGuards,
   Request,
   Query,
-  DefaultValuePipe,
-  ParseIntPipe,
   HttpStatus,
   HttpCode,
   UseInterceptors,

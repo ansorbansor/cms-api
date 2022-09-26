@@ -88,6 +88,7 @@ export class CreateUserDto {
   @ValidateNested({
     each: true,
   })
+  @IsOptional()
   @IsArray()
   @Type(() => CreateUserTopicDto)
   categories: CreateUserTopicDto[];

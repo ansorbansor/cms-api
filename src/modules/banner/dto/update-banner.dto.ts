@@ -45,6 +45,7 @@ export class UpdateBannerDto {
   external_url: string;
 
   @ApiProperty({ type: 'string', format: 'binary' })
+  @IsOptional()
   photo: any;
 
   @ApiProperty({ example: 1 })

@@ -99,7 +99,7 @@ export class BannerService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-Status${paginationOptions.status}-Type${paginationOptions.type}`;
+    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-Status${paginationOptions.status_bool}-Type${paginationOptions.type}`;
 
     const value = await this.redisService.get(redisKey, typeof BannerResource);
     if (value != null) {

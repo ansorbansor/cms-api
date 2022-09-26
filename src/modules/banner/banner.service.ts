@@ -14,6 +14,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { FilesService } from '../files/files.service';
 import { Course } from 'src/entities/course.entity';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
+import { isNumber } from 'class-validator';
 
 @Injectable()
 export class BannerService {
@@ -96,7 +97,7 @@ export class BannerService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}`;
+    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-Status${paginationOptions.status}-Type${paginationOptions.type}`;
 
     const value = await this.redisService.get(redisKey, typeof BannerResource);
     if (value != null) {
@@ -120,7 +121,7 @@ export class BannerService {
       });
     }
 
-    if (paginationOptions.type) {
+    if (paginationOptions.type != null && isNumber(paginationOptions.type)) {
       data.andWhere('banner.type = :type', {
         type: paginationOptions.type,
       });

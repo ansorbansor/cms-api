@@ -29,6 +29,8 @@ import { UpdateBannerDto } from './dto/update-banner.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
+import { Transform } from 'class-transformer';
+import { GetBannerDto } from './dto/get-banner.dto';
 
 @ApiBearerAuth()
 @ApiTags('Banner')
@@ -75,25 +77,19 @@ export class BannerController {
 
   @Get('banners')
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('search') search: string,
-    @Query('status') status: boolean,
-    @Query('type') type: number,
-  ) {
-    if (limit > 50) {
-      limit = 50;
+  async findAll(@Query() queryParams: GetBannerDto) {
+    if (queryParams.limit > 50) {
+      queryParams.limit = 50;
     }
 
     return successResponseList(
       await this.bannerServices.findManyWithPagination({
-        page,
-        limit,
+        page: queryParams.page,
+        limit: queryParams.limit,
         total: 0,
-        search: search,
-        status_bool: status,
-        type: type,
+        search: queryParams.search,
+        status_bool: queryParams.status,
+        type: queryParams.type,
       }),
       'success',
     );

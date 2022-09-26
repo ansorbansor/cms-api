@@ -117,9 +117,13 @@ export class BannerService {
       );
     }
 
-    if (paginationOptions.status_bool != null) {
+    if (paginationOptions.status_bool != undefined) {
       data.andWhere('banner.status = :status', {
         status: paginationOptions.status_bool,
+      });
+    } else {
+      data.andWhere('banner.status = :status', {
+        status: true,
       });
     }
 

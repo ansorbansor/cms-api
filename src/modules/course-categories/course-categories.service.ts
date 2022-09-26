@@ -161,13 +161,26 @@ export class CourseCategoriesService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    let updateData = null;
 
-    await this.categoryRepository.update(updateCourseCategoryDto.id, {
-      name: updateCourseCategoryDto.name,
-      pkasn_program: updateCourseCategoryDto.pkasn_program,
-      photo: img.id,
-    });
+    if (photo) {
+      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      updateData = {
+        name: updateCourseCategoryDto.name,
+        pkasn_program: updateCourseCategoryDto.pkasn_program,
+        photo: img.id,
+      };
+    } else {
+      updateData = {
+        name: updateCourseCategoryDto.name,
+        pkasn_program: updateCourseCategoryDto.pkasn_program,
+      };
+    }
+
+    await this.categoryRepository.update(
+      updateCourseCategoryDto.id,
+      updateData,
+    );
 
     if (updateCourseCategoryDto.topic) {
       const topics = [];

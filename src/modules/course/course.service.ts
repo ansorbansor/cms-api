@@ -11,6 +11,7 @@ import { RedisService } from '../redis/redis.service';
 import {
   CouponSubmissionStatus,
   CoursePriceType,
+  CourseScheduleType,
   RedisKeyEnum,
 } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
@@ -434,5 +435,21 @@ export class CourseService {
       this.redisService.del(redisKey);
       return successResponse(null, 'Pelatihan berhasil disukai');
     }
+  }
+
+  async courseSchedule() {
+    const data = await this.courseRepository.find();
+    return [
+      {
+        id: CourseScheduleType.MANDIRI,
+        name: 'Mandiri',
+        course_count: data.filter((e) => e.date_course == null).length,
+      },
+      {
+        id: CourseScheduleType.TERJADWAL,
+        name: 'Terjadwal',
+        course_count: data.filter((e) => e.date_course != null).length,
+      },
+    ];
   }
 }

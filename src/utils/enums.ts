@@ -103,3 +103,8 @@ export enum SocialMediaUrl {
   INSTAGRAM = 'https://www.instagram.com/ppkasn.kemensetneg',
   WHATSAPP = 'https://wa.me/082110002114',
 }
+
+export enum CourseScheduleType {
+  TERJADWAL = 2,
+  MANDIRI = 1,
+}

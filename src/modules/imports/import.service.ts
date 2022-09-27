@@ -113,13 +113,11 @@ export class ImportService {
       //check role exists
       const dataRole = await this.roleRepository
         .createQueryBuilder('role')
-        .where(`LOWER(role.name) IN (:...role)`, { role: role })
+        .where(`role.id IN (:...role)`, { role: role })
         .getMany();
 
       role.forEach((element) => {
-        const check = dataRole.some(
-          (b) => b.name.toLowerCase() == element.toLowerCase(),
-        );
+        const check = dataRole.some((b) => b.id == element.toLowerCase());
         if (!check) {
           throw failedResponse(
             HttpStatus.BAD_REQUEST,
@@ -131,13 +129,11 @@ export class ImportService {
       //check unit exists
       const dataUnit = await this.employeeUnitRepository
         .createQueryBuilder('unit')
-        .where(`LOWER(unit.name) IN (:...unit)`, { unit: unit })
+        .where(`unit.id IN (:...unit)`, { unit: unit })
         .getMany();
 
       unit.forEach((element) => {
-        const check = dataUnit.some(
-          (b) => b.name.toLowerCase() == element.toLowerCase(),
-        );
+        const check = dataUnit.some((b) => b.id == element);
         if (!check) {
           throw failedResponse(
             HttpStatus.BAD_REQUEST,
@@ -149,13 +145,11 @@ export class ImportService {
       //check level exists
       const dataLevel = await this.employeeLevelRepository
         .createQueryBuilder('level')
-        .where(`LOWER(level.name) IN (:...level)`, { level: level })
+        .where(`level.id IN (:...level)`, { level: level })
         .getMany();
 
       level.forEach((element) => {
-        const check = dataLevel.some(
-          (b) => b.name.toLowerCase() == element.toLowerCase(),
-        );
+        const check = dataLevel.some((b) => b.id == element);
         if (!check) {
           throw failedResponse(
             HttpStatus.BAD_REQUEST,
@@ -167,34 +161,17 @@ export class ImportService {
       //check position exists
       const dataPosition = await this.employeePositionRepository
         .createQueryBuilder('position')
-        .where(`LOWER(position.name) IN (:...position)`, { position: position })
+        .where(`position.id IN (:...position)`, { position: position })
         .getMany();
 
       position.forEach((element) => {
-        const check = dataPosition.some(
-          (b) => b.name.toLowerCase() == element.toLowerCase(),
-        );
+        const check = dataPosition.some((b) => b.id == element);
         if (!check) {
           throw failedResponse(
             HttpStatus.BAD_REQUEST,
             `Jabatan ${element} tidak tersedia`,
           );
         }
-      });
-
-      saveData.forEach((element) => {
-        element.role = dataRole.find(
-          (a) => a.name.toLowerCase() == element.role.toLowerCase(),
-        ).id;
-        element.position_id = dataPosition.find(
-          (a) => a.name.toLowerCase() == element.position_id.toLowerCase(),
-        ).id;
-        element.unit_id = dataUnit.find(
-          (a) => a.name.toLowerCase() == element.unit_id.toLowerCase(),
-        ).id;
-        element.level_id = dataLevel.find(
-          (a) => a.name.toLowerCase() == element.level_id.toLowerCase(),
-        ).id;
       });
 
       await this.usersRepository.save(this.usersRepository.create(saveData));

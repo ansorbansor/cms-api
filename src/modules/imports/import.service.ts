@@ -448,6 +448,9 @@ export class ImportService {
         prefix = 'TemplateImportUserBlacklist-';
         break;
       }
+      default: {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Tipe tidak tersedia');
+      }
     }
 
     //create sheet

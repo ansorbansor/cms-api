@@ -21,6 +21,7 @@ import { MasterRoleResource } from './resource/master-role.resources';
 import { MasterEmployeeUnitResource } from './resource/master-employee-unit.resources';
 import { MasterEmployeeLevelResource } from './resource/master-employee-level.resources';
 import { MasterEmployeePositionResource } from './resource/master-employee-position.resources';
+import { Coupon } from 'src/entities/coupon.entity';
 
 @Injectable()
 export class ImportService {
@@ -39,6 +40,8 @@ export class ImportService {
     private providerRepository: Repository<Provider>,
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
+    @InjectRepository(Coupon)
+    private couponRepository: Repository<Coupon>,
     private mailService: MailService,
   ) {}
 
@@ -332,6 +335,92 @@ export class ImportService {
       });
 
       return `Berhasil mengubah data level ${saveData.length} data pengguna`;
+    }
+  }
+
+  async importCoupon(file: BufferedFile) {
+    if (!file) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
+    }
+
+    const coupon_name = [];
+    const coupon_code = [];
+    const provider_id = [];
+    const course_id = [];
+
+    const saveData = [];
+    const workbook = new Workbook();
+    const stream = new Stream.Readable();
+    stream.push(file.buffer); // file is ArrayBuffer variable
+    stream.push(null); //set end of file
+    await workbook.xlsx.read(stream).then(function () {
+      const worksheet = workbook.getWorksheet('uploads');
+      if (worksheet) {
+        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+          const currRow = worksheet.getRow(rowNumber);
+          if (rowNumber > 1 && currRow.getCell(1).value != null) {
+            coupon_name.push(String(currRow.getCell(1).value));
+            coupon_code.push(String(currRow.getCell(2).value));
+            provider_id.push(currRow.getCell(3).value);
+
+            if (currRow.getCell(5).value) {
+              course_id.push(currRow.getCell(5).value);
+            }
+
+            saveData.push({
+              name: currRow.getCell(1).value,
+              code: currRow.getCell(2).value,
+              provider_id: currRow.getCell(3).value,
+              amount: currRow.getCell(4).value,
+              type: currRow.getCell(5).value ? 1 : 0,
+              course_id: currRow.getCell(5).value,
+              status: currRow.getCell(6).value,
+              start_date: currRow.getCell(7).value,
+              end_date: currRow.getCell(8).value,
+            });
+          }
+        });
+      } else {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
+      }
+    });
+
+    if (saveData.length > 0) {
+      //check coupon name and code not exists
+      const dataCoupon = await this.couponRepository
+        .createQueryBuilder('coupon')
+        .where(`coupon.name IN (:...name)`, { name: coupon_name })
+        .orWhere(`coupon.code IN (:...code)`, { code: coupon_code })
+        .getOne();
+
+      if (dataCoupon) {
+        throw failedResponse(
+          HttpStatus.BAD_REQUEST,
+          `Kupon dengan Nama ${dataCoupon.name} atau kode ${dataCoupon.code} sudah ada.`,
+        );
+      }
+
+      //check course exists
+      if (course_id.length > 0) {
+        const dataCourse = await this.courseRepository
+          .createQueryBuilder('course')
+          .where(`course.id IN (:...course)`, { course: course_id })
+          .getMany();
+
+        course_id.forEach((element) => {
+          const check = dataCourse.some((b) => b.id == element);
+          if (!check) {
+            throw failedResponse(
+              HttpStatus.BAD_REQUEST,
+              `Pembelajaran ${element} tidak tersedia`,
+            );
+          }
+        });
+      }
+
+      await this.couponRepository.save(this.couponRepository.create(saveData));
+
+      return `Berhasil menambah ${saveData.length} data kupon`;
     }
   }
 

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Coupon } from 'src/entities/coupon.entity';
 import { Course } from 'src/entities/course.entity';
 import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
@@ -21,6 +22,7 @@ import { ImportService } from './import.service';
       EmployeePosition,
       Provider,
       Course,
+      Coupon,
     ]),
     MailModule,
   ],

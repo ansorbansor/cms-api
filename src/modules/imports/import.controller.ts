@@ -69,6 +69,17 @@ export class ImportController {
     );
   }
 
+  @Post('coupon')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(UsersController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importCoupon(@UploadedFile() file: BufferedFile) {
+    return successResponse(null, await this.importService.importCoupon(file));
+  }
+
   @Get(':path')
   @ApiParam({ name: 'path', example: 'user.xlsx' })
   async download(@Param('path') path, @Res() res: Response) {

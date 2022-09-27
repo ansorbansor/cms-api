@@ -240,4 +240,11 @@ export class CourseController {
       'success',
     );
   }
+
+  @Get('course/rating')
+  @UseGuards(OptionalJwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getCourseRating() {
+    return successResponse(await this.courseServices.courseRating(), 'success');
+  }
 }

@@ -12,6 +12,7 @@ import {
   CouponSubmissionStatus,
   CoursePriceType,
   CourseScheduleType,
+  Rating,
   RedisKeyEnum,
 } from 'src/utils/enums';
 import { FilesService } from '../files/files.service';
@@ -451,6 +452,37 @@ export class CourseService {
         id: CourseScheduleType.TERJADWAL,
         name: 'Terjadwal',
         course_count: data.filter((e) => e.date_course != null).length,
+      },
+    ];
+  }
+
+  async courseRating() {
+    const data = await this.courseRepository.find();
+    return [
+      {
+        id: Number(Rating.A),
+        name: Rating.A,
+        course_count: data.filter((e) => String(e.rating) == Rating.A).length,
+      },
+      {
+        id: Number(Rating.B),
+        name: Rating.B,
+        course_count: data.filter((e) => String(e.rating) == Rating.B).length,
+      },
+      {
+        id: Number(Rating.C),
+        name: Rating.C,
+        course_count: data.filter((e) => String(e.rating) == Rating.C).length,
+      },
+      {
+        id: Number(Rating.D),
+        name: Rating.D,
+        course_count: data.filter((e) => String(e.rating) == Rating.D).length,
+      },
+      {
+        id: Number(Rating.E),
+        name: Rating.E,
+        course_count: data.filter((e) => String(e.rating) == Rating.E).length,
       },
     ];
   }

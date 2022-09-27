@@ -180,9 +180,11 @@ export class CourseService {
     }
 
     if (paginationOptions.schedule) {
-      if (paginationOptions.schedule.includes(0)) {
+      if (paginationOptions.schedule.includes(CourseScheduleType.MANDIRI)) {
         data.andWhere(`course.date_course IS NULL`);
-      } else if (paginationOptions.schedule.includes(1)) {
+      } else if (
+        paginationOptions.schedule.includes(CourseScheduleType.TERJADWAL)
+      ) {
         data.andWhere(`course.date_course IS NOT NULL`);
       }
     }

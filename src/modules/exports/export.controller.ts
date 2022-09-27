@@ -1,9 +1,6 @@
 import {
   Controller,
   Get,
-  Query,
-  DefaultValuePipe,
-  ParseIntPipe,
   HttpStatus,
   HttpCode,
   UseGuards,
@@ -32,15 +29,7 @@ export class ExportController {
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Res() res: Response,
-  ) {
-    if (limit > 50) {
-      limit = 50;
-    }
-
+  async findAll(@Res() res: Response) {
     const response = await this.exportService.exportUser();
 
     res.download(`${response}`);

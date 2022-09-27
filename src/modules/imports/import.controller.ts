@@ -6,10 +6,13 @@ import {
   UseInterceptors,
   UploadedFile,
   Post,
+  Get,
+  Param,
+  Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
 import { BufferedFile } from 'src/utils/file-helper';
@@ -17,6 +20,7 @@ import { RolesGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
 import { UsersController } from '../users/users.controller';
 import { ImportService } from './import.service';
+import { Response } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('Imports')
@@ -63,5 +67,13 @@ export class ImportController {
       null,
       await this.importService.importLevelUser(file),
     );
+  }
+
+  @Get(':path')
+  @ApiParam({ name: 'path', example: 'user.xlsx' })
+  async download(@Param('path') path, @Res() res: Response) {
+    const response = await this.importService.downloadTemplate(path);
+
+    res.download(`${response}`);
   }
 }

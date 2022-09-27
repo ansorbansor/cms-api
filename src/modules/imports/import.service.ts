@@ -12,6 +12,15 @@ import { failedResponse } from 'src/utils/responses';
 import { Stream } from 'stream';
 import { Repository } from 'typeorm';
 import { MailService } from '../mail/mail.service';
+import * as tmp from 'tmp';
+import { Provider } from 'src/entities/provider.entity';
+import { Course } from 'src/entities/course.entity';
+import { MasterProviderResource } from './resource/master-provider.resources';
+import { MasterCourseResource } from './resource/master-course.resources';
+import { MasterRoleResource } from './resource/master-role.resources';
+import { MasterEmployeeUnitResource } from './resource/master-employee-unit.resources';
+import { MasterEmployeeLevelResource } from './resource/master-employee-level.resources';
+import { MasterEmployeePositionResource } from './resource/master-employee-position.resources';
 
 @Injectable()
 export class ImportService {
@@ -26,6 +35,10 @@ export class ImportService {
     private employeeLevelRepository: Repository<EmployeeLevel>,
     @InjectRepository(EmployeePosition)
     private employeePositionRepository: Repository<EmployeePosition>,
+    @InjectRepository(Provider)
+    private providerRepository: Repository<Provider>,
+    @InjectRepository(Course)
+    private courseRepository: Repository<Course>,
     private mailService: MailService,
   ) {}
 
@@ -343,5 +356,300 @@ export class ImportService {
 
       return `Berhasil mengubah data level ${saveData.length} data pengguna`;
     }
+  }
+
+  async downloadTemplate(name: string) {
+    //create workbook
+    const wb = new Workbook();
+
+    let rows = [];
+    let prefix = '';
+
+    //set header and prefix file
+    switch (name) {
+      case 'coupon': {
+        rows = [
+          { header: 'Nama Coupon', key: 'coupon_name', width: 18 },
+          { header: 'Kode Kupon', key: 'coupon_code', width: 18 },
+          { header: 'ID Penyelenggara', key: 'provider_id', width: 18 },
+          {
+            header: 'Nominal',
+            key: 'amount',
+            width: 18,
+          },
+          {
+            header: 'ID Pembelajaran',
+            key: 'course_id',
+            width: 18,
+          },
+          {
+            header: 'Status',
+            key: 'status',
+            width: 18,
+          },
+          {
+            header: 'Berlaku Dari',
+            key: 'start_date',
+            style: { numFmt: 'YYYY-MM-DD HH:mm:ss' },
+            width: 18,
+          },
+          {
+            header: 'Berlaku Sampai',
+            key: 'end_date',
+            style: { numFmt: 'YYYY-MM-DD HH:mm:ss' },
+            width: 18,
+          },
+        ];
+        prefix = 'TemplateImportCoupon-';
+        break;
+      }
+      case 'user': {
+        rows = [
+          { header: 'NIP', key: 'nip', width: 18 },
+          { header: 'Nama', key: 'name', width: 18 },
+          { header: 'Email', key: 'email', width: 18 },
+          {
+            header: 'Status',
+            key: 'status',
+            width: 18,
+          },
+          {
+            header: 'Peran Pengguna',
+            key: 'role',
+            width: 18,
+          },
+          {
+            header: 'Blacklist',
+            key: 'blacklist',
+            width: 18,
+          },
+          {
+            header: 'Unit',
+            key: 'unit',
+            width: 18,
+          },
+          {
+            header: 'Pangkat',
+            key: 'level',
+            width: 18,
+          },
+          {
+            header: 'Jabatan',
+            key: 'position',
+            width: 18,
+          },
+          {
+            header: 'Level Pengguna',
+            key: 'user_level',
+            width: 18,
+          },
+        ];
+        prefix = 'TemplateImportUser-';
+        break;
+      }
+      case 'user-level': {
+        rows = [
+          { header: 'NIP', key: 'nip', width: 18 },
+          {
+            header: 'Level Pengguna',
+            key: 'user_level',
+            width: 18,
+          },
+        ];
+        prefix = 'TemplateImportUserLevel-';
+        break;
+      }
+      case 'user-blacklist': {
+        rows = [
+          { header: 'NIP', key: 'nip', width: 18 },
+          {
+            header: 'Blacklist',
+            key: 'user_blacklist',
+            width: 18,
+          },
+        ];
+        prefix = 'TemplateImportUserBlacklist-';
+        break;
+      }
+    }
+
+    //create sheet
+    const sheet = wb.addWorksheet('uploads');
+    //add header
+    sheet.columns = rows;
+
+    //set comment header and inser additional sheet master data
+    switch (name) {
+      case 'coupon': {
+        sheet.getCell('A1').note = 'Diisi nama kupon';
+        sheet.getCell('B1').note = 'Diisi kode kupon';
+        sheet.getCell('C1').note = 'Diisi ID penyelenggara';
+        sheet.getCell('D1').note = 'Diisi nominal kupon';
+        sheet.getCell('E1').note =
+          'Diisi ID pembelajaran (jika hanya berlaku untuk 1 pembelajaran)';
+        sheet.getCell('F1').note =
+          'Diisi status kupon (tersedia = 0, terpakai = 1, tidak tersedia = 2)';
+        sheet.getCell('G1').note =
+          'Diisi tanggal mulai berlaku kupon (contoh: 2022-01-23 23:59:59)';
+        sheet.getCell('H1').note =
+          'Diisi tanggal berakhir berlaku kupon (contoh: 2022-01-27 23:59:59)';
+
+        //provider master data
+        const providerSheet = wb.addWorksheet('Daftar Penyelenggara');
+        const providerData = await this.providerRepository
+          .createQueryBuilder('provider')
+          .getMany();
+
+        let rows = [];
+
+        providerData.forEach((d) => {
+          rows.push(Object.values(MasterProviderResource(d)));
+        });
+
+        rows.unshift(Object.keys(MasterProviderResource(providerData[0])));
+
+        providerSheet.addRows(rows);
+
+        //course master data
+        const courseSheet = wb.addWorksheet('Daftar Pembelajaran');
+        const courseData = await this.courseRepository
+          .createQueryBuilder('course')
+          .leftJoinAndSelect('course.provider', 'provider')
+          .leftJoinAndSelect('course.courseCategory', 'category')
+          .leftJoinAndSelect('course.topic', 'topic')
+          .leftJoinAndSelect('course.courseLevel', 'courseLevel')
+          .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
+          .leftJoinAndSelect('course.coursePrice', 'coursePrice')
+          .leftJoinAndSelect('course.photoFile', 'photoFile')
+          .getMany();
+
+        rows = [];
+
+        courseData.forEach((d) => {
+          rows.push(Object.values(MasterCourseResource(d)));
+        });
+
+        rows.unshift(Object.keys(MasterCourseResource(courseData[0])));
+
+        courseSheet.addRows(rows);
+        break;
+      }
+      case 'user': {
+        sheet.getCell('A1').note = 'Diisi NIP pengguna';
+        sheet.getCell('B1').note = 'Diisi nama pengguna';
+        sheet.getCell('C1').note = 'Diisi email pengguna';
+        sheet.getCell('D1').note = 'Diisi status "Aktif" atau "Tidak Aktif"';
+        sheet.getCell('E1').note = 'Diisi ID peran pengguna';
+        sheet.getCell('F1').note = 'Diisi "Ya" atau "Tidak"';
+        sheet.getCell('G1').note = 'Diisi ID unit pengguna';
+        sheet.getCell('H1').note = 'Diisi ID pangkat pengguna';
+        sheet.getCell('I1').note = 'Diisi ID jabatan pengguna';
+        sheet.getCell('J1').note = 'Diisi level pengguna (0-5)';
+
+        //role master data
+        const roleSheet = wb.addWorksheet('Daftar Peran Pengguna');
+        const roleData = await this.roleRepository
+          .createQueryBuilder('role')
+          .getMany();
+
+        let rows = [];
+
+        roleData.forEach((d) => {
+          rows.push(Object.values(MasterRoleResource(d)));
+        });
+
+        rows.unshift(Object.keys(MasterRoleResource(roleData[0])));
+
+        roleSheet.addRows(rows);
+
+        //employee unit master data
+        const employeeUnitSheet = wb.addWorksheet('Daftar Unit');
+        const employeeUnitData = await this.employeeUnitRepository
+          .createQueryBuilder('employeeUnit')
+          .getMany();
+
+        rows = [];
+
+        employeeUnitData.forEach((d) => {
+          rows.push(Object.values(MasterEmployeeUnitResource(d)));
+        });
+
+        rows.unshift(
+          Object.keys(MasterEmployeeUnitResource(employeeUnitData[0])),
+        );
+
+        employeeUnitSheet.addRows(rows);
+
+        //employee level master data
+        const employeeLevelSheet = wb.addWorksheet('Daftar Pangkat');
+        const employeeLevelData = await this.employeeLevelRepository
+          .createQueryBuilder('employeeLevel')
+          .getMany();
+
+        rows = [];
+
+        employeeLevelData.forEach((d) => {
+          rows.push(Object.values(MasterEmployeeLevelResource(d)));
+        });
+
+        rows.unshift(
+          Object.keys(MasterEmployeeLevelResource(employeeLevelData[0])),
+        );
+
+        employeeLevelSheet.addRows(rows);
+
+        //employee position master data
+        const employeePositionSheet = wb.addWorksheet('Daftar Jabatan');
+        const employeePositionData = await this.employeePositionRepository
+          .createQueryBuilder('employeePosition')
+          .getMany();
+
+        rows = [];
+
+        employeePositionData.forEach((d) => {
+          rows.push(Object.values(MasterEmployeePositionResource(d)));
+        });
+
+        rows.unshift(
+          Object.keys(MasterEmployeePositionResource(employeePositionData[0])),
+        );
+
+        employeePositionSheet.addRows(rows);
+        break;
+      }
+      case 'user-level': {
+        sheet.getCell('A1').note = 'Diisi NIP pengguna';
+        sheet.getCell('B1').note = 'Diisi level pengguna (0-5)';
+        break;
+      }
+      case 'user-blacklist': {
+        sheet.getCell('A1').note = 'Diisi NIP pengguna';
+        sheet.getCell('B1').note = 'Diisi "Ya" atau "Tidak"';
+        break;
+      }
+    }
+
+    const f = await new Promise((resolve) => {
+      tmp.file(
+        { mode: 0o644, prefix: prefix, postfix: '.xlsx' },
+        function _tempFileCreated(err, path) {
+          if (err) throw err;
+
+          wb.xlsx
+            .writeFile(path)
+            .then(() => {
+              resolve(path);
+            })
+            .catch((err) => {
+              throw failedResponse(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                `error : ${err}`,
+              );
+            });
+        },
+      );
+    });
+
+    return f;
   }
 }

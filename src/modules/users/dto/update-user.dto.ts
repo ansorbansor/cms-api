@@ -86,7 +86,7 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
   blacklist?: boolean;
 
   hash?: string | null;

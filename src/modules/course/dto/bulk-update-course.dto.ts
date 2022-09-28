@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -36,6 +37,7 @@ export class BulkUpdateCourseDto {
 
   @ApiProperty({ example: true })
   @IsNotEmpty()
+  @Transform(({ value }) => value === 'true')
   status: boolean;
 
   @ApiProperty({ example: 1 })

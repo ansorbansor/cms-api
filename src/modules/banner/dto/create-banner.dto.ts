@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional, NotEquals, Validate } from 'class-validator';
 import { BannerType } from 'src/utils/enums';
 import { IsNotExist } from 'src/utils/validators';
@@ -44,5 +45,6 @@ export class CreateBannerDto {
 
   @ApiProperty({ example: true })
   @IsOptional()
+  @Transform(({ value }) => value === 'true')
   status: boolean;
 }

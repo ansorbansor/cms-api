@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -41,6 +42,7 @@ export class CreateCourseDto {
 
   @ApiProperty({ example: true })
   @IsNotEmpty()
+  @Transform(({ value }) => value === 'true')
   status: boolean;
 
   @ApiProperty({ example: 1 })

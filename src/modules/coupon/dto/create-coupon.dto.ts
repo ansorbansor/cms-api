@@ -23,7 +23,7 @@ export class CreateCouponDto {
 
   @ApiProperty({ example: 1 })
   @Validate(IsExist, ['Provider', 'id'], {
-    message: 'Penyedia tidak ditemukan',
+    message: 'Penyelenggara tidak ditemukan',
   })
   @IsNotEmpty()
   provider_id: number;

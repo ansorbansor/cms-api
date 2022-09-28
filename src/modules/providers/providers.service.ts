@@ -86,7 +86,7 @@ export class ProvidersService {
     if (!data) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Penyedia tidak ditemukan',
+        'Penyelenggara tidak ditemukan',
       );
     }
 
@@ -108,7 +108,7 @@ export class ProvidersService {
     if (!exists) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Penyedia tidak ditemukan',
+        'Penyelenggara tidak ditemukan',
       );
     }
 
@@ -138,7 +138,7 @@ export class ProvidersService {
     if (!provider) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Penyedia tidak ditemukan',
+        'Penyelenggara tidak ditemukan',
       );
     }
 

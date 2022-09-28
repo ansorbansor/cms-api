@@ -9,7 +9,7 @@ export class UpdateProviderDto {
 
   @ApiProperty({ example: 'Mooc A' })
   @Validate(IsNotExist, ['Provider', 'name', 'id'], {
-    message: 'Nama penyedia sudah ada',
+    message: 'Nama penyelenggara sudah ada',
   })
   @IsNotEmpty()
   name: string | null;

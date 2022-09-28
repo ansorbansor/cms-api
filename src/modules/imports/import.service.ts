@@ -478,7 +478,7 @@ export class ImportService {
             style: { numFmt: '@' },
           },
           { header: 'Nama', key: 'name', width: 18 },
-          { header: 'Email', key: 'email', width: 18 },
+          { header: 'Email', key: 'email', width: 18, style: { numFmt: '@' } },
           {
             header: 'Status',
             key: 'status',

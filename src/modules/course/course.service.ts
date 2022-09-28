@@ -422,10 +422,12 @@ export class CourseService {
         await this.userLikeRepository.update(data.id, {
           deleted_at: null,
         });
+        const redisKey = `${RedisKeyEnum.course}:`;
+        this.redisService.del(redisKey);
         return successResponse(null, 'Pelatihan berhasil disukai');
       } else {
         await this.userLikeRepository.softDelete(data.id);
-        const redisKey = `${RedisKeyEnum.course}:${courseId}-${RedisKeyEnum.user}${user.id}`;
+        const redisKey = `${RedisKeyEnum.course}:`;
         this.redisService.del(redisKey);
         return successResponse(null, 'Pelatihan tidak disukai');
       }
@@ -437,7 +439,7 @@ export class CourseService {
         }),
       );
 
-      const redisKey = `${RedisKeyEnum.course}:${courseId}-${RedisKeyEnum.user}${user.id}`;
+      const redisKey = `${RedisKeyEnum.course}:`;
       this.redisService.del(redisKey);
       return successResponse(null, 'Pelatihan berhasil disukai');
     }

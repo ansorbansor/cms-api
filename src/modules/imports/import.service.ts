@@ -471,7 +471,12 @@ export class ImportService {
       }
       case 'user': {
         rows = [
-          { header: 'NIP', key: 'nip', width: 18 },
+          {
+            header: 'NIP',
+            key: 'nip',
+            width: 18,
+            style: { numFmt: '@' },
+          },
           { header: 'Nama', key: 'name', width: 18 },
           { header: 'Email', key: 'email', width: 18 },
           {
@@ -515,7 +520,7 @@ export class ImportService {
       }
       case 'user-level': {
         rows = [
-          { header: 'NIP', key: 'nip', width: 18 },
+          { header: 'NIP', key: 'nip', width: 18, style: { numFmt: '@' } },
           {
             header: 'Level Pengguna',
             key: 'user_level',
@@ -527,7 +532,7 @@ export class ImportService {
       }
       case 'user-blacklist': {
         rows = [
-          { header: 'NIP', key: 'nip', width: 18 },
+          { header: 'NIP', key: 'nip', width: 18, style: { numFmt: '@' } },
           {
             header: 'Blacklist',
             key: 'user_blacklist',

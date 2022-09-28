@@ -88,6 +88,9 @@ export class CourseService {
       );
     });
 
+    const redisKey = `${RedisKeyEnum.course}:`;
+    this.redisService.del(redisKey);
+
     return this.findOneAdmin({ id: course.id });
   }
 

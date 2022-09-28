@@ -79,7 +79,6 @@ export class UsersController {
         page,
         limit,
         total: 0,
-        blacklist: false,
         search: search,
         employeePosition: positionId,
         employeeUnit: unitId,

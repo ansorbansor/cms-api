@@ -14,6 +14,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailService } from '../mail/mail.service';
+import { RedisKeyEnum } from 'src/utils/enums';
 
 @Injectable()
 export class UsersService {
@@ -296,6 +297,10 @@ export class UsersService {
     await this.userTopicsRepository.save(
       this.userTopicsRepository.create(saveData),
     );
+
+    const redisKey = `${RedisKeyEnum.user}:${userId}`;
+
+    this.redisService.del(redisKey);
 
     return 'success';
   }

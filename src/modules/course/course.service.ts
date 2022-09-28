@@ -110,7 +110,8 @@ export class CourseService {
       .leftJoinAndSelect('course.courseLevel', 'courseLevel')
       .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
-      .leftJoinAndSelect('course.photoFile', 'photoFile');
+      .leftJoinAndSelect('course.photoFile', 'photoFile')
+      .leftJoinAndSelect('course.userLike', 'userLike');
 
     if (
       paginationOptions.user_id &&
@@ -123,7 +124,6 @@ export class CourseService {
     }
 
     if (paginationOptions.user_id && paginationOptions.liked) {
-      data.leftJoinAndSelect('course.userLike', 'userLike');
       data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
     }
 

@@ -67,28 +67,32 @@ export class ImportService {
       if (worksheet) {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
-          if (rowNumber > 1 && currRow.getCell(1).value != null) {
-            nip.push(currRow.getCell(1).value);
-            email.push(currRow.getCell(3).value);
-            role.push(String(currRow.getCell(5).value).toLowerCase());
-            unit.push(String(currRow.getCell(7).value).toLowerCase());
-            level.push(String(currRow.getCell(8).value).toLowerCase());
-            position.push(String(currRow.getCell(9).value).toLowerCase());
+          if (
+            rowNumber > 1 &&
+            currRow.getCell(1).text != null &&
+            currRow.getCell(1).text != ''
+          ) {
+            nip.push(currRow.getCell(1).text);
+            email.push(currRow.getCell(3).text);
+            role.push(String(currRow.getCell(5).text).toLowerCase());
+            unit.push(String(currRow.getCell(7).text).toLowerCase());
+            level.push(String(currRow.getCell(8).text).toLowerCase());
+            position.push(String(currRow.getCell(9).text).toLowerCase());
 
             saveData.push({
-              nip: currRow.getCell(1).value,
-              name: currRow.getCell(2).value,
-              email: currRow.getCell(3).value,
+              nip: currRow.getCell(1).text,
+              name: currRow.getCell(2).text,
+              email: currRow.getCell(3).text,
               status:
-                currRow.getCell(4).value && currRow.getCell(4).value == 'Aktif',
-              role: currRow.getCell(5).value,
+                currRow.getCell(4).text && currRow.getCell(4).text == 'Aktif',
+              role: currRow.getCell(5).text,
               blacklist:
-                currRow.getCell(6).value && currRow.getCell(6).value == 'Ya',
-              unit_id: currRow.getCell(7).value,
-              level_id: currRow.getCell(8).value,
-              position_id: currRow.getCell(9).value,
+                currRow.getCell(6).text && currRow.getCell(6).text == 'Ya',
+              unit_id: currRow.getCell(7).text,
+              level_id: currRow.getCell(8).text,
+              position_id: currRow.getCell(9).text,
               provider: 'email',
-              level: currRow.getCell(10).value,
+              level: currRow.getCell(10).text,
               password: randomStringGenerator(),
             });
           }
@@ -210,12 +214,16 @@ export class ImportService {
       if (worksheet) {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
-          if (rowNumber > 1 && currRow.getCell(1).value != null) {
+          if (
+            rowNumber > 1 &&
+            currRow.getCell(1).text != null &&
+            currRow.getCell(1).text != ''
+          ) {
             if (
-              !currRow.getCell(1).value ||
-              !currRow.getCell(2).value ||
-              (currRow.getCell(2).value.toString() != 'Ya' &&
-                currRow.getCell(2).value.toString() != 'Tidak')
+              !currRow.getCell(1).text ||
+              !currRow.getCell(2).text ||
+              (currRow.getCell(2).text.toString() != 'Ya' &&
+                currRow.getCell(2).text.toString() != 'Tidak')
             ) {
               throw failedResponse(
                 HttpStatus.BAD_REQUEST,
@@ -223,11 +231,11 @@ export class ImportService {
               );
             }
 
-            nip.push(currRow.getCell(1).value);
+            nip.push(currRow.getCell(1).text);
             saveData.push({
-              nip: currRow.getCell(1).value,
+              nip: currRow.getCell(1).text,
               blacklist:
-                currRow.getCell(2).value && currRow.getCell(2).value == 'Ya',
+                currRow.getCell(2).text && currRow.getCell(2).text == 'Ya',
             });
           }
         });
@@ -283,12 +291,16 @@ export class ImportService {
       if (worksheet) {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
-          if (rowNumber > 1 && currRow.getCell(1).value != null) {
+          if (
+            rowNumber > 1 &&
+            currRow.getCell(1).text != null &&
+            currRow.getCell(1).text != ''
+          ) {
             if (
-              !Number(currRow.getCell(1).value) ||
-              !Number(currRow.getCell(2).value) ||
-              Number(currRow.getCell(2).value) < 0 ||
-              Number(currRow.getCell(2).value) > 5
+              !Number(currRow.getCell(1).text) ||
+              !Number(currRow.getCell(2).text) ||
+              Number(currRow.getCell(2).text) < 0 ||
+              Number(currRow.getCell(2).text) > 5
             ) {
               throw failedResponse(
                 HttpStatus.BAD_REQUEST,
@@ -296,10 +308,10 @@ export class ImportService {
               );
             }
 
-            nip.push(currRow.getCell(1).value);
+            nip.push(currRow.getCell(1).text);
             saveData.push({
-              nip: currRow.getCell(1).value,
-              level: currRow.getCell(2).value,
+              nip: currRow.getCell(1).text,
+              level: currRow.getCell(2).text,
             });
           }
         });
@@ -358,25 +370,29 @@ export class ImportService {
       if (worksheet) {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
-          if (rowNumber > 1 && currRow.getCell(1).value != null) {
-            coupon_name.push(String(currRow.getCell(1).value));
-            coupon_code.push(String(currRow.getCell(2).value));
-            provider_id.push(currRow.getCell(3).value);
+          if (
+            rowNumber > 1 &&
+            currRow.getCell(1).text != null &&
+            currRow.getCell(1).text != ''
+          ) {
+            coupon_name.push(String(currRow.getCell(1).text));
+            coupon_code.push(String(currRow.getCell(2).text));
+            provider_id.push(currRow.getCell(3).text);
 
-            if (currRow.getCell(5).value) {
-              course_id.push(currRow.getCell(5).value);
+            if (currRow.getCell(5).text) {
+              course_id.push(currRow.getCell(5).text);
             }
 
             saveData.push({
-              name: currRow.getCell(1).value,
-              code: currRow.getCell(2).value,
-              provider_id: currRow.getCell(3).value,
-              amount: currRow.getCell(4).value,
-              type: currRow.getCell(5).value ? 1 : 0,
-              course_id: currRow.getCell(5).value,
-              status: currRow.getCell(6).value,
-              start_date: currRow.getCell(7).value,
-              end_date: currRow.getCell(8).value,
+              name: currRow.getCell(1).text,
+              code: currRow.getCell(2).text,
+              provider_id: currRow.getCell(3).text,
+              amount: currRow.getCell(4).text,
+              type: currRow.getCell(5).text ? 1 : 0,
+              course_id: currRow.getCell(5).text,
+              status: currRow.getCell(6).text,
+              start_date: currRow.getCell(7).text,
+              end_date: currRow.getCell(8).text,
             });
           }
         });

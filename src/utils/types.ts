@@ -38,6 +38,7 @@ export interface IPaginationOptions {
   blacklist?: boolean;
   status?: number;
   status_bool?: boolean;
+  status_string?: string;
   is_admin?: boolean;
   employeePosition?: number;
   employeeLevel?: number;

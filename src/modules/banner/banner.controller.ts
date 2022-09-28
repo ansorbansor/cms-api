@@ -85,8 +85,30 @@ export class BannerController {
         limit: queryParams.limit,
         total: 0,
         search: queryParams.search,
-        status_bool: queryParams.status,
+        status_string: queryParams.status,
         type: queryParams.type,
+        is_admin: false,
+      }),
+      'success',
+    );
+  }
+
+  @Get('admin/banners')
+  @HttpCode(HttpStatus.OK)
+  async findAllAdmin(@Query() queryParams: GetBannerDto) {
+    if (queryParams.limit > 50) {
+      queryParams.limit = 50;
+    }
+
+    return successResponseList(
+      await this.bannerServices.findManyWithPagination({
+        page: queryParams.page,
+        limit: queryParams.limit,
+        total: 0,
+        search: queryParams.search,
+        status_string: queryParams.status,
+        type: queryParams.type,
+        is_admin: true,
       }),
       'success',
     );

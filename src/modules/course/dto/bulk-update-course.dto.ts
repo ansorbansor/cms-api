@@ -67,7 +67,7 @@ export class BulkUpdateCourseDto {
   date_course?: Date;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @IsEnum(Rating, {
     message: 'Rating hanya 1-5',
   })

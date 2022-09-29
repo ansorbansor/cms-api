@@ -98,7 +98,6 @@ export class UsersController {
     return successResponse(
       await this.usersService.findOne({
         id: +id,
-        blacklist: false,
       }),
       'success',
     );

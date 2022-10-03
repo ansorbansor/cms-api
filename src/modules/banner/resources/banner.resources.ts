@@ -7,7 +7,7 @@ export const BannerResource = (banner: Banner): any => {
     id: banner.id,
     name: banner.name,
     type: banner.type,
-    course: CourseResource(banner.course),
+    course: CourseResource(banner.courseData),
     content: banner.content,
     external_url: banner.external_url,
     photo: banner.photoFile

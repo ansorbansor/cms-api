@@ -1,7 +1,7 @@
 {
   "type": "mysql",
-  "host": "localhost",
-  "port": 5432,
+  "host": "206.189.91.190",
+  "port": 3306,
   "username": "postgres",
   "password": "postgres@123!",
   "database": "nest_boilerplate",

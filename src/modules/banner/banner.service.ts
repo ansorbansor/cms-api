@@ -109,7 +109,7 @@ export class BannerService {
     const data = this.bannerRepository
       .createQueryBuilder('banner')
       .leftJoinAndSelect('banner.photoFile', 'photoFile')
-      .leftJoinAndSelect('banner.course', 'course');
+      .leftJoinAndSelect('banner.courseData', 'course');
 
     if (paginationOptions.search) {
       data.andWhere(

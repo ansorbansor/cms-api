@@ -17,17 +17,17 @@ x-minio-common: &minio-common
     retries: 3
 
 services:
-  # postgres:
-  #   image: postgres:14.2
-  #   container_name: postgres
-  #   ports:
-  #     - ${DATABASE_PORT}:5432
-  #   volumes:
-  #     - ./.data/db:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: ${DATABASE_USERNAME}
-  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-  #     POSTGRES_DB: ${DATABASE_NAME}
+  postgres:
+    image: postgres:14.2
+    container_name: postgres
+    ports:
+      - ${DATABASE_PORT}:5432
+    volumes:
+      - ./.data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
 
   mysql:
     image: mysql:8

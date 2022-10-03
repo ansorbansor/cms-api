@@ -101,7 +101,7 @@ export class User extends EntityHelper {
     eager: true,
   })
   @JoinColumn()
-  userRole?: UserRoles[];
+  userRoles?: UserRoles[];
 
   @ManyToOne(() => EmployeeUnit, (employeeUnit) => employeeUnit.id, {
     eager: true,

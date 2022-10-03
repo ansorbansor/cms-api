@@ -72,10 +72,10 @@ export const CouponSubmissionDetailResource = (
           : null,
       role:
         couponSubmission.user &&
-        couponSubmission.user.userRole &&
-        couponSubmission.user.userRole > 0 &&
-        couponSubmission.user.userRole
-          ? couponSubmission.user.userRole[0].role.name
+        couponSubmission.user.userRoles &&
+        couponSubmission.user.userRoles > 0 &&
+        couponSubmission.user.userRoles
+          ? couponSubmission.user.userRoles[0].role.name
           : null,
       email:
         couponSubmission.user && couponSubmission.user.email

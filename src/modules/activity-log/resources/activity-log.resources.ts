@@ -3,10 +3,10 @@
 import { ActivityLog } from "src/entities/activity-log.entity";
 
 export const ActivityLogResource = (activityLog: ActivityLog): any => {
-  const mapRole = activityLog.user.userRole != null ? activityLog.user.userRole.map((role) => {
+  const mapRole = activityLog.user.userRoles != null ? activityLog.user.userRoles.map((role) => {
     return {
-      id: role.role.id,
-      name: role.role.name,
+      id: role.roleData.id,
+      name: role.roleData.name,
     }
   }) : [];
 

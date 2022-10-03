@@ -18,13 +18,13 @@ export class ExportService {
     const data = await this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('user.userCourse', 'userCourse')
       .leftJoinAndSelect('userCourse.course', 'course')
       .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
       .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
-      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('userRole.roleData', 'role')
       .getMany();
 
     const rows = [];

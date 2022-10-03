@@ -7,11 +7,11 @@ export const UserResource = (user: User): any => {
   const mapRole = [];
   const mapUserTopic = [];
 
-  user.userRole != null ? user.userRole.map((role) => {
-    if (role.role) {
+  user.userRoles != null ? user.userRoles.map((role) => {
+    if (role.roleData) {
       mapRole.push({
-        id: role.role ? role.role.id : null,
-        name: role.role ? role.role.name: null
+        id: role.roleData ? role.roleData.id : null,
+        name: role.roleData ? role.roleData.name: null
       });
     }
   }) : [];

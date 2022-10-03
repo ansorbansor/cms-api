@@ -60,7 +60,7 @@ export class AuthService {
       email: loginDto.email,
     });
 
-    if (!user || (user && user.userRole.length == 0)) {
+    if (!user || (user && user.userRoles.length == 0)) {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'not found');
     }
 
@@ -79,7 +79,7 @@ export class AuthService {
     if (isValidPassword) {
       const token = await this.jwtService.sign({
         id: user.id,
-        role: user.userRole,
+        role: user.userRoles,
       });
 
       await this.activityLogService.create({
@@ -181,7 +181,7 @@ export class AuthService {
 
     const jwtToken = await this.jwtService.sign({
       id: user.id,
-      role: user.userRole,
+      role: user.userRoles,
     });
 
     return {

@@ -26,8 +26,8 @@ export class ActivityLogService {
     const data = this.activityLogRepository
       .createQueryBuilder('acl')
       .leftJoinAndSelect('acl.user', 'user')
-      .leftJoinAndSelect('user.userRole', 'userRole')
-      .leftJoinAndSelect('userRole.role', 'role');
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.roleData', 'role');
 
     if (paginationOptions.search) {
       data.andWhere(

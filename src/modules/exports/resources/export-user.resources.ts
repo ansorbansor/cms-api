@@ -7,14 +7,14 @@ import { RoleEnum } from "src/utils/enums";
 export const ExportUserResource = (user: User): any => {
   let role = '';
 
-  if (user.userRole != null && user.userRole.length > 0) {
-    const dataRole = user.userRole.find(
+  if (user.userRoles != null && user.userRoles.length > 0) {
+    const dataRole = user.userRoles.find(
       (role) => role.role_id != RoleEnum.user,
     );
-    if (dataRole && dataRole.role) {
-      role = dataRole.role.name
-    } else if(user.userRole[0].role) {
-      role = user.userRole[0].role.name
+    if (dataRole && dataRole.roleData) {
+      role = dataRole.roleData.name
+    } else if(user.userRoles[0].roleData) {
+      role = user.userRoles[0].roleData.name
     }
   }
 

@@ -19,5 +19,5 @@ export class UserRoles extends EntityHelper {
     eager: true,
   })
   @JoinColumn({ name: 'role_id' })
-  role?: Role;
+  roleData?: Role;
 }

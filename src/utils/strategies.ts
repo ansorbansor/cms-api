@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from 'src/entities/user.entity';
 import { failedResponse } from './responses';
 
-type JwtPayload = Pick<User, 'id' | 'userRole'> & { iat: number; exp: number };
+type JwtPayload = Pick<User, 'id' | 'userRoles'> & { iat: number; exp: number };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

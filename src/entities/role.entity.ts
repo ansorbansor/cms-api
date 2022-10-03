@@ -16,7 +16,7 @@ export class Role extends EntityHelper {
   @JoinColumn()
   roleAccess?: RoleAccess[];
 
-  @OneToMany(() => UserRoles, (userRole) => userRole.role)
+  @OneToMany(() => UserRoles, (userRole) => userRole.roleData)
   @JoinColumn()
   userRole?: UserRoles[];
   userCount: number;

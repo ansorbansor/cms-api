@@ -90,13 +90,13 @@ export class UsersService {
     const data = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.userRole', 'userRole')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('user.userCourse', 'userCourse')
       .leftJoinAndSelect('userCourse.course', 'course')
       .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
       .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
-      .leftJoinAndSelect('userRole.role', 'role');
+      .leftJoinAndSelect('userRole.roleData', 'role');
 
     if (paginationOptions.blacklist != undefined) {
       data.where(`user.blacklist = ${paginationOptions.blacklist}`);
@@ -154,8 +154,8 @@ export class UsersService {
   async findOne(fields: EntityCondition<User>) {
     const data = await this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.userRole', 'userRole')
-      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.roleData', 'role')
       .leftJoinAndSelect('user.userCourse', 'userCourse')
       .leftJoinAndSelect('userCourse.course', 'course')
       .leftJoinAndSelect('role.roleAccess', 'roleAccess')
@@ -183,8 +183,8 @@ export class UsersService {
   async findOneFull(fields: EntityCondition<User>) {
     const data = await this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.userRole', 'userRole')
-      .leftJoinAndSelect('userRole.role', 'role')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.roleData', 'role')
       .leftJoinAndSelect('user.userCourse', 'userCourse')
       .leftJoinAndSelect('userCourse.course', 'course')
       .leftJoinAndSelect('role.roleAccess', 'roleAccess')
@@ -204,7 +204,7 @@ export class UsersService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         'User tidak ditemukan',
       );
-    } else if (!data.userRole || data.userRole.length == 0) {
+    } else if (!data.userRoles || data.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'User tidak memiliki role',

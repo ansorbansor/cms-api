@@ -3,10 +3,10 @@
 import { User } from "src/entities/user.entity";
 
 export const AuthResource = (token: string, user: User): any => {
-  const mapRole = user.userRole.map((role) => {
+  const mapRole = user.userRoles.map((role) => {
     return {
-      id: role.role.id,
-      name: role.role.name
+      id: role.roleData.id,
+      name: role.roleData.name
     }
   });
   return {

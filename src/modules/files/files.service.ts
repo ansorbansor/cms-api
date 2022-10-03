@@ -16,6 +16,7 @@ import { failedResponse } from 'src/utils/responses';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { FileResource } from './resources/file.resources';
+import { FileTypeEnum } from 'src/utils/enums';
 
 @Injectable()
 export class FilesService {
@@ -59,6 +60,46 @@ export class FilesService {
     }
 
     return FileResource(getFile);
+  }
+
+  public async uploadWithMinioBuffer(
+    file: any,
+    userId: number,
+    originalName: string,
+  ) {
+    const timestamp = Date.now().toString();
+    const hashedFileName = crypto
+      .createHash('md5')
+      .update(timestamp)
+      .digest('hex');
+    const extension = originalName.substring(
+      originalName.lastIndexOf('.'),
+      originalName.length,
+    );
+
+    // We need to append the extension at the end otherwise Minio will save it as a generic file
+    const fileName = hashedFileName + extension;
+
+    this.client.putObject(minioConfig().bucketName, fileName, file, (error) => {
+      if (error) {
+        // throw failedResponse(HttpStatus.BAD_REQUEST, 'Error upload file');
+        throw new HttpException(
+          `Error uploading file ${error}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    });
+
+    return await this.fileRepository.save(
+      this.fileRepository.create({
+        name: fileName,
+        path: `${minioConfig().bucketName}/${fileName}`,
+        file_type: FileTypeEnum.image,
+        extension: getFileExtension(originalName),
+        description: 'user file',
+        user_id: userId,
+      }),
+    );
   }
 
   public async uploadWithMinio(file: BufferedFile, userId: number) {

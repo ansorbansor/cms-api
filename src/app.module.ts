@@ -21,6 +21,7 @@ import { BannerModule } from './modules/banner/banner.module';
 import { CouponSubmissionModule } from './modules/coupon-submission/coupon-submission.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { CategoriesModule } from './modules/course-categories/course-categories.module';
+import { CourseFetchModule } from './modules/course-fetch/course-fetch.module';
 import { CourseLanguageModule } from './modules/course-language/course-language.module';
 import { CourseLevelsModule } from './modules/course-levels/course-levels.module';
 import { CoursePriceModule } from './modules/course-price/course-price.module';
@@ -110,6 +111,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     EmployeeUnitModule,
     ExportModule,
     ImportModule,
+    CourseFetchModule,
   ],
 })
 export class AppModule {

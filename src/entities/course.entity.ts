@@ -20,9 +20,13 @@ import { UserCourse } from './user-course.entity';
 import { CourseLanguageTransaction } from './course-language-transaction.entity';
 import { CouponSubmission } from './coupon-submission.entity';
 import { EditorChoiceCourse } from './editor-choice-course.entity';
+import { TemporaryCourse } from './temporary-course.entity';
 
 @Entity({ name: 'courses' })
 export class Course extends EntityHelper {
+  @Column()
+  external_id: number;
+
   @Column()
   name: string;
 
@@ -123,6 +127,10 @@ export class Course extends EntityHelper {
     (editorChoiceCourse) => editorChoiceCourse.course,
   )
   editorChoiceCourse?: EditorChoiceCourse;
+
+  @OneToOne(() => TemporaryCourse, (temporaryCourse) => temporaryCourse.course)
+  @JoinColumn({ name: 'external_id', referencedColumnName: 'external_id' })
+  temporaryCourse?: TemporaryCourse;
 
   @AfterLoad()
   setLessonHours() {

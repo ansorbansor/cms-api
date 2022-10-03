@@ -95,9 +95,14 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}-EditorChoice${paginationOptions.editor_choice}`;
+    const redisKey = `${RedisKeyEnum.course}:-isAdmin${paginationOptions.is_admin}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.language}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}-EditorChoice${paginationOptions.editor_choice}`;
 
-    const value = await this.redisService.get(redisKey, typeof CourseResource);
+    const value = await this.redisService.get(
+      redisKey,
+      paginationOptions.is_admin
+        ? typeof CourseAdminResource
+        : typeof CourseResource,
+    );
     if (value != null) {
       return value;
     }
@@ -112,6 +117,10 @@ export class CourseService {
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile')
       .leftJoinAndSelect('course.userLike', 'userLike');
+
+    if (paginationOptions.is_admin) {
+      data.leftJoinAndSelect('course.temporaryCourse', 'temporaryCourse');
+    }
 
     if (
       paginationOptions.user_id &&

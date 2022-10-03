@@ -18,6 +18,9 @@ export class CreateCourseDto {
   @IsNotEmpty()
   name: string;
 
+  @IsOptional()
+  external_id: number;
+
   @ApiProperty({ example: 'Pelatih A' })
   @IsNotEmpty()
   coach?: string;

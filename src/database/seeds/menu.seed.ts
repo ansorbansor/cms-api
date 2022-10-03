@@ -54,14 +54,14 @@ export default class CreateMenu implements Seeder {
       //add menu provider fetch
       menu = new Menu();
       menu.name = 'Update Data Penyelenggara';
-      menu.be_controller = 'ProviderFetchController';
+      menu.be_controller = 'CourseFetchController';
       listMenus.push(menu);
-      //add menu provider fetch
+      //add menu menu fetch
       menu = new Menu();
       menu.name = 'Kupon';
       menu.be_controller = 'CouponController';
       listMenus.push(menu);
-      //add menu provider fetch
+      //add menu coupon submission fetch
       menu = new Menu();
       menu.name = 'Pengajuan Kupon';
       menu.be_controller = 'CouponSubmissionController';

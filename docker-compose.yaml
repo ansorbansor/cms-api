@@ -17,17 +17,31 @@ x-minio-common: &minio-common
     retries: 3
 
 services:
-  postgres:
-    image: postgres:14.2
-    container_name: postgres
+  # postgres:
+  #   image: postgres:14.2
+  #   container_name: postgres
+  #   ports:
+  #     - ${DATABASE_PORT}:5432
+  #   volumes:
+  #     - ./.data/db:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_USER: ${DATABASE_USERNAME}
+  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+  #     POSTGRES_DB: ${DATABASE_NAME}
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
     ports:
-      - ${DATABASE_PORT}:5432
+      - ${DATABASE_PORT}:3306
     volumes:
-      - ./.data/db:/var/lib/postgresql/data
+      - ./.data/db:/var/lib/mysql
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_USER=${DATABASE_USERNAME}
+      - MYSQL_DATABASE=${DATABASE_NAME}
 
   adminer:
     image: adminer
@@ -42,7 +56,7 @@ services:
     ports:
       - 6479:6379
     depends_on:
-      - postgres
+      - mysql
   
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -54,14 +68,14 @@ services:
     depends_on:
         - redis
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-    depends_on:
-      - redis
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - ${APP_PORT}:${APP_PORT}
+  #   depends_on:
+  #     - redis
 
   maildev:
     build:

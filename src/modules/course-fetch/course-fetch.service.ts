@@ -155,6 +155,7 @@ export class CourseFetchService {
             post.freemium_code = null;
             post.photo = data.image;
             post.language = data.language;
+            post.rating_count = data.rating_count;
             mapDataTemporary.push(post);
           }
         }
@@ -241,6 +242,7 @@ export class CourseFetchService {
             post.price = data.price;
             post.freemium_code = null;
             post.photo = img.id;
+            post.rating_count = data.rating_count;
             mapDataCourse.push(post);
 
             if (findLanguage) {

@@ -18,6 +18,7 @@ export const FetchUdemyResource = (data: any): any => {
     headline: data.headline,
     description: data.description,
     rating: data.rating,
+    rating_count: data.num_reviews ? data.num_reviews : 0,
     num_reviews: data.num_reviews,
     language: data.locale.title,
     curriculum: data.objectives_summary,

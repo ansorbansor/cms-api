@@ -48,4 +48,7 @@ export class CreateTemporaryCourseDto {
 
   @IsOptional()
   language: string;
+
+  @IsOptional()
+  rating_count: number;
 }

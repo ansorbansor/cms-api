@@ -109,4 +109,8 @@ export class CreateCourseDto {
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;
+
+  @ApiProperty({ example: 123, default: 0 })
+  @IsOptional()
+  rating_count?: number;
 }

@@ -220,9 +220,9 @@ export class CourseService {
       if (!paginationOptions.owned) {
         data.leftJoinAndSelect('course.userCourse', 'userCourse');
       }
+    } else {
+      data.orderBy('course.created_at', 'DESC');
     }
-
-    data.orderBy('course.created_at', 'DESC');
 
     const total = await data.getCount();
     paginationOptions.total = total;

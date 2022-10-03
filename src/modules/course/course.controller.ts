@@ -169,19 +169,23 @@ export class CourseController {
   }
 
   @Get('admin/courses/:id')
+  @Permissions(MenuPermission.READ)
+  @Controllers(CourseController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOneAdmin(@Param('id') id: string) {
+  async findOneAdmin(@Param('id') id: string, @Request() req) {
     return successResponse(
-      await this.courseServices.findOneAdmin({ id: +id }),
+      await this.courseServices.findOneAdmin({ id: +id }, req.user),
       'success',
     );
   }
 
   @Get('courses/:id')
+  @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req) {
     return successResponse(
-      await this.courseServices.findOne({ id: +id }),
+      await this.courseServices.findOne({ id: +id }, req.user),
       'success',
     );
   }

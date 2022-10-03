@@ -260,6 +260,7 @@ export class CourseService {
         'coursePrice',
         'photoFile',
         'courseLanguage.language',
+        'userLike',
       ],
     });
 
@@ -270,12 +271,12 @@ export class CourseService {
       );
     }
 
-    this.redisService.set(redisKey, CourseResource(data));
+    this.redisService.set(redisKey, CourseResource(data, user.id));
 
-    return CourseResource(data);
+    return CourseResource(data, user.id);
   }
 
-  async findOneAdmin(fields: EntityCondition<Course>) {
+  async findOneAdmin(fields: EntityCondition<Course>, user?: User) {
     const data = await this.courseRepository.findOne({
       where: fields,
       relations: [
@@ -297,7 +298,7 @@ export class CourseService {
       );
     }
 
-    return CourseAdminResource(data);
+    return CourseAdminResource(data, user.id);
   }
 
   async update(

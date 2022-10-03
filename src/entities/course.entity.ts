@@ -59,6 +59,9 @@ export class Course extends EntityHelper {
   rating: number;
 
   @Column()
+  rating_count: number;
+
+  @Column()
   description: string;
 
   @Column()

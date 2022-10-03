@@ -90,7 +90,10 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
         name: course.dateCourseParse ? 'Terjadwal' : 'Mandiri',
         value: course.dateCourseParse,
       },
-      rating: course.rating ? course.rating : null,
+      rating: {
+        value: course.rating ? course.rating : 0,
+        count: course.rating_count ? course.rating_count : 0,
+      },
       description: course.description,
       url: course.url,
       price_name: course.coursePrice

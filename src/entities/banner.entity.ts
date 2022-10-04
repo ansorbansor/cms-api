@@ -27,7 +27,7 @@ export class Banner extends EntityHelper {
   position: number;
 
   @Column()
-  status: boolean;
+  status: number;
 
   @OneToOne(() => FileEntity, {
     eager: true,

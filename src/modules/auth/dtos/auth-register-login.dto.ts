@@ -47,7 +47,7 @@ export class AuthRegisterLoginDto {
 
   @ApiProperty({ default: true })
   @IsNotEmpty()
-  status: boolean | true;
+  status: number;
 
   @ApiProperty({
     required: false,

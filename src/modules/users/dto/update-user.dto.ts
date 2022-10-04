@@ -48,7 +48,7 @@ export class UpdateUserDto {
 
   @ApiProperty({ default: true })
   @IsOptional()
-  status?: boolean | true;
+  status?: number;
 
   @ApiProperty({
     required: false,
@@ -85,8 +85,8 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  blacklist?: boolean;
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  blacklist?: number;
 
   hash?: string | null;
 

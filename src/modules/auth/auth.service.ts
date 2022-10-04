@@ -204,7 +204,7 @@ export class AuthService {
         ...dto,
         email: dto.email,
         role_id: RoleEnum.user,
-        status: true,
+        status: 1,
         name: dto.name,
         provider: AuthProvidersEnum.email,
         notification_token: null,
@@ -248,7 +248,7 @@ export class AuthService {
     }
 
     user.hash = null;
-    user.status = true;
+    user.status = 1;
     await user.save();
   }
 

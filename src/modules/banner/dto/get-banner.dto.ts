@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
 export class GetBannerDto {
@@ -16,7 +17,8 @@ export class GetBannerDto {
 
   @ApiProperty()
   @IsOptional()
-  status?: string;
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  status?: number;
 
   @ApiProperty()
   @IsOptional()

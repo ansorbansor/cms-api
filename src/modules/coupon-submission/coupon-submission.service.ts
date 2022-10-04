@@ -223,7 +223,7 @@ export class CouponSubmissionService {
     }
 
     if (paginationOptions.blacklist != null) {
-      data.andWhere(`user.blacklist = ${paginationOptions.blacklist}`);
+      data.andWhere(`user.blacklist = ${paginationOptions.blacklist ? 1 : 0}`);
     }
 
     if (paginationOptions.status) {

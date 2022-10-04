@@ -99,7 +99,7 @@ export class UsersService {
       .leftJoinAndSelect('userRole.roleData', 'role');
 
     if (paginationOptions.blacklist != undefined) {
-      data.where(`user.blacklist = ${paginationOptions.blacklist}`);
+      data.where(`user.blacklist = ${paginationOptions.blacklist ? 1 : 0}`);
     }
 
     if (paginationOptions.search) {

@@ -49,9 +49,9 @@ export class CreateUserDto {
   })
   photoFile?: FileEntity | null;
 
-  @ApiProperty({ default: true })
+  @ApiProperty({ default: 1 })
   @IsNotEmpty()
-  status: boolean | true;
+  status: number;
 
   @ApiProperty({
     required: false,

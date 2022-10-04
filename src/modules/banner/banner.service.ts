@@ -99,7 +99,7 @@ export class BannerService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-Status${paginationOptions.status_string}-Type${paginationOptions.type}`;
+    const redisKey = `${RedisKeyEnum.banner}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-Status${paginationOptions.status}-Type${paginationOptions.type}`;
 
     const value = await this.redisService.get(redisKey, typeof BannerResource);
     if (value != null && !paginationOptions.is_admin) {
@@ -118,12 +118,9 @@ export class BannerService {
     }
 
     if (paginationOptions.is_admin) {
-      if (
-        paginationOptions.status_string != undefined &&
-        paginationOptions.status_string != ''
-      ) {
+      if (paginationOptions.status != undefined) {
         data.andWhere('banner.status = :status', {
-          status: paginationOptions.status_string,
+          status: paginationOptions.status,
         });
       }
     } else {

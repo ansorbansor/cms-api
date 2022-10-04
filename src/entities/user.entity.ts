@@ -80,13 +80,13 @@ export class User extends EntityHelper {
   @Column({})
   course_level: number;
 
-  @Column({ default: true })
+  @Column({ default: 1 })
   @Index()
-  status: boolean;
+  status: number;
 
-  @Column({ default: false })
+  @Column({ default: 1 })
   @Index()
-  blacklist: boolean;
+  blacklist: number;
 
   @Column({ nullable: true })
   notification_token: string | null;

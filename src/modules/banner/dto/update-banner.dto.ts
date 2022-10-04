@@ -55,6 +55,6 @@ export class UpdateBannerDto {
   @ApiProperty({ example: true })
   @IsNotEmpty()
   @IsBoolean()
-  @Transform(({ value }) => value === 'true')
-  status: boolean;
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  status: number;
 }

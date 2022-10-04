@@ -5,6 +5,6 @@ import { IsOptional } from 'class-validator';
 export class UpdateBlacklistUserDto {
   @ApiProperty()
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  blacklist?: boolean;
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  blacklist?: number;
 }

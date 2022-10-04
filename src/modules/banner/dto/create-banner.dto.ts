@@ -45,6 +45,6 @@ export class CreateBannerDto {
 
   @ApiProperty({ example: true })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  status: boolean;
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  status: number;
 }

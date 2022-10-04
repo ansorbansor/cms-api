@@ -43,7 +43,7 @@ export class Course extends EntityHelper {
   category_id: number;
 
   @Column()
-  status: boolean;
+  status: number;
 
   @Column()
   topic_id: number;

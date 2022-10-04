@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  NotEquals,
-  Validate,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, NotEquals, Validate } from 'class-validator';
 import { BannerType } from 'src/utils/enums';
 import { IsNotExist } from 'src/utils/validators';
 

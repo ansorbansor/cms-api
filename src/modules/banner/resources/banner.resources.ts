@@ -14,6 +14,6 @@ export const BannerResource = (banner: Banner): any => {
       ? minioConfig().fullUrl + banner.photoFile.path
       : null,
     position: banner.position,
-    status: banner.status,
+    status: banner.status == 1 ? true : false,
   };
 };

@@ -19,11 +19,12 @@ import { ExportService } from './export.service';
 @ApiBearerAuth()
 @ApiTags('Exports')
 @Controller({
+  path: 'export',
   version: '1',
 })
 export class ExportController {
   constructor(private readonly exportService: ExportService) {}
-  @Get('export')
+  @Get('users')
   @Header('Content-Type', 'text/xlsx')
   @Permissions(MenuPermission.READ)
   @Controllers(UsersController.name)

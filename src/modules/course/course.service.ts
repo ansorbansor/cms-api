@@ -298,7 +298,7 @@ export class CourseService {
       );
     }
 
-    return CourseAdminResource(data, user.id);
+    return CourseAdminResource(data, user?.id);
   }
 
   async update(

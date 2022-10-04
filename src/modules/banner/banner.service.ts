@@ -14,7 +14,6 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { FilesService } from '../files/files.service';
 import { Course } from 'src/entities/course.entity';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
-import { isNumber } from 'class-validator';
 
 @Injectable()
 export class BannerService {
@@ -129,7 +128,7 @@ export class BannerService {
       });
     }
 
-    if (paginationOptions.type != null && isNumber(paginationOptions.type)) {
+    if (paginationOptions.type != undefined && paginationOptions.type) {
       data.andWhere('banner.type = :type', {
         type: paginationOptions.type,
       });

@@ -47,6 +47,7 @@ export class AuthRegisterLoginDto {
 
   @ApiProperty({ default: true })
   @IsNotEmpty()
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status: number;
 
   @ApiProperty({

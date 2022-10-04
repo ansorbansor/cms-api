@@ -51,6 +51,7 @@ export class CreateUserDto {
 
   @ApiProperty({ default: 1 })
   @IsNotEmpty()
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status: number;
 
   @ApiProperty({

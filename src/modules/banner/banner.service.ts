@@ -117,9 +117,12 @@ export class BannerService {
     }
 
     if (paginationOptions.is_admin) {
-      if (paginationOptions.status != undefined) {
+      if (
+        paginationOptions.status_string != undefined &&
+        paginationOptions.status_string != ''
+      ) {
         data.andWhere('banner.status = :status', {
-          status: paginationOptions.status,
+          status: paginationOptions.status_string == 'true' ? 1 : 0,
         });
       }
     } else {

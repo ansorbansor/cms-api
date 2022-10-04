@@ -147,9 +147,7 @@ export class CouponSubmissionService {
       .select('COUNT(couponSubmissionTotal.user_id)', 'total_submissions')
       .addSelect('couponSubmissionTotal.user_id', 'user_id')
       .groupBy('couponSubmissionTotal.user_id')
-      .where(
-        `date_part('year', couponSubmissionTotal.created_at) = date_part('year', CURRENT_DATE)`,
-      );
+      .where(`YEAR(couponSubmissionTotal.created_at) = YEAR(CURRENT_DATE)`);
 
     const subqueryApprovedCoupon = this.couponSubmissionRepository
       .createQueryBuilder('couponSubmissionApproved')
@@ -159,9 +157,7 @@ export class CouponSubmissionService {
       )
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
-      .where(
-        `date_part('year', couponSubmissionApproved.created_at) = date_part('year', CURRENT_DATE)`,
-      )
+      .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
       .andWhere(
         `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
       );
@@ -179,11 +175,11 @@ export class CouponSubmissionService {
       .addSelect('employeeLevel.name', 'user_level')
       .addSelect('user.blacklist', 'user_blacklist')
       .addSelect(
-        '"couponSubmissionTotal".total_submissions',
+        '`couponSubmissionTotal`.total_submissions',
         'total_submissions',
       )
       .addSelect(
-        '"couponSubmissionApproved".total_submissions_approved',
+        '`couponSubmissionApproved`.total_submissions_approved',
         'total_submissions_approved',
       )
       .leftJoin('couponSubmission.user', 'user')
@@ -193,12 +189,12 @@ export class CouponSubmissionService {
       .leftJoin(
         '(' + subquery.getQuery() + ')',
         'couponSubmissionTotal',
-        '"couponSubmission".user_id = "couponSubmissionTotal".user_id',
+        '`couponSubmission`.user_id = `couponSubmissionTotal`.user_id',
       )
       .leftJoin(
         '(' + subqueryApprovedCoupon.getQuery() + ')',
         'couponSubmissionApproved',
-        '"couponSubmission".user_id = "couponSubmissionApproved".user_id',
+        '`couponSubmission`.user_id = `couponSubmissionApproved`.user_id',
       );
 
     if (paginationOptions.search) {
@@ -282,9 +278,7 @@ export class CouponSubmissionService {
       .select('COUNT(couponSubmissionTotal.user_id)', 'total_submissions')
       .addSelect('couponSubmissionTotal.user_id', 'user_id')
       .groupBy('couponSubmissionTotal.user_id')
-      .where(
-        `date_part('year', couponSubmissionTotal.created_at) = date_part('year', CURRENT_DATE)`,
-      )
+      .where(`YEAR(couponSubmissionTotal.created_at) = YEAR(CURRENT_DATE)`)
       .andWhere(`couponSubmissionTotal.user_id = ${data.user_id}`)
       .getRawOne();
 
@@ -296,9 +290,7 @@ export class CouponSubmissionService {
       )
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
-      .where(
-        `date_part('year', couponSubmissionApproved.created_at) = date_part('year', CURRENT_DATE)`,
-      )
+      .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
       .andWhere(
         `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
       )

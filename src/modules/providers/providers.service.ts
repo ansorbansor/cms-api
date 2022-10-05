@@ -48,7 +48,8 @@ export class ProvidersService {
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data = this.providerRepository
       .createQueryBuilder('provider')
-      .leftJoinAndSelect('provider.photoFile', 'photoFile');
+      .leftJoinAndSelect('provider.photoFile', 'photoFile')
+      .leftJoinAndSelect('provider.course', 'course');
 
     if (paginationOptions.search) {
       data.where(

@@ -5,7 +5,9 @@ export const CourseResource = (course: Course, userId?: number): any => {
   if (course) {
     const progress = userId
       ? course.userCourse
-        ? course.userCourse.find((e) => (e.user_id === userId ? e.progress : 0))
+        ? course.userCourse.find(
+            (e) => e.user_id === userId && e.course_id == course.id,
+          )
         : null
       : null;
 

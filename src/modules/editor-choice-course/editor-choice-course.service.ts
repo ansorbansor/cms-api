@@ -49,6 +49,13 @@ export class EditorChoiceCourseService {
     const data = this.editorChoiceCourseRepository
       .createQueryBuilder('editorChoice')
       .leftJoinAndSelect('editorChoice.courseData', 'courseData')
+      .leftJoinAndSelect('courseData.provider', 'provider')
+      .leftJoinAndSelect('courseData.courseCategory', 'category')
+      .leftJoinAndSelect('courseData.topic', 'topic')
+      .leftJoinAndSelect('courseData.courseLevel', 'courseLevel')
+      .leftJoinAndSelect('courseData.courseLanguage', 'courseLanguage')
+      .leftJoinAndSelect('courseLanguage.language', 'language')
+      .leftJoinAndSelect('courseData.coursePrice', 'coursePrice')
       .leftJoinAndSelect('courseData.photoFile', 'photoFile')
       .orderBy('editorChoice.position', 'ASC');
 

@@ -263,7 +263,7 @@ export class AuthService {
       .digest('hex');
     await this.forgotService.create({
       hash,
-      user,
+      userData: user,
     });
 
     await this.mailService.forgotPassword({
@@ -288,7 +288,7 @@ export class AuthService {
       );
     }
 
-    const user = forgot.user;
+    const user = forgot.userData;
     user.password = password;
     await user.save();
     await this.forgotService.softDelete(forgot.id);
@@ -308,7 +308,7 @@ export class AuthService {
       );
     }
 
-    return ResetPasswordDataResource(forgot.user);
+    return ResetPasswordDataResource(forgot.userData);
   }
 
   async me(user: User) {

@@ -127,7 +127,7 @@ export class Course extends EntityHelper {
 
   @OneToOne(
     () => EditorChoiceCourse,
-    (editorChoiceCourse) => editorChoiceCourse.course,
+    (editorChoiceCourse) => editorChoiceCourse.courseData,
   )
   editorChoiceCourse?: EditorChoiceCourse;
 

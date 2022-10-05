@@ -46,14 +46,16 @@ export class EditorChoiceCourseService {
     const total = await this.editorChoiceCourseRepository.count();
     paginationOptions.total = total;
 
-    const getData = await this.editorChoiceCourseRepository.find({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      order: {
-        position: 'ASC',
-      },
-    });
+    const data = this.editorChoiceCourseRepository
+      .createQueryBuilder('editorChoice')
+      .leftJoinAndSelect('editorChoice.courseData', 'courseData')
+      .leftJoinAndSelect('courseData.photoFile', 'photoFile')
+      .orderBy('editorChoice.position', 'ASC');
 
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    const getData = await data.getMany();
     return infinityPagination(
       getData,
       EditorChoiceCourseResource,

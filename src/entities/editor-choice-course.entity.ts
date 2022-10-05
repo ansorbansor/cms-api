@@ -17,5 +17,5 @@ export class EditorChoiceCourse extends EntityHelper {
     eager: true,
   })
   @JoinColumn({ name: 'course_id' })
-  course?: Course;
+  courseData?: Course;
 }

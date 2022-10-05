@@ -6,8 +6,8 @@ export const EditorChoiceCourseResource = (
 ): any => {
   if (editorChoiceCourse) {
     const mapLanguage =
-      editorChoiceCourse.course.courseLanguage != null
-        ? editorChoiceCourse.course.courseLanguage.map((language) => {
+      editorChoiceCourse.courseData.courseLanguage != null
+        ? editorChoiceCourse.courseData.courseLanguage.map((language) => {
             return {
               id: language.language.id ? language.language.id : null,
               name: language.language.name ? language.language.name : null,
@@ -16,77 +16,77 @@ export const EditorChoiceCourseResource = (
         : [];
 
     return {
-      id: editorChoiceCourse.course.id,
-      name: editorChoiceCourse.course.name,
+      id: editorChoiceCourse.courseData.id,
+      name: editorChoiceCourse.courseData.name,
       position: editorChoiceCourse.position,
-      coach: editorChoiceCourse.course.coach,
-      duration: editorChoiceCourse.course.duration,
-      provider: editorChoiceCourse.course.provider
+      coach: editorChoiceCourse.courseData.coach,
+      duration: editorChoiceCourse.courseData.duration,
+      provider: editorChoiceCourse.courseData.provider
         ? {
-            id: editorChoiceCourse.course.provider.id
-              ? editorChoiceCourse.course.provider.id
+            id: editorChoiceCourse.courseData.provider.id
+              ? editorChoiceCourse.courseData.provider.id
               : null,
-            name: editorChoiceCourse.course.provider.name
-              ? editorChoiceCourse.course.provider.name
+            name: editorChoiceCourse.courseData.provider.name
+              ? editorChoiceCourse.courseData.provider.name
               : null,
           }
         : null,
-      category: editorChoiceCourse.course.courseCategory
+      category: editorChoiceCourse.courseData.courseCategory
         ? {
-            id: editorChoiceCourse.course.courseCategory.id
-              ? editorChoiceCourse.course.courseCategory.id
+            id: editorChoiceCourse.courseData.courseCategory.id
+              ? editorChoiceCourse.courseData.courseCategory.id
               : null,
-            name: editorChoiceCourse.course.courseCategory.name
-              ? editorChoiceCourse.course.courseCategory.name
+            name: editorChoiceCourse.courseData.courseCategory.name
+              ? editorChoiceCourse.courseData.courseCategory.name
               : null,
           }
         : null,
-      topic: editorChoiceCourse.course.topic
+      topic: editorChoiceCourse.courseData.topic
         ? {
-            id: editorChoiceCourse.course.topic.id
-              ? editorChoiceCourse.course.topic.id
+            id: editorChoiceCourse.courseData.topic.id
+              ? editorChoiceCourse.courseData.topic.id
               : null,
-            name: editorChoiceCourse.course.topic.name
-              ? editorChoiceCourse.course.topic.name
+            name: editorChoiceCourse.courseData.topic.name
+              ? editorChoiceCourse.courseData.topic.name
               : null,
           }
         : null,
-      level: editorChoiceCourse.course.courseLevel
+      level: editorChoiceCourse.courseData.courseLevel
         ? {
-            id: editorChoiceCourse.course.courseLevel.id
-              ? editorChoiceCourse.course.courseLevel.id
+            id: editorChoiceCourse.courseData.courseLevel.id
+              ? editorChoiceCourse.courseData.courseLevel.id
               : null,
-            name: editorChoiceCourse.course.courseLevel.name
-              ? editorChoiceCourse.course.courseLevel.name
+            name: editorChoiceCourse.courseData.courseLevel.name
+              ? editorChoiceCourse.courseData.courseLevel.name
               : null,
           }
         : null,
       language: mapLanguage,
       date_course: {
-        name: editorChoiceCourse.course.dateCourseParse
+        name: editorChoiceCourse.courseData.dateCourseParse
           ? 'Terjadwal'
           : 'Mandiri',
-        value: editorChoiceCourse.course.dateCourseParse,
+        value: editorChoiceCourse.courseData.dateCourseParse,
       },
-      rating: editorChoiceCourse.course.rating
-        ? editorChoiceCourse.course.rating
+      rating: editorChoiceCourse.courseData.rating
+        ? editorChoiceCourse.courseData.rating
         : null,
-      description: editorChoiceCourse.course.description,
-      url: editorChoiceCourse.course.url,
-      price_name: editorChoiceCourse.course.coursePrice
+      description: editorChoiceCourse.courseData.description,
+      url: editorChoiceCourse.courseData.url,
+      price_name: editorChoiceCourse.courseData.coursePrice
         ? {
-            id: editorChoiceCourse.course.coursePrice.id
-              ? editorChoiceCourse.course.coursePrice.id
+            id: editorChoiceCourse.courseData.coursePrice.id
+              ? editorChoiceCourse.courseData.coursePrice.id
               : null,
-            name: editorChoiceCourse.course.coursePrice.name
-              ? editorChoiceCourse.course.coursePrice.name
+            name: editorChoiceCourse.courseData.coursePrice.name
+              ? editorChoiceCourse.courseData.coursePrice.name
               : null,
           }
         : null,
-      price: editorChoiceCourse.course.price,
-      freemium_code: editorChoiceCourse.course.freemium_code,
-      photo: editorChoiceCourse.course.photoFile
-        ? minioConfig().fullUrl + editorChoiceCourse.course.photoFile.path
+      price: editorChoiceCourse.courseData.price,
+      freemium_code: editorChoiceCourse.courseData.freemium_code,
+      photo: editorChoiceCourse.courseData.photoFile
+        ? minioConfig().fullUrl + editorChoiceCourse.courseData.photoFile.path
         : null,
     };
   }

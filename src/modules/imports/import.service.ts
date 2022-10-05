@@ -297,8 +297,6 @@ export class ImportService {
             currRow.getCell(1).text != ''
           ) {
             if (
-              !Number(currRow.getCell(1).text) ||
-              !Number(currRow.getCell(2).text) ||
               Number(currRow.getCell(2).text) < 0 ||
               Number(currRow.getCell(2).text) > 5
             ) {
@@ -311,7 +309,7 @@ export class ImportService {
             nip.push(currRow.getCell(1).text);
             saveData.push({
               nip: currRow.getCell(1).text,
-              level: currRow.getCell(2).text,
+              level: Number(currRow.getCell(2).text),
             });
           }
         });

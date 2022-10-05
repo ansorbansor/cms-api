@@ -59,8 +59,11 @@ export class IsNotExist implements ValidatorConstraintInterface {
       (currentValue.name &&
         currentValue.id &&
         entity?.id == currentValue?.id &&
-        (entity?.name.toLowerCase() === currentValue?.name.toLowerCase() ||
-          entity?.code.toLowerCase() === currentValue?.code.toLowerCase())) ||
+        ((entity?.name &&
+          entity?.name.toLowerCase() === currentValue?.name.toLowerCase()) ||
+          (entity?.code &&
+            entity?.code.toLowerCase() ===
+              currentValue?.code.toLowerCase()))) ||
       !entity
     ) {
       return true;

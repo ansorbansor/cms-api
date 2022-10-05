@@ -114,7 +114,7 @@ export class CourseService {
       .leftJoinAndSelect('course.topic', 'topic')
       .leftJoinAndSelect('course.courseLevel', 'courseLevel')
       .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
-      .leftJoinAndSelect('courseLanguage.language', 'courseLanguage.language')
+      .leftJoinAndSelect('courseLanguage.language', 'language')
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile')
       .leftJoinAndSelect('course.userLike', 'userLike');

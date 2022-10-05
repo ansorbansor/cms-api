@@ -41,6 +41,11 @@ export class BlacklistController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search: string,
+    @Query('position_id') positionId: number,
+    @Query('unit_id') unitId: number,
+    @Query('level_id') levelId: number,
+    @Query('role_id') roleId: number[],
   ) {
     if (limit > 50) {
       limit = 50;
@@ -52,6 +57,11 @@ export class BlacklistController {
         limit,
         total: 0,
         blacklist: true,
+        search: search,
+        employeePosition: positionId,
+        employeeUnit: unitId,
+        employeeLevel: levelId,
+        role: roleId,
       }),
       'success',
     );

@@ -358,6 +358,8 @@ export class AuthService {
 
     await this.usersService.update(user.id, userDto, photo);
 
+    await this.usersService.createUserTopic(userDto.topics, user.id);
+
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 
     return await this.usersService.findOne({

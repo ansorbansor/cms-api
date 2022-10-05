@@ -1,4 +1,4 @@
-import { Column, Entity } from 'typeorm';
+import { BeforeInsert, Column, Entity } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityHelper } from 'src/utils/entity-helper';
 
@@ -35,4 +35,9 @@ export class CourseFetchHistory extends EntityHelper {
   @ApiProperty()
   @Column()
   provider_category_id?: number;
+
+  @BeforeInsert()
+  setDate() {
+    this.created_at = new Date();
+  }
 }

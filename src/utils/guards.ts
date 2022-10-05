@@ -25,7 +25,13 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     const canAccess = function (data) {
+      if (!data || data.length == 0) {
+        return false;
+      }
       return data.some(function (e) {
+        if (!e.role || !e.role.roleAccess || e.role.roleAccess.length == 0) {
+          return false;
+        }
         return e.role.roleAccess.some(function (x) {
           if (
             controllers == x.menu.be_controller &&

@@ -83,6 +83,24 @@ export class CourseFetchService {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Base URL tidak ditemukan!');
     }
 
+    const lastFetchValidity = await this.courseFetchHistoryRepository
+      .createQueryBuilder('history')
+      .orderBy('history.id', 'DESC')
+      .getOne();
+
+    if (
+      lastFetchValidity &&
+      (new Date().getTime() -
+        new Date(lastFetchValidity.created_at).getTime()) /
+        (1000 * 60) <
+        30
+    ) {
+      throw failedResponse(
+        HttpStatus.NOT_ACCEPTABLE,
+        `Sedang melakukan proses pengambilan data, harap tunggu.`,
+      );
+    }
+
     let savedDataCount = 0;
     for (const categoryItem of providerCategories) {
       //get last history fetch

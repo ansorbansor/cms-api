@@ -125,7 +125,10 @@ export class CourseFetchService {
       let url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
       &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
       const headers = {
-        Authorization: `Basic RGdiVGF4NDhBdzZtbnI5RGJEdmgyQjdvdTM5ZVJRd3FJajJyQ0xoMDpFekFVV1JZU0luNTVIS1BMOHVSMG4xY3VUcTU2ajgwUXhxdHM5YVlnZmY1WXhUeEFxNnlEMnU4ME9XZWRCbld4MmVxY3ZleUl2anR3Q3dLTlgyVTFzcnJzTk9mN2hHRVZRajZwTjZVM1NteFBGNTJQRlRPeHFWZXZaTGZLdWJ5UQ==`,
+        Authorization:
+          'Basic RGdiVGF4NDhBdzZtbnI5RGJEdmgyQjdvdTM5ZVJRd3FJajJyQ0xoMDpFekFVV1JZU0luNTVIS1BMOHVSMG4xY3VUcTU2ajgwUXhxdHM5YVlnZmY1WXhUeEFxNnlEMnU4ME9XZWRCbld4MmVxY3ZleUl2anR3Q3dLTlgyVTFzcnJzTk9mN2hHRVZRajZwTjZVM1NteFBGNTJQRlRPeHFWZXZaTGZLdWJ5UQ==',
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json;charset=utf-8',
       };
       let response = await fetch(url, { headers: headers });
       console.log(response);
@@ -146,7 +149,7 @@ export class CourseFetchService {
         url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
         &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
 
-        response = await fetch(url);
+        response = await fetch(url, { headers: headers });
         data = await response.json();
 
         const returnedData = data.unit.items.map((data) => {

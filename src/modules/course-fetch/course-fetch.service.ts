@@ -126,7 +126,10 @@ export class CourseFetchService {
       &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
 
       let response = await fetch(url);
+      console.log(response);
       let data = await response.json();
+      console.log('===============================');
+      console.log(data);
 
       const totalItemCount = data.unit.pagination.total_item_count;
 

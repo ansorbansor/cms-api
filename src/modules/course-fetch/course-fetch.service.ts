@@ -129,7 +129,7 @@ export class CourseFetchService {
           'Basic RmVVcUl2UWI5QkxJZmZXN1ZtOVZORWVvZmtXWHNQWmpZVjU4VU9VcTo2Ym1ROTJpRnJpQUtRdkRYRWI0SUt0cGhMcU0wZGlHOHFSQVlNdHYxcE4yOU1BaUdDY1R3akNzQ2hQb0RFUkkxWkdlWTVJM2s1UEN6VThBTXRFeThhM0pVUmVCRXZmUnZ0eUtrZjllbnMxZTJsUmJacUdOeGdFZ0drcE94NGNsNw==',
         Accept: 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
-        'User-Agent': '',
+        'User-Agent': 'Mozilla/5.0',
         'Accept-Encoding': 'gzip, deflate, br',
         'X-Requested-With': 'XMLHttpRequest',
       };

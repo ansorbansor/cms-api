@@ -129,13 +129,17 @@ export class CourseFetchService {
           'Basic RmVVcUl2UWI5QkxJZmZXN1ZtOVZORWVvZmtXWHNQWmpZVjU4VU9VcTo2Ym1ROTJpRnJpQUtRdkRYRWI0SUt0cGhMcU0wZGlHOHFSQVlNdHYxcE4yOU1BaUdDY1R3akNzQ2hQb0RFUkkxWkdlWTVJM2s1UEN6VThBTXRFeThhM0pVUmVCRXZmUnZ0eUtrZjllbnMxZTJsUmJacUdOeGdFZ0drcE94NGNsNw==',
         Accept: 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
+        'User-Agent': '',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'X-Requested-With': 'XMLHttpRequest',
       };
       let response = await fetch(url, {
         headers: headers,
-        withCredentials: true,
         credentials: 'include',
       });
       console.log(response.headers);
+      console.log('===============================');
+      console.log(response);
       let data = await response.json();
       console.log('===============================');
       console.log(data);

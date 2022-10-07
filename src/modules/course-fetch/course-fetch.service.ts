@@ -126,7 +126,7 @@ export class CourseFetchService {
       &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
       const headers = {
         Authorization:
-          'Basic RGdiVGF4NDhBdzZtbnI5RGJEdmgyQjdvdTM5ZVJRd3FJajJyQ0xoMDpFekFVV1JZU0luNTVIS1BMOHVSMG4xY3VUcTU2ajgwUXhxdHM5YVlnZmY1WXhUeEFxNnlEMnU4ME9XZWRCbld4MmVxY3ZleUl2anR3Q3dLTlgyVTFzcnJzTk9mN2hHRVZRajZwTjZVM1NteFBGNTJQRlRPeHFWZXZaTGZLdWJ5UQ==',
+          'Basic MXlsc3RPU1YyMXpHcWJ2cG9wOW1EN243RTFnT3RnTEdkMlJ3a1FsTzpqTGF6QzVHS0lTM3c5dGRDdm00MXRuamlxUjZhTjE0blloOTA4b1hlZzNJaFNWSlNxbVFrS2Zxc0lwQlN4bW1xUEdqODZDVHJKWEtlVEZPWFg5ckV6SVlWaEEzaDZCektjM0s5QkJMR3ZPR1RDcU9uMWQ0TFY0WFpudnhxYTVBVw==',
         Accept: 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
       };

@@ -132,12 +132,15 @@ export class CourseFetchService {
       };
       let response = await fetch(url, {
         headers: headers,
+        withCredentials: true,
         credentials: 'include',
       });
-      console.log(response);
+      console.log(response.headers);
       let data = await response.json();
       console.log('===============================');
       console.log(data);
+
+      return data;
 
       const totalItemCount = data.unit.pagination.total_item_count;
 

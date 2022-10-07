@@ -130,7 +130,10 @@ export class CourseFetchService {
         Accept: 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
       };
-      let response = await fetch(url, { headers: headers });
+      let response = await fetch(url, {
+        headers: headers,
+        credentials: 'include',
+      });
       console.log(response);
       let data = await response.json();
       console.log('===============================');
@@ -149,7 +152,10 @@ export class CourseFetchService {
         url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
         &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
 
-        response = await fetch(url, { headers: headers });
+        response = await fetch(url, {
+          headers: headers,
+          credentials: 'include',
+        });
         data = await response.json();
 
         const returnedData = data.unit.items.map((data) => {

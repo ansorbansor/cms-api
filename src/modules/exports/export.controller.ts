@@ -6,6 +6,7 @@ import {
   UseGuards,
   Header,
   Res,
+  Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -30,8 +31,8 @@ export class ExportController {
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findAll(@Res() res: Response) {
-    const response = await this.exportService.exportUser();
+  async findAll(@Res() res: Response, @Request() req) {
+    const response = await this.exportService.exportUser(req.user, req.ip);
 
     res.download(`${response}`);
   }

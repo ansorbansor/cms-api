@@ -5,6 +5,7 @@ import { User } from 'src/entities/user.entity';
 import { failedResponse } from 'src/utils/responses';
 import * as tmp from 'tmp';
 import { Repository } from 'typeorm';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ExportUserResource } from './resources/export-user.resources';
 
 @Injectable()
@@ -12,9 +13,10 @@ export class ExportService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private activityLogService: ActivityLogService,
   ) {}
 
-  async exportUser() {
+  async exportUser(user: User, ip: string) {
     const data = await this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
@@ -61,6 +63,12 @@ export class ExportService {
             });
         },
       );
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Data Pengguna`,
+      ip: ip,
     });
 
     return f;

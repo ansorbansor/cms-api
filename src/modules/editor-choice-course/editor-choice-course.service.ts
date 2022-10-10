@@ -7,17 +7,20 @@ import { EditorChoiceCourse } from 'src/entities/editor-choice-course.entity';
 import { CreateEditorChoiceCourseDto } from './dto/create-editor-choice-course.dto';
 import { User } from 'src/entities/user.entity';
 import { EditorChoiceCourseResource } from './resources/editor-choice-course.resources';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class EditorChoiceCourseService {
   constructor(
     @InjectRepository(EditorChoiceCourse)
     private editorChoiceCourseRepository: Repository<EditorChoiceCourse>,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createEditorChoiceCourseDto: CreateEditorChoiceCourseDto[],
     user: User,
+    ip: string,
   ) {
     await getManager().query(
       'UPDATE editor_choice_courses SET deleted_at = NOW()',
@@ -35,6 +38,12 @@ export class EditorChoiceCourseService {
     await this.editorChoiceCourseRepository.save(
       this.editorChoiceCourseRepository.create(arrCourse),
     );
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Ubah Course Pilihan Editor`,
+      ip: ip,
+    });
 
     return this.findManyWithPagination({
       page: 1,

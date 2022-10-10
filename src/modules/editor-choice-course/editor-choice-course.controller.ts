@@ -49,6 +49,7 @@ export class EditorChoiceCourseController {
       await this.editorChoiceCourse.create(
         createEditorChoiceCourseDto,
         req.user,
+        req.ip,
       ),
       'success',
     );

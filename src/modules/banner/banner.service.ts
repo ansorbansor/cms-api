@@ -147,6 +147,7 @@ export class BannerService {
     }
 
     data.orderBy('banner.position', 'ASC');
+    data.addOrderBy('banner.id', 'DESC');
 
     const total = await data.getCount();
     paginationOptions.total = total;

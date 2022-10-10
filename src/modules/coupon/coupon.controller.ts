@@ -39,7 +39,7 @@ export class CouponController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCouponDto: CreateCouponDto, @Request() req) {
     return successResponse(
-      await this.couponServices.create(createCouponDto, req.user, req.id),
+      await this.couponServices.create(createCouponDto, req.user, req.ip),
       'success',
     );
   }

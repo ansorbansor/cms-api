@@ -368,7 +368,7 @@ export class ImportService {
     }
   }
 
-  async importCoupon(file: BufferedFile) {
+  async importCoupon(file: BufferedFile, user: User, ip: string) {
     if (!file) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
@@ -453,6 +453,12 @@ export class ImportService {
       }
 
       await this.couponRepository.save(this.couponRepository.create(saveData));
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Tambah Kupon By Spreadsheet`,
+        ip: ip,
+      });
 
       return `Berhasil menambah ${saveData.length} data kupon`;
     }

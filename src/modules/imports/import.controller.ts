@@ -83,8 +83,11 @@ export class ImportController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async importCoupon(@UploadedFile() file: BufferedFile) {
-    return successResponse(null, await this.importService.importCoupon(file));
+  async importCoupon(@UploadedFile() file: BufferedFile, @Request() req) {
+    return successResponse(
+      null,
+      await this.importService.importCoupon(file, req.user, req.ip),
+    );
   }
 
   @Get(':path')

@@ -105,12 +105,15 @@ export class CouponSubmissionController {
     @Query('status') status: number,
     @Query('coupon_id') couponId: number,
     @Query('reason') reason: string,
+    @Request() req,
   ) {
     return await this.couponSubmissionServices.update(
       id,
       status,
       couponId,
       reason,
+      req.user,
+      req.ip,
     );
   }
 }

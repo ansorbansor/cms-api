@@ -20,6 +20,8 @@ import { StartCourseResource } from './resources/start-course.resources';
 import { CouponSubmissionDetailResource } from './resources/coupon-submission-detail.resources';
 import { Coupon } from 'src/entities/coupon.entity';
 import { MailService } from '../mail/mail.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -33,6 +35,7 @@ export class CouponSubmissionService {
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
     private mailService: MailService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(userId: number, courseId: number) {
@@ -314,6 +317,8 @@ export class CouponSubmissionService {
     status: number,
     couponId: number,
     reason: string,
+    user: User,
+    ip: string,
   ) {
     if (!Object.values(CouponSubmissionStatus).includes(status)) {
       throw failedResponse(
@@ -414,6 +419,12 @@ export class CouponSubmissionService {
         },
       });
 
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Setujui Pengajuan Kupon ${exists.user.email}`,
+        ip: ip,
+      });
+
       return successResponse(null, `Pengajuan berhasil disetujui`);
     } else {
       await this.couponSubmissionRepository.update(submissionId, {
@@ -428,6 +439,12 @@ export class CouponSubmissionService {
           courseTitle: exists.course.name,
           reason: reason,
         },
+      });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Menolak Pengajuan Kupon ${exists.user.email}`,
+        ip: ip,
       });
 
       return successResponse(null, `Pengajuan telah ditolak`);

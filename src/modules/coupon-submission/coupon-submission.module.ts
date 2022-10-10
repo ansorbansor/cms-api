@@ -4,6 +4,7 @@ import { CouponSubmission } from 'src/entities/coupon-submission.entity';
 import { Coupon } from 'src/entities/coupon.entity';
 import { Course } from 'src/entities/course.entity';
 import { UserCourse } from 'src/entities/user-course.entity';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { MailModule } from '../mail/mail.module';
 import { CouponSubmissionController } from './coupon-submission.controller';
 import { CouponSubmissionService } from './coupon-submission.service';
@@ -12,6 +13,7 @@ import { CouponSubmissionService } from './coupon-submission.service';
   imports: [
     TypeOrmModule.forFeature([CouponSubmission, Course, UserCourse, Coupon]),
     MailModule,
+    ActivityLogModule,
   ],
   controllers: [CouponSubmissionController],
   providers: [CouponSubmissionService],

@@ -144,10 +144,19 @@ export class ProvidersService {
     return await this.findOne({ id: updateProfileDto.id });
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.provider}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
+
+    const deletedData = await this.providerRepository.findOne({ id: id });
+
     await this.providerRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Data Penyelenggara ${deletedData.name}`,
+      ip: ip,
+    });
   }
 
   async sendMailRegisterProvider(providerId: number, userId: number) {

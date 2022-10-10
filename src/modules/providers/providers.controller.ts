@@ -134,9 +134,9 @@ export class ProvidersController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(ProvidersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param('id') id: number, @Request() request) {
     return successResponse(
-      await this.providerServices.softDelete(id),
+      await this.providerServices.softDelete(id, request.user, request.ip),
       'success',
     );
   }

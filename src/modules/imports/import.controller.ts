@@ -9,6 +9,7 @@ import {
   Get,
   Param,
   Res,
+  Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -37,8 +38,11 @@ export class ImportController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async importUser(@UploadedFile() file: BufferedFile) {
-    return successResponse(null, await this.importService.importUser(file));
+  async importUser(@UploadedFile() file: BufferedFile, @Request() req) {
+    return successResponse(
+      null,
+      await this.importService.importUser(file, req.user, req.ip),
+    );
   }
 
   @Post('user-blacklist')

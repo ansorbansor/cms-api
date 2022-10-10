@@ -8,6 +8,7 @@ import { BlacklistController } from './user-blacklists.controller';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailModule } from '../mail/mail.module';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MailModule } from '../mail/mail.module';
       useClass: RedisConfigService,
     }),
     MailModule,
+    ActivityLogModule,
   ],
   controllers: [BlacklistController],
   providers: [UsersService, RedisService],

@@ -22,6 +22,7 @@ import { MasterEmployeeUnitResource } from './resource/master-employee-unit.reso
 import { MasterEmployeeLevelResource } from './resource/master-employee-level.resources';
 import { MasterEmployeePositionResource } from './resource/master-employee-position.resources';
 import { Coupon } from 'src/entities/coupon.entity';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class ImportService {
@@ -43,9 +44,10 @@ export class ImportService {
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
     private mailService: MailService,
+    private activityLogService: ActivityLogService,
   ) {}
 
-  async importUser(file: BufferedFile) {
+  async importUser(file: BufferedFile, user: User, ip: string) {
     if (!file) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
@@ -191,6 +193,12 @@ export class ImportService {
             password: user.password,
           },
         });
+      });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Tambah ${saveData.length} Pengguna by Spreadsheet`,
+        ip: ip,
       });
 
       return `Berhasil menambah ${saveData.length} data pengguna`;

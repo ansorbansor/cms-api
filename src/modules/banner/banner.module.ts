@@ -6,6 +6,7 @@ import { Banner } from 'src/entities/banner.entity';
 import { BannerController } from './banner.controller';
 import { BannerService } from './banner.service';
 import { Course } from 'src/entities/course.entity';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { Course } from 'src/entities/course.entity';
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
+    ActivityLogModule,
   ],
   controllers: [BannerController],
   providers: [BannerService, RedisService],

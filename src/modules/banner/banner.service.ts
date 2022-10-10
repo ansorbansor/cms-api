@@ -14,6 +14,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { FilesService } from '../files/files.service';
 import { Course } from 'src/entities/course.entity';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class BannerService {
@@ -24,12 +25,14 @@ export class BannerService {
     private courseRepository: Repository<Course>,
     private redisService: RedisService,
     private fileService: FilesService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createBannerDto: CreateBannerDto,
     user: User,
     photo: BufferedFile,
+    ip: string,
   ) {
     if (!photo) {
       throw failedResponse(
@@ -91,6 +94,12 @@ export class BannerService {
         ...createBannerDto,
       }),
     );
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Menambah Banner ${createBannerDto.name}`,
+      ip: ip,
+    });
 
     await this.redisService.del(`${RedisKeyEnum.banner}:`);
 

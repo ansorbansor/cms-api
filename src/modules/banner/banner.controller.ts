@@ -50,7 +50,12 @@ export class BannerController {
     @UploadedFile() photo: BufferedFile,
   ) {
     return successResponse(
-      await this.bannerServices.create(createBannerDto, req.user, photo),
+      await this.bannerServices.create(
+        createBannerDto,
+        req.user,
+        photo,
+        req.ip,
+      ),
       'success',
     );
   }

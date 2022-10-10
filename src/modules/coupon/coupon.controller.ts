@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -36,9 +37,9 @@ export class CouponController {
   @Controllers(CouponController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createCouponDto: CreateCouponDto) {
+  async create(@Body() createCouponDto: CreateCouponDto, @Request() req) {
     return successResponse(
-      await this.couponServices.create(createCouponDto),
+      await this.couponServices.create(createCouponDto, req.user, req.id),
       'success',
     );
   }

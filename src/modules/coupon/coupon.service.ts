@@ -7,20 +7,28 @@ import { Coupon } from 'src/entities/coupon.entity';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { CouponResource } from './resources/coupon.resources';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class CouponService {
   constructor(
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
+    private activityLogService: ActivityLogService,
   ) {}
 
-  async create(createCouponDto: CreateCouponDto) {
+  async create(createCouponDto: CreateCouponDto, user: User, ip: string) {
     const coupon = await this.couponRepository.save(
       this.couponRepository.create({
         ...createCouponDto,
       }),
     );
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Kupon ${createCouponDto.name}`,
+      ip: ip,
+    });
 
     return this.findOne({ id: coupon.id });
   }

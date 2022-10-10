@@ -237,8 +237,11 @@ export class CourseController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.courseServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number, @Request() req) {
+    return successResponse(
+      await this.courseServices.softDelete(id, req.user, req.ip),
+      'success',
+    );
   }
 
   @Post('course/like')

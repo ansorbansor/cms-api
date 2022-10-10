@@ -449,9 +449,16 @@ export class CourseService {
     return 'success';
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.course}`);
+    const deletedData = await this.courseRepository.findOne({ id: id });
     await this.courseRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Course ${deletedData.name}`,
+      ip: ip,
+    });
   }
 
   async postLike(courseId: number, user: User) {

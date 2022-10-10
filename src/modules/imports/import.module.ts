@@ -7,6 +7,7 @@ import { EmployeePosition } from 'src/entities/employee-position.entity';
 import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { Provider } from 'src/entities/provider.entity';
 import { Role } from 'src/entities/role.entity';
+import { UserRoles } from 'src/entities/user-role.entity';
 import { User } from 'src/entities/user.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { MailModule } from '../mail/mail.module';
@@ -24,6 +25,7 @@ import { ImportService } from './import.service';
       Provider,
       Course,
       Coupon,
+      UserRoles,
     ]),
     MailModule,
     ActivityLogModule,

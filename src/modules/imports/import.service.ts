@@ -23,6 +23,7 @@ import { MasterEmployeeLevelResource } from './resource/master-employee-level.re
 import { MasterEmployeePositionResource } from './resource/master-employee-position.resources';
 import { Coupon } from 'src/entities/coupon.entity';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { UserRoles } from 'src/entities/user-role.entity';
 
 @Injectable()
 export class ImportService {
@@ -43,6 +44,8 @@ export class ImportService {
     private courseRepository: Repository<Course>,
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
+    @InjectRepository(UserRoles)
+    private userRoleRepository: Repository<UserRoles>,
     private mailService: MailService,
     private activityLogService: ActivityLogService,
   ) {}
@@ -60,6 +63,7 @@ export class ImportService {
     const position = [];
 
     const saveData = [];
+    const roleSaveData = [];
     const workbook = new Workbook();
     const stream = new Stream.Readable();
     stream.push(file.buffer); // file is ArrayBuffer variable
@@ -80,6 +84,11 @@ export class ImportService {
             unit.push(String(currRow.getCell(7).text).toLowerCase());
             level.push(String(currRow.getCell(8).text).toLowerCase());
             position.push(String(currRow.getCell(9).text).toLowerCase());
+
+            roleSaveData.push({
+              nip: currRow.getCell(1).text,
+              role_id: currRow.getCell(5).text,
+            });
 
             saveData.push({
               nip: currRow.getCell(1).text,
@@ -183,9 +192,11 @@ export class ImportService {
         }
       });
 
-      await this.usersRepository.save(this.usersRepository.create(saveData));
+      const savedData = await this.usersRepository.save(
+        this.usersRepository.create(saveData),
+      );
 
-      saveData.forEach(async (user) => {
+      savedData.forEach(async (user) => {
         await this.mailService.welcome({
           to: user.email,
           data: {
@@ -193,6 +204,13 @@ export class ImportService {
             password: user.password,
           },
         });
+
+        await this.userRoleRepository.save(
+          this.userRoleRepository.create({
+            user_id: user.id,
+            role_id: roleSaveData.find((e) => e.nip == user.nip).role_id,
+          }),
+        );
       });
 
       await this.activityLogService.create({

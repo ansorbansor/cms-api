@@ -7,7 +7,7 @@ export class CoursePrice extends EntityHelper {
   @Column()
   name: string;
 
-  @OneToMany(() => Course, (course) => course.courseLevel)
+  @OneToMany(() => Course, (course) => course.coursePrice)
   @JoinColumn()
   course?: Course[];
   course_count: number;

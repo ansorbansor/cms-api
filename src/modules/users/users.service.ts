@@ -15,6 +15,7 @@ import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailService } from '../mail/mail.service';
 import { RedisKeyEnum } from 'src/utils/enums';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class UsersService {
@@ -33,12 +34,15 @@ export class UsersService {
     private fileService: FilesService,
 
     private mailService: MailService,
+
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createProfileDto: CreateUserDto,
     user_id?: number,
     photo?: BufferedFile,
+    ip?: string,
   ) {
     if (photo && user_id) {
       const uploadedPhoto = await this.fileService.uploadWithMinio(
@@ -81,6 +85,12 @@ export class UsersService {
         email: user.email,
         password: createProfileDto.password,
       },
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Pengguna ${user.email}`,
+      ip: ip,
     });
 
     return this.findOne({ id: user.id });

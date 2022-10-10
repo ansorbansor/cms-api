@@ -51,7 +51,12 @@ export class UsersController {
     @UploadedFile() file?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.create(createProfileDto, req.user.id, file),
+      await this.usersService.create(
+        createProfileDto,
+        req.user.id,
+        file,
+        req.ip,
+      ),
       'success',
     );
   }

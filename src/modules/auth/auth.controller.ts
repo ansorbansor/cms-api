@@ -92,9 +92,10 @@ export class AuthController {
   async register(
     @UploadedFile() file: BufferedFile,
     @Body() createUserDto: AuthRegisterLoginDto,
+    @Request() req,
   ) {
     return successResponse(
-      this.service.register(file, createUserDto),
+      this.service.register(file, createUserDto, req.ip),
       'success',
     );
   }

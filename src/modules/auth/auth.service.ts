@@ -193,6 +193,7 @@ export class AuthService {
   async register(
     photo: BufferedFile,
     dto: AuthRegisterLoginDto,
+    ip: string,
   ): Promise<void> {
     const hash = crypto
       .createHash('sha256')
@@ -213,6 +214,7 @@ export class AuthService {
       },
       null,
       photo,
+      ip,
     );
 
     if (dto.categories) {

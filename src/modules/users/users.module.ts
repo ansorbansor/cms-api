@@ -8,6 +8,7 @@ import { RedisService } from '../redis/redis.service';
 import { RedisConfigService } from 'src/config/redis-config.service';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailModule } from '../mail/mail.module';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MailModule } from '../mail/mail.module';
       useClass: RedisConfigService,
     }),
     MailModule,
+    ActivityLogModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, RedisService],

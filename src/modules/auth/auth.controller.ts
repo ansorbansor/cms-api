@@ -110,9 +110,12 @@ export class AuthController {
 
   @Post('forgot/password')
   @HttpCode(HttpStatus.OK)
-  async forgotPassword(@Body() forgotPasswordDto: AuthForgotPasswordDto) {
+  async forgotPassword(
+    @Body() forgotPasswordDto: AuthForgotPasswordDto,
+    @Request() req,
+  ) {
     return successResponse(
-      await this.service.forgotPassword(forgotPasswordDto.email),
+      await this.service.forgotPassword(forgotPasswordDto.email, req.ip),
       'success',
     );
   }

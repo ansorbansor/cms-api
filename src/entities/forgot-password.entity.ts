@@ -16,4 +16,6 @@ export class ForgotPassword extends EntityHelper {
   })
   @JoinColumn({ name: 'user_id' })
   userData: User;
+
+  ip: string;
 }

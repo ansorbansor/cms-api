@@ -252,7 +252,7 @@ export class AuthService {
     await user.save();
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(email: string, ip: string): Promise<void> {
     const user = await this.usersService.findOne({
       email,
     });
@@ -264,6 +264,7 @@ export class AuthService {
     await this.forgotService.create({
       hash,
       userData: user,
+      ip: ip,
     });
 
     await this.mailService.forgotPassword({

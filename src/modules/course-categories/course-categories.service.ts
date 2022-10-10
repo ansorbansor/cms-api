@@ -158,6 +158,7 @@ export class CourseCategoriesService {
     updateCourseCategoryDto: UpdateCourseCategoryDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     const exists = await this.findOne(
       { id: updateCourseCategoryDto.id },
@@ -203,6 +204,12 @@ export class CourseCategoriesService {
       await this.topicService.softDeleteByCategory(updateCourseCategoryDto.id);
       await this.topicService.createBulk(topics);
     }
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Kategori ${updateCourseCategoryDto.name}`,
+      ip: ip,
+    });
 
     this.redisService.del(`${RedisKeyEnum.category}`);
     this.redisService.del(`${RedisKeyEnum.course}`);

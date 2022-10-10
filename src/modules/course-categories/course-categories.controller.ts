@@ -117,6 +117,7 @@ export class CourseCategoriesController {
         updateCourseCategoryDto,
         photo,
         request.user,
+        request.ip,
       ),
       'success',
     );

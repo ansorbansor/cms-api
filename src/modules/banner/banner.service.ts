@@ -198,6 +198,7 @@ export class BannerService {
     updateBannerDto: UpdateBannerDto,
     user: User,
     photo: BufferedFile,
+    ip: string,
   ) {
     const exists = await this.findOne({ id: updateBannerDto.id });
 
@@ -260,6 +261,12 @@ export class BannerService {
 
     await this.bannerRepository.update(updateBannerDto.id, {
       ...updateBannerDto,
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Mengubah Banner ${updateBannerDto.name}`,
+      ip: ip,
     });
 
     await this.redisService.del(`${RedisKeyEnum.banner}:`);

@@ -7,6 +7,7 @@ import { ProvidersController } from './providers.controller';
 import { ProvidersService } from './providers.service';
 import { MailModule } from '../mail/mail.module';
 import { User } from 'src/entities/user.entity';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { User } from 'src/entities/user.entity';
       useClass: RedisConfigService,
     }),
     MailModule,
+    ActivityLogModule,
   ],
   controllers: [ProvidersController],
   providers: [ProvidersService, RedisService],

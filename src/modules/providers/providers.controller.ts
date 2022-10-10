@@ -70,6 +70,7 @@ export class ProvidersController {
         createProviderDto,
         photo,
         request.user,
+        request.ip,
       ),
       'success',
     );

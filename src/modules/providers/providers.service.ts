@@ -13,6 +13,7 @@ import { User } from 'src/entities/user.entity';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { MailService } from '../mail/mail.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class ProvidersService {
@@ -24,12 +25,14 @@ export class ProvidersService {
     private redisService: RedisService,
     private fileService: FilesService,
     private mailService: MailService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createProviderDto: CreateProviderDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, user.id);
@@ -41,6 +44,12 @@ export class ProvidersService {
         ...createProviderDto,
       }),
     );
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Penyelenggara ${createProviderDto.name}`,
+      ip: ip,
+    });
 
     return this.findOne({ id: provider.id });
   }

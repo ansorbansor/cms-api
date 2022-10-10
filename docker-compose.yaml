@@ -33,6 +33,7 @@ services:
     image: mysql:8
     container_name: mysql
     command: --default-authentication-plugin=mysql_native_password
+    restart: always
     ports:
       - ${DATABASE_PORT}:3306
     volumes:
@@ -42,6 +43,7 @@ services:
       - MYSQL_PASSWORD=${DATABASE_PASSWORD}
       - MYSQL_USER=${DATABASE_USERNAME}
       - MYSQL_DATABASE=${DATABASE_NAME}
+      - TZ=Asia/Jakarta
 
   adminer:
     image: adminer

@@ -121,6 +121,15 @@ export class CourseService {
 
     if (paginationOptions.is_admin) {
       data.leftJoinAndSelect('course.temporaryCourse', 'temporaryCourse');
+
+      if (
+        paginationOptions.status_string != undefined &&
+        paginationOptions.status_string != ''
+      ) {
+        data.andWhere('course.status = :status', {
+          status: paginationOptions.status_string == 'true' ? 1 : 0,
+        });
+      }
     }
 
     if (
@@ -467,7 +476,10 @@ export class CourseService {
   }
 
   async courseSchedule() {
-    const data = await this.courseRepository.find();
+    const data = await this.courseRepository
+      .createQueryBuilder('course')
+      .where('course.status = 1')
+      .getMany();
     return [
       {
         id: CourseScheduleType.MANDIRI,
@@ -483,7 +495,10 @@ export class CourseService {
   }
 
   async courseRating() {
-    const data = await this.courseRepository.find();
+    const data = await this.courseRepository
+      .createQueryBuilder('course')
+      .where('course.status = 1')
+      .getMany();
     return [
       {
         id: Number(Rating.A),

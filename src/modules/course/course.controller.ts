@@ -106,6 +106,7 @@ export class CourseController {
         popular: popular,
         submission: submission,
         editor_choice: editor_choice,
+        status_string: 'true',
       }),
       'success',
     );
@@ -136,6 +137,7 @@ export class CourseController {
     @Query('popular') popular?: boolean,
     @Query('submission') submission?: boolean,
     @Query('editor_choice') editor_choice?: boolean,
+    @Query('status') status?: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -163,6 +165,7 @@ export class CourseController {
         latest: latest,
         popular: popular,
         editor_choice: editor_choice,
+        status_string: status,
       }),
       'success',
     );

@@ -29,15 +29,21 @@ export class CourseLanguageService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const total = await this.courseLanguageRepository.count();
+    const data = this.courseLanguageRepository
+      .createQueryBuilder('language')
+      .leftJoinAndSelect('language.course', 'courseLanguage')
+      .leftJoinAndSelect('courseLanguage.course', 'course');
+
+    const total = await data.getCount();
     paginationOptions.total = total;
 
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    const getData = await data.getMany();
+
     return infinityPagination(
-      await this.courseLanguageRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-        relations: ['course'],
-      }),
+      getData,
       CourseLanguageResource,
       paginationOptions,
     );

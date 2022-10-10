@@ -41,7 +41,7 @@ export class Provider extends EntityHelper {
   countArticleComment() {
     this.courseCount = 0;
     if (this.course) {
-      this.courseCount = this.course.length;
+      this.courseCount = this.course.filter((e) => e.status == 1).length;
     }
   }
 }

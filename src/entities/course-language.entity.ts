@@ -14,6 +14,8 @@ export class CourseLanguage extends EntityHelper {
 
   @AfterLoad()
   setCount() {
-    this.course_count = this.course ? this.course.length : 0;
+    this.course_count = this.course
+      ? this.course.filter((e) => e.course?.status == 1).length
+      : 0;
   }
 }

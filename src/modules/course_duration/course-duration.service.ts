@@ -39,7 +39,7 @@ export class CourseDurationService {
       .leftJoin(
         Course,
         'course',
-        'course.duration >= duration.minimum AND course.duration <= duration.maximum',
+        'course.duration >= duration.minimum AND course.duration <= duration.maximum AND course.status = 1',
       )
       .groupBy('duration.id');
 

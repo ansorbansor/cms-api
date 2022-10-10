@@ -211,7 +211,12 @@ export class CourseController {
     @Request() request,
   ) {
     return successResponse(
-      await this.courseServices.update(updateCourseDto, photo, request.user),
+      await this.courseServices.update(
+        updateCourseDto,
+        photo,
+        request.user,
+        request.ip,
+      ),
       'success',
     );
   }

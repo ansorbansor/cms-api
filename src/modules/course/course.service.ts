@@ -334,6 +334,7 @@ export class CourseService {
     updateCourseDto: UpdateCourseDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, user.id);
@@ -382,6 +383,12 @@ export class CourseService {
         );
       });
     }
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Course ${updateCourseDto.name}`,
+      ip: ip,
+    });
 
     this.redisService.del(`${RedisKeyEnum.course}:`);
 

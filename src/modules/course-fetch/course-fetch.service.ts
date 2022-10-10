@@ -21,6 +21,8 @@ import { Course } from 'src/entities/course.entity';
 import { FilesService } from '../files/files.service';
 import { CoursePriceType } from 'src/utils/enums';
 import { getFileExtension } from 'src/utils/file-helper';
+import { ActivityLogService } from '../activity-log/activity-log.service';
+import { Provider } from 'src/entities/provider.entity';
 
 @Injectable()
 export class CourseFetchService {
@@ -45,10 +47,13 @@ export class CourseFetchService {
     private courseLanguageTransactionRepository: Repository<CourseLanguageTransaction>,
     @InjectRepository(Course)
     private courseRepository: Repository<Course>,
+    @InjectRepository(Provider)
+    private providerRepository: Repository<Provider>,
     private fileService: FilesService,
+    private activityLogService: ActivityLogService,
   ) {}
 
-  async fetchData(providerId: number, userId: number) {
+  async fetchData(providerId: number, userId: number, ip: string) {
     //get provider categories
     const providerCategories = await this.providerCategoryRepository
       .createQueryBuilder('providerCategory')
@@ -126,11 +131,13 @@ export class CourseFetchService {
       let url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
       &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
       const headers = {
-        'Authorization': 'Basic RmVVcUl2UWI5QkxJZmZXN1ZtOVZORWVvZmtXWHNQWmpZVjU4VU9VcTo2Ym1ROTJpRnJpQUtRdkRYRWI0SUt0cGhMcU0wZGlHOHFSQVlNdHYxcE4yOU1BaUdDY1R3akNzQ2hQb0RFUkkxWkdlWTVJM2s1UEN6VThBTXRFeThhM0pVUmVCRXZmUnZ0eUtrZjllbnMxZTJsUmJacUdOeGdFZ0drcE94NGNsNw==',
-        'Accept': 'application/json, text/plain, */*',
+        Authorization:
+          'Basic RmVVcUl2UWI5QkxJZmZXN1ZtOVZORWVvZmtXWHNQWmpZVjU4VU9VcTo2Ym1ROTJpRnJpQUtRdkRYRWI0SUt0cGhMcU0wZGlHOHFSQVlNdHYxcE4yOU1BaUdDY1R3akNzQ2hQb0RFUkkxWkdlWTVJM2s1UEN6VThBTXRFeThhM0pVUmVCRXZmUnZ0eUtrZjllbnMxZTJsUmJacUdOeGdFZ0drcE94NGNsNw==',
+        Accept: 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
         'X-Udemy-Client-Id': 'FeUqIvQb9BLIffW7Vm9VNEeofkWXsPZjYV58UOUq',
-        'X-Udemy-Client-Secret': '6bmQ92iFriAKQvDXEb4IKtphLqM0diG8qRAYMtv1pN29MAiGCcTwjCsChPoDERI1ZGeY5I3k5PCzU8AMtEy8a3JUReBEvfRvtyKkf9ens1e2lRbZqGNxgEgGkpOx4cl7',
+        'X-Udemy-Client-Secret':
+          '6bmQ92iFriAKQvDXEb4IKtphLqM0diG8qRAYMtv1pN29MAiGCcTwjCsChPoDERI1ZGeY5I3k5PCzU8AMtEy8a3JUReBEvfRvtyKkf9ens1e2lRbZqGNxgEgGkpOx4cl7',
         'X-Requested-With': 'XMLHttpRequest',
       };
       const httpsAgent = new https.Agent({
@@ -352,6 +359,14 @@ export class CourseFetchService {
         `Tidak ada data baru`,
       );
     }
+
+    const provider = await this.providerRepository.findOne({ id: providerId });
+
+    await this.activityLogService.create({
+      user_id: userId,
+      description: `Update Data List Course ${provider.name}`,
+      ip: ip,
+    });
 
     return successResponse(null, `Berhasil menambah ${savedDataCount} data`);
   }

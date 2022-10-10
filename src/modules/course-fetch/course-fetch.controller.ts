@@ -29,6 +29,6 @@ export class CourseFetchController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: number, @Request() req) {
-    return await this.courseFetchService.fetchData(id, req.user.id);
+    return await this.courseFetchService.fetchData(id, req.user.id, req.ip);
   }
 }

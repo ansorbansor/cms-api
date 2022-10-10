@@ -9,8 +9,10 @@ import { CourseLanguage } from 'src/entities/course-language.entity';
 import { CourseLevel } from 'src/entities/course-level.entity';
 import { Course } from 'src/entities/course.entity';
 import { ProviderCategory } from 'src/entities/provider-category.entity';
+import { Provider } from 'src/entities/provider.entity';
 import { TemporaryCourse } from 'src/entities/temporary-course.entity';
 import { Topic } from 'src/entities/topic.entity';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { CourseFetchController } from './course-fetch.controller';
 import { CourseFetchService } from './course-fetch.service';
 
@@ -27,10 +29,12 @@ import { CourseFetchService } from './course-fetch.service';
       CourseLanguage,
       CourseLanguageTransaction,
       Course,
+      Provider,
     ]),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
+    ActivityLogModule,
   ],
   controllers: [CourseFetchController],
   providers: [CourseFetchService],

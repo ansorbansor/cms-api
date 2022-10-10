@@ -79,7 +79,8 @@ export class CourseCategoriesService {
 
     const data = this.categoryRepository
       .createQueryBuilder('category')
-      .leftJoinAndSelect('category.photoFile', 'photoFile');
+      .leftJoinAndSelect('category.photoFile', 'photoFile')
+      .leftJoinAndSelect('category.course', 'course');
 
     if (withTopics) {
       data.leftJoinAndSelect('category.topic', 'topic');

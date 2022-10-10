@@ -155,7 +155,10 @@ export class BannerController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(BannerController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.bannerServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number, @Request() req) {
+    return successResponse(
+      await this.bannerServices.softDelete(id, req.user, req.ip),
+      'success',
+    );
   }
 }

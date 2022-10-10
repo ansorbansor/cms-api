@@ -301,8 +301,15 @@ export class BannerService {
     await this.redisService.del(`${RedisKeyEnum.banner}:`);
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
+    const deletedData = await this.bannerRepository.findOne({ id: id });
     this.redisService.del(`${RedisKeyEnum.banner}:`);
     await this.bannerRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Menghapus Banner ${deletedData.name}`,
+      ip: ip,
+    });
   }
 }

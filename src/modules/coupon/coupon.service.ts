@@ -24,6 +24,7 @@ export class CouponService {
         ...createCouponDto,
       }),
     );
+
     await this.activityLogService.create({
       user_id: user.id,
       description: `Tambah Kupon ${createCouponDto.name}`,
@@ -99,7 +100,7 @@ export class CouponService {
     return CouponResource(data);
   }
 
-  async update(updateCouponDto: UpdateCouponDto) {
+  async update(updateCouponDto: UpdateCouponDto, user: User, ip: string) {
     const exists = await this.findOne({ id: updateCouponDto.id });
 
     if (!exists) {
@@ -111,6 +112,12 @@ export class CouponService {
 
     await this.couponRepository.update(updateCouponDto.id, {
       ...updateCouponDto,
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Data Kupon ${updateCouponDto.name}`,
+      ip: ip,
     });
 
     return await this.findOne({ id: updateCouponDto.id });

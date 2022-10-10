@@ -94,9 +94,9 @@ export class CouponController {
   @Controllers(CouponController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async update(@Body() updateCouponDto: UpdateCouponDto) {
+  async update(@Body() updateCouponDto: UpdateCouponDto, @Request() req) {
     return successResponse(
-      await this.couponServices.update(updateCouponDto),
+      await this.couponServices.update(updateCouponDto, req.user, req.ip),
       'success',
     );
   }

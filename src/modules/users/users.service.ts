@@ -228,6 +228,8 @@ export class UsersService {
     id: number,
     updateProfileDto: UpdateUserDto,
     photo?: BufferedFile,
+    user?: User,
+    ip?: string,
   ) {
     const exists = await this.findOne({ id: id });
 
@@ -269,7 +271,7 @@ export class UsersService {
       updateProfileDto.photo = img.id;
     }
 
-    await this.usersRepository.save(
+    const savedData = await this.usersRepository.save(
       this.usersRepository.create({
         id,
         ...updateProfileDto,
@@ -279,6 +281,12 @@ export class UsersService {
     if (updateProfileDto.categories) {
       await this.createUserTopic(updateProfileDto.categories, id);
     }
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Data User ${savedData.email}`,
+      ip: ip,
+    });
 
     return await this.findOne({ id: id });
   }

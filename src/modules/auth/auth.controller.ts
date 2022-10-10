@@ -54,33 +54,33 @@ export class AuthController {
 
   @Post('google/login')
   @HttpCode(HttpStatus.OK)
-  async loginGoogle(@Body() loginDto: AuthGoogleLoginDto) {
+  async loginGoogle(@Body() loginDto: AuthGoogleLoginDto, @Request() req) {
     const socialData = await this.service.getProfileByTokenGoogle(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('google', socialData),
+      this.service.validateSocialLogin('google', socialData, req.ip),
       'success',
     );
   }
 
   @Post('facebook/login')
   @HttpCode(HttpStatus.OK)
-  async loginFacebook(@Body() loginDto: AuthFacebookLoginDto) {
+  async loginFacebook(@Body() loginDto: AuthFacebookLoginDto, @Request() req) {
     const socialData = await this.service.getProfileByTokenFacebook(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('facebook', socialData),
+      this.service.validateSocialLogin('facebook', socialData, req.ip),
       'success',
     );
   }
 
   @Post('apple/login')
   @HttpCode(HttpStatus.OK)
-  async loginApple(@Body() loginDto: AuthAppleLoginDto) {
+  async loginApple(@Body() loginDto: AuthAppleLoginDto, @Request() req) {
     const socialData = await this.service.getProfileByTokenApple(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('apple', socialData),
+      this.service.validateSocialLogin('apple', socialData, req.ip),
       'success',
     );
   }
@@ -166,7 +166,7 @@ export class AuthController {
     @UploadedFile() photo?: BufferedFile,
   ) {
     return successResponse(
-      await this.service.update(request.user, userDto, photo),
+      await this.service.update(request.user, userDto, request.ip, photo),
       'success',
     );
   }
@@ -176,6 +176,9 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   public async delete(@Request() request) {
-    return successResponse(this.service.softDelete(request.user), 'success');
+    return successResponse(
+      this.service.softDelete(request.user, request.ip),
+      'success',
+    );
   }
 }

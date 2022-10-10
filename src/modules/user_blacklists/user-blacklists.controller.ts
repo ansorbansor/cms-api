@@ -12,6 +12,7 @@ import {
   HttpCode,
   UseInterceptors,
   UploadedFile,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -92,13 +93,14 @@ export class BlacklistController {
   async update(
     @Param('id') id: number,
     @Body() updateBlacklistUserDto: UpdateBlacklistUserDto,
+    @Request() req,
     @UploadedFile() photo?: BufferedFile,
   ) {
     const updateProfileDto = new UpdateUserDto();
     updateProfileDto.blacklist = updateBlacklistUserDto.blacklist;
 
     return successResponse(
-      await this.usersService.update(id, updateProfileDto, photo),
+      await this.usersService.update(id, updateProfileDto, req.ip, photo),
       'success',
     );
   }

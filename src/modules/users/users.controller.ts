@@ -118,10 +118,11 @@ export class UsersController {
   async update(
     @Param('id') id: number,
     @Body() updateProfileDto: UpdateUserDto,
+    @Request() req,
     @UploadedFile() photo?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.update(id, updateProfileDto, photo),
+      await this.usersService.update(id, updateProfileDto, req.ip, photo),
       'success',
     );
   }
@@ -130,8 +131,11 @@ export class UsersController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(UsersController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.usersService.softDelete(id), 'success');
+  async remove(@Param('id') id: number, @Request() req) {
+    return successResponse(
+      await this.usersService.softDelete(id, req.ip),
+      'success',
+    );
   }
 
   @Post('user/topics')

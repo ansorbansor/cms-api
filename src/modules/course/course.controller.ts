@@ -51,7 +51,12 @@ export class CourseController {
     @Request() request,
   ) {
     return successResponse(
-      await this.courseServices.create(createCourseDto, photo, request.user),
+      await this.courseServices.create(
+        createCourseDto,
+        photo,
+        request.user,
+        request.ip,
+      ),
       'success',
     );
   }

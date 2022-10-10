@@ -7,6 +7,7 @@ import { CourseController } from './course.controller';
 import { CourseService } from './course.service';
 import { UserLike } from 'src/entities/user-like.entity';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CourseLanguageTransaction } from 'src/entities/course-language-transact
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
+    ActivityLogModule,
   ],
   controllers: [CourseController],
   providers: [CourseService, RedisService],

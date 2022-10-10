@@ -27,6 +27,7 @@ import { CourseAdminResource } from './resources/course-admin.resources';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 import { UserCourse } from 'src/entities/user-course.entity';
 import { BulkUpdateCourseDto } from './dto/bulk-update-course.dto';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class CourseService {
@@ -40,12 +41,14 @@ export class CourseService {
 
     private redisService: RedisService,
     private fileService: FilesService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createCourseDto: CreateCourseDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, user.id);
@@ -86,6 +89,12 @@ export class CourseService {
           language_id: element,
         }),
       );
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Course ${createCourseDto.name}`,
+      ip: ip,
     });
 
     const redisKey = `${RedisKeyEnum.course}:`;

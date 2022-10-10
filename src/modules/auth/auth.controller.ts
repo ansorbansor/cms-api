@@ -122,11 +122,15 @@ export class AuthController {
 
   @Post('reset/password')
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto) {
+  async resetPassword(
+    @Body() resetPasswordDto: AuthResetPasswordDto,
+    @Request() req,
+  ) {
     return successResponse(
       this.service.resetPassword(
         resetPasswordDto.hash,
         resetPasswordDto.password,
+        req.ip,
       ),
       'success',
     );

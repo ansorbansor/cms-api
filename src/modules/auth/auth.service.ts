@@ -275,7 +275,11 @@ export class AuthService {
     });
   }
 
-  async resetPassword(hash: string, password: string): Promise<void> {
+  async resetPassword(
+    hash: string,
+    password: string,
+    ip: string,
+  ): Promise<void> {
     const forgot = await this.forgotService.findOne({
       where: {
         hash,
@@ -292,6 +296,13 @@ export class AuthService {
     const user = forgot.userData;
     user.password = password;
     await user.save();
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: 'Reset Password',
+      ip: ip,
+    });
+
     await this.forgotService.softDelete(forgot.id);
   }
 

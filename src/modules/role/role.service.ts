@@ -139,13 +139,22 @@ export class RoleService {
     return await this.findOne({ id: updateRoleDto.id });
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
     if (id == RoleEnum.superadmin) {
       throw failedResponse(
         HttpStatus.FORBIDDEN,
         'Superadmin tidak bisa dihapus',
       );
     }
+
+    const deletedData = await this.roleRepository.findOne({ id: id });
+
     await this.roleRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Peran Pengguna ${deletedData.name}`,
+      ip: ip,
+    });
   }
 }

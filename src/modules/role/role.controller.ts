@@ -99,7 +99,10 @@ export class RoleController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.roleService.softDelete(id), 'success');
+  async remove(@Param('id') id: number, @Request() req) {
+    return successResponse(
+      await this.roleService.softDelete(id, req.user, req.ip),
+      'success',
+    );
   }
 }

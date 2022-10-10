@@ -88,7 +88,7 @@ export class UsersService {
     });
 
     await this.activityLogService.create({
-      user_id: user.id,
+      user_id: user_id,
       description: `Tambah Pengguna ${user.email}`,
       ip: ip,
     });

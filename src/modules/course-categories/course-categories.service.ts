@@ -217,10 +217,17 @@ export class CourseCategoriesService {
     return await this.findOne({ id: updateCourseCategoryDto.id }, true);
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.category}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);
+    const deletedData = await this.categoryRepository.findOne({ id: id });
     await this.topicService.softDeleteByCategory(id);
     await this.categoryRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Kategori ${deletedData.name}`,
+      ip: ip,
+    });
   }
 }

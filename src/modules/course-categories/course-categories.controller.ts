@@ -127,9 +127,9 @@ export class CourseCategoriesController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseCategoriesController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
-      await this.categoryServices.softDelete(id),
+      await this.categoryServices.softDelete(id, req.user, req.ip),
       'success',
     );
   }

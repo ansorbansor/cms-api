@@ -124,7 +124,10 @@ export class CouponSubmissionService {
               status: CouponSubmissionStatus.PENDING,
             }),
           );
-          return successResponse(null, `Pengajuan kupon sedang dalam proses`);
+          return successResponse(
+            StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
+            `Pengajuan kupon sedang dalam proses`,
+          );
         } else {
           return successResponse(
             StartCourseResource(course, CourseUserStatus.REDIRECT),
@@ -139,7 +142,10 @@ export class CouponSubmissionService {
             status: CouponSubmissionStatus.PENDING,
           }),
         );
-        return successResponse(null, `Pengajuan kupon sedang dalam proses`);
+        return successResponse(
+          StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
+          `Pengajuan kupon sedang dalam proses`,
+        );
       }
     }
   }

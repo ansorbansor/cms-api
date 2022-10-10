@@ -99,7 +99,7 @@ export class CouponSubmissionService {
 
     if (pendingCouponSubmission) {
       return successResponse(
-        StartCourseResource(course, CourseUserStatus.REJECTED_VOUCHER),
+        StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
         `Anda memiliki pengajuan kupon yang sedang diproses. Mohon tunggu informasi selanjutnya.`,
       );
     } else {

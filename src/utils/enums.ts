@@ -78,8 +78,8 @@ export enum CouponSubmissionStatus {
 }
 
 export enum CourseUserStatus {
-  REDIRECT = 0,
-  PENDING_VOUCHER = 1,
+  REDIRECT = 1,
+  PENDING_VOUCHER = 0,
   REJECTED_VOUCHER = 2,
 }
 

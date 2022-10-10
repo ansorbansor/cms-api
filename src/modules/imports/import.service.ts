@@ -205,7 +205,7 @@ export class ImportService {
     }
   }
 
-  async importBlacklistUser(file: BufferedFile) {
+  async importBlacklistUser(file: BufferedFile, user: User, ip: string) {
     if (!file) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
@@ -276,6 +276,12 @@ export class ImportService {
             blacklist: user.blacklist,
           },
         );
+      });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Tambah ${saveData.length} Data User Blacklist`,
+        ip: ip,
       });
 
       return `Berhasil mengubah data blacklist ${saveData.length} data pengguna`;

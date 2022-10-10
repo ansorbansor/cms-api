@@ -52,10 +52,13 @@ export class ImportController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async importBlacklistUser(@UploadedFile() file: BufferedFile) {
+  async importBlacklistUser(
+    @UploadedFile() file: BufferedFile,
+    @Request() req,
+  ) {
     return successResponse(
       null,
-      await this.importService.importBlacklistUser(file),
+      await this.importService.importBlacklistUser(file, req.user, req.ip),
     );
   }
 

@@ -290,6 +290,37 @@ export class UsersService {
     return await this.findOne({ id: id });
   }
 
+  async updateBlacklist(id: number, blacklist: number, user: User, ip: string) {
+    const exists = await this.findOne({ id: id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'User tidak ditemukan',
+      );
+    }
+
+    await this.usersRepository.update(id, {
+      blacklist: blacklist,
+    });
+
+    if (blacklist == 1) {
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Tambah Blacklist User ${exists.email}`,
+        ip: ip,
+      });
+    } else {
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Buka Blacklist User ${exists.email}`,
+        ip: ip,
+      });
+    }
+
+    return await this.findOne({ id: id });
+  }
+
   async softDelete(id: number, ip: string): Promise<void> {
     const user = await this.findOne({ id: id });
 

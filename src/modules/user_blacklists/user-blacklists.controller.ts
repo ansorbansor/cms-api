@@ -11,7 +11,6 @@ import {
   HttpStatus,
   HttpCode,
   UseInterceptors,
-  UploadedFile,
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -21,7 +20,6 @@ import { UsersService } from 'src/modules/users/users.service';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { BufferedFile } from 'src/utils/file-helper';
 import { MenuPermission } from 'src/utils/enums';
 import { UpdateBlacklistUserDto } from './dto/update-blacklist-user.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
@@ -94,13 +92,17 @@ export class BlacklistController {
     @Param('id') id: number,
     @Body() updateBlacklistUserDto: UpdateBlacklistUserDto,
     @Request() req,
-    @UploadedFile() photo?: BufferedFile,
   ) {
     const updateProfileDto = new UpdateUserDto();
     updateProfileDto.blacklist = updateBlacklistUserDto.blacklist;
 
     return successResponse(
-      await this.usersService.update(id, updateProfileDto, req.ip, photo),
+      await this.usersService.updateBlacklist(
+        id,
+        updateProfileDto.blacklist,
+        req.user,
+        req.ip,
+      ),
       'success',
     );
   }

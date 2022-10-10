@@ -32,7 +32,7 @@ export enum RedisKeyEnum {
 }
 
 export enum MaxFileSize {
-  IMAGE = 200,
+  IMAGE = 2000,
   AUDIO = 3000,
   VIDEO = 200000,
   DOCUMENT = 1500,

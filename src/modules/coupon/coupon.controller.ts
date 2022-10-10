@@ -105,7 +105,10 @@ export class CouponController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CouponController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.couponServices.softDelete(id), 'success');
+  async remove(@Param('id') id: number, @Request() req) {
+    return successResponse(
+      await this.couponServices.softDelete(id, req.user, req.ip),
+      'success',
+    );
   }
 }

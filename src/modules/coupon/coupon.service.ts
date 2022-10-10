@@ -123,7 +123,15 @@ export class CouponService {
     return await this.findOne({ id: updateCouponDto.id });
   }
 
-  async softDelete(id: number): Promise<void> {
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
+    const deletedData = await this.couponRepository.findOne({ id: id });
+
     await this.couponRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Data Kupon ${deletedData.name}`,
+      ip: ip,
+    });
   }
 }

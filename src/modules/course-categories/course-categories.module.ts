@@ -6,6 +6,7 @@ import { CourseCategoriesController } from './course-categories.controller';
 import { CourseCategoriesService } from './course-categories.service';
 import { CourseCategory } from 'src/entities/course-category.entity';
 import { TopicsModule } from '../topics/topics.module';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TopicsModule } from '../topics/topics.module';
       useClass: RedisConfigService,
     }),
     TopicsModule,
+    ActivityLogModule,
   ],
   controllers: [CourseCategoriesController],
   providers: [CourseCategoriesService, RedisService],

@@ -54,6 +54,7 @@ export class CourseCategoriesController {
         createCourseCategoryDto,
         photo,
         request.user,
+        request.ip,
       ),
       'success',
     );

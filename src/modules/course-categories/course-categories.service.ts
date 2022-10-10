@@ -14,6 +14,7 @@ import { CourseCategory } from 'src/entities/course-category.entity';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateTopicDto } from '../topics/dto/create-topic.dto';
 import { TopicsService } from '../topics/topics.service';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class CourseCategoriesService {
@@ -23,12 +24,14 @@ export class CourseCategoriesService {
     private redisService: RedisService,
     private fileService: FilesService,
     private topicService: TopicsService,
+    private activityLogService: ActivityLogService,
   ) {}
 
   async create(
     createCourseCategoryDto: CreateCourseCategoryDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     if (!photo) {
       throw failedResponse(
@@ -59,6 +62,12 @@ export class CourseCategoriesService {
 
       await this.topicService.createBulk(topics);
     }
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Kategori ${createCourseCategoryDto.name}`,
+      ip: ip,
+    });
 
     return this.findOne({ id: category.id }, true);
   }

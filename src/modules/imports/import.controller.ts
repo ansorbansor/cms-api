@@ -66,10 +66,10 @@ export class ImportController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async importLevelUser(@UploadedFile() file: BufferedFile) {
+  async importLevelUser(@UploadedFile() file: BufferedFile, @Request() req) {
     return successResponse(
       null,
-      await this.importService.importLevelUser(file),
+      await this.importService.importLevelUser(file, req.user, req.ip),
     );
   }
 

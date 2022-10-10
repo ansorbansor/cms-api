@@ -282,7 +282,7 @@ export class ImportService {
     }
   }
 
-  async importLevelUser(file: BufferedFile) {
+  async importLevelUser(file: BufferedFile, user: User, ip: string) {
     if (!file) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
@@ -350,6 +350,12 @@ export class ImportService {
             level: user.level,
           },
         );
+      });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Update Level ${saveData.length} Pengguna`,
+        ip: ip,
       });
 
       return `Berhasil mengubah data level ${saveData.length} data pengguna`;

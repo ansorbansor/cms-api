@@ -67,7 +67,7 @@ export class CourseCategoriesService {
     paginationOptions: IPaginationOptions,
     withTopics?: boolean,
   ) {
-    const redisKey = `${RedisKeyEnum.category}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}`;
+    const redisKey = `${RedisKeyEnum.category}:-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-WithTopics${withTopics}`;
 
     const value = await this.redisService.get(
       redisKey,

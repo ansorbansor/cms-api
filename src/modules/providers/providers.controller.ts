@@ -124,6 +124,7 @@ export class ProvidersController {
         updateProviderDto,
         photo,
         request.user,
+        request.ip,
       ),
       'success',
     );

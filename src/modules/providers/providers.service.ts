@@ -47,7 +47,7 @@ export class ProvidersService {
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Tambah Penyelenggara ${createProviderDto.name}`,
+      description: `Tambah Data Penyelenggara ${createProviderDto.name}`,
       ip: ip,
     });
 
@@ -112,6 +112,7 @@ export class ProvidersService {
     updateProfileDto: UpdateProviderDto,
     photo: BufferedFile,
     user: User,
+    ip: string,
   ) {
     const exists = await this.findOne({ id: updateProfileDto.id });
 
@@ -129,6 +130,12 @@ export class ProvidersService {
 
     await this.providerRepository.update(updateProfileDto.id, {
       ...updateProfileDto,
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Data Penyelenggara ${updateProfileDto.name}`,
+      ip: ip,
     });
 
     this.redisService.del(`${RedisKeyEnum.provider}:${updateProfileDto.id}`);

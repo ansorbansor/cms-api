@@ -225,12 +225,22 @@ export class CouponSubmissionService {
       data.andWhere(`employeeLevel.id = ${paginationOptions.employeeLevel}`);
     }
 
-    if (paginationOptions.blacklist != null) {
-      data.andWhere(`user.blacklist = ${paginationOptions.blacklist ? 1 : 0}`);
+    if (
+      paginationOptions.blacklist != undefined &&
+      paginationOptions.blacklist != ''
+    ) {
+      data.andWhere(
+        `user.blacklist = ${paginationOptions.blacklist == 'true' ? 1 : 0}`,
+      );
     }
 
-    if (paginationOptions.status) {
-      data.andWhere(`couponSubmission.status = ${paginationOptions.status}`);
+    if (
+      paginationOptions.status_string != undefined &&
+      paginationOptions.status_string != ''
+    ) {
+      data.andWhere(
+        `couponSubmission.status = ${paginationOptions.status_string}`,
+      );
     }
 
     const total = await data.getCount();

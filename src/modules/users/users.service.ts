@@ -108,8 +108,13 @@ export class UsersService {
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .leftJoinAndSelect('userRole.roleData', 'role');
 
-    if (paginationOptions.blacklist != undefined) {
-      data.where(`user.blacklist = ${paginationOptions.blacklist ? 1 : 0}`);
+    if (
+      paginationOptions.blacklist != undefined &&
+      paginationOptions.blacklist != ''
+    ) {
+      data.where(
+        `user.blacklist = ${paginationOptions.blacklist == 'true' ? 1 : 0}`,
+      );
     }
 
     if (paginationOptions.search) {

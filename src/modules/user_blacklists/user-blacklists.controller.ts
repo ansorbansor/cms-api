@@ -55,7 +55,7 @@ export class BlacklistController {
         page,
         limit,
         total: 0,
-        blacklist: true,
+        blacklist: 'true',
         search: search,
         employeePosition: positionId,
         employeeUnit: unitId,

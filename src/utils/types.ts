@@ -35,7 +35,7 @@ export interface IPaginationOptions {
   user_id?: number;
   owned?: boolean;
   liked?: boolean;
-  blacklist?: boolean;
+  blacklist?: string;
   status?: number;
   status_bool?: boolean;
   status_string?: string;

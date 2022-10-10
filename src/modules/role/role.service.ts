@@ -9,6 +9,8 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { RoleAccess } from 'src/entities/role-access.entity';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleEnum } from 'src/utils/enums';
+import { ActivityLogService } from '../activity-log/activity-log.service';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class RoleService {
@@ -17,9 +19,11 @@ export class RoleService {
     private roleRepository: Repository<Role>,
     @InjectRepository(RoleAccess)
     private roleAccessRepository: Repository<RoleAccess>,
+
+    private activityLogService: ActivityLogService,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto) {
+  async create(createRoleDto: CreateRoleDto, user: User, ip: string) {
     const role = await this.roleRepository.save(
       this.roleRepository.create({
         ...createRoleDto,
@@ -36,6 +40,12 @@ export class RoleService {
           }),
         );
       });
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Tambah Peran Pengguna ${createRoleDto.name}`,
+      ip: ip,
     });
 
     return this.findOne({ id: role.id });
@@ -81,7 +91,7 @@ export class RoleService {
     return RoleResource(data);
   }
 
-  async update(updateRoleDto: UpdateRoleDto) {
+  async update(updateRoleDto: UpdateRoleDto, user: User, ip: string) {
     const exists = await this.findOne({ id: updateRoleDto.id });
 
     if (!exists) {
@@ -119,6 +129,12 @@ export class RoleService {
     });
 
     await this.roleAccessRepository.save(roleAccess);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Peran Pengguna ${updateRoleDto.name}`,
+      ip: ip,
+    });
 
     return await this.findOne({ id: updateRoleDto.id });
   }

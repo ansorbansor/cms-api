@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -37,9 +38,9 @@ export class RoleController {
   @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createRoleDto: CreateRoleDto) {
+  async create(@Body() createRoleDto: CreateRoleDto, @Request() req) {
     return successResponse(
-      await this.roleService.create(createRoleDto),
+      await this.roleService.create(createRoleDto, req.user, req.ip),
       'success',
     );
   }
@@ -87,9 +88,9 @@ export class RoleController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.OK)
-  async update(@Body() updateRoleDto: UpdateRoleDto) {
+  async update(@Body() updateRoleDto: UpdateRoleDto, @Request() req) {
     return successResponse(
-      await this.roleService.update(updateRoleDto),
+      await this.roleService.update(updateRoleDto, req.user, req.ip),
       'success',
     );
   }

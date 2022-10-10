@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { getManager, In, Repository } from 'typeorm';
+import { Brackets, getManager, In, Repository } from 'typeorm';
 import {
   failedResponse,
   infinityPagination,
@@ -155,6 +155,16 @@ export class CourseService {
     if (paginationOptions.search) {
       data.andWhere(
         `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+      );
+
+      data.andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          ).orWhere(
+            `LOWER(course.coach) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          );
+        }),
       );
     }
 

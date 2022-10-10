@@ -175,7 +175,7 @@ export class AuthService {
 
     if (user) {
       user.provider = authProvider;
-      await this.usersService.update(user.id, user, ip);
+      await this.usersService.update(user.id, user, user, ip);
     } else {
       throw failedResponse(HttpStatus.NOT_FOUND, 'Pengguna tidak ditemukan');
     }
@@ -372,7 +372,7 @@ export class AuthService {
       }
     }
 
-    await this.usersService.update(user.id, userDto, ip, photo);
+    await this.usersService.update(user.id, userDto, user, ip, photo);
 
     await this.usersService.createUserTopic(userDto.topics, user.id);
 
@@ -385,6 +385,6 @@ export class AuthService {
 
   async softDelete(user: User, ip: string): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
-    await this.usersService.softDelete(user.id, ip);
+    await this.usersService.softDelete(user.id, user, ip);
   }
 }

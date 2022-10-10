@@ -227,6 +227,7 @@ export class UsersService {
   async update(
     id: number,
     updateProfileDto: UpdateUserDto,
+    user: User,
     ip: string,
     photo?: BufferedFile,
   ) {
@@ -282,7 +283,7 @@ export class UsersService {
     }
 
     await this.activityLogService.create({
-      user_id: id,
+      user_id: user.id,
       description: `Update Data User ${savedData.email}`,
       ip: ip,
     });
@@ -321,14 +322,14 @@ export class UsersService {
     return await this.findOne({ id: id });
   }
 
-  async softDelete(id: number, ip: string): Promise<void> {
-    const user = await this.findOne({ id: id });
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
+    const deletedData = await this.findOne({ id: id });
 
     await this.usersRepository.softDelete(id);
 
     await this.activityLogService.create({
-      user_id: id,
-      description: `Hapus Data User ${user.email}`,
+      user_id: user.id,
+      description: `Hapus Data User ${deletedData.email}`,
       ip: ip,
     });
   }

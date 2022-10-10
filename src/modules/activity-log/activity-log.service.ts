@@ -46,6 +46,8 @@ export class ActivityLogService {
       });
     }
 
+    data.orderBy('acl.id', 'DESC');
+
     const total = await this.activityLogRepository.count();
     paginationOptions.total = total;
 

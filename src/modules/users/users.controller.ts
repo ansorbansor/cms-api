@@ -122,7 +122,13 @@ export class UsersController {
     @UploadedFile() photo?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.update(id, updateProfileDto, req.ip, photo),
+      await this.usersService.update(
+        id,
+        updateProfileDto,
+        req.user,
+        req.ip,
+        photo,
+      ),
       'success',
     );
   }
@@ -133,7 +139,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
-      await this.usersService.softDelete(id, req.ip),
+      await this.usersService.softDelete(id, req.user, req.ip),
       'success',
     );
   }

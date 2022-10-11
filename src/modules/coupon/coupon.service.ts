@@ -65,8 +65,11 @@ export class CouponService {
       data.andWhere(`provider.id = ${paginationOptions.provider_id}`);
     }
 
-    if (paginationOptions.status) {
-      data.andWhere(`coupon.status = ${paginationOptions.status}`);
+    if (
+      paginationOptions.status_string != undefined &&
+      paginationOptions.status_string != ''
+    ) {
+      data.andWhere(`coupon.status = ${paginationOptions.status_string}`);
     }
 
     const total = await data.getCount();

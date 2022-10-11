@@ -56,7 +56,7 @@ export class CouponController {
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
     @Query('provider_id') provider?: number,
-    @Query('status') status?: number,
+    @Query('status') status?: string,
   ) {
     if (limit > 50) {
       limit = 50;
@@ -71,7 +71,7 @@ export class CouponController {
         start_date: start_date,
         end_date: end_date,
         provider_id: provider,
-        status: status,
+        status_string: status,
       }),
       'success',
     );

@@ -31,7 +31,7 @@ export const CourseResource = (course: Course, userId?: number): any => {
       id: course.id,
       name: course.name,
       coach: course.coach,
-      duration: course.duration,
+      duration: course.lesson_hours,
       provider: course.provider
         ? {
             id: course.provider.id ? course.provider.id : null,

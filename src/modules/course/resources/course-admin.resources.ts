@@ -33,9 +33,9 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
         ? course.temporaryCourse.coach
         : null,
       duration: course.duration
-        ? course.duration
-        : course.temporaryCourse && course.temporaryCourse.duration
-        ? course.temporaryCourse.duration
+        ? course.lesson_hours
+        : course.temporaryCourse && course.temporaryCourse.lesson_hours
+        ? course.temporaryCourse.lesson_hours
         : null,
       provider: course.provider
         ? {

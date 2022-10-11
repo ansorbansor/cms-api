@@ -8,6 +8,9 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  Post,
+  Body,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,10 +19,11 @@ import { MenuPermission } from 'src/utils/enums';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { ActivityLogService } from './activity-log.service';
+import { CreateActivityLogDto } from './dto/create-activity-log.dto';
+import { OptionalJwtAuthGuard } from 'src/utils/custom-auth-guard';
 
 @ApiBearerAuth()
 @ApiTags('ActivityLogs')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller({
   path: 'acl',
   version: '1',
@@ -30,6 +34,7 @@ export class ActivityLogController {
   @Get()
   @Permissions(MenuPermission.READ)
   @Controllers(ActivityLogController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -60,10 +65,33 @@ export class ActivityLogController {
   @Get(':id')
   @Permissions(MenuPermission.READ)
   @Controllers(ActivityLogController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
       await this.activityLogService.findOne({ id: +id }),
+      'success',
+    );
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(OptionalJwtAuthGuard)
+  async create(
+    @Body() createActivityLogDto: CreateActivityLogDto,
+    @Request() req,
+  ) {
+    if (!req.user.id || req.user.id == undefined) {
+      return successResponse(null, 'success');
+    }
+
+    const createACL = new CreateActivityLogDto();
+    createACL.user_id = req.user.id;
+    createACL.ip = req.ip;
+    createACL.description = createActivityLogDto.description;
+
+    return successResponse(
+      await this.activityLogService.create(createACL),
       'success',
     );
   }

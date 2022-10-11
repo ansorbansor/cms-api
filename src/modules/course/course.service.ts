@@ -140,6 +140,10 @@ export class CourseService {
           status: paginationOptions.status_string == 'true' ? 1 : 0,
         });
       }
+    } else {
+      data.andWhere('course.status = :status', {
+        status: 1,
+      });
     }
 
     if (

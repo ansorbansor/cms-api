@@ -49,4 +49,5 @@ export interface IPaginationOptions {
   submission?: boolean;
   editor_choice?: boolean;
   type?: number;
+  source?: string;
 }

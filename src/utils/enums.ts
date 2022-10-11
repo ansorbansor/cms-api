@@ -29,6 +29,7 @@ export enum RedisKeyEnum {
   price = 'CoursePrice',
   banner = 'Banner',
   duration = 'Duration',
+  notification = 'Notification',
 }
 
 export enum MaxFileSize {
@@ -107,4 +108,14 @@ export enum SocialMediaUrl {
 export enum CourseScheduleType {
   TERJADWAL = 2,
   MANDIRI = 1,
+}
+
+export enum NotificationSource {
+  CMS = 2,
+  WEBSITE = 1,
+}
+
+export enum NotificationType {
+  COURSE = 1,
+  GENERAL = 0,
 }

@@ -38,7 +38,7 @@ export class CouponSubmissionService {
     private activityLogService: ActivityLogService,
   ) {}
 
-  async create(userId: number, courseId: number) {
+  async create(userId: number, courseId: number, ip: string) {
     const course = await this.courseRepository
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.provider', 'provider')
@@ -75,6 +75,12 @@ export class CouponSubmissionService {
           }),
         );
       }
+
+      await this.activityLogService.create({
+        user_id: userId,
+        description: `Mendaftar Course ${course.name}`,
+        ip: ip,
+      });
 
       return successResponse(
         StartCourseResource(course, CourseUserStatus.REDIRECT),
@@ -124,6 +130,13 @@ export class CouponSubmissionService {
               status: CouponSubmissionStatus.PENDING,
             }),
           );
+
+          await this.activityLogService.create({
+            user_id: userId,
+            description: `Mendaftar Course ${course.name}`,
+            ip: ip,
+          });
+
           return successResponse(
             StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
             `Pengajuan kupon sedang dalam proses`,
@@ -142,6 +155,13 @@ export class CouponSubmissionService {
             status: CouponSubmissionStatus.PENDING,
           }),
         );
+
+        await this.activityLogService.create({
+          user_id: userId,
+          description: `Mendaftar Course ${course.name}`,
+          ip: ip,
+        });
+
         return successResponse(
           StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
           `Pengajuan kupon sedang dalam proses`,

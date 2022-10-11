@@ -36,7 +36,11 @@ export class CouponSubmissionController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async create(@Query('course_id') courseId: number, @Request() req) {
-    return await this.couponSubmissionServices.create(req.user.id, courseId);
+    return await this.couponSubmissionServices.create(
+      req.user.id,
+      courseId,
+      req.ip,
+    );
   }
 
   @Get()

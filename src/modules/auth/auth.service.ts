@@ -64,6 +64,20 @@ export class AuthService {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'not found');
     }
 
+    if (
+      onlyAdmin &&
+      !user.userRoles.some(
+        (b) =>
+          b.roleData &&
+          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
+      )
+    ) {
+      throw failedResponse(
+        HttpStatus.FORBIDDEN,
+        'Akun tidak bisa mengakses CMS admin',
+      );
+    }
+
     if (authConfig().emailVerification && user.hash != null) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

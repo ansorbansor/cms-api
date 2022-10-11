@@ -214,7 +214,18 @@ export class CourseService {
     }
 
     if (paginationOptions.language) {
-      data.andWhere(`courseLanguage.id IN (${paginationOptions.language})`);
+      const subquery = this.courseLanguageTransactionRepository
+        .createQueryBuilder('lang')
+        .select(`\`lang\`.\`course_id\``, 'langCourse_id')
+        .where(`\`lang\`.\`language_id\` IN (${paginationOptions.language})`);
+
+      data.innerJoinAndSelect(
+        `(` + subquery.getQuery() + `)`,
+        `jointable`,
+        `\`course\`.\`id\` = \`jointable\`.\`langCourse_id\``,
+      );
+
+      // data.andWhere(`course.id IN (${paginationOptions.language})`);
     }
 
     if (paginationOptions.price) {

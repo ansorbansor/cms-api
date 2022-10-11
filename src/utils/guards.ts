@@ -1,6 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleEnum } from './enums';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -43,9 +42,14 @@ export class RolesGuard implements CanActivate {
       });
     };
 
-    if (request.user?.role.some((b) => RoleEnum.superadmin === b.id)) {
+    if (
+      request.user &&
+      request.user.role &&
+      request.user.role.some((b) => b.roleData && b.roleData.grant_all_access)
+    ) {
       return true;
-    } else if (controllers && permissions) {
+    }
+    if (controllers && permissions) {
       return canAccess(request.user.role);
     } else {
       return (

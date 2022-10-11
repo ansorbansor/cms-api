@@ -98,7 +98,7 @@ export class AuthService {
 
       await this.activityLogService.create({
         user_id: user.id,
-        description: 'Melakukan Login',
+        description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
         ip: ip,
       });
 

@@ -248,7 +248,11 @@ export class CourseController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {
-    return await this.courseServices.postLike(courseId, request.user);
+    return await this.courseServices.postLike(
+      courseId,
+      request.user,
+      request.ip,
+    );
   }
 
   @Get('course/schedule')

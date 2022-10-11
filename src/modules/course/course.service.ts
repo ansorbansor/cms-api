@@ -472,9 +472,10 @@ export class CourseService {
     });
   }
 
-  async postLike(courseId: number, user: User) {
+  async postLike(courseId: number, user: User, ip: string) {
     const data = await this.userLikeRepository.findOne({
       withDeleted: true,
+      relations: ['course'],
       where: {
         user_id: user.id,
         course_id: courseId,
@@ -486,11 +487,25 @@ export class CourseService {
         await this.userLikeRepository.update(data.id, {
           deleted_at: null,
         });
+
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: `Menyukai Course ${data.course.name}`,
+          ip: ip,
+        });
+
         const redisKey = `${RedisKeyEnum.course}:`;
         this.redisService.del(redisKey);
         return successResponse(null, 'Pelatihan berhasil disukai');
       } else {
         await this.userLikeRepository.softDelete(data.id);
+
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: `Batal Menyukai Course ${data.course.name}`,
+          ip: ip,
+        });
+
         const redisKey = `${RedisKeyEnum.course}:`;
         this.redisService.del(redisKey);
         return successResponse(null, 'Pelatihan tidak disukai');
@@ -502,6 +517,12 @@ export class CourseService {
           course_id: courseId,
         }),
       );
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Menyukai Course ${data.course.name}`,
+        ip: ip,
+      });
 
       const redisKey = `${RedisKeyEnum.course}:`;
       this.redisService.del(redisKey);

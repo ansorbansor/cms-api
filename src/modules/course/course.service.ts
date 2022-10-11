@@ -126,7 +126,8 @@ export class CourseService {
       .leftJoinAndSelect('courseLanguage.language', 'language')
       .leftJoinAndSelect('course.coursePrice', 'coursePrice')
       .leftJoinAndSelect('course.photoFile', 'photoFile')
-      .leftJoinAndSelect('course.userLike', 'userLike');
+      .leftJoinAndSelect('course.userLike', 'userLike')
+      .leftJoinAndSelect('course.userCourse', 'userCourse');
 
     if (paginationOptions.is_admin) {
       data.leftJoinAndSelect('course.temporaryCourse', 'temporaryCourse');
@@ -145,7 +146,6 @@ export class CourseService {
       paginationOptions.user_id &&
       (paginationOptions.owned || paginationOptions.is_admin)
     ) {
-      data.leftJoinAndSelect('course.userCourse', 'userCourse');
       if (paginationOptions.owned) {
         data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
       }
@@ -245,10 +245,6 @@ export class CourseService {
         }, 'count')
         .addOrderBy('count', 'DESC')
         .loadRelationCountAndMap('course.userCourseCount', 'course.userCourse');
-
-      if (!paginationOptions.owned) {
-        data.leftJoinAndSelect('course.userCourse', 'userCourse');
-      }
     } else {
       data.orderBy('course.created_at', 'DESC');
     }

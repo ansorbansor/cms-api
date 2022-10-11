@@ -9,6 +9,21 @@ export const AuthResource = (token: string, user: User): any => {
       name: role.roleData.name
     }
   });
+
+  const menuAccess = [];
+  user.userRoles.forEach((element) => {
+    if (element.roleData && element.roleData.roleAccess) {
+      element.roleData.roleAccess.forEach((menus) => {
+        if (menus.menu_id && !menuAccess.some((e) => e.id == menus.menu_id)) {
+          menuAccess.push({
+            id: menus.menu_id,
+            name: menus.menu.name,
+          });
+        }
+      });
+    }
+  });
+
   return {
     token: token,
     user: {
@@ -19,6 +34,7 @@ export const AuthResource = (token: string, user: User): any => {
       status: user.status,
       notification_token: user.notification_token,
       roles: mapRole,
-    }
+    },
+    menu_access: menuAccess,
   };
 };

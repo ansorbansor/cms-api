@@ -26,7 +26,7 @@ export interface IPaginationOptions {
   category?: number[];
   topic?: number[];
   level?: number[];
-  duration?: number[];
+  duration?: string[];
   language?: number[];
   price?: number[];
   schedule?: number[];

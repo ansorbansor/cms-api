@@ -104,7 +104,7 @@ export class CourseService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const redisKey = `${RedisKeyEnum.course}:-isAdmin${paginationOptions.is_admin}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.duration}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}-EditorChoice${paginationOptions.editor_choice}`;
+    const redisKey = `${RedisKeyEnum.course}:-isAdmin${paginationOptions.is_admin}-${RedisKeyEnum.user}${paginationOptions.user_id}-owned${paginationOptions.owned}-liked${paginationOptions.liked}-Page${paginationOptions.page}-Limit${paginationOptions.limit}-Search${paginationOptions.search}-${RedisKeyEnum.provider}${paginationOptions.provider}-${RedisKeyEnum.category}${paginationOptions.category}-${RedisKeyEnum.topic}${paginationOptions.topic}-${RedisKeyEnum.level}${paginationOptions.level}-${RedisKeyEnum.duration}${paginationOptions.duration}-${RedisKeyEnum.language}${paginationOptions.language}-${RedisKeyEnum.price}${paginationOptions.price}-Schedule${paginationOptions.schedule}-Rating${paginationOptions.rating}-Latest${paginationOptions.latest}-Popular${paginationOptions.popular}-Submission${paginationOptions.submission}-EditorChoice${paginationOptions.editor_choice}-Status${paginationOptions.status_string}`;
 
     const value = await this.redisService.get(
       redisKey,
@@ -206,7 +206,10 @@ export class CourseService {
       data.andWhere(`courseLevel.id IN (${paginationOptions.level})`);
     }
 
-    if (paginationOptions.duration) {
+    if (
+      paginationOptions.duration != undefined &&
+      paginationOptions.duration.length > 0
+    ) {
       const dur = await getManager().query(
         `SELECT MIN(minimum) as min, MAX(maximum) as max FROM course_durations WHERE id IN (${paginationOptions.duration})`,
       );

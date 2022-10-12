@@ -176,10 +176,6 @@ export class CourseService {
 
     if (paginationOptions.search) {
       data.andWhere(
-        `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-      );
-
-      data.andWhere(
         new Brackets((qb) => {
           qb.where(
             `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,

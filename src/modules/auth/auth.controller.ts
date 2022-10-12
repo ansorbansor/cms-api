@@ -58,7 +58,7 @@ export class AuthController {
     const socialData = await this.service.getProfileByTokenGoogle(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('google', socialData, req.ip),
+      await this.service.validateSocialLogin('google', socialData, req.ip),
       'success',
     );
   }

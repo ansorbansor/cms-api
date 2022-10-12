@@ -117,17 +117,17 @@ export class CourseService {
     }
 
     const data = this.courseRepository
-      .createQueryBuilder('course')
-      .leftJoinAndSelect('course.provider', 'provider')
-      .leftJoinAndSelect('course.courseCategory', 'category')
-      .leftJoinAndSelect('course.topic', 'topic')
-      .leftJoinAndSelect('course.courseLevel', 'courseLevel')
-      .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
+      .createQueryBuilder('courses')
+      .leftJoinAndSelect('courses.provider', 'provider')
+      .leftJoinAndSelect('courses.courseCategory', 'category')
+      .leftJoinAndSelect('courses.topic', 'topic')
+      .leftJoinAndSelect('courses.courseLevel', 'courseLevel')
+      .leftJoinAndSelect('courses.courseLanguage', 'courseLanguage')
       .leftJoinAndSelect('courseLanguage.language', 'language')
-      .leftJoinAndSelect('course.coursePrice', 'coursePrice')
-      .leftJoinAndSelect('course.photoFile', 'photoFile')
-      .leftJoinAndSelect('course.userLike', 'userLike')
-      .leftJoinAndSelect('course.userCourse', 'userCourse');
+      .leftJoinAndSelect('courses.coursePrice', 'coursePrice')
+      .leftJoinAndSelect('courses.photoFile', 'photoFile')
+      .leftJoinAndSelect('courses.userLike', 'userLike')
+      .leftJoinAndSelect('courses.userCourse', 'userCourse');
 
     if (paginationOptions.is_admin) {
       data.leftJoinAndSelect('course.temporaryCourse', 'temporaryCourse');
@@ -186,23 +186,53 @@ export class CourseService {
       );
     }
 
-    if (paginationOptions.provider) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.provider &&
+      paginationOptions.provider.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.provider_id IS NULL`);
+    } else if (paginationOptions.provider) {
       data.andWhere(`provider.id IN (${paginationOptions.provider})`);
     }
 
-    if (paginationOptions.category) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.category &&
+      paginationOptions.category.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.category_id IS NULL`);
+    } else if (paginationOptions.category) {
       data.andWhere(`category.id IN (${paginationOptions.category})`);
     }
 
-    if (paginationOptions.topic) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.topic &&
+      paginationOptions.topic.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.topic_id IS NULL`);
+    } else if (paginationOptions.topic) {
       data.andWhere(`topic.id IN (${paginationOptions.topic})`);
     }
 
-    if (paginationOptions.level) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.level &&
+      paginationOptions.level.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.level_id IS NULL`);
+    } else if (paginationOptions.level) {
       data.andWhere(`courseLevel.id IN (${paginationOptions.level})`);
     }
 
     if (
+      paginationOptions.is_admin &&
+      paginationOptions.duration &&
+      paginationOptions.duration.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.duration IS NULL`);
+    } else if (
       paginationOptions.duration != undefined &&
       paginationOptions.duration.length > 0
     ) {
@@ -216,7 +246,19 @@ export class CourseService {
       }
     }
 
-    if (paginationOptions.language) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.language &&
+      paginationOptions.language.find((e) => e == 'empty')
+    ) {
+      // const subquery = this.courseLanguageTransactionRepository
+      //   .createQueryBuilder('lang')
+      //   .select(`\`lang\`.\`course_id\``, 'langCourse_id');
+
+      // data.andWhere(`courseLanguage.id NOT IN (${subquery.getQuery()}`);
+
+      data.andWhere('courseLanguage.id IS NULL');
+    } else if (paginationOptions.language) {
       const subquery = this.courseLanguageTransactionRepository
         .createQueryBuilder('lang')
         .select(`\`lang\`.\`course_id\``, 'langCourse_id')
@@ -227,11 +269,15 @@ export class CourseService {
         `jointable`,
         `\`course\`.\`id\` = \`jointable\`.\`langCourse_id\``,
       );
-
-      // data.andWhere(`course.id IN (${paginationOptions.language})`);
     }
 
-    if (paginationOptions.price) {
+    if (
+      paginationOptions.is_admin &&
+      paginationOptions.price &&
+      paginationOptions.price.find((e) => e == 'empty')
+    ) {
+      data.andWhere(`course.price_id IS NULL`);
+    } else if (paginationOptions.price) {
       data.andWhere(`coursePrice.id IN (${paginationOptions.price})`);
     }
 
@@ -430,6 +476,40 @@ export class CourseService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { language_id, course_id, ...saveData } = updateCourseDto;
 
+    //multiple duration to adjust JP data
+    saveData.duration = saveData.duration * 40;
+
+    if (updateCourseDto.status == 1) {
+      const validateField = [];
+      Object.values(updateCourseDto).forEach((x, index) => {
+        if (x != null) {
+          validateField.push(Object.keys(updateCourseDto)[index]);
+        }
+      });
+
+      const checkData = await this.courseRepository
+        .createQueryBuilder('courses')
+        .leftJoinAndSelect('courses.provider', 'provider')
+        .leftJoinAndSelect('courses.courseCategory', 'category')
+        .leftJoinAndSelect('courses.topic', 'topic')
+        .leftJoinAndSelect('courses.courseLevel', 'courseLevel')
+        .leftJoinAndSelect('courses.courseLanguage', 'courseLanguage')
+        .leftJoinAndSelect('courses.coursePrice', 'coursePrice')
+        .where(`courses.id IN (${updateCourseDto.course_id})`)
+        .getMany();
+
+      const isNotValid = checkData.find(
+        (e) => e.isDataComplete(validateField) != null,
+      );
+
+      if (isNotValid != null) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          isNotValid.isDataComplete(validateField),
+        );
+      }
+    }
+
     await this.courseRepository.update(updateCourseDto.course_id, {
       ...saveData,
     });
@@ -531,8 +611,8 @@ export class CourseService {
 
   async courseSchedule() {
     const data = await this.courseRepository
-      .createQueryBuilder('course')
-      .where('course.status = 1')
+      .createQueryBuilder('courses')
+      .where('courses.status = 1')
       .getMany();
     return [
       {
@@ -550,8 +630,8 @@ export class CourseService {
 
   async courseRating() {
     const data = await this.courseRepository
-      .createQueryBuilder('course')
-      .where('course.status = 1')
+      .createQueryBuilder('courses')
+      .where('courses.status = 1')
       .getMany();
     return [
       {

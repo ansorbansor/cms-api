@@ -4,7 +4,6 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
-  IsNotEmpty,
   IsOptional,
   Validate,
 } from 'class-validator';
@@ -25,30 +24,30 @@ export class BulkUpdateCourseDto {
   course_id: number[];
 
   @ApiProperty({ example: 1, description: 'in minute' })
-  @IsNotEmpty()
+  @IsOptional()
   duration: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Validate(IsExist, ['CourseCategory', 'id'], {
     message: 'Kategori tidak tersedia',
   })
   category_id: number;
 
   @ApiProperty({ example: true })
-  @IsNotEmpty()
-  @Transform(({ value }) => (value === 'true' ? 1 : 0))
+  @IsOptional()
+  @Transform(({ value }) => (value == 'true' || value == true ? 1 : 0))
   status: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Validate(IsExist, ['Topic', 'id'], {
     message: 'Topik tidak tersedia',
   })
   topic_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Validate(IsExist, ['CourseLevel', 'id'], {
     message: 'Level tidak tersedia',
   })
@@ -74,7 +73,7 @@ export class BulkUpdateCourseDto {
   rating: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Validate(IsExist, ['CoursePrice', 'id'], {
     message: 'Jenis harga tidak tersedia',
   })

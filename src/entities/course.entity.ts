@@ -79,6 +79,57 @@ export class Course extends EntityHelper {
   @Column()
   photo: number;
 
+  isDataComplete(except: string[]) {
+    let thisVar = [
+      'provider_id',
+      'category_id',
+      'topic_id',
+      'level_id',
+      'duration',
+      'language_id',
+      'price_id',
+    ];
+
+    thisVar = thisVar.filter((e) => {
+      return !except.find((x) => e == x);
+    });
+
+    thisVar[thisVar.indexOf('language_id')] = 'courseLanguage';
+
+    for (const element of thisVar) {
+      if (
+        this[element] == null ||
+        (Array.isArray(this[element]) && this[element].length == 0)
+      ) {
+        switch (element) {
+          case 'provider_id': {
+            return 'Penyelenggara tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'category_id': {
+            return 'Kategori tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'topic_id': {
+            return 'Topik tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'level_id': {
+            return 'Level tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'duration': {
+            return 'Durasi tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'courseLanguage': {
+            return 'Bahasa tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+          case 'price_id': {
+            return 'Jenis harga tidak boleh kosong pada semua pembelajaran untuk mengaktifkan!';
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   lesson_hours = 0;
 
   @ManyToOne(() => Provider)

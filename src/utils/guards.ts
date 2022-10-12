@@ -51,10 +51,14 @@ export class RolesGuard implements CanActivate {
     }
     if (controllers && permissions) {
       return canAccess(request.user.role);
-    } else {
+    } else if (roles) {
       return (
         roles.filter((a) => request.user?.role.some((b) => a === b.id)).length >
         0
+      );
+    } else {
+      return (
+        request.user && request.user?.role && request.user?.role.length > 0
       );
     }
   }

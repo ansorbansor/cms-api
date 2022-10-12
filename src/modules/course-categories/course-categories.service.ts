@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
@@ -97,7 +97,13 @@ export class CourseCategoriesService {
 
     if (paginationOptions.search) {
       data.andWhere(
-        `LOWER(category.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(category.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          ).orWhere(
+            `LOWER(category.pkasn_program) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          );
+        }),
       );
     }
 

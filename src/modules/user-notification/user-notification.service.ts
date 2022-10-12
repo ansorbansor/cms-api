@@ -33,6 +33,27 @@ export class UserNotificationService {
     });
   }
 
+  async createBulk(createUserNotificationDtos: CreateUserNotificationDto[]) {
+    const saveData = [];
+    createUserNotificationDtos.forEach((element) => {
+      saveData.push(
+        this.userNotificationRepository.create({
+          ...element,
+        }),
+      );
+    });
+
+    const userNotifications = await this.userNotificationRepository.save(
+      saveData,
+    );
+
+    createUserNotificationDtos.forEach((element) => {
+      this.redisService.del(`${RedisKeyEnum.notification}:${element.user_id}`);
+    });
+
+    return userNotifications;
+  }
+
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const value = await this.redisService.get(
       `${RedisKeyEnum.notification}:${paginationOptions.user_id}`,

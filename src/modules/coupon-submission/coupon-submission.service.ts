@@ -12,6 +12,8 @@ import {
   CouponStatus,
   CouponSubmissionStatus,
   CourseUserStatus,
+  NotificationSource,
+  NotificationType,
 } from 'src/utils/enums';
 import { CouponSubmissionResource } from './resources/coupon-submission.resources';
 import { Course } from 'src/entities/course.entity';
@@ -22,6 +24,9 @@ import { Coupon } from 'src/entities/coupon.entity';
 import { MailService } from '../mail/mail.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
+import { UserNotificationService } from '../user-notification/user-notification.service';
+import { CouponSubmissionController } from './coupon-submission.controller';
+import { CreateUserNotificationDto } from '../user-notification/dto/create-user-notification.dto';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -34,11 +39,14 @@ export class CouponSubmissionService {
     private userCourseRepository: Repository<UserCourse>,
     @InjectRepository(Coupon)
     private couponRepository: Repository<Coupon>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private mailService: MailService,
     private activityLogService: ActivityLogService,
+    private userNotificationService: UserNotificationService,
   ) {}
 
-  async create(userId: number, courseId: number, ip: string) {
+  async create(user: User, courseId: number, ip: string) {
     const course = await this.courseRepository
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.provider', 'provider')
@@ -61,7 +69,7 @@ export class CouponSubmissionService {
     const data = await this.userCourseRepository.findOne({
       where: {
         course_id: courseId,
-        user_id: userId,
+        user_id: user.id,
       },
     });
 
@@ -69,7 +77,7 @@ export class CouponSubmissionService {
       if (!data) {
         await this.userCourseRepository.save(
           this.userCourseRepository.create({
-            user_id: userId,
+            user_id: user.id,
             course_id: courseId,
             progress: 50,
           }),
@@ -77,7 +85,7 @@ export class CouponSubmissionService {
       }
 
       await this.activityLogService.create({
-        user_id: userId,
+        user_id: user.id,
         description: `Mendaftar Course ${course.name}`,
         ip: ip,
       });
@@ -99,7 +107,7 @@ export class CouponSubmissionService {
       await this.couponSubmissionRepository.findOne({
         where: {
           status: CouponSubmissionStatus.PENDING,
-          user_id: userId,
+          user_id: user.id,
         },
       });
 
@@ -112,7 +120,7 @@ export class CouponSubmissionService {
       const couponSubmission = await this.couponSubmissionRepository.findOne({
         where: {
           course_id: courseId,
-          user_id: userId,
+          user_id: user.id,
         },
       });
 
@@ -125,17 +133,34 @@ export class CouponSubmissionService {
         } else if (couponSubmission.status == CouponSubmissionStatus.REJECTED) {
           await this.couponSubmissionRepository.save(
             this.couponSubmissionRepository.create({
-              user_id: userId,
+              user_id: user.id,
               course_id: courseId,
               status: CouponSubmissionStatus.PENDING,
             }),
           );
 
           await this.activityLogService.create({
-            user_id: userId,
+            user_id: user.id,
             description: `Mendaftar Course ${course.name}`,
             ip: ip,
           });
+
+          const userData = await this.userRepository.findOne({ id: user.id });
+
+          const users = await this.getUserAdmin();
+          const notifData = [];
+          users.forEach((element) => {
+            const notif = new CreateUserNotificationDto();
+            notif.user_id = element.id;
+            notif.title = 'Pengajuan Kupon';
+            notif.description = `${userData.name} (${userData.nip}) mengajukan kupon`;
+            notif.type = NotificationType.COURSE;
+            notif.source = NotificationSource.CMS;
+            notif.extra_data = String(courseId);
+            notifData.push(notif);
+          });
+
+          await this.userNotificationService.createBulk(notifData);
 
           return successResponse(
             StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
@@ -150,17 +175,33 @@ export class CouponSubmissionService {
       } else {
         await this.couponSubmissionRepository.save(
           this.couponSubmissionRepository.create({
-            user_id: userId,
+            user_id: user.id,
             course_id: courseId,
             status: CouponSubmissionStatus.PENDING,
           }),
         );
 
         await this.activityLogService.create({
-          user_id: userId,
+          user_id: user.id,
           description: `Mendaftar Course ${course.name}`,
           ip: ip,
         });
+
+        const userData = await this.userRepository.findOne({ id: user.id });
+        const users = await this.getUserAdmin();
+        const notifData = [];
+        users.forEach((element) => {
+          const notif = new CreateUserNotificationDto();
+          notif.user_id = element.id;
+          notif.title = 'Pengajuan Kupon';
+          notif.description = `${userData.name} (${userData.nip}) mengajukan kupon`;
+          notif.type = NotificationType.COURSE;
+          notif.source = NotificationSource.CMS;
+          notif.extra_data = String(courseId);
+          notifData.push(notif);
+        });
+
+        await this.userNotificationService.createBulk(notifData);
 
         return successResponse(
           StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
@@ -168,6 +209,22 @@ export class CouponSubmissionService {
         );
       }
     }
+  }
+
+  async getUserAdmin() {
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRoles')
+      .leftJoinAndSelect('userRoles.roleData', 'roleData')
+      .leftJoinAndSelect('roleData.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('roleAccess.menu', 'menu')
+      .where('menu.be_controller = :BEController', {
+        BEController: CouponSubmissionController.name,
+      })
+      .orWhere('roleData.grant_all_access = 1')
+      .getMany();
+
+    return users;
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
@@ -461,6 +518,16 @@ export class CouponSubmissionService {
         ip: ip,
       });
 
+      const notif = new CreateUserNotificationDto();
+      notif.user_id = exists.user_id;
+      notif.title = 'Pengajuan Kupon Berhasil';
+      notif.description = `Pengajuan kupon untuk pembelajaran ${exists.course.name} telah disetujui`;
+      notif.type = NotificationType.COURSE;
+      notif.source = NotificationSource.WEBSITE;
+      notif.extra_data = String(exists.course_id);
+
+      await this.userNotificationService.create(notif);
+
       return successResponse(null, `Pengajuan berhasil disetujui`);
     } else {
       await this.couponSubmissionRepository.update(submissionId, {
@@ -482,6 +549,16 @@ export class CouponSubmissionService {
         description: `Menolak Pengajuan Kupon ${exists.user.email}`,
         ip: ip,
       });
+
+      const notif = new CreateUserNotificationDto();
+      notif.user_id = exists.user_id;
+      notif.title = 'Pengajuan Kupon Gagal';
+      notif.description = `Pengajuan kupon untuk pembelajaran ${exists.course.name} ditolak. Alasan : ${reason}. Cek email anda untuk informasi lebih lanjut.`;
+      notif.type = NotificationType.COURSE;
+      notif.source = NotificationSource.WEBSITE;
+      notif.extra_data = String(exists.course_id);
+
+      await this.userNotificationService.create(notif);
 
       return successResponse(null, `Pengajuan telah ditolak`);
     }

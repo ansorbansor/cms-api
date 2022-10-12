@@ -48,7 +48,7 @@ export class ActivityLogService {
 
     data.orderBy('acl.id', 'DESC');
 
-    const total = await this.activityLogRepository.count();
+    const total = await data.getCount();
     paginationOptions.total = total;
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);

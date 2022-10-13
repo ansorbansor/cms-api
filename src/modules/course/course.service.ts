@@ -191,7 +191,7 @@ export class CourseService {
       paginationOptions.provider &&
       paginationOptions.provider.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.provider_id IS NULL`);
+      data.andWhere(`courses.provider_id IS NULL`);
     } else if (paginationOptions.provider) {
       data.andWhere(`provider.id IN (${paginationOptions.provider})`);
     }
@@ -201,7 +201,7 @@ export class CourseService {
       paginationOptions.category &&
       paginationOptions.category.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.category_id IS NULL`);
+      data.andWhere(`courses.category_id IS NULL`);
     } else if (paginationOptions.category) {
       data.andWhere(`category.id IN (${paginationOptions.category})`);
     }
@@ -211,7 +211,7 @@ export class CourseService {
       paginationOptions.topic &&
       paginationOptions.topic.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.topic_id IS NULL`);
+      data.andWhere(`courses.topic_id IS NULL`);
     } else if (paginationOptions.topic) {
       data.andWhere(`topic.id IN (${paginationOptions.topic})`);
     }
@@ -221,7 +221,7 @@ export class CourseService {
       paginationOptions.level &&
       paginationOptions.level.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.level_id IS NULL`);
+      data.andWhere(`courses.level_id IS NULL`);
     } else if (paginationOptions.level) {
       data.andWhere(`courseLevel.id IN (${paginationOptions.level})`);
     }
@@ -231,7 +231,7 @@ export class CourseService {
       paginationOptions.duration &&
       paginationOptions.duration.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.duration IS NULL`);
+      data.andWhere(`courses.duration IS NULL`);
     } else if (
       paginationOptions.duration != undefined &&
       paginationOptions.duration.length > 0
@@ -241,8 +241,8 @@ export class CourseService {
       );
 
       if (dur[0] && dur[0].min && dur[0].max) {
-        data.andWhere(`course.duration >= ${dur[0].min}`);
-        data.andWhere(`course.duration <= ${dur[0].max}`);
+        data.andWhere(`courses.duration >= ${dur[0].min}`);
+        data.andWhere(`courses.duration <= ${dur[0].max}`);
       }
     }
 
@@ -276,23 +276,23 @@ export class CourseService {
       paginationOptions.price &&
       paginationOptions.price.find((e) => e == 'empty')
     ) {
-      data.andWhere(`course.price_id IS NULL`);
+      data.andWhere(`courses.price_id IS NULL`);
     } else if (paginationOptions.price) {
       data.andWhere(`coursePrice.id IN (${paginationOptions.price})`);
     }
 
     if (paginationOptions.schedule) {
       if (paginationOptions.schedule.includes(CourseScheduleType.MANDIRI)) {
-        data.andWhere(`course.date_course IS NULL`);
+        data.andWhere(`courses.date_course IS NULL`);
       } else if (
         paginationOptions.schedule.includes(CourseScheduleType.TERJADWAL)
       ) {
-        data.andWhere(`course.date_course IS NOT NULL`);
+        data.andWhere(`courses.date_course IS NOT NULL`);
       }
     }
 
     if (paginationOptions.rating) {
-      data.andWhere(`course.rating IN (${paginationOptions.rating})`);
+      data.andWhere(`courses.rating IN (${paginationOptions.rating})`);
     }
 
     if (paginationOptions.popular) {

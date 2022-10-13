@@ -6,7 +6,7 @@ import { Course } from './course.entity';
 @Entity({ name: 'temporary_courses' })
 export class TemporaryCourse extends EntityHelper {
   @Column()
-  external_id: number;
+  external_id: string;
 
   @Column()
   name: string;

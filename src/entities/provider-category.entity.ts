@@ -10,7 +10,7 @@ export class ProviderCategory extends EntityHelper {
 
   @ApiProperty()
   @Column()
-  external_id?: number;
+  external_id?: string;
 
   @ApiProperty()
   @Column()

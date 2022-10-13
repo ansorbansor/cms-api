@@ -2,7 +2,7 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateTemporaryCourseDto {
   @IsNotEmpty()
-  external_id: number;
+  external_id: string;
 
   @IsOptional()
   name: string;

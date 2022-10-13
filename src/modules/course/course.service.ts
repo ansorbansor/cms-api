@@ -130,18 +130,18 @@ export class CourseService {
       .leftJoinAndSelect('courses.userCourse', 'userCourse');
 
     if (paginationOptions.is_admin) {
-      data.leftJoinAndSelect('course.temporaryCourse', 'temporaryCourse');
+      data.leftJoinAndSelect('courses.temporaryCourse', 'temporaryCourse');
 
       if (
         paginationOptions.status_string != undefined &&
         paginationOptions.status_string != ''
       ) {
-        data.andWhere('course.status = :status', {
+        data.andWhere('courses.status = :status', {
           status: paginationOptions.status_string == 'true' ? 1 : 0,
         });
       }
     } else {
-      data.andWhere('course.status = :status', {
+      data.andWhere('courses.status = :status', {
         status: 1,
       });
     }
@@ -160,7 +160,7 @@ export class CourseService {
     }
 
     if (paginationOptions.submission) {
-      data.leftJoinAndSelect('course.couponSubmission', 'couponSubmission');
+      data.leftJoinAndSelect('courses.couponSubmission', 'couponSubmission');
       data.andWhere('couponSubmission.user_id = :userId', {
         userId: paginationOptions.user_id,
       });
@@ -171,16 +171,16 @@ export class CourseService {
     }
 
     if (paginationOptions.editor_choice) {
-      data.innerJoin('course.editorChoiceCourse', 'editorChoiceCourse');
+      data.innerJoin('courses.editorChoiceCourse', 'editorChoiceCourse');
     }
 
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
           qb.where(
-            `LOWER(course.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            `LOWER(courses.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
           ).orWhere(
-            `LOWER(course.coach) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            `LOWER(courses.coach) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
           );
         }),
       );
@@ -304,9 +304,12 @@ export class CourseService {
             .where('uc.course_id = course.id');
         }, 'count')
         .addOrderBy('count', 'DESC')
-        .loadRelationCountAndMap('course.userCourseCount', 'course.userCourse');
+        .loadRelationCountAndMap(
+          'courses.userCourseCount',
+          'courses.userCourse',
+        );
     } else {
-      data.orderBy('course.created_at', 'DESC');
+      data.orderBy('courses.created_at', 'DESC');
     }
 
     const total = await data.getCount();

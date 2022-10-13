@@ -267,7 +267,7 @@ export class CourseService {
       data.innerJoinAndSelect(
         `(` + subquery.getQuery() + `)`,
         `jointable`,
-        `\`course\`.\`id\` = \`jointable\`.\`langCourse_id\``,
+        `\`courses\`.\`id\` = \`jointable\`.\`langCourse_id\``,
       );
     }
 

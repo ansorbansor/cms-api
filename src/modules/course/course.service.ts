@@ -301,7 +301,7 @@ export class CourseService {
           return subQuery
             .select('COUNT(uc.id)', 'count')
             .from(UserCourse, 'uc')
-            .where('uc.course_id = course.id');
+            .where('uc.course_id = courses.id');
         }, 'count')
         .addOrderBy('count', 'DESC')
         .loadRelationCountAndMap(

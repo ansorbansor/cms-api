@@ -72,7 +72,7 @@ export const FetchCourseResource = (
       url: data.slug ? `${coursePageUrl}${data.slug}` : null,
       coach:
         data.instructor && data.instructor.name ? data.instructor.name : '',
-      image: data.imageUrl ? data.imageURL : null,
+      image: data.imageURL ? data.imageURL : null,
       headline: null,
       description: data.description ? data.description : null,
       rating: data.rating && data.rating.average ? data.rating.average : 0,

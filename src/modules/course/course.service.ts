@@ -251,12 +251,6 @@ export class CourseService {
       paginationOptions.language &&
       paginationOptions.language.find((e) => e == 'empty')
     ) {
-      // const subquery = this.courseLanguageTransactionRepository
-      //   .createQueryBuilder('lang')
-      //   .select(`\`lang\`.\`course_id\``, 'langCourse_id');
-
-      // data.andWhere(`courseLanguage.id NOT IN (${subquery.getQuery()}`);
-
       data.andWhere('courseLanguage.id IS NULL');
     } else if (paginationOptions.language) {
       const subquery = this.courseLanguageTransactionRepository
@@ -423,6 +417,9 @@ export class CourseService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { language_id, ...saveData } = updateCourseDto;
+
+    //multiple duration to adjust JP data
+    saveData.duration = saveData.duration * 40;
 
     await this.courseRepository.update(updateCourseDto.id, {
       ...saveData,

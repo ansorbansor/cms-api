@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions } from 'src/utils/types';
 import { getManager, Repository } from 'typeorm';
-import { infinityPagination } from 'src/utils/responses';
+import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { EditorChoiceCourse } from 'src/entities/editor-choice-course.entity';
 import { CreateEditorChoiceCourseDto } from './dto/create-editor-choice-course.dto';
 import { User } from 'src/entities/user.entity';
@@ -22,6 +22,12 @@ export class EditorChoiceCourseService {
     user: User,
     ip: string,
   ) {
+    if (createEditorChoiceCourseDto.length > 10) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Course pilihan editor maksimal 10',
+      );
+    }
     await getManager().query(
       'UPDATE editor_choice_courses SET deleted_at = NOW()',
     );

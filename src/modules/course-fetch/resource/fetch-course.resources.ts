@@ -90,7 +90,7 @@ export const FetchCourseResource = (
         dataDetail.data &&
         dataDetail.data.courseTopic &&
         dataDetail.data.courseTopic.totalDuration
-          ? dataDetail.data.courseTopic.totalDuration
+          ? Math.round(dataDetail.data.courseTopic.totalDuration / 60)
           : 0,
       level: null,
       price: data.price && data.price.price ? data.price.price : 0,

@@ -89,13 +89,13 @@ export class CourseFetchService {
     //get url for get open course page
     const baseUrlCoursePage = setting.find(
       (e) => e.type == CourseFetchSettingType.BASE_URL_COURSE_PAGE,
-    ).value;
+    );
     //get fetch url for get course detail
     const baseUrlGetCourseDetail = setting.find(
       (e) => e.type == CourseFetchSettingType.BASE_URL_GET_COURSE_DETAIL,
-    ).value;
+    );
 
-    if (!baseUrlGetCourse) {
+    if (!baseUrlGetCourse || !baseUrlCoursePage) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Base URL tidak ditemukan!');
     }
 
@@ -221,7 +221,7 @@ export class CourseFetchService {
               return FetchCourseResource(
                 data,
                 categoryItem.providerData.name,
-                baseUrlCoursePage,
+                baseUrlCoursePage.value,
                 null,
               );
             })
@@ -231,14 +231,14 @@ export class CourseFetchService {
           ? await Promise.all(
               data.data.courses.map(async (data) => {
                 const fetchData = await fetch(
-                  `${baseUrlGetCourseDetail}?courseSerial=${data.serial}`,
+                  `${baseUrlGetCourseDetail.value}?courseSerial=${data.serial}`,
                 );
                 const dataDetail = await fetchData.json();
 
                 return FetchCourseResource(
                   data,
                   categoryItem.providerData.name,
-                  baseUrlCoursePage,
+                  baseUrlCoursePage.value,
                   dataDetail,
                 );
               }),

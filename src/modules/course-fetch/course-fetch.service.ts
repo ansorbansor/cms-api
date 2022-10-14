@@ -255,12 +255,7 @@ export class CourseFetchService {
             post.external_id = data.id;
             post.name = data.title;
             post.coach = data.coach;
-            post.duration = data.duration
-              ? typeof data.duration === 'string' ||
-                data.duration instanceof String
-                ? data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60
-                : data.duration * 60
-              : 0;
+            post.duration = data.duration;
             post.provider_id = providerId;
             post.category = data.category.name;
             post.topic = data.topic.name;
@@ -346,12 +341,7 @@ export class CourseFetchService {
             post.external_id = data.id;
             post.name = data.title;
             post.coach = data.coach;
-            post.duration = data.duration
-              ? typeof data.duration === 'string' ||
-                data.duration instanceof String
-                ? data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60
-                : data.duration * 60
-              : 0;
+            post.duration = data.duration;
             post.provider_id = providerId;
             post.category_id = findCategory ? findCategory.id : null;
             post.topic_id = findTopic ? findTopic.id : null;

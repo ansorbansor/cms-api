@@ -28,7 +28,12 @@ export const FetchCourseResource = (
       num_reviews: data.num_reviews ? data.num_reviews : 0,
       language: data.locale && data.locale.title ? data.locale.title : null,
       curriculum: data.objectives_summary ? data.objectives_summary : null,
-      duration: data.content_info_short ? data.content_info_short : 0,
+      duration:
+        typeof data.content_info_short === 'string' ||
+        data.content_info_short instanceof String
+          ? data.content_info_short.replace(',', '.').replace(/[^0-9.]/g, '') *
+            60
+          : data.content_info_short * 60,
       level: data.instructional_level_simple
         ? data.instructional_level_simple
         : null,

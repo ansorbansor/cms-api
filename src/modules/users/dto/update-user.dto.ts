@@ -48,6 +48,7 @@ export class UpdateUserDto {
 
   @ApiProperty({ default: true })
   @IsOptional()
+  @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status?: number;
 
   @ApiProperty({

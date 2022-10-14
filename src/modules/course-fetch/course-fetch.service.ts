@@ -148,14 +148,8 @@ export class CourseFetchService {
         credentials: 'include',
         agent: httpsAgent,
       });
-      console.log(response.headers);
-      console.log('===============================');
-      console.log(response);
-      let data = await response.json();
-      console.log('===============================');
-      console.log(data);
 
-      return data;
+      let data = await response.json();
 
       const totalItemCount = data.unit.pagination.total_item_count;
 

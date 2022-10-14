@@ -160,7 +160,7 @@ export class CourseFetchService {
           .toLocaleLowerCase()
           .includes('skill academy')
       ) {
-        url = `${baseUrlGetCourse.value}?page=${page}&pageSize=1&serials=${categoryItem.external_id}`;
+        url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
       }
 
       const httpsAgent = new https.Agent({
@@ -205,7 +205,7 @@ export class CourseFetchService {
             .toLocaleLowerCase()
             .includes('skill academy')
         ) {
-          url = `${baseUrlGetCourse.value}?page=${page}&pageSize=1&serials=${categoryItem.external_id}`;
+          url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
         }
 
         response = await fetch(url, {

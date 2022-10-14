@@ -5,7 +5,7 @@ import { ProviderCategory } from 'src/entities/provider-category.entity';
 import fetch from 'node-fetch';
 import * as https from 'https';
 import { CourseFetchSetting } from 'src/entities/course-fetch-setting.entity';
-import { FetchUdemyResource } from './resource/fetch-udemy.resources';
+import { FetchCourseResource } from './resource/fetch-course.resources';
 import { failedResponse, successResponse } from 'src/utils/responses';
 import { CreateTemporaryCourseDto } from './dto/create-temporary-course.dto';
 import { TemporaryCourse } from 'src/entities/temporary-course.entity';
@@ -19,10 +19,11 @@ import { CourseLanguage } from 'src/entities/course-language.entity';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 import { Course } from 'src/entities/course.entity';
 import { FilesService } from '../files/files.service';
-import { CoursePriceType } from 'src/utils/enums';
+import { CourseFetchSettingType, CoursePriceType } from 'src/utils/enums';
 import { getFileExtension } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { Provider } from 'src/entities/provider.entity';
+import courseFetchConfig from 'src/config/course-fetch.config';
 
 @Injectable()
 export class CourseFetchService {
@@ -57,6 +58,7 @@ export class CourseFetchService {
     //get provider categories
     const providerCategories = await this.providerCategoryRepository
       .createQueryBuilder('providerCategory')
+      .leftJoinAndSelect('providerCategory.providerData', 'providerData')
       .where('providerCategory.provider_id = :id', { id: providerId })
       .getMany();
 
@@ -82,8 +84,16 @@ export class CourseFetchService {
 
     //get fetch url for get course
     const baseUrlGetCourse = setting.find(
-      (e) => e.type == 'base-url-get-course',
+      (e) => e.type == CourseFetchSettingType.BASE_URL_GET_COURSE,
     );
+    //get url for get open course page
+    const baseUrlCoursePage = setting.find(
+      (e) => e.type == CourseFetchSettingType.BASE_URL_COURSE_PAGE,
+    ).value;
+    //get fetch url for get course detail
+    const baseUrlGetCourseDetail = setting.find(
+      (e) => e.type == CourseFetchSettingType.BASE_URL_GET_COURSE_DETAIL,
+    ).value;
 
     if (!baseUrlGetCourse) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Base URL tidak ditemukan!');
@@ -126,20 +136,33 @@ export class CourseFetchService {
 
       //max from udemy 60
       const limit = 50;
+      let url = baseUrlGetCourse.value;
+      let headers;
 
-      //get limit item fetch
-      let url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
-      &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
-      const headers = {
-        Authorization:
-          'Basic RmVVcUl2UWI5QkxJZmZXN1ZtOVZORWVvZmtXWHNQWmpZVjU4VU9VcTo2Ym1ROTJpRnJpQUtRdkRYRWI0SUt0cGhMcU0wZGlHOHFSQVlNdHYxcE4yOU1BaUdDY1R3akNzQ2hQb0RFUkkxWkdlWTVJM2s1UEN6VThBTXRFeThhM0pVUmVCRXZmUnZ0eUtrZjllbnMxZTJsUmJacUdOeGdFZ0drcE94NGNsNw==',
-        Accept: 'application/json, text/plain, */*',
-        'Content-Type': 'application/json;charset=utf-8',
-        'X-Udemy-Client-Id': 'FeUqIvQb9BLIffW7Vm9VNEeofkWXsPZjYV58UOUq',
-        'X-Udemy-Client-Secret':
-          '6bmQ92iFriAKQvDXEb4IKtphLqM0diG8qRAYMtv1pN29MAiGCcTwjCsChPoDERI1ZGeY5I3k5PCzU8AMtEy8a3JUReBEvfRvtyKkf9ens1e2lRbZqGNxgEgGkpOx4cl7',
-        'X-Requested-With': 'XMLHttpRequest',
-      };
+      if (
+        categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
+      ) {
+        //get limit item fetch
+        url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
+        &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
+        headers = {
+          Authorization: `Basic ${btoa(
+            courseFetchConfig().udemyClientId,
+          )}:${btoa(courseFetchConfig().udemyClientSecret)}`,
+          Accept: 'application/json, text/plain, */*',
+          'Content-Type': 'application/json;charset=utf-8',
+          'X-Udemy-Client-Id': courseFetchConfig().udemyClientId,
+          'X-Udemy-Client-Secret': courseFetchConfig().udemyClientSecret,
+          'X-Requested-With': 'XMLHttpRequest',
+        };
+      } else if (
+        categoryItem.providerData.name
+          .toLocaleLowerCase()
+          .includes('skill academy')
+      ) {
+        url = `${baseUrlGetCourse.value}?page=${page}&pageSize=1&serials=${categoryItem.external_id}`;
+      }
+
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
       });
@@ -151,7 +174,18 @@ export class CourseFetchService {
 
       let data = await response.json();
 
-      const totalItemCount = data.unit.pagination.total_item_count;
+      let totalItemCount = 0;
+      if (
+        categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
+      ) {
+        totalItemCount = data.unit.pagination.total_item_count;
+      } else if (
+        categoryItem.providerData.name
+          .toLocaleLowerCase()
+          .includes('skill academy')
+      ) {
+        totalItemCount = data.data.totalItems;
+      }
 
       while (itemCount < totalItemCount) {
         //get existing external id
@@ -161,8 +195,18 @@ export class CourseFetchService {
           .getMany();
 
         //start fetching
-        url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
-        &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
+        if (
+          categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
+        ) {
+          url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
+          &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
+        } else if (
+          categoryItem.providerData.name
+            .toLocaleLowerCase()
+            .includes('skill academy')
+        ) {
+          url = `${baseUrlGetCourse.value}?page=${page}&pageSize=1&serials=${categoryItem.external_id}`;
+        }
 
         response = await fetch(url, {
           headers: headers,
@@ -170,9 +214,36 @@ export class CourseFetchService {
         });
         data = await response.json();
 
-        const returnedData = data.unit.items.map((data) => {
-          return FetchUdemyResource(data);
-        });
+        const returnedData = categoryItem.providerData.name
+          .toLocaleLowerCase()
+          .includes('udemy')
+          ? data.unit.items.map((data) => {
+              return FetchCourseResource(
+                data,
+                categoryItem.providerData.name,
+                baseUrlCoursePage,
+                null,
+              );
+            })
+          : categoryItem.providerData.name
+              .toLocaleLowerCase()
+              .includes('skill academy')
+          ? await Promise.all(
+              data.data.courses.map(async (data) => {
+                const fetchData = await fetch(
+                  `${baseUrlGetCourseDetail}?courseSerial=${data.serial}`,
+                );
+                const dataDetail = await fetchData.json();
+
+                return FetchCourseResource(
+                  data,
+                  categoryItem.providerData.name,
+                  baseUrlCoursePage,
+                  dataDetail,
+                );
+              }),
+            )
+          : null;
 
         itemCount += returnedData.length;
 
@@ -185,7 +256,10 @@ export class CourseFetchService {
             post.name = data.title;
             post.coach = data.coach;
             post.duration = data.duration
-              ? data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60
+              ? typeof data.duration === 'string' ||
+                data.duration instanceof String
+                ? data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60
+                : data.duration * 60
               : 0;
             post.provider_id = providerId;
             post.category = data.category.name;
@@ -197,7 +271,7 @@ export class CourseFetchService {
             post.url = data.url;
             post.price = data.price;
             post.freemium_code = null;
-            post.photo = data.image;
+            post.photo = data.image ? data.image : null;
             post.language = data.language;
             post.rating_count = data.rating_count;
             mapDataTemporary.push(post);
@@ -254,23 +328,30 @@ export class CourseFetchService {
                 )
               : null;
             //get file image
-            const fileExt = getFileExtension(data.image);
-            const res = await fetch(data.image);
-            const resBuffer = await res.buffer();
+            let img = null;
+            if (data.image) {
+              const fileExt = getFileExtension(data.image);
+              const res = await fetch(data.image);
+              const resBuffer = await res.buffer();
 
-            //save get image
-            const img = await this.fileService.uploadWithMinioBuffer(
-              resBuffer,
-              userId,
-              `${data.id}.${fileExt}`,
-            );
+              //save get image
+              img = await this.fileService.uploadWithMinioBuffer(
+                resBuffer,
+                userId,
+                `${data.id}.${fileExt}`,
+              );
+            }
 
             const post = new CreateCourseDto();
             post.external_id = data.id;
             post.name = data.title;
             post.coach = data.coach;
-            post.duration =
-              data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60;
+            post.duration = data.duration
+              ? typeof data.duration === 'string' ||
+                data.duration instanceof String
+                ? data.duration.replace(',', '.').replace(/[^0-9.]/g, '') * 60
+                : data.duration * 60
+              : 0;
             post.provider_id = providerId;
             post.category_id = findCategory ? findCategory.id : null;
             post.topic_id = findTopic ? findTopic.id : null;
@@ -285,7 +366,7 @@ export class CourseFetchService {
                 : CoursePriceType.FREE;
             post.price = data.price;
             post.freemium_code = null;
-            post.photo = img.id;
+            post.photo = img && img.id ? img.id : null;
             post.rating_count = data.rating_count;
             mapDataCourse.push(post);
 
@@ -301,6 +382,20 @@ export class CourseFetchService {
         if (mapDataTemporary.length > 0) {
           //save to temporary course
           await this.temporaryCourseRepository.save(mapDataTemporary);
+        }
+
+        //get last page
+        let lastPage = 0;
+        if (
+          categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
+        ) {
+          lastPage = data.unit.pagination.current_page + 1;
+        } else if (
+          categoryItem.providerData.name
+            .toLocaleLowerCase()
+            .includes('skill academy')
+        ) {
+          lastPage = data.data.totalPage;
         }
 
         if (mapDataCourse.length > 0) {
@@ -329,7 +424,7 @@ export class CourseFetchService {
           const saveHistoryFetch = new CreateCourseFetchHistoryDto();
           saveHistoryFetch.provider_id = providerId;
           saveHistoryFetch.first_page = page;
-          saveHistoryFetch.last_page = data.unit.pagination.current_page + 1;
+          saveHistoryFetch.last_page = lastPage;
           saveHistoryFetch.limit = limit;
           saveHistoryFetch.item_count = itemCount;
           saveHistoryFetch.total_item_count = totalItemCount;
@@ -343,7 +438,7 @@ export class CourseFetchService {
           );
         }
 
-        page = data.unit.pagination.current_page + 1;
+        page = lastPage;
       }
     }
 

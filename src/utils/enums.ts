@@ -119,3 +119,9 @@ export enum NotificationType {
   COURSE = 1,
   GENERAL = 0,
 }
+
+export enum CourseFetchSettingType {
+  BASE_URL_GET_COURSE = 'base-url-get-course',
+  BASE_URL_GET_COURSE_DETAIL = 'base-url-get-course-detail',
+  BASE_URL_COURSE_PAGE = 'base-url-course-page',
+}

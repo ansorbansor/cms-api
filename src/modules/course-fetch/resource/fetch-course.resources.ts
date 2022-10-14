@@ -69,7 +69,7 @@ export const FetchCourseResource = (
     return {
       id: data.serial ? data.serial : null,
       title: data.name ? data.name : null,
-      url: data.slug ? `${coursePageUrl}/${data.slug}` : null,
+      url: data.slug ? `${coursePageUrl}${data.slug}` : null,
       coach:
         data.instructor && data.instructor.name ? data.instructor.name : '',
       image: data.imageUrl ? data.imageURL : null,

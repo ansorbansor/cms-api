@@ -185,7 +185,7 @@ export class AuthService {
   ): Promise<{ token: string; user: User }> {
     const socialEmail = socialData.email?.toLowerCase();
 
-    const user = await this.usersService.findOne({
+    const user = await this.usersService.findOneFull({
       email: socialEmail,
     });
 

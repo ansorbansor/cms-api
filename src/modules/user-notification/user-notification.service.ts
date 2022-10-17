@@ -81,16 +81,18 @@ export class UserNotificationService {
 
     const getData = await data.getMany();
 
-    this.redisService.set(
-      `${RedisKeyEnum.notification}:${paginationOptions.user_id}`,
-      getData,
-    );
-
-    return infinityPagination(
+    const returnedData = infinityPagination(
       getData,
       UserNotificationResource,
       paginationOptions,
     );
+
+    this.redisService.set(
+      `${RedisKeyEnum.notification}:${paginationOptions.user_id}`,
+      returnedData,
+    );
+
+    return returnedData;
   }
 
   async read(id: number, userId: number) {

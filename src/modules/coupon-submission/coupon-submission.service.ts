@@ -258,7 +258,7 @@ export class CouponSubmissionService {
       .addSelect('user.name', 'user_name')
       .addSelect('course.price', 'course_price')
       .addSelect('employeePosition.name', 'user_position')
-      .addSelect('employeeLevel.name', 'user_level')
+      .addSelect('user.level', 'user_level')
       .addSelect('user.blacklist', 'user_blacklist')
       .addSelect(
         '`couponSubmissionTotal`.total_submissions',
@@ -309,7 +309,7 @@ export class CouponSubmissionService {
     }
 
     if (paginationOptions.employeeLevel) {
-      data.andWhere(`employeeLevel.id = ${paginationOptions.employeeLevel}`);
+      data.andWhere(`user.level = ${paginationOptions.employeeLevel}`);
     }
 
     if (

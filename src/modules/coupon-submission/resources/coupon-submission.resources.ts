@@ -11,7 +11,7 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
       position: couponSubmission.user_position
         ? couponSubmission.user_position
         : null,
-      level: couponSubmission.user_level ? couponSubmission.user_level : null,
+      level: couponSubmission.user_level ? couponSubmission.user_level : 0,
       blacklist: couponSubmission.user_blacklist,
     },
     price: couponSubmission.course_price,

@@ -27,6 +27,7 @@ export class UpdateCourseDto {
 
   @ApiProperty({ example: 1, description: 'in minute' })
   @IsNotEmpty()
+  @Transform(({ value }) => value * 40)
   duration: number;
 
   @ApiProperty({ example: 1 })

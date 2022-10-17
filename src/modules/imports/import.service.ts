@@ -105,6 +105,7 @@ export class ImportService {
               provider: 'email',
               level: currRow.getCell(10).text,
               password: randomStringGenerator(),
+              generatePassword: true,
             });
           }
         });

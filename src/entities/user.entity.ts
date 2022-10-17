@@ -39,6 +39,8 @@ export class User extends EntityHelper {
 
   public previousPassword: string;
 
+  public generatePassword?: boolean;
+
   @AfterLoad()
   public loadPreviousPassword(): void {
     this.previousPassword = this.password;
@@ -47,10 +49,10 @@ export class User extends EntityHelper {
   @BeforeInsert()
   @BeforeUpdate()
   async setPassword() {
-    if (this.previousPassword !== this.password && this.password) {
+    if (this.previousPassword !== this.password) {
       const salt = await bcrypt.genSalt();
       this.password = await bcrypt.hash(this.password, salt);
-    } else {
+    } else if (this.generatePassword) {
       const salt = await bcrypt.genSalt();
       this.password = await bcrypt.hash(randomStringGenerator(), salt);
     }

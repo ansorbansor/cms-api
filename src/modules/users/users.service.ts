@@ -271,6 +271,15 @@ export class UsersService {
       }
     }
 
+    if (
+      updateProfileDto.password == '' ||
+      updateProfileDto.password == undefined
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...saveData } = updateProfileDto;
+      updateProfileDto = saveData;
+    }
+
     if (photo) {
       const img = await this.fileService.uploadWithMinio(photo, id);
       updateProfileDto.photo = img.id;

@@ -3,7 +3,6 @@ import {
   IsArray,
   IsEmail,
   IsOptional,
-  MinLength,
   Validate,
   ValidateNested,
 } from 'class-validator';
@@ -29,7 +28,6 @@ export class UpdateUserDto {
   email?: string | null;
 
   @ApiProperty({ example: 'Password9' })
-  @MinLength(6)
   @IsOptional()
   password?: string;
 

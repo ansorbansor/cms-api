@@ -45,7 +45,7 @@ export class UserNotificationController {
     );
   }
 
-  @Post()
+  @Post('token')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async postUserNotificationToken(

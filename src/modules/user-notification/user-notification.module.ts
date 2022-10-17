@@ -5,10 +5,11 @@ import { RedisConfigService } from 'src/config/redis-config.service';
 import { UserNotification } from 'src/entities/user-notification.entity';
 import { UserNotificationController } from './user-notification.controller';
 import { UserNotificationService } from './user-notification.service';
+import { User } from 'src/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserNotification]),
+    TypeOrmModule.forFeature([UserNotification, User]),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),

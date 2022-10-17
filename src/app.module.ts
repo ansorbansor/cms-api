@@ -40,6 +40,7 @@ import { MenuModule } from './modules/menu/menu.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { RoleModule } from './modules/role/role.module';
 import { TopicsModule } from './modules/topics/topics.module';
+import { FirebaseModule } from './modules/user-notification/firebase.module';
 import { UserNotificationModule } from './modules/user-notification/user-notification.module';
 import { UsersModule } from './modules/users/users.module';
 import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.module';
@@ -85,6 +86,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
       inject: [ConfigService],
       resolvers: [new HeaderResolver(['x-custom-lang'])],
     }),
+    FirebaseModule,
     UsersModule,
     FilesModule,
     AuthModule,

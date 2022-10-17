@@ -20,6 +20,7 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 import { UserNotificationService } from './user-notification.service';
 import { CreateUserNotificationDto } from './dto/create-user-notification.dto';
 import { UserNotificationResource } from './resources/user-notification.resources';
+import { UpdateUserNotificationTokenDto } from './dto/update-user-notification-token.dto';
 
 @ApiBearerAuth()
 @ApiTags('User Notification')
@@ -42,6 +43,20 @@ export class UserNotificationController {
       ),
       'success',
     );
+  }
+
+  @Post()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async postUserNotificationToken(
+    @Body() updateUserNotificationTokenDto: UpdateUserNotificationTokenDto,
+    @Request() req,
+  ) {
+    await this.userNotificationService.postToken(
+      req.user.id,
+      updateUserNotificationTokenDto,
+    );
+    return successResponse(null, 'success');
   }
 
   @Get()

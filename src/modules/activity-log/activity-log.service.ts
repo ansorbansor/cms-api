@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLog } from 'src/entities/activity-log.entity';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
@@ -31,7 +31,17 @@ export class ActivityLogService {
 
     if (paginationOptions.search) {
       data.andWhere(
-        `LOWER(acl.description) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(acl.description) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          )
+            .orWhere(
+              `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            )
+            .orWhere(
+              `LOWER(acl.ip) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            );
+        }),
       );
     }
 

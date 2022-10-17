@@ -46,9 +46,13 @@ export class CouponService {
         new Brackets((qb) => {
           qb.where(
             `LOWER(coupon.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(
-            `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          );
+          )
+            .orWhere(
+              `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            )
+            .orWhere(
+              `coupon.amount = ${paginationOptions.search.toLowerCase()}`,
+            );
         }),
       );
     }

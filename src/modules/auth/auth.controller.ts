@@ -116,7 +116,19 @@ export class AuthController {
     @Request() req,
   ) {
     return successResponse(
-      await this.service.forgotPassword(forgotPasswordDto.email, req.ip),
+      await this.service.forgotPassword(forgotPasswordDto.email, req.ip, false),
+      'success',
+    );
+  }
+
+  @Post('admin/forgot/password')
+  @HttpCode(HttpStatus.OK)
+  async adminForgotPassword(
+    @Body() forgotPasswordDto: AuthForgotPasswordDto,
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.service.forgotPassword(forgotPasswordDto.email, req.ip, true),
       'success',
     );
   }
@@ -128,7 +140,7 @@ export class AuthController {
     @Request() req,
   ) {
     return successResponse(
-      this.service.resetPassword(
+      await this.service.resetPassword(
         resetPasswordDto.hash,
         resetPasswordDto.password,
         req.ip,

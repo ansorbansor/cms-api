@@ -26,6 +26,8 @@ import { RedisService } from '../redis/redis.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
+import { ResetPasswordResource } from './resources/reset-password.resources';
+import appConfig from 'src/config/app.config';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -269,7 +271,11 @@ export class AuthService {
     await user.save();
   }
 
-  async forgotPassword(email: string, ip: string): Promise<void> {
+  async forgotPassword(
+    email: string,
+    ip: string,
+    isAdmin: boolean,
+  ): Promise<void> {
     const user = await this.usersService.findOne({
       email,
     });
@@ -282,6 +288,7 @@ export class AuthService {
       hash,
       userData: user,
       ip: ip,
+      forgot_admin: isAdmin,
     });
 
     await this.mailService.forgotPassword({
@@ -321,6 +328,10 @@ export class AuthService {
     });
 
     await this.forgotService.softDelete(forgot.id);
+
+    return ResetPasswordResource(
+      forgot.forgot_admin ? appConfig().cmsDomain : appConfig().frontendDomain,
+    );
   }
 
   async resetPasswordData(hash: string): Promise<void> {

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import {
   failedResponse,
   infinityPagination,
@@ -285,7 +285,11 @@ export class CouponSubmissionService {
 
     if (paginationOptions.search) {
       data.andWhere(
-        `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+        new Brackets((qb) => {
+          qb.where(
+            `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          ).orWhere(`user.nip = ${paginationOptions.search.toLowerCase()}`);
+        }),
       );
     }
 

@@ -214,18 +214,6 @@ export class UsersService {
       .where(fields)
       .getOne();
 
-    if (!data) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'User tidak ditemukan',
-      );
-    } else if (!data.userRoles || data.userRoles.length == 0) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'User tidak memiliki role',
-      );
-    }
-
     return data;
   }
 
@@ -236,7 +224,7 @@ export class UsersService {
     ip: string,
     photo?: BufferedFile,
   ) {
-    const exists = await this.findOne({ id: id });
+    const exists = await this.findOneFull({ id: id });
 
     if (!exists) {
       throw failedResponse(
@@ -246,7 +234,7 @@ export class UsersService {
     }
 
     if (updateProfileDto.email) {
-      const userWithEmail = await this.findOne({
+      const userWithEmail = await this.findOneFull({
         email: updateProfileDto.email.toLocaleLowerCase(),
       });
 
@@ -259,7 +247,7 @@ export class UsersService {
     }
 
     if (updateProfileDto.nip) {
-      const userWithNIP = await this.findOne({
+      const userWithNIP = await this.findOneFull({
         nip: updateProfileDto.nip,
       });
 

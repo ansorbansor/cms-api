@@ -64,7 +64,10 @@ export class AuthService {
     });
 
     if (!user || (user && user.userRoles.length == 0)) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'not found');
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengguna tidak ditemukan',
+      );
     }
 
     if (
@@ -190,7 +193,7 @@ export class AuthService {
       email: socialEmail,
     });
 
-    if (user) {
+    if (user || (user && user.userRoles.length == 0)) {
       user.provider = authProvider;
       await this.usersService.update(user.id, user, user, ip);
     } else {
@@ -263,8 +266,11 @@ export class AuthService {
       hash,
     });
 
-    if (!user) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'Not Found');
+    if (!user || (user && user.userRoles.length == 0)) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengguna tidak ditemukan',
+      );
     }
 
     user.hash = null;
@@ -404,6 +410,13 @@ export class AuthService {
     const currentUser = await this.usersService.findOneFull({
       id: user.id,
     });
+
+    if (!currentUser || (currentUser && currentUser.userRoles.length == 0)) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengguna tidak ditemukan',
+      );
+    }
 
     const isValidOldPassword = await bcrypt.compare(
       userDto.oldPassword,

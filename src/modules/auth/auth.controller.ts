@@ -29,6 +29,7 @@ import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import { successResponse } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
+import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 
 @ApiTags('Auth')
 @Controller({
@@ -179,6 +180,20 @@ export class AuthController {
   ) {
     return successResponse(
       await this.service.update(request.user, userDto, request.ip, photo),
+      'success',
+    );
+  }
+
+  @ApiBearerAuth()
+  @Patch('me/password')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  public async updatePassword(
+    @Request() request,
+    @Body() userDto: AuthUpdatePasswordDto,
+  ) {
+    return successResponse(
+      await this.service.changePassword(request.user, userDto, request.ip),
       'success',
     );
   }

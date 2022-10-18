@@ -28,6 +28,7 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
 import { ResetPasswordResource } from './resources/reset-password.resources';
 import appConfig from 'src/config/app.config';
+import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -372,28 +373,13 @@ export class AuthService {
     ip: string,
     photo?: BufferedFile,
   ): Promise<User> {
-    if (userDto.password) {
-      if (userDto.oldPassword) {
-        const currentUser = await this.usersService.findOneFull({
-          id: user.id,
-        });
+    if (userDto.email) {
+      const userWithEmail = await this.usersService.findOne({
+        email: userDto.email,
+      });
 
-        const isValidOldPassword = await bcrypt.compare(
-          userDto.oldPassword,
-          currentUser.password,
-        );
-
-        if (!isValidOldPassword) {
-          throw failedResponse(
-            HttpStatus.UNPROCESSABLE_ENTITY,
-            'Password lama salah',
-          );
-        }
-      } else {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'Password lama tidak boleh kosong',
-        );
+      if (userWithEmail.id != user.id) {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Email telah digunakan');
       }
     }
 
@@ -402,6 +388,36 @@ export class AuthService {
     if (userDto.topics && userDto.topics.length > 0) {
       await this.usersService.createUserTopic(userDto.topics, user.id);
     }
+
+    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
+
+    return await this.usersService.findOne({
+      id: user.id,
+    });
+  }
+
+  async changePassword(
+    user: User,
+    userDto: AuthUpdatePasswordDto,
+    ip: string,
+  ): Promise<User> {
+    const currentUser = await this.usersService.findOneFull({
+      id: user.id,
+    });
+
+    const isValidOldPassword = await bcrypt.compare(
+      userDto.oldPassword,
+      currentUser.password,
+    );
+
+    if (!isValidOldPassword) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Password lama salah',
+      );
+    }
+
+    await this.usersService.update(user.id, userDto, user, ip);
 
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 

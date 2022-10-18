@@ -308,8 +308,11 @@ export class CouponSubmissionService {
       );
     }
 
-    if (paginationOptions.employeeLevel) {
-      data.andWhere(`user.level = ${paginationOptions.employeeLevel}`);
+    if (
+      paginationOptions.level != undefined &&
+      paginationOptions.level.length > 0
+    ) {
+      data.andWhere(`user.level = ${paginationOptions.level}`);
     }
 
     if (

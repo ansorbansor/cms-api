@@ -288,7 +288,9 @@ export class CouponSubmissionService {
         new Brackets((qb) => {
           qb.where(
             `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(`user.nip = ${paginationOptions.search.toLowerCase()}`);
+          ).orWhere(
+            `user.nip LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+          );
         }),
       );
     }

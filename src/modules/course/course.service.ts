@@ -238,7 +238,7 @@ export class CourseService {
         `SELECT MIN(minimum) as min, MAX(maximum) as max FROM course_durations WHERE id IN (${paginationOptions.duration})`,
       );
 
-      if (dur[0] && dur[0].min && dur[0].max) {
+      if (dur[0] && dur[0].min != null && dur[0].max != null) {
         data.andWhere(`courses.duration >= ${dur[0].min}`);
         data.andWhere(`courses.duration <= ${dur[0].max}`);
       }

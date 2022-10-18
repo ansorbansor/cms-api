@@ -20,6 +20,13 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
         })
       : [];
 
+    const userHasCourse =
+      userId && course.userCourse
+        ? course.userCourse.find(
+            (e) => e.user_id == userId && e.course_id == course.id,
+          )
+        : null;
+
     return {
       id: course.id,
       name: course.name
@@ -112,13 +119,7 @@ export const CourseAdminResource = (course: Course, userId?: number): any => {
           ? course.userLike.some((e) => e.user_id == userId)
           : false
         : false,
-      progress: userId
-        ? course.userCourse
-          ? course.userCourse.some((e) =>
-              e.user_id == userId ? e.progress : 0,
-            )
-          : 0
-        : 0,
+      progress: userHasCourse ? userHasCourse.progress : 0,
       status: course.status == 1 ? true : false,
     };
   }

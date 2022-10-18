@@ -150,9 +150,7 @@ export class CourseService {
       paginationOptions.user_id &&
       (paginationOptions.owned || paginationOptions.is_admin)
     ) {
-      if (paginationOptions.owned) {
-        data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
-      }
+      data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
     }
 
     if (paginationOptions.user_id && paginationOptions.liked) {

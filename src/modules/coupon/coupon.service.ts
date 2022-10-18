@@ -51,7 +51,7 @@ export class CouponService {
               `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
             )
             .orWhere(
-              `coupon.amount = ${paginationOptions.search.toLowerCase()}`,
+              `coupon.amount LIKE '%${paginationOptions.search.toLowerCase()}%'`,
             );
         }),
       );

@@ -348,6 +348,18 @@ export class UsersService {
     });
   }
 
+  async logout(user: User, ip: string): Promise<void> {
+    await this.usersRepository.update(user.id, {
+      notification_token: null,
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Melakukan logout`,
+      ip: ip,
+    });
+  }
+
   async createUserTopic(
     createUserTopicDto: CreateUserTopicDto[],
     userId: number,

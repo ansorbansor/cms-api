@@ -430,4 +430,8 @@ export class AuthService {
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
     await this.usersService.softDelete(user.id, user, ip);
   }
+
+  async logout(user: User, ip: string) {
+    await this.usersService.logout(user, ip);
+  }
 }

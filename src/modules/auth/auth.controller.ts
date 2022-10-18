@@ -208,4 +208,14 @@ export class AuthController {
       'success',
     );
   }
+
+  @Get('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
+  async logout(@Request() req) {
+    return successResponse(
+      await this.service.logout(req.user, req.ip),
+      'success',
+    );
+  }
 }

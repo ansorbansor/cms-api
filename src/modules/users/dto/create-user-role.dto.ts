@@ -22,7 +22,7 @@ export class CreateUserDto {
   @Validate(IsNotExist, ['User'], {
     message: 'Email telah digunakan',
   })
-  @IsEmail()
+  @IsEmail({}, { message: 'Format email salah' })
   email: string | null;
 
   @ApiProperty()

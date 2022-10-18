@@ -24,7 +24,7 @@ export class UpdateUserDto {
   @ApiProperty({ example: 'john.tor@example.com' })
   @Transform(({ value }) => value?.toLowerCase().trim())
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Format email salah' })
   email?: string | null;
 
   @ApiProperty({ example: 'Password9' })

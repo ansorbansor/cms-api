@@ -341,6 +341,7 @@ export class CourseService {
         'photoFile',
         'courseLanguage.language',
         'userLike',
+        'userCourse',
       ],
     });
 

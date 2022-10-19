@@ -3,13 +3,12 @@ import { Course } from 'src/entities/course.entity';
 
 export const CourseResource = (course: Course, userId?: number): any => {
   if (course) {
-    const progress = userId
-      ? course.userCourse
+    const progress =
+      userId && course.userCourse
         ? course.userCourse.find(
-            (e) => e.user_id === userId && e.course_id == course.id,
+            (e) => e.user_id == userId && e.course_id == course.id,
           )
-        : null
-      : null;
+        : null;
 
     const mapLanguage =
       course.courseLanguage != null

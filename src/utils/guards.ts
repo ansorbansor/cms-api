@@ -1,5 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  HttpStatus,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { failedResponse } from './responses';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -61,5 +68,15 @@ export class RolesGuard implements CanActivate {
         request.user && request.user?.role && request.user?.role.length > 0
       );
     }
+  }
+}
+
+@Injectable()
+export class CustomThrottlerGuard extends ThrottlerGuard {
+  protected throwThrottlingException(): void {
+    throw failedResponse(
+      HttpStatus.TOO_MANY_REQUESTS,
+      'Terlalu banyak permintaan',
+    );
   }
 }

@@ -1,6 +1,8 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CacheModule, CACHE_MANAGER, Inject, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule, HeaderResolver, I18nJsonParser } from 'nestjs-i18n';
 import * as path from 'path';
@@ -44,6 +46,7 @@ import { FirebaseModule } from './modules/user-notification/firebase.module';
 import { UserNotificationModule } from './modules/user-notification/user-notification.module';
 import { UsersModule } from './modules/users/users.module';
 import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.module';
+import { CustomThrottlerGuard } from './utils/guards';
 
 @Module({
   imports: [
@@ -61,6 +64,7 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
       ],
       envFilePath: ['.env'],
     }),
+    ThrottlerModule.forRoot({}),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),
@@ -116,6 +120,12 @@ import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.
     ImportModule,
     CourseFetchModule,
     UserNotificationModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
   ],
 })
 export class AppModule {

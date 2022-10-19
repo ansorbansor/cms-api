@@ -13,6 +13,7 @@ import { RolesGuard } from 'src/utils/guards';
 import { CourseFetchService } from './course-fetch.service';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiBearerAuth()
 @ApiTags('Course Fetch')
@@ -23,6 +24,7 @@ import { MenuPermission } from 'src/utils/enums';
 export class CourseFetchController {
   constructor(private readonly courseFetchService: CourseFetchService) {}
 
+  @Throttle(1, 600)
   @Get(':id')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)

@@ -257,9 +257,16 @@ export class CouponSubmissionService {
       .addSelect('user.nip', 'user_nip')
       .addSelect('user.name', 'user_name')
       .addSelect('course.price', 'course_price')
-      .addSelect('employeePosition.name', 'user_position')
+      .addSelect('employeePosition.id', 'user_position_id')
+      .addSelect('employeePosition.name', 'user_position_name')
+      .addSelect('employeeLevel.id', 'user_level_id')
+      .addSelect('employeeLevel.name', 'user_level_name')
+      .addSelect('employeeUnit.id', 'user_unit_id')
+      .addSelect('employeeUnit.name', 'user_unit_name')
       .addSelect('user.level', 'user_level')
       .addSelect('user.blacklist', 'user_blacklist')
+      .addSelect('roleData.id', 'role_id')
+      .addSelect('roleData.name', 'role_name')
       .addSelect(
         '`couponSubmissionTotal`.total_submissions',
         'total_submissions',
@@ -272,6 +279,9 @@ export class CouponSubmissionService {
       .leftJoin('couponSubmission.course', 'course')
       .leftJoin('user.employeePosition', 'employeePosition')
       .leftJoin('user.employeeLevel', 'employeeLevel')
+      .leftJoin('user.employeeUnit', 'employeeUnit')
+      .leftJoin('user.userRoles', 'userRoles')
+      .leftJoin('userRoles.roleData', 'roleData')
       .leftJoin(
         '(' + subquery.getQuery() + ')',
         'couponSubmissionTotal',
@@ -342,7 +352,13 @@ export class CouponSubmissionService {
     data.take(paginationOptions.limit);
     data.orderBy('id', 'DESC');
 
-    const getData = await data.getRawMany();
+    const rawData = await data.getRawMany();
+    const getData = [];
+    rawData.forEach((e) => {
+      if (!getData.find((j) => j.id == e.id)) {
+        getData.push(e);
+      }
+    });
 
     return infinityPagination(
       getData,

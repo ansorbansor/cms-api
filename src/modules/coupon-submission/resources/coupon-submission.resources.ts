@@ -8,10 +8,34 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
     user: {
       nip: couponSubmission.user_nip ? couponSubmission.user_nip : null,
       name: couponSubmission.user_name ? couponSubmission.user_name : null,
-      position: couponSubmission.user_position
-        ? couponSubmission.user_position
-        : null,
-      level: couponSubmission.user_level ? couponSubmission.user_level : 0,
+      unit: {
+        id: couponSubmission.user_unit_id
+          ? couponSubmission.user_unit_id
+          : null,
+        name: couponSubmission.user_unit_name
+          ? couponSubmission.user_unit_name
+          : null,
+      },
+      level: {
+        id: couponSubmission.user_level_id
+          ? couponSubmission.user_level_id
+          : null,
+        name: couponSubmission.user_level_name
+          ? couponSubmission.user_level_name
+          : null,
+      },
+      position: {
+        id: couponSubmission.user_position_id
+          ? couponSubmission.user_position_id
+          : null,
+        name: couponSubmission.user_position_name
+          ? couponSubmission.user_position_name
+          : null,
+      },
+      role: {
+        id: couponSubmission.role_id,
+        name: couponSubmission.role_name,
+      },
       blacklist: couponSubmission.user_blacklist,
     },
     price: couponSubmission.course_price,

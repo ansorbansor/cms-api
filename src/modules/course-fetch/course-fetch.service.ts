@@ -139,9 +139,7 @@ export class CourseFetchService {
       let url = baseUrlGetCourse.value;
       let headers;
 
-      if (
-        categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
-      ) {
+      if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
         //get limit item fetch
         url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
         &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
@@ -156,9 +154,7 @@ export class CourseFetchService {
           'X-Requested-With': 'XMLHttpRequest',
         };
       } else if (
-        categoryItem.providerData.name
-          .toLocaleLowerCase()
-          .includes('skill academy')
+        categoryItem.providerData.name.toLowerCase().includes('skill academy')
       ) {
         url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
       }
@@ -175,14 +171,10 @@ export class CourseFetchService {
       let data = await response.json();
 
       let totalItemCount = 0;
-      if (
-        categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
-      ) {
+      if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
         totalItemCount = data.unit.pagination.total_item_count;
       } else if (
-        categoryItem.providerData.name
-          .toLocaleLowerCase()
-          .includes('skill academy')
+        categoryItem.providerData.name.toLowerCase().includes('skill academy')
       ) {
         totalItemCount = data.data.totalItems;
       }
@@ -195,15 +187,11 @@ export class CourseFetchService {
           .getMany();
 
         //start fetching
-        if (
-          categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
-        ) {
+        if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
           url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
           &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
         } else if (
-          categoryItem.providerData.name
-            .toLocaleLowerCase()
-            .includes('skill academy')
+          categoryItem.providerData.name.toLowerCase().includes('skill academy')
         ) {
           url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
         }
@@ -215,7 +203,7 @@ export class CourseFetchService {
         data = await response.json();
 
         const returnedData = categoryItem.providerData.name
-          .toLocaleLowerCase()
+          .toLowerCase()
           .includes('udemy')
           ? data.unit.items.map((data) => {
               return FetchCourseResource(
@@ -226,7 +214,7 @@ export class CourseFetchService {
               );
             })
           : categoryItem.providerData.name
-              .toLocaleLowerCase()
+              .toLowerCase()
               .includes('skill academy')
           ? await Promise.all(
               data.data.courses.map(async (data) => {
@@ -292,7 +280,7 @@ export class CourseFetchService {
               data.category && data.category.name
                 ? existingCategories.find((e) =>
                     e.name
-                      .toLocaleLowerCase()
+                      .toLowerCase()
                       .includes(data.category.name.toLowerCase()),
                   )
                 : null;
@@ -301,7 +289,7 @@ export class CourseFetchService {
               data.topic && data.topic.name
                 ? existingTopics.find((e) =>
                     e.name
-                      .toLocaleLowerCase()
+                      .toLowerCase()
                       .includes(data.topic.name.toLowerCase()),
                   )
                 : null;
@@ -309,17 +297,13 @@ export class CourseFetchService {
             const findLevel =
               data.level && data.level.name
                 ? existingLevels.find((e) =>
-                    e.name
-                      .toLocaleLowerCase()
-                      .includes(data.level.toLowerCase()),
+                    e.name.toLowerCase().includes(data.level.toLowerCase()),
                   )
                 : null;
             //find language
             const findLanguage = data.language
               ? existingLanguages.find((e) =>
-                  e.name
-                    .toLocaleLowerCase()
-                    .includes(data.language.toLowerCase()),
+                  e.name.toLowerCase().includes(data.language.toLowerCase()),
                 )
               : null;
             //get file image
@@ -376,14 +360,10 @@ export class CourseFetchService {
 
         //get last page
         let lastPage = 0;
-        if (
-          categoryItem.providerData.name.toLocaleLowerCase().includes('udemy')
-        ) {
+        if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
           lastPage = data.unit.pagination.current_page + 1;
         } else if (
-          categoryItem.providerData.name
-            .toLocaleLowerCase()
-            .includes('skill academy')
+          categoryItem.providerData.name.toLowerCase().includes('skill academy')
         ) {
           lastPage = data.data.totalPage;
         }
@@ -395,17 +375,18 @@ export class CourseFetchService {
 
           //mapping data course language
           const saveLanguage = [];
-          mapDataCourseLanguage.forEach((e) => {
+          for (const e of mapDataCourseLanguage) {
             const findData = savedData.find((elem) => {
-              elem.external_id == e.external_id;
+              return elem.external_id === e.external_id;
             });
+
             if (findData) {
               saveLanguage.push({
                 course_id: findData.id,
                 language_id: e.language_id,
               });
             }
-          });
+          }
 
           //save to course language
           await this.courseLanguageTransactionRepository.save(saveLanguage);

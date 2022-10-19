@@ -58,10 +58,11 @@ export class ProvidersService {
     const data = this.providerRepository
       .createQueryBuilder('provider')
       .leftJoinAndSelect('provider.photoFile', 'photoFile')
-      .leftJoinAndSelect('provider.course', 'course');
+      .leftJoinAndSelect('provider.course', 'course')
+      .where('course.status = 1');
 
     if (paginationOptions.search) {
-      data.where(
+      data.andWhere(
         `LOWER(provider.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
       );
     }

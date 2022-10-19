@@ -42,7 +42,7 @@ export class MailService {
         });
   }
 
-  async forgotPassword(mailData: MailData<{ hash: string }>) {
+  async forgotPassword(mailData: MailData<{ hash: string; isAdmin: boolean }>) {
     if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
       await this.mailerService
         .sendMail({
@@ -56,7 +56,9 @@ export class MailService {
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
             )}${this.configService.get('minio.bucketName')}/systems/`,
-            frontendUrl: this.configService.get('app.frontendDomain'),
+            frontendUrl: mailData.data.isAdmin
+              ? `${this.configService.get('app.cmsDomain')}/auth`
+              : this.configService.get('app.frontendDomain'),
             hash: mailData.data.hash,
             facebookUrl: SocialMediaUrl.FACEBOOK,
             twitterUrl: SocialMediaUrl.TWITTER,

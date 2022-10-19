@@ -302,6 +302,7 @@ export class AuthService {
       to: email,
       data: {
         hash,
+        isAdmin,
       },
     });
   }

@@ -596,6 +596,15 @@ export class CourseService {
         }),
       );
 
+      const data = await this.userLikeRepository.findOne({
+        withDeleted: true,
+        relations: ['course'],
+        where: {
+          user_id: user.id,
+          course_id: courseId,
+        },
+      });
+
       await this.activityLogService.create({
         user_id: user.id,
         description: `Menyukai Course ${data.course.name}`,

@@ -114,7 +114,7 @@ export const CouponSubmissionDetailResource = (
           ? couponSubmission.coupon.course.name
           : null,
     },
-    price: couponSubmission.course_price,
+    price: couponSubmission.course.price,
     status: couponSubmission.status,
   };
 };

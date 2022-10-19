@@ -45,5 +45,9 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
     ),
     status: couponSubmission.status,
     reason: couponSubmission.reason ? couponSubmission.reason : null,
+    provider: {
+      id: couponSubmission.provider_id,
+      name: couponSubmission.provider_name,
+    },
   };
 };

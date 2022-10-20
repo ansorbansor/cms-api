@@ -19,11 +19,16 @@ import { CourseLanguage } from 'src/entities/course-language.entity';
 import { CourseLanguageTransaction } from 'src/entities/course-language-transaction.entity';
 import { Course } from 'src/entities/course.entity';
 import { FilesService } from '../files/files.service';
-import { CourseFetchSettingType, CoursePriceType } from 'src/utils/enums';
+import {
+  CourseFetchSettingType,
+  CoursePriceType,
+  RedisKeyEnum,
+} from 'src/utils/enums';
 import { getFileExtension } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { Provider } from 'src/entities/provider.entity';
 import courseFetchConfig from 'src/config/course-fetch.config';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class CourseFetchService {
@@ -52,6 +57,7 @@ export class CourseFetchService {
     private providerRepository: Repository<Provider>,
     private fileService: FilesService,
     private activityLogService: ActivityLogService,
+    private redisService: RedisService,
   ) {}
 
   async fetchData(providerId: number, userId: number, ip: string) {
@@ -407,6 +413,9 @@ export class CourseFetchService {
               ...saveHistoryFetch,
             }),
           );
+
+          const redisKey = `${RedisKeyEnum.course}:`;
+          this.redisService.del(redisKey);
         }
 
         page = lastPage;
@@ -487,6 +496,9 @@ export class CourseFetchService {
       description: `Menghapus data course dari provider ID ${providerId}`,
       ip: ip,
     });
+
+    const redisKey = `${RedisKeyEnum.course}:`;
+    this.redisService.del(redisKey);
 
     return successResponse(
       null,

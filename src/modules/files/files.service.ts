@@ -8,7 +8,6 @@ import { User } from 'src/entities/user.entity';
 import {
   BufferedFile,
   getFileExtension,
-  getFileName,
   getFileType,
   policy,
 } from 'src/utils/file-helper';
@@ -154,41 +153,57 @@ export class FilesService {
     );
   }
 
-  async delete(
-    objetName: string,
-    bucketName: string = minioConfig().bucketName,
-  ) {
-    this.client.removeObject(bucketName, objetName, (err) => {
+  async delete(id: number, bucketName: string = minioConfig().bucketName) {
+    const fileData = await this.fileRepository.findOne({
+      id: id,
+    });
+
+    if (!fileData) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'File tidak ditemukan');
+    }
+
+    this.client.removeObject(bucketName, fileData.name, (err) => {
       if (err)
         throw new HttpException(
           'An error occured when deleting!',
           HttpStatus.BAD_REQUEST,
         );
     });
+
+    await this.fileRepository.delete(fileData.id);
+
+    return `Berhasil menghapus file ${fileData.name}`;
   }
 
-  async uploadFile(file: Express.Multer.File, user: User): Promise<FileEntity> {
-    if (!file) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'selectFile');
-    }
+  async deleteUnused(bucketName: string = minioConfig().bucketName) {
+    const stream = this.client.listObjects(bucketName, '', false);
 
-    const path = {
-      local: `/${this.configService.get('app.apiPrefix')}/v1/${file.path}`,
-      s3: file.path,
-    };
+    const data = [];
+    await new Promise((resolve) => {
+      stream.on('data', function (obj) {
+        data.push(obj);
+      });
+      stream.on('end', function () {
+        resolve(data);
+      });
+      stream.on('error', function (err) {
+        throw failedResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          `Terjadi kesalahan! ${err.message}`,
+        );
+      });
+    });
 
-    const fileName = getFileName(file);
+    const fileNames = data.map((e) => {
+      return `'${e.name}'`;
+    });
 
-    return this.fileRepository.save(
-      this.fileRepository.create({
-        name: fileName,
-        path: path[this.configService.get('file.driver')],
-        file_type: getFileType(file.mimetype),
-        extension: getFileExtension(file.originalname),
-        description: 'user file',
-        user: user,
-      }),
-    );
+    const fileNotExists = this.fileRepository
+      .createQueryBuilder('file')
+      .where(`file.name NOT IN (${fileNames})`)
+      .delete();
+
+    return fileNotExists;
   }
 
   async uploadPhotoProfile(

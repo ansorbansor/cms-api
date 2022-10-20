@@ -13,6 +13,8 @@ import { Provider } from 'src/entities/provider.entity';
 import { TemporaryCourse } from 'src/entities/temporary-course.entity';
 import { Topic } from 'src/entities/topic.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
+import { FilesModule } from '../files/files.module';
+import { RedisService } from '../redis/redis.service';
 import { CourseFetchController } from './course-fetch.controller';
 import { CourseFetchService } from './course-fetch.service';
 
@@ -37,7 +39,7 @@ import { CourseFetchService } from './course-fetch.service';
     ActivityLogModule,
   ],
   controllers: [CourseFetchController],
-  providers: [CourseFetchService],
+  providers: [CourseFetchService, RedisService, FilesModule],
   exports: [CourseFetchService],
 })
 export class CourseFetchModule {}

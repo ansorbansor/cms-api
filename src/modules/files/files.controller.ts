@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -54,5 +55,16 @@ export class FilesController {
   @ApiParam({ name: 'path', example: 'background.png' })
   async download(@Param('path') path) {
     return successResponse(await this.filesService.getFiles(path), 'success');
+  }
+
+  @Delete('delete-unused')
+  async deleteUnused() {
+    return successResponse(await this.filesService.deleteUnused(), 'success');
+  }
+
+  @Delete(':id')
+  @ApiParam({ name: 'id', example: '1' })
+  async delete(@Param('id') id) {
+    return successResponse(await this.filesService.delete(id), 'success');
   }
 }

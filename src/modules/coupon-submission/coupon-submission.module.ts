@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisConfigService } from 'src/config/redis-config.service';
 import { CouponSubmission } from 'src/entities/coupon-submission.entity';
 import { Coupon } from 'src/entities/coupon.entity';
 import { Course } from 'src/entities/course.entity';
@@ -21,6 +22,9 @@ import { CouponSubmissionService } from './coupon-submission.service';
       Coupon,
       User,
     ]),
+    CacheModule.registerAsync({
+      useClass: RedisConfigService,
+    }),
     MailModule,
     ActivityLogModule,
     UserNotificationModule,

@@ -476,7 +476,9 @@ export class CourseService {
     const { language_id, course_id, ...saveData } = updateCourseDto;
 
     //multiple duration to adjust JP data
-    saveData.duration = saveData.duration * 40;
+    if (saveData.duration) {
+      saveData.duration = saveData.duration * 40;
+    }
 
     if (updateCourseDto.status == 1) {
       const validateField = [];

@@ -443,10 +443,15 @@ export class CourseFetchService {
       LEFT JOIN editor_choice_courses ecc
       ON
       c.id = ecc.course_id
+      LEFT JOIN coupons cou
+      ON
+      c.id = cou.course_id
       WHERE
       uc.id IS NULL 
       AND
-      ecc.course_id IS NULL
+      cou.id IS NULL 
+      AND
+      ecc.id IS NULL
       AND
       c.provider_id = ${providerId}
       AND
@@ -466,7 +471,7 @@ export class CourseFetchService {
     });
 
     await this.courseRepository.delete({
-      external_id: In(deleteData),
+      id: In(deleteDataCourseId),
     });
 
     await this.temporaryCourseRepository.delete({

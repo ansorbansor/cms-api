@@ -163,8 +163,8 @@ export class CourseService {
         userId: paginationOptions.user_id,
       });
 
-      data.andWhere('couponSubmission.status = :status', {
-        status: CouponSubmissionStatus.PENDING,
+      data.andWhere('couponSubmission.status = :submissionStatus', {
+        submissionStatus: CouponSubmissionStatus.PENDING,
       });
     }
 

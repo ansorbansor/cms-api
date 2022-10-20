@@ -105,8 +105,8 @@ export const CouponSubmissionDetailResource = (
           ? couponSubmission.coupon.endDateParseDate
           : null,
       provider:
-        couponSubmission.coupon && couponSubmission.coupon.provider
-          ? couponSubmission.coupon.provider.name
+        couponSubmission.coupon && couponSubmission.coupon.couponProvider
+          ? couponSubmission.coupon.couponProvider.name
           : null,
       type: couponSubmission.coupon && couponSubmission.coupon.type,
       course:
@@ -116,5 +116,21 @@ export const CouponSubmissionDetailResource = (
     },
     price: couponSubmission.course.price,
     status: couponSubmission.status,
+    provider: {
+      id:
+        couponSubmission &&
+        couponSubmission.course &&
+        couponSubmission.course.provider &&
+        couponSubmission.course.provider.id
+          ? couponSubmission.course.provider.id
+          : null,
+      name:
+        couponSubmission &&
+        couponSubmission.course &&
+        couponSubmission.course.provider &&
+        couponSubmission.course.provider.name
+          ? couponSubmission.course.provider.name
+          : null,
+    },
   };
 };

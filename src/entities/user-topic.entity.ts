@@ -21,9 +21,9 @@ export class UserTopic extends EntityHelper {
 
   @OneToOne(() => CourseCategory)
   @JoinColumn({ name: 'category_id' })
-  category?: CourseCategory | null;
+  category?: CourseCategory;
 
   @OneToOne(() => Topic)
   @JoinColumn({ name: 'topic_id' })
-  topic?: Topic | null;
+  topic?: Topic;
 }

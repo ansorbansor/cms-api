@@ -6,21 +6,24 @@ export const CouponSubmissionDetailResource = (
   totalSubmissionApproved: number,
 ): any => {
   const mapCat = [];
-  couponSubmission.user.userTopic.map((category) => {
-    if (!mapCat.some((e) => e.category_id == category.category_id)) {
+  couponSubmission.user.userTopic.map((userTopic) => {
+    if (!mapCat.some((e) => e.category_id == userTopic.category_id)) {
       const mapTopic = couponSubmission.user.userTopic.filter(
-        (topic) => topic.category_id == category.category_id,
+        (topic) => topic.category_id == userTopic.category_id,
       );
-      mapCat.push({
-        category_id: category.category_id,
-        category_name: category.category_name,
-        topics: mapTopic.map((topic) => {
-          return {
-            topic_id: topic.topic_id,
-            topic_name: topic.topic_name,
-          };
-        }),
-      });
+
+      if (userTopic.category && userTopic.topic) {
+        mapCat.push({
+          category_id: userTopic.category.id,
+          category_name: userTopic.category.name,
+          topics: mapTopic.map((topic) => {
+            return {
+              topic_id: topic.topic.id,
+              topic_name: topic.topic.name,
+            };
+          }),
+        });
+      }
     }
   });
 

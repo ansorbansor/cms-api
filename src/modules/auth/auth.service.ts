@@ -381,11 +381,11 @@ export class AuthService {
     photo?: BufferedFile,
   ): Promise<User> {
     if (userDto.email) {
-      const userWithEmail = await this.usersService.findOne({
+      const userWithEmail = await this.usersService.findOneFull({
         email: userDto.email,
       });
 
-      if (userWithEmail.id != user.id) {
+      if (userWithEmail && userWithEmail.id != user.id) {
         throw failedResponse(HttpStatus.BAD_REQUEST, 'Email telah digunakan');
       }
     }

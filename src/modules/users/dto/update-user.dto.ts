@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsEmail,
-  IsOptional,
-  Validate,
-  ValidateNested,
-} from 'class-validator';
+import { IsEmail, IsOptional, Validate, ValidateNested } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 import { Transform, Type } from 'class-transformer';
@@ -93,7 +87,6 @@ export class UpdateUserDto {
   @ValidateNested({
     each: true,
   })
-  @IsArray()
   @Type(() => CreateUserTopicDto)
   categories?: CreateUserTopicDto[];
 

@@ -7,6 +7,7 @@ import { UserCourse } from 'src/entities/user-course.entity';
 import { User } from 'src/entities/user.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { MailModule } from '../mail/mail.module';
+import { RedisService } from '../redis/redis.service';
 import { UserNotificationModule } from '../user-notification/user-notification.module';
 import { CouponSubmissionController } from './coupon-submission.controller';
 import { CouponSubmissionService } from './coupon-submission.service';
@@ -25,7 +26,7 @@ import { CouponSubmissionService } from './coupon-submission.service';
     UserNotificationModule,
   ],
   controllers: [CouponSubmissionController],
-  providers: [CouponSubmissionService],
+  providers: [CouponSubmissionService, RedisService],
   exports: [CouponSubmissionService],
 })
 export class CouponSubmissionModule {}

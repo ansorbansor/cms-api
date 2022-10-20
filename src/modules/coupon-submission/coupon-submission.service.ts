@@ -14,6 +14,7 @@ import {
   CourseUserStatus,
   NotificationSource,
   NotificationType,
+  RedisKeyEnum,
 } from 'src/utils/enums';
 import { CouponSubmissionResource } from './resources/coupon-submission.resources';
 import { Course } from 'src/entities/course.entity';
@@ -27,6 +28,7 @@ import { User } from 'src/entities/user.entity';
 import { UserNotificationService } from '../user-notification/user-notification.service';
 import { CouponSubmissionController } from './coupon-submission.controller';
 import { CreateUserNotificationDto } from '../user-notification/dto/create-user-notification.dto';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -44,6 +46,7 @@ export class CouponSubmissionService {
     private mailService: MailService,
     private activityLogService: ActivityLogService,
     private userNotificationService: UserNotificationService,
+    private redisService: RedisService,
   ) {}
 
   async create(user: User, courseId: number, ip: string) {
@@ -89,6 +92,8 @@ export class CouponSubmissionService {
         description: `Mendaftar Course ${course.name}`,
         ip: ip,
       });
+
+      this.redisService.del(`${RedisKeyEnum.course}:`);
 
       return successResponse(
         StartCourseResource(course, CourseUserStatus.REDIRECT),
@@ -162,6 +167,8 @@ export class CouponSubmissionService {
 
           await this.userNotificationService.createBulk(notifData);
 
+          this.redisService.del(`${RedisKeyEnum.course}:`);
+
           return successResponse(
             StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),
             `Pengajuan kupon sedang dalam proses`,
@@ -202,6 +209,8 @@ export class CouponSubmissionService {
         });
 
         await this.userNotificationService.createBulk(notifData);
+
+        this.redisService.del(`${RedisKeyEnum.course}:`);
 
         return successResponse(
           StartCourseResource(course, CourseUserStatus.PENDING_VOUCHER),

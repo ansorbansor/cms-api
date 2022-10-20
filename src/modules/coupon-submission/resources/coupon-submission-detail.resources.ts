@@ -12,12 +12,12 @@ export const CouponSubmissionDetailResource = (
         (topic) => topic.category_id == category.category_id,
       );
       mapCat.push({
-        category_id: category.category.id,
-        category_name: category.category.name,
+        category_id: category.category_id,
+        category_name: category.category_name,
         topics: mapTopic.map((topic) => {
           return {
-            topic_id: topic.topic.id,
-            topic_name: topic.topic.name,
+            topic_id: topic.topic_id,
+            topic_name: topic.topic_name,
           };
         }),
       });

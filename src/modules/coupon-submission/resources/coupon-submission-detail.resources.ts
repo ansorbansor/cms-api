@@ -43,18 +43,34 @@ export const CouponSubmissionDetailResource = (
         couponSubmission.user && couponSubmission.user.name
           ? couponSubmission.user.name
           : null,
-      position:
-        couponSubmission.user &&
-        couponSubmission.user.employeePosition &&
-        couponSubmission.user.employeePosition.name
-          ? couponSubmission.user.employeePosition.name
-          : null,
-      level:
-        couponSubmission.user &&
-        couponSubmission.user.employeeLevel &&
-        couponSubmission.user.employeeLevel.name
-          ? couponSubmission.user.employeeLevel.name
-          : null,
+      position: {
+        id:
+          couponSubmission.user &&
+          couponSubmission.user.employeePosition &&
+          couponSubmission.user.employeePosition.id
+            ? couponSubmission.user.employeePosition.id
+            : null,
+        name:
+          couponSubmission.user &&
+          couponSubmission.user.employeePosition &&
+          couponSubmission.user.employeePosition.name
+            ? couponSubmission.user.employeePosition.name
+            : null,
+      },
+      level: {
+        id:
+          couponSubmission.user &&
+          couponSubmission.user.employeeLevel &&
+          couponSubmission.user.employeeLevel.id
+            ? couponSubmission.user.employeeLevel.id
+            : null,
+        name:
+          couponSubmission.user &&
+          couponSubmission.user.employeeLevel &&
+          couponSubmission.user.employeeLevel.name
+            ? couponSubmission.user.employeeLevel.name
+            : null,
+      },
       blacklist: couponSubmission.user
         ? couponSubmission.user.blacklist
         : false,
@@ -64,19 +80,36 @@ export const CouponSubmissionDetailResource = (
         couponSubmission.user.photoFile
           ? minioConfig().fullUrl + couponSubmission.user.photoFile.path
           : null,
-      unit:
-        couponSubmission.user &&
-        couponSubmission.user.employeeUnit &&
-        couponSubmission.user.employeeUnit
-          ? couponSubmission.user.employeeUnit.name
-          : null,
-      role:
-        couponSubmission.user &&
-        couponSubmission.user.userRoles &&
-        couponSubmission.user.userRoles > 0 &&
-        couponSubmission.user.userRoles
-          ? couponSubmission.user.userRoles[0].role.name
-          : null,
+      unit: {
+        id:
+          couponSubmission.user &&
+          couponSubmission.user.employeeUnit &&
+          couponSubmission.user.employeeUnit.id
+            ? couponSubmission.user.employeeUnit.id
+            : null,
+        name:
+          couponSubmission.user &&
+          couponSubmission.user.employeeUnit &&
+          couponSubmission.user.employeeUnit.name
+            ? couponSubmission.user.employeeUnit.name
+            : null,
+      },
+      role: {
+        id:
+          couponSubmission.user &&
+          couponSubmission.user.userRoles &&
+          couponSubmission.user.userRoles.length > 0 &&
+          couponSubmission.user.userRoles[0].roleData
+            ? couponSubmission.user.userRoles[0].roleData.id
+            : null,
+        name:
+          couponSubmission.user &&
+          couponSubmission.user.userRoles &&
+          couponSubmission.user.userRoles.length > 0 &&
+          couponSubmission.user.userRoles[0].roleData
+            ? couponSubmission.user.userRoles[0].roleData.name
+            : null,
+      },
       email:
         couponSubmission.user && couponSubmission.user.email
           ? couponSubmission.user.email

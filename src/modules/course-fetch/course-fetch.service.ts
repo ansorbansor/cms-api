@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getManager, In, Repository } from 'typeorm';
 import { ProviderCategory } from 'src/entities/provider-category.entity';
 import fetch from 'node-fetch';
 import * as https from 'https';
@@ -429,5 +429,63 @@ export class CourseFetchService {
     });
 
     return successResponse(null, `Berhasil menambah ${savedDataCount} data`);
+  }
+
+  async deleteAllFetchData(providerId: number, userId: number, ip: string) {
+    let deleteData = await getManager().query(`
+      SELECT c.id, c.external_id
+      FROM courses c
+      LEFT JOIN temporary_courses tc
+      ON c.external_id = tc.external_id
+      LEFT JOIN user_courses uc
+      ON
+      c.id = uc.course_id
+      LEFT JOIN editor_choice_courses ecc
+      ON
+      c.id = ecc.course_id
+      WHERE
+      uc.id IS NULL 
+      AND
+      ecc.course_id IS NULL
+      AND
+      c.provider_id = ${providerId}
+      AND
+      c.external_id IS NOT NULL
+    `);
+
+    const deleteDataCourseId = deleteData.map((e) => {
+      return e.id;
+    });
+
+    deleteData = deleteData.map((e) => {
+      return e.external_id;
+    });
+
+    await this.courseLanguageTransactionRepository.delete({
+      course_id: In(deleteDataCourseId),
+    });
+
+    await this.courseRepository.delete({
+      external_id: In(deleteData),
+    });
+
+    await this.temporaryCourseRepository.delete({
+      external_id: In(deleteData),
+    });
+
+    await this.courseFetchHistoryRepository.delete({
+      provider_id: providerId,
+    });
+
+    await this.activityLogService.create({
+      user_id: userId,
+      description: `Menghapus data course dari provider ID ${providerId}`,
+      ip: ip,
+    });
+
+    return successResponse(
+      null,
+      `Berhasil menghapus data course dari provider ID ${providerId}`,
+    );
   }
 }

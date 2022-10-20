@@ -6,6 +6,7 @@ import {
   HttpStatus,
   HttpCode,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -32,5 +33,18 @@ export class CourseFetchController {
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: number, @Request() req) {
     return await this.courseFetchService.fetchData(id, req.user.id, req.ip);
+  }
+
+  @Delete(':id')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(CourseFetchController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteAll(@Param('id') id: number, @Request() req) {
+    return await this.courseFetchService.deleteAllFetchData(
+      id,
+      req.user.id,
+      req.ip,
+    );
   }
 }

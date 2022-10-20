@@ -25,7 +25,7 @@ import { Throttle } from '@nestjs/throttler';
 export class CourseFetchController {
   constructor(private readonly courseFetchService: CourseFetchService) {}
 
-  @Throttle(1, 600)
+  @Throttle(1, 10)
   @Get(':id')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)

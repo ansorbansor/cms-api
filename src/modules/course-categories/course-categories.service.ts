@@ -93,7 +93,9 @@ export class CourseCategoriesService {
       .where('course.status = 1');
 
     if (withTopics) {
-      data.leftJoinAndSelect('category.topic', 'topic');
+      data
+        .leftJoinAndSelect('category.topic', 'topic')
+        .leftJoinAndSelect('topic.course', 'topicCourses');
     }
 
     if (paginationOptions.search) {

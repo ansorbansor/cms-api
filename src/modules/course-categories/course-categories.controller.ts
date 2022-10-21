@@ -73,6 +73,16 @@ export class CourseCategoriesController {
       limit = 50;
     }
 
+    return await this.categoryServices.findManyWithPagination(
+      {
+        page,
+        limit,
+        total: 0,
+        search: search,
+      },
+      withTopics,
+    );
+
     return successResponseList(
       await this.categoryServices.findManyWithPagination(
         {

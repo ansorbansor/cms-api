@@ -8,6 +8,7 @@ export const CourseCategoryResource = (category: CourseCategory): any => {
           return {
             id: topic.id,
             name: topic.name,
+            course_count: topic.course_count,
           };
         })
       : [];

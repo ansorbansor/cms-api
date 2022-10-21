@@ -15,6 +15,7 @@ import { Topic } from 'src/entities/topic.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { FilesModule } from '../files/files.module';
 import { RedisService } from '../redis/redis.service';
+import { UserNotificationModule } from '../user-notification/user-notification.module';
 import { CourseFetchController } from './course-fetch.controller';
 import { CourseFetchService } from './course-fetch.service';
 
@@ -37,6 +38,7 @@ import { CourseFetchService } from './course-fetch.service';
       useClass: RedisConfigService,
     }),
     ActivityLogModule,
+    UserNotificationModule,
   ],
   controllers: [CourseFetchController],
   providers: [CourseFetchService, RedisService, FilesModule],

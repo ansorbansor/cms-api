@@ -22,6 +22,8 @@ import { FilesService } from '../files/files.service';
 import {
   CourseFetchSettingType,
   CoursePriceType,
+  NotificationSource,
+  NotificationType,
   RedisKeyEnum,
 } from 'src/utils/enums';
 import { getFileExtension } from 'src/utils/file-helper';
@@ -29,6 +31,8 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { Provider } from 'src/entities/provider.entity';
 import courseFetchConfig from 'src/config/course-fetch.config';
 import { RedisService } from '../redis/redis.service';
+import { CreateUserNotificationDto } from '../user-notification/dto/create-user-notification.dto';
+import { UserNotificationService } from '../user-notification/user-notification.service';
 
 @Injectable()
 export class CourseFetchService {
@@ -58,6 +62,7 @@ export class CourseFetchService {
     private fileService: FilesService,
     private activityLogService: ActivityLogService,
     private redisService: RedisService,
+    private userNotificationService: UserNotificationService,
   ) {}
 
   async fetchData(providerId: number, userId: number, ip: string) {
@@ -416,13 +421,25 @@ export class CourseFetchService {
 
           const redisKey = `${RedisKeyEnum.course}:`;
           this.redisService.del(redisKey);
+
+          await this.providerRepository.update(providerId, {
+            last_update: new Date(),
+          });
         }
 
         page = lastPage;
       }
     }
 
+    const notif = new CreateUserNotificationDto();
+    notif.user_id = userId;
+    notif.title = 'Update data pembelajaran selesai';
+    notif.description = `Tidak ada data baru untuk ditambahkan`;
+    notif.type = NotificationType.GENERAL;
+    notif.source = NotificationSource.CMS;
+
     if (savedDataCount == 0) {
+      await this.userNotificationService.create(notif);
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         `Tidak ada data baru`,
@@ -436,6 +453,10 @@ export class CourseFetchService {
       description: `Update Data List Course ${provider.name}`,
       ip: ip,
     });
+
+    notif.description = `Berhasil menambah ${savedDataCount} data`;
+
+    await this.userNotificationService.create(notif);
 
     return successResponse(null, `Berhasil menambah ${savedDataCount} data`);
   }

@@ -29,6 +29,9 @@ import { ResetPasswordDataResource } from './resources/reset-password-data.resou
 import { ResetPasswordResource } from './resources/reset-password.resources';
 import appConfig from 'src/config/app.config';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
+import { Menu } from 'src/entities/menu.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -42,6 +45,8 @@ export class AuthService {
     private configService: ConfigService,
     private redisService: RedisService,
     private activityLogService: ActivityLogService,
+    @InjectRepository(Menu)
+    private menuRepository: Repository<Menu>,
   ) {
     this.google = new OAuth2Client(
       configService.get('google.clientId'),
@@ -58,7 +63,7 @@ export class AuthService {
     loginDto: AuthEmailLoginDto,
     onlyAdmin: boolean,
     ip: string,
-  ): Promise<{ token: string; user: User }> {
+  ): Promise<{ token: string; user: User; menus: Menu[] }> {
     const user = await this.usersService.findOneFull({
       email: loginDto.email,
     });
@@ -108,7 +113,16 @@ export class AuthService {
         ip: ip,
       });
 
-      return { token, user: user };
+      let menus = null;
+      if (
+        user.userRoles.find((e) => {
+          return e.roleData.grant_all_access;
+        })
+      ) {
+        menus = await this.menuRepository.find();
+      }
+
+      return { token, user: user, menus };
     } else {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

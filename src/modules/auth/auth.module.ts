@@ -11,9 +11,12 @@ import { ForgotPasswordModule } from '../forgot-password/forgot-password.module'
 import { RedisConfigService } from 'src/config/redis-config.service';
 import { RedisService } from '../redis/redis.service';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Menu } from 'src/entities/menu.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Menu]),
     UsersModule,
     ForgotPasswordModule,
     PassportModule,

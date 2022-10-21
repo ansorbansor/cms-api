@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
 
+import { Menu } from "src/entities/menu.entity";
 import { User } from "src/entities/user.entity";
 
-export const AuthResource = (token: string, user: User): any => {
+export const AuthResource = (token: string, user: User, menu: Menu[]): any => {
   const mapRole = user.userRoles.map((role) => {
     return {
       id: role.roleData.id,
@@ -11,18 +12,27 @@ export const AuthResource = (token: string, user: User): any => {
   });
 
   const menuAccess = [];
-  user.userRoles.forEach((element) => {
-    if (element.roleData && element.roleData.roleAccess) {
-      element.roleData.roleAccess.forEach((menus) => {
-        if (menus.menu_id && !menuAccess.some((e) => e.id == menus.menu_id)) {
-          menuAccess.push({
-            id: menus.menu_id,
-            name: menus.menu.name,
-          });
-        }
-      });
-    }
-  });
+  if (menu) {
+    menu.forEach((e) => {
+      menuAccess.push({
+        id: e.id,
+        name: e.name,
+      })
+    })
+  } else {
+    user.userRoles.forEach((element) => {
+      if (element.roleData && element.roleData.roleAccess) {
+        element.roleData.roleAccess.forEach((menus) => {
+          if (menus.menu_id && !menuAccess.some((e) => e.id == menus.menu_id)) {
+            menuAccess.push({
+              id: menus.menu_id,
+              name: menus.menu.name,
+            });
+          }
+        });
+      }
+    });
+  }
 
   return {
     token: token,

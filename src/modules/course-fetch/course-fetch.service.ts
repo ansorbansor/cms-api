@@ -149,6 +149,8 @@ export class CourseFetchService {
       const limit = 50;
       let url = baseUrlGetCourse.value;
       let headers;
+      let method = 'GET';
+      let body;
 
       if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
         //get limit item fetch
@@ -168,15 +170,39 @@ export class CourseFetchService {
         categoryItem.providerData.name.toLowerCase().includes('skill academy')
       ) {
         url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
+      } else if (
+        categoryItem.providerData.name.toLowerCase().includes('terampil')
+      ) {
+        method = 'POST';
+        headers = {
+          'Content-Type': 'application/json',
+        };
+        body = JSON.stringify({
+          operationName: 'GET_TRAININGS_AND_RECOMMENDATION',
+          variables: {
+            input: {
+              limit: limit,
+              page: page,
+              orderBy: 'created_at',
+              orderType: 'desc',
+            },
+          },
+          query:
+            'query GET_TRAININGS_AND_RECOMMENDATION($input: TrainingsRequest) {\n  Trainings(input: $input) {\n    status\n    statusText\n    total\n    filtered\n    items {\n      id\n      title\n      thumbnail\n      training_prakerja\n      description\n      training_price\n      tag\n      trainer {\n        fullname\n        rating\n        slug\n        __typename\n      }\n      total_rating\n      viewers\n      category {\n        id\n        name\n        __typename\n      }\n      rating\n      durations\n      slug\n      benefits {\n        title\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n',
+        });
+        url = baseUrlGetCourse.value;
       }
 
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
       });
       let response = await fetch(url, {
+        method: method,
+        body: body,
         headers: headers,
         credentials: 'include',
         agent: httpsAgent,
+        redirect: 'follow',
       });
 
       let data = await response.json();
@@ -188,6 +214,10 @@ export class CourseFetchService {
         categoryItem.providerData.name.toLowerCase().includes('skill academy')
       ) {
         totalItemCount = data.data.totalItems;
+      } else if (
+        categoryItem.providerData.name.toLowerCase().includes('terampil')
+      ) {
+        totalItemCount = data.data.Trainings.filtered;
       }
 
       while (itemCount < totalItemCount) {
@@ -205,11 +235,31 @@ export class CourseFetchService {
           categoryItem.providerData.name.toLowerCase().includes('skill academy')
         ) {
           url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
+        } else if (
+          categoryItem.providerData.name.toLowerCase().includes('terampil')
+        ) {
+          body = JSON.stringify({
+            operationName: 'GET_TRAININGS_AND_RECOMMENDATION',
+            variables: {
+              input: {
+                limit: limit,
+                page: page,
+                orderBy: 'created_at',
+                orderType: 'desc',
+              },
+            },
+            query:
+              'query GET_TRAININGS_AND_RECOMMENDATION($input: TrainingsRequest) {\n  Trainings(input: $input) {\n    status\n    statusText\n    total\n    filtered\n    items {\n      id\n      title\n      thumbnail\n      training_prakerja\n      description\n      training_price\n      tag\n      trainer {\n        fullname\n        rating\n        slug\n        __typename\n      }\n      total_rating\n      viewers\n      category {\n        id\n        name\n        __typename\n      }\n      rating\n      durations\n      slug\n      benefits {\n        title\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n',
+          });
         }
 
         response = await fetch(url, {
+          method: method,
+          body: body,
           headers: headers,
           credentials: 'include',
+          agent: httpsAgent,
+          redirect: 'follow',
         });
         data = await response.json();
 
@@ -242,6 +292,17 @@ export class CourseFetchService {
                 );
               }),
             )
+          : categoryItem.providerData.name
+              .toLocaleLowerCase()
+              .includes('terampil')
+          ? data.data.Trainings.items.map((data) => {
+              return FetchCourseResource(
+                data,
+                categoryItem.providerData.name,
+                baseUrlCoursePage.value,
+                null,
+              );
+            })
           : null;
 
         itemCount += returnedData.length;
@@ -292,7 +353,7 @@ export class CourseFetchService {
                 ? existingCategories.find((e) =>
                     e.name
                       .toLowerCase()
-                      .includes(data.category.name.toLowerCase()),
+                      .includes(categoryItem.name.toLowerCase()),
                   )
                 : null;
             //find category
@@ -304,9 +365,9 @@ export class CourseFetchService {
                       .includes(data.topic.name.toLowerCase()),
                   )
                 : null;
-            //find category
+            //find level
             const findLevel =
-              data.level && data.level.name
+              data.level && data.level
                 ? existingLevels.find((e) =>
                     e.name.toLowerCase().includes(data.level.toLowerCase()),
                   )
@@ -377,6 +438,10 @@ export class CourseFetchService {
           categoryItem.providerData.name.toLowerCase().includes('skill academy')
         ) {
           lastPage = data.data.totalPage;
+        } else if (
+          categoryItem.providerData.name.toLowerCase().includes('terampil')
+        ) {
+          lastPage = Math.ceil(data.data.Trainings.filtered / limit);
         }
 
         if (mapDataCourse.length > 0) {

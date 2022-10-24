@@ -92,7 +92,7 @@ export const FetchCourseResource = (
         dataDetail.data.courseTopic.totalDuration
           ? Math.round(dataDetail.data.courseTopic.totalDuration / 60)
           : 0,
-      level: null,
+      level: 'Pemula',
       price: data.price && data.price.price ? data.price.price : 0,
       category: {
         id: data.category && data.category.serial ? data.category.serial : null,
@@ -106,6 +106,38 @@ export const FetchCourseResource = (
         name:
           data.topics && data.topics.length > 0 && data.topics[0].name
             ? data.topics[0].name
+            : null,
+      },
+    };
+  } else if (provider.toLocaleLowerCase().includes('terampil')) {
+    return {
+      id: data.id ? data.id : null,
+      title: data.title ? data.title : null,
+      url: data.slug ? `${coursePageUrl}${data.slug}` : null,
+      coach: data.trainer && data.trainer.fullname ? data.trainer.fullname : '',
+      image: data.thumbnail ? data.thumbnail : null,
+      headline: null,
+      description: data.description ? data.description : null,
+      rating: data.rating ? data.rating : 0,
+      rating_count: data.rating.total_rating ? data.rating.total_rating : 0,
+      num_reviews: data.rating.total_rating ? data.rating.total_rating : 0,
+      language: 'Indonesia',
+      curriculum: data.benefits ? data.benefits : null,
+      duration: data.durations ? Math.round(data.durations / 60) : 0,
+      level: 'Pemula',
+      price: data.training_price ? data.training_price : 0,
+      category: {
+        id: data.category && data.category.id ? data.category.id : null,
+        name: data.category && data.category.name ? data.category.name : null,
+      },
+      topic: {
+        id:
+          data.tag && data.tag.length > 0 && data.tag[0].serial
+            ? data.tag[0].serial
+            : null,
+        name:
+          data.tag && data.tag.length > 0 && data.tag[0].name
+            ? data.tag[0].name
             : null,
       },
     };

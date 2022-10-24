@@ -77,12 +77,12 @@ export class CouponService {
       data.andWhere(`coupon.status = ${paginationOptions.status_string}`);
       if (paginationOptions.status_string == '0') {
         data.andWhere(
-          `coupon.start_date >= '${moment(new Date()).format(
+          `coupon.start_date <= '${moment(new Date()).format(
             'yyyy-MM-D HH:mm:ss',
           )}'`,
         );
         data.andWhere(
-          `coupon.end_date <= '${moment(new Date()).format(
+          `coupon.end_date >= '${moment(new Date()).format(
             'yyyy-MM-D HH:mm:ss',
           )}'`,
         );

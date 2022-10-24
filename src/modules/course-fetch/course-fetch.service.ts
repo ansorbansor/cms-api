@@ -120,7 +120,7 @@ export class CourseFetchService {
       (new Date().getTime() -
         new Date(lastFetchValidity.created_at).getTime()) /
         (1000 * 60) <
-        30
+        10
     ) {
       throw failedResponse(
         HttpStatus.NOT_ACCEPTABLE,

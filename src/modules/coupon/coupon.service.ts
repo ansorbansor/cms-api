@@ -9,6 +9,7 @@ import { CouponResource } from './resources/coupon.resources';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
+import * as moment from 'moment';
 
 @Injectable()
 export class CouponService {
@@ -74,6 +75,18 @@ export class CouponService {
       paginationOptions.status_string != ''
     ) {
       data.andWhere(`coupon.status = ${paginationOptions.status_string}`);
+      if (paginationOptions.status_string == '0') {
+        data.andWhere(
+          `coupon.start_date >= '${moment(new Date()).format(
+            'yyyy-MM-D HH:mm:ss',
+          )}'`,
+        );
+        data.andWhere(
+          `coupon.end_date <= '${moment(new Date()).format(
+            'yyyy-MM-D HH:mm:ss',
+          )}'`,
+        );
+      }
     }
 
     const total = await data.getCount();

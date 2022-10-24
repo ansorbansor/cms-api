@@ -2,7 +2,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { FindOperator, getRepository, ILike, In } from 'typeorm';
+import { FindOperator, getRepository, In } from 'typeorm';
 import { ValidationArguments } from 'class-validator/types/validation/ValidationArguments';
 
 type ValidationNotExistsEntity =
@@ -48,7 +48,7 @@ export class IsNotExist implements ValidatorConstraintInterface {
 
     if (currentValue.name || currentValue.code) {
       where = {
-        [validationArguments.property]: ILike(`%${value}%`),
+        [validationArguments.property]: value,
       };
     }
     const entity = (await getRepository(repository).findOne(

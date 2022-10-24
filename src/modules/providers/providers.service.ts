@@ -58,8 +58,7 @@ export class ProvidersService {
     const data = this.providerRepository
       .createQueryBuilder('provider')
       .leftJoinAndSelect('provider.photoFile', 'photoFile')
-      .leftJoinAndSelect('provider.course', 'course')
-      .where('course.status = 1');
+      .leftJoinAndSelect('provider.course', 'course');
 
     if (paginationOptions.search) {
       data.andWhere(

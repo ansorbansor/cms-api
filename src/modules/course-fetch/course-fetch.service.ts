@@ -541,12 +541,17 @@ export class CourseFetchService {
       LEFT JOIN coupons cou
       ON
       c.id = cou.course_id
+      LEFT JOIN coupon_submissions cs
+      ON
+      c.id = cs.course_id
       WHERE
       uc.id IS NULL 
       AND
       cou.id IS NULL 
       AND
       ecc.id IS NULL
+      AND
+      cs.id IS NULL
       AND
       c.provider_id = ${providerId}
       AND

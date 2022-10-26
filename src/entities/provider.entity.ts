@@ -1,11 +1,4 @@
-import {
-  AfterLoad,
-  Column,
-  Entity,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { FileEntity } from './file.entity';
 import { Course } from './course.entity';
@@ -38,13 +31,4 @@ export class Provider extends EntityHelper {
 
   @OneToMany(() => Course, (c) => c.provider)
   course: Course[];
-  courseCount: number;
-
-  @AfterLoad()
-  countArticleComment() {
-    this.courseCount = 0;
-    if (this.course) {
-      this.courseCount = this.course.filter((e) => e.status == 1).length;
-    }
-  }
 }

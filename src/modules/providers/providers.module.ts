@@ -8,10 +8,11 @@ import { ProvidersService } from './providers.service';
 import { MailModule } from '../mail/mail.module';
 import { User } from 'src/entities/user.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
+import { Course } from 'src/entities/course.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Provider, User]),
+    TypeOrmModule.forFeature([Provider, User, Course]),
     CacheModule.registerAsync({
       useClass: RedisConfigService,
     }),

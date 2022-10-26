@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
@@ -14,6 +14,7 @@ import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { MailService } from '../mail/mail.service';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { Course } from 'src/entities/course.entity';
 
 @Injectable()
 export class ProvidersService {
@@ -22,6 +23,8 @@ export class ProvidersService {
     private providerRepository: Repository<Provider>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Course)
+    private courseRepository: Repository<Course>,
     private redisService: RedisService,
     private fileService: FilesService,
     private mailService: MailService,
@@ -57,8 +60,7 @@ export class ProvidersService {
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data = this.providerRepository
       .createQueryBuilder('provider')
-      .leftJoinAndSelect('provider.photoFile', 'photoFile')
-      .leftJoinAndSelect('provider.course', 'course');
+      .leftJoinAndSelect('provider.photoFile', 'photoFile');
 
     if (paginationOptions.search) {
       data.andWhere(
@@ -71,11 +73,23 @@ export class ProvidersService {
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
+    const result = await data.getMany();
+
+    const providerId = result.map((e) => {
+      return e.id;
+    });
+
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, provider_id FROM courses ${
+        providerId.length > 0 ? `WHERE provider_id IN (${providerId})` : ''
+      } GROUP BY provider_id`,
+    );
 
     return infinityPagination(
-      await data.getMany(),
+      result,
       ProviderResource,
       paginationOptions,
+      courseCount,
     );
   }
 

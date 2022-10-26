@@ -103,7 +103,6 @@ export class ProvidersService {
     }
 
     const data = await this.providerRepository.findOne({
-      relations: ['course'],
       where: fields,
     });
 
@@ -114,12 +113,16 @@ export class ProvidersService {
       );
     }
 
-    this.redisService.set(
-      `${RedisKeyEnum.provider}:${fields.id}`,
-      ProviderResource(data),
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, provider_id FROM courses WHERE provider_id = ${fields.id} GROUP BY provider_id`,
     );
 
-    return ProviderResource(data);
+    this.redisService.set(
+      `${RedisKeyEnum.provider}:${fields.id}`,
+      ProviderResource(data, null, courseCount),
+    );
+
+    return ProviderResource(data, null, courseCount);
   }
 
   async update(

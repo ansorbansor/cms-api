@@ -1,4 +1,4 @@
-import { AfterLoad, Column, Entity, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { CourseLanguageTransaction } from './course-language-transaction.entity';
 
@@ -10,12 +10,4 @@ export class CourseLanguage extends EntityHelper {
   @OneToMany(() => CourseLanguageTransaction, (course) => course.language)
   @JoinColumn()
   course?: CourseLanguageTransaction[];
-  course_count: number;
-
-  @AfterLoad()
-  setCount() {
-    this.course_count = this.course
-      ? this.course.filter((e) => e.course?.status == 1).length
-      : 0;
-  }
 }

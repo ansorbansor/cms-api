@@ -6,6 +6,10 @@ export const ProviderResource = (
   userId?: number,
   courseCount?: any,
 ): any => {
+  const countData =
+    courseCount && courseCount.find((e) => e.provider_id == provider.id)
+      ? courseCount.find((e) => e.provider_id == provider.id)
+      : null;
   return {
     id: provider.id,
     name: provider.name,
@@ -15,8 +19,6 @@ export const ProviderResource = (
       : null,
     last_update: provider.last_update,
     url: provider.url,
-    course_count: courseCount
-      ? courseCount.find((e) => e.provider_id == provider.id).total
-      : 0,
+    course_count: countData && countData.total ? countData.total : 0,
   };
 };

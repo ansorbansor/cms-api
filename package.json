@@ -42,6 +42,7 @@
     "@nestjs/swagger": "5.2.1",
     "@nestjs/throttler": "^3.1.0",
     "@nestjs/typeorm": "8.0.3",
+    "activedirectory2": "^2.1.0",
     "apple-signin-auth": "^1.7.4",
     "bcryptjs": "2.4.3",
     "cache-manager": "^4.1.0",

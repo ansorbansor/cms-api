@@ -32,6 +32,7 @@ import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { Menu } from 'src/entities/menu.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ActiveDirectoryUtils } from 'src/utils/active-directory-utils';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -68,7 +69,25 @@ export class AuthService {
       email: loginDto.email,
     });
 
-    if (!user || (user && user.userRoles.length == 0)) {
+    if (!user) {
+      //check Active Directory user
+      const ADResult = await new ActiveDirectoryUtils().authAD(
+        loginDto.email,
+        loginDto.password,
+      );
+
+      if (!ADResult || !ADResult.code || ADResult.code != 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          `Pengguna tidak ditemukan (${ADResult.code} : ${ADResult.description})`,
+        );
+      } else {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'REGISTERKAN AKUN AD DISINI!',
+        );
+      }
+    } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'Pengguna tidak ditemukan',

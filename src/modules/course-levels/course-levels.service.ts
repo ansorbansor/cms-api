@@ -42,8 +42,8 @@ export class CourseLevelsService {
     });
 
     const courseCount = await getManager().query(
-      `SELECT COUNT(id) as total, level_id FROM courses ${
-        levelId.length > 0 ? `WHERE level_id IN (${levelId})` : ''
+      `SELECT COUNT(id) as total, level_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        levelId.length > 0 ? ` AND level_id IN (${levelId})` : ''
       } GROUP BY level_id`,
     );
 
@@ -76,7 +76,7 @@ export class CourseLevelsService {
     }
 
     const courseCount = await getManager().query(
-      `SELECT COUNT(id) as total, level_id FROM courses WHERE level_id IN (${fields.id}) GROUP BY level_id`,
+      `SELECT COUNT(id) as total, level_id FROM courses  WHERE status = 1 AND deleted_at IS NULL AND level_id IN (${fields.id}) GROUP BY level_id`,
     );
 
     this.redisService.set(

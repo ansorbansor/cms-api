@@ -4,6 +4,7 @@ import { Transform } from 'class-transformer';
 
 export class AuthEmailLoginDto {
   @ApiProperty({ example: 'john.tor@example.com' })
+  @IsNotEmpty()
   @Transform(({ value }) => value.toLowerCase().trim())
   email: string;
 

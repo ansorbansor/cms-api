@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
@@ -88,13 +88,10 @@ export class CourseCategoriesService {
 
     const data = this.categoryRepository
       .createQueryBuilder('category')
-      .leftJoinAndSelect('category.photoFile', 'photoFile')
-      .leftJoinAndSelect('category.course', 'course');
+      .leftJoinAndSelect('category.photoFile', 'photoFile');
 
     if (withTopics) {
-      data
-        .leftJoinAndSelect('category.topic', 'topic')
-        .leftJoinAndSelect('topic.course', 'topicCourses');
+      data.leftJoinAndSelect('category.topic', 'topic');
     }
 
     if (paginationOptions.search) {
@@ -117,10 +114,36 @@ export class CourseCategoriesService {
 
     const getData = await data.getMany();
 
+    const categoryId = getData.map((e) => {
+      return e.id;
+    });
+
+    const topicId = getData.flatMap((e) => {
+      return e.topic.map((elem) => {
+        return elem.id;
+      });
+    });
+
+    const categoryCourseCount = await getManager().query(
+      `SELECT COUNT(id) as total, category_id FROM courses ${
+        categoryId.length > 0 ? `WHERE category_id IN (${categoryId})` : ''
+      } GROUP BY category_id`,
+    );
+
+    const courseTopicCount = await getManager().query(
+      `SELECT COUNT(id) as total, topic_id FROM courses ${
+        topicId.length > 0 ? `WHERE topic_id IN (${topicId})` : ''
+      } GROUP BY topic_id`,
+    );
+
     const returnData = infinityPagination(
       getData,
       CourseCategoryResource,
       paginationOptions,
+      {
+        categoryCourseCount: categoryCourseCount,
+        topicCourseCount: courseTopicCount,
+      },
     );
 
     this.redisService.set(redisKey, returnData);

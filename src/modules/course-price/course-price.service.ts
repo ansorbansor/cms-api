@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
@@ -32,14 +32,26 @@ export class CoursePriceService {
     const total = await this.coursePriceRepository.count();
     paginationOptions.total = total;
 
+    const result = await this.coursePriceRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+    });
+
+    const priceId = result.map((e) => {
+      return e.id;
+    });
+
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, price_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        priceId.length > 0 ? ` AND price_id IN (${priceId})` : ''
+      } GROUP BY price_id`,
+    );
+
     return infinityPagination(
-      await this.coursePriceRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-        relations: ['course'],
-      }),
+      result,
       CoursePriceResource,
       paginationOptions,
+      courseCount,
     );
   }
 
@@ -63,12 +75,16 @@ export class CoursePriceService {
       );
     }
 
-    this.redisService.set(
-      `${RedisKeyEnum.price}:${fields.id}`,
-      CoursePriceResource(data),
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, price_id FROM courses WHERE status = 1 AND deleted_at IS NULL AND price_id IN (${fields.id}) GROUP BY price_id`,
     );
 
-    return CoursePriceResource(data);
+    this.redisService.set(
+      `${RedisKeyEnum.price}:${fields.id}`,
+      CoursePriceResource(data, null, courseCount),
+    );
+
+    return CoursePriceResource(data, null, courseCount);
   }
 
   async update(updateCoursePriceDto: UpdateCoursePriceDto) {

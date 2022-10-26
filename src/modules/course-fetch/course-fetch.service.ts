@@ -129,6 +129,8 @@ export class CourseFetchService {
     }
 
     let savedDataCount = 0;
+    let limit = 50;
+
     for (const categoryItem of providerCategories) {
       //get last history fetch
       const lastFetch = await this.courseFetchHistoryRepository
@@ -145,67 +147,15 @@ export class CourseFetchService {
       let page = lastFetch ? lastFetch.last_page + 1 : 1;
       let itemCount = lastFetch ? lastFetch.item_count : 0;
 
-      //max from udemy 60
-      const limit = 50;
-      let url = baseUrlGetCourse.value;
-      let headers;
-      let method = 'GET';
-      let body;
+      const { returnedData, usedLimit } = await this.startFetch(
+        categoryItem,
+        baseUrlGetCourse.value,
+        limit,
+        page,
+      );
 
-      if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
-        //get limit item fetch
-        url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
-        &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
-        headers = {
-          Authorization: `Basic ${btoa(
-            courseFetchConfig().udemyClientId,
-          )}:${btoa(courseFetchConfig().udemyClientSecret)}`,
-          Accept: 'application/json, text/plain, */*',
-          'Content-Type': 'application/json;charset=utf-8',
-          'X-Udemy-Client-Id': courseFetchConfig().udemyClientId,
-          'X-Udemy-Client-Secret': courseFetchConfig().udemyClientSecret,
-          'X-Requested-With': 'XMLHttpRequest',
-        };
-      } else if (
-        categoryItem.providerData.name.toLowerCase().includes('skill academy')
-      ) {
-        url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
-      } else if (
-        categoryItem.providerData.name.toLowerCase().includes('terampil')
-      ) {
-        method = 'POST';
-        headers = {
-          'Content-Type': 'application/json',
-        };
-        body = JSON.stringify({
-          operationName: 'GET_TRAININGS_AND_RECOMMENDATION',
-          variables: {
-            input: {
-              limit: limit,
-              page: page,
-              orderBy: 'created_at',
-              orderType: 'desc',
-            },
-          },
-          query:
-            'query GET_TRAININGS_AND_RECOMMENDATION($input: TrainingsRequest) {\n  Trainings(input: $input) {\n    status\n    statusText\n    total\n    filtered\n    items {\n      id\n      title\n      thumbnail\n      training_prakerja\n      description\n      training_price\n      tag\n      trainer {\n        fullname\n        rating\n        slug\n        __typename\n      }\n      total_rating\n      viewers\n      category {\n        id\n        name\n        __typename\n      }\n      rating\n      durations\n      slug\n      benefits {\n        title\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n',
-        });
-        url = baseUrlGetCourse.value;
-      }
-
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      let response = await fetch(url, {
-        method: method,
-        body: body,
-        headers: headers,
-        credentials: 'include',
-        agent: httpsAgent,
-        redirect: 'follow',
-      });
-
-      let data = await response.json();
+      let data = returnedData;
+      limit = usedLimit;
 
       let totalItemCount = 0;
       if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
@@ -228,88 +178,70 @@ export class CourseFetchService {
           .getMany();
 
         //start fetching
-        if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
-          url = `${baseUrlGetCourse.value}?source_page=category_page&page_size=${limit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
-          &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
-        } else if (
-          categoryItem.providerData.name.toLowerCase().includes('skill academy')
-        ) {
-          url = `${baseUrlGetCourse.value}?page=${page}&pageSize=100&serials=${categoryItem.external_id}`;
-        } else if (
-          categoryItem.providerData.name.toLowerCase().includes('terampil')
-        ) {
-          body = JSON.stringify({
-            operationName: 'GET_TRAININGS_AND_RECOMMENDATION',
-            variables: {
-              input: {
-                limit: limit,
-                page: page,
-                orderBy: 'created_at',
-                orderType: 'desc',
-              },
-            },
-            query:
-              'query GET_TRAININGS_AND_RECOMMENDATION($input: TrainingsRequest) {\n  Trainings(input: $input) {\n    status\n    statusText\n    total\n    filtered\n    items {\n      id\n      title\n      thumbnail\n      training_prakerja\n      description\n      training_price\n      tag\n      trainer {\n        fullname\n        rating\n        slug\n        __typename\n      }\n      total_rating\n      viewers\n      category {\n        id\n        name\n        __typename\n      }\n      rating\n      durations\n      slug\n      benefits {\n        title\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n',
-          });
-        }
+        const { returnedData, usedLimit } = await this.startFetch(
+          categoryItem,
+          baseUrlGetCourse.value,
+          limit,
+          page,
+        );
 
-        response = await fetch(url, {
-          method: method,
-          body: body,
-          headers: headers,
-          credentials: 'include',
-          agent: httpsAgent,
-          redirect: 'follow',
-        });
-        data = await response.json();
+        data = returnedData;
+        limit = usedLimit;
 
-        const returnedData = categoryItem.providerData.name
-          .toLowerCase()
-          .includes('udemy')
-          ? data.unit.items.map((data) => {
-              return FetchCourseResource(
-                data,
-                categoryItem.providerData.name,
-                baseUrlCoursePage.value,
-                null,
-              );
-            })
-          : categoryItem.providerData.name
-              .toLowerCase()
-              .includes('skill academy')
-          ? await Promise.all(
-              data.data.courses.map(async (data) => {
-                const fetchData = await fetch(
-                  `${baseUrlGetCourseDetail.value}?courseSerial=${data.serial}`,
-                );
-                const dataDetail = await fetchData.json();
-
+        const formattedData =
+          categoryItem.providerData.name.toLowerCase().includes('udemy') &&
+          data.unit.items
+            ? data.unit.items.map((data) => {
                 return FetchCourseResource(
                   data,
                   categoryItem.providerData.name,
                   baseUrlCoursePage.value,
-                  dataDetail,
+                  null,
                 );
-              }),
-            )
-          : categoryItem.providerData.name
-              .toLocaleLowerCase()
-              .includes('terampil')
-          ? data.data.Trainings.items.map((data) => {
-              return FetchCourseResource(
-                data,
-                categoryItem.providerData.name,
-                baseUrlCoursePage.value,
-                null,
-              );
-            })
-          : null;
+              })
+            : categoryItem.providerData.name
+                .toLowerCase()
+                .includes('skill academy')
+            ? await Promise.all(
+                data.data.courses.map(async (data) => {
+                  const fetchData = await fetch(
+                    `${baseUrlGetCourseDetail.value}?courseSerial=${data.serial}`,
+                  );
+                  const dataDetail = await fetchData.json();
 
-        itemCount += returnedData.length;
+                  return FetchCourseResource(
+                    data,
+                    categoryItem.providerData.name,
+                    baseUrlCoursePage.value,
+                    dataDetail,
+                  );
+                }),
+              )
+            : categoryItem.providerData.name
+                .toLocaleLowerCase()
+                .includes('terampil')
+            ? data.data.Trainings.items.map((data) => {
+                return FetchCourseResource(
+                  data,
+                  categoryItem.providerData.name,
+                  baseUrlCoursePage.value,
+                  null,
+                );
+              })
+            : null;
+
+        if (!formattedData) {
+          throw failedResponse(
+            HttpStatus.EXPECTATION_FAILED,
+            'Providers tidak memiliki data lain.',
+          );
+        }
+
+        itemCount += formattedData.length;
 
         //arrange temporary course
         const mapDataTemporary = [];
-        for (const data of returnedData) {
+        for (const data of formattedData) {
           if (!existingCourse.find((e) => e.external_id == data.id)) {
             const post = new CreateTemporaryCourseDto();
             post.external_id = data.id;
@@ -345,7 +277,7 @@ export class CourseFetchService {
 
         const mapDataCourse = [];
         const mapDataCourseLanguage = [];
-        for (const data of returnedData) {
+        for (const data of formattedData) {
           if (!existingCourse.find((e) => e.external_id == data.id)) {
             //find category
             const findCategory =
@@ -524,6 +456,90 @@ export class CourseFetchService {
     await this.userNotificationService.create(notif);
 
     return successResponse(null, `Berhasil menambah ${savedDataCount} data`);
+  }
+
+  async startFetch(
+    categoryItem: ProviderCategory,
+    baseUrl: string,
+    usedLimit: number,
+    page: number,
+  ) {
+    let url;
+    let headers;
+    let method = 'GET';
+    let body;
+
+    if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
+      //get limit item fetch
+      url = `${baseUrl}?source_page=category_page&page_size=${usedLimit}&category_id=${categoryItem.external_id}&locale=id_ID&sos=pc&fl=cat&p=${page}
+      &fields[course]=title,url,image_480x270,context_info,visible_instructors,locale,estimated_content_length,rating,num_reviews,description,objectives_summary,content_info_short,instructional_level_simple,price_detail`;
+      headers = {
+        Authorization: `Basic ${btoa(courseFetchConfig().udemyClientId)}:${btoa(
+          courseFetchConfig().udemyClientSecret,
+        )}`,
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json;charset=utf-8',
+        'X-Udemy-Client-Id': courseFetchConfig().udemyClientId,
+        'X-Udemy-Client-Secret': courseFetchConfig().udemyClientSecret,
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+    } else if (
+      categoryItem.providerData.name.toLowerCase().includes('skill academy')
+    ) {
+      url = `${baseUrl}?page=${page}&pageSize=${usedLimit}&serials=${categoryItem.external_id}`;
+    } else if (
+      categoryItem.providerData.name.toLowerCase().includes('terampil')
+    ) {
+      method = 'POST';
+      headers = {
+        'Content-Type': 'application/json',
+      };
+      body = JSON.stringify({
+        operationName: 'GET_TRAININGS_AND_RECOMMENDATION',
+        variables: {
+          input: {
+            limit: usedLimit,
+            page: page,
+            orderBy: 'created_at',
+            orderType: 'desc',
+          },
+        },
+        query:
+          'query GET_TRAININGS_AND_RECOMMENDATION($input: TrainingsRequest) {\n  Trainings(input: $input) {\n    status\n    statusText\n    total\n    filtered\n    items {\n      id\n      title\n      thumbnail\n      training_prakerja\n      description\n      training_price\n      tag\n      trainer {\n        fullname\n        rating\n        slug\n        __typename\n      }\n      total_rating\n      viewers\n      category {\n        id\n        name\n        __typename\n      }\n      rating\n      durations\n      slug\n      benefits {\n        title\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n',
+      });
+      url = baseUrl;
+    }
+
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+    const response = await fetch(url, {
+      method: method,
+      body: body,
+      headers: headers,
+      credentials: 'include',
+      agent: httpsAgent,
+      redirect: 'follow',
+    });
+
+    let returnedData = await response.json();
+
+    console.log(returnedData);
+
+    if (
+      returnedData &&
+      returnedData.detail &&
+      returnedData.detail.toLowerCase() == 'invalid page size'
+    ) {
+      returnedData = await this.startFetch(
+        categoryItem,
+        baseUrl,
+        usedLimit - 5,
+        page,
+      );
+    }
+
+    return { returnedData, usedLimit };
   }
 
   async deleteAllFetchData(providerId: number, userId: number, ip: string) {

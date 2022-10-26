@@ -125,14 +125,14 @@ export class CourseCategoriesService {
     });
 
     const categoryCourseCount = await getManager().query(
-      `SELECT COUNT(id) as total, category_id FROM courses ${
-        categoryId.length > 0 ? `WHERE category_id IN (${categoryId})` : ''
+      `SELECT COUNT(id) as total, category_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        categoryId.length > 0 ? ` AND category_id IN (${categoryId})` : ''
       } GROUP BY category_id`,
     );
 
     const courseTopicCount = await getManager().query(
-      `SELECT COUNT(id) as total, topic_id FROM courses ${
-        topicId.length > 0 ? `WHERE topic_id IN (${topicId})` : ''
+      `SELECT COUNT(id) as total, topic_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        topicId.length > 0 ? ` AND topic_id IN (${topicId})` : ''
       } GROUP BY topic_id`,
     );
 
@@ -160,7 +160,7 @@ export class CourseCategoriesService {
       return value;
     }
 
-    const relation = ['course'];
+    const relation = [];
     if (withTopics) {
       relation.push('topic');
     }
@@ -169,6 +169,20 @@ export class CourseCategoriesService {
       where: fields,
       relations: relation,
     });
+
+    const topicId = data.topic.map((elem) => {
+      return elem.id;
+    });
+
+    const categoryCourseCount = await getManager().query(
+      `SELECT COUNT(id) as total, category_id FROM courses WHERE status = 1 AND deleted_at IS NULL AND category_id = ${fields.id} GROUP BY category_id`,
+    );
+
+    const courseTopicCount = await getManager().query(
+      `SELECT COUNT(id) as total, topic_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        topicId.length > 0 ? ` AND topic_id IN (${topicId})` : ''
+      } GROUP BY topic_id`,
+    );
 
     if (!data) {
       throw failedResponse(
@@ -179,10 +193,16 @@ export class CourseCategoriesService {
 
     this.redisService.set(
       `${RedisKeyEnum.category}:${fields.id}`,
-      CourseCategoryResource(data),
+      CourseCategoryResource(data, null, {
+        categoryCourseCount: categoryCourseCount,
+        topicCourseCount: courseTopicCount,
+      }),
     );
 
-    return CourseCategoryResource(data);
+    return CourseCategoryResource(data, null, {
+      categoryCourseCount: categoryCourseCount,
+      topicCourseCount: courseTopicCount,
+    });
   }
 
   async update(

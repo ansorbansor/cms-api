@@ -147,7 +147,7 @@ export class CourseFetchService {
       let page = lastFetch ? lastFetch.last_page + 1 : 1;
       let itemCount = lastFetch ? lastFetch.item_count : 0;
 
-      const { returnedData, usedLimit } = await this.startFetch(
+      const [returnedData, usedLimit] = await this.startFetch(
         categoryItem,
         baseUrlGetCourse.value,
         limit,
@@ -178,7 +178,7 @@ export class CourseFetchService {
           .getMany();
 
         //start fetching
-        const { returnedData, usedLimit } = await this.startFetch(
+        const [returnedData, usedLimit] = await this.startFetch(
           categoryItem,
           baseUrlGetCourse.value,
           limit,
@@ -524,22 +524,22 @@ export class CourseFetchService {
 
     let returnedData = await response.json();
 
-    console.log(returnedData);
-
     if (
       returnedData &&
       returnedData.detail &&
       returnedData.detail.toLowerCase() == 'invalid page size'
     ) {
-      returnedData = await this.startFetch(
+      const [returnedDataa] = await this.startFetch(
         categoryItem,
         baseUrl,
         usedLimit - 5,
         page,
       );
+
+      returnedData = returnedDataa;
     }
 
-    return { returnedData, usedLimit };
+    return [returnedData, usedLimit];
   }
 
   async deleteAllFetchData(providerId: number, userId: number, ip: string) {

@@ -181,7 +181,7 @@ export class ProvidersService {
       data: {
         providerName: provider.name,
         providerUrl: provider.url,
-        downloadUrl: 'https://google.com',
+        tutorialUrl: provider.tutorial_url,
       },
     });
   }

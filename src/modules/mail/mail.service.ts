@@ -172,7 +172,7 @@ export class MailService {
     mailData: MailData<{
       providerUrl: string;
       providerName: string;
-      downloadUrl: string;
+      tutorialUrl: string;
     }>,
   ) {
     if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
@@ -188,7 +188,7 @@ export class MailService {
             frontendUrl: this.configService.get('app.frontendDomain'),
             providerUrl: mailData.data.providerUrl,
             providerName: mailData.data.providerName,
-            downloadUrl: mailData.data.downloadUrl,
+            tutorialUrl: mailData.data.tutorialUrl,
             facebookUrl: SocialMediaUrl.FACEBOOK,
             twitterUrl: SocialMediaUrl.TWITTER,
             instagramUrl: SocialMediaUrl.INSTAGRAM,

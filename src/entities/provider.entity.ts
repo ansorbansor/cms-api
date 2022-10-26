@@ -27,6 +27,9 @@ export class Provider extends EntityHelper {
   @Column()
   url: string;
 
+  @Column()
+  tutorial_url: string;
+
   @OneToOne(() => FileEntity, {
     eager: true,
   })

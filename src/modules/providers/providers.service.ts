@@ -80,8 +80,8 @@ export class ProvidersService {
     });
 
     const courseCount = await getManager().query(
-      `SELECT COUNT(id) as total, provider_id FROM courses ${
-        providerId.length > 0 ? `WHERE provider_id IN (${providerId})` : ''
+      `SELECT COUNT(id) as total, provider_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+        providerId.length > 0 ? ` AND provider_id IN (${providerId})` : ''
       } GROUP BY provider_id`,
     );
 
@@ -114,7 +114,7 @@ export class ProvidersService {
     }
 
     const courseCount = await getManager().query(
-      `SELECT COUNT(id) as total, provider_id FROM courses WHERE provider_id = ${fields.id} GROUP BY provider_id`,
+      `SELECT COUNT(id) as total, provider_id FROM courses WHERE status = 1 AND deleted_at IS NULL AND provider_id = ${fields.id} GROUP BY provider_id`,
     );
 
     this.redisService.set(

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
 import { RedisKeyEnum } from 'src/utils/enums';
@@ -32,14 +32,26 @@ export class CourseLevelsService {
     const total = await this.courseLevelRepository.count();
     paginationOptions.total = total;
 
+    const result = await this.courseLevelRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+    });
+
+    const levelId = result.map((e) => {
+      return e.id;
+    });
+
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, level_id FROM courses ${
+        levelId.length > 0 ? `WHERE level_id IN (${levelId})` : ''
+      } GROUP BY level_id`,
+    );
+
     return infinityPagination(
-      await this.courseLevelRepository.find({
-        skip: (paginationOptions.page - 1) * paginationOptions.limit,
-        take: paginationOptions.limit,
-        relations: ['course'],
-      }),
+      result,
       CourseLevelResource,
       paginationOptions,
+      courseCount,
     );
   }
 
@@ -63,12 +75,16 @@ export class CourseLevelsService {
       );
     }
 
-    this.redisService.set(
-      `${RedisKeyEnum.level}:${fields.id}`,
-      CourseLevelResource(data),
+    const courseCount = await getManager().query(
+      `SELECT COUNT(id) as total, level_id FROM courses WHERE level_id IN (${fields.id}) GROUP BY level_id`,
     );
 
-    return CourseLevelResource(data);
+    this.redisService.set(
+      `${RedisKeyEnum.level}:${fields.id}`,
+      CourseLevelResource(data, null, courseCount),
+    );
+
+    return CourseLevelResource(data, null, courseCount);
   }
 
   async update(updateCourseLevelDto: UpdateCourseLevelDto) {

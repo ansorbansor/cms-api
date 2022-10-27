@@ -241,29 +241,6 @@ export class CourseFetchService {
 
         //arrange temporary course
         const mapDataTemporary = [];
-        for (const data of formattedData) {
-          if (!existingCourse.find((e) => e.external_id == data.id)) {
-            const post = new CreateTemporaryCourseDto();
-            post.external_id = data.id;
-            post.name = data.title;
-            post.coach = data.coach;
-            post.duration = data.duration;
-            post.provider_id = providerId;
-            post.category = data.category.name;
-            post.topic = data.topic.name;
-            post.level = data.level;
-            post.date_course = null;
-            post.rating = Math.round(data.rating);
-            post.description = data.description;
-            post.url = data.url;
-            post.price = data.price;
-            post.freemium_code = null;
-            post.photo = data.image ? data.image : null;
-            post.language = data.language;
-            post.rating_count = data.rating_count;
-            mapDataTemporary.push(post);
-          }
-        }
 
         //start arrange real course
         //get existing categories
@@ -279,6 +256,27 @@ export class CourseFetchService {
         const mapDataCourseLanguage = [];
         for (const data of formattedData) {
           if (!existingCourse.find((e) => e.external_id == data.id)) {
+            //set temporary course data
+            const temporaryData = new CreateTemporaryCourseDto();
+            temporaryData.external_id = data.id;
+            temporaryData.name = data.title;
+            temporaryData.coach = data.coach;
+            temporaryData.duration = data.duration;
+            temporaryData.provider_id = providerId;
+            temporaryData.category = data.category.name;
+            temporaryData.topic = data.topic.name;
+            temporaryData.level = data.level;
+            temporaryData.date_course = null;
+            temporaryData.rating = Math.round(data.rating);
+            temporaryData.description = data.description;
+            temporaryData.url = data.url;
+            temporaryData.price = data.price;
+            temporaryData.freemium_code = null;
+            temporaryData.photo = data.image ? data.image : null;
+            temporaryData.language = data.language;
+            temporaryData.rating_count = data.rating_count;
+            mapDataTemporary.push(temporaryData);
+
             //find category
             const findCategory =
               data.category && data.category.name
@@ -325,6 +323,7 @@ export class CourseFetchService {
               );
             }
 
+            //set course data
             const post = new CreateCourseDto();
             post.external_id = data.id;
             post.name = data.title;
@@ -363,7 +362,7 @@ export class CourseFetchService {
         }
 
         //get last page
-        let lastPage = 0;
+        let lastPage = page + 1;
         if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
           lastPage = data.unit.pagination.current_page + 1;
         } else if (

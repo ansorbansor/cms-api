@@ -12,6 +12,6 @@ export const CourseLevelResource = (
   return {
     id: level.id,
     name: level.name,
-    course_count: countData && countData.total ? countData.total : 0,
+    course_count: countData && countData.total ? Number(countData.total) : 0,
   };
 };

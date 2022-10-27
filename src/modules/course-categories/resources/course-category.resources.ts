@@ -16,7 +16,8 @@ export const CourseCategoryResource = (
           return {
             id: topic.id,
             name: topic.name,
-            course_count: topicCount && topicCount.total ? topicCount.total : 0,
+            course_count:
+              topicCount && topicCount.total ? Number(topicCount.total) : 0,
           };
         })
       : [];
@@ -38,6 +39,8 @@ export const CourseCategoryResource = (
     topic: mapTopic,
     topic_count: category.topic_count,
     course_count:
-      courseCount && categoryCourseCount ? categoryCourseCount.total : 0,
+      courseCount && categoryCourseCount
+        ? Number(categoryCourseCount.total)
+        : 0,
   };
 };

@@ -19,6 +19,6 @@ export const ProviderResource = (
       : null,
     last_update: provider.last_update,
     url: provider.url,
-    course_count: countData && countData.total ? countData.total : 0,
+    course_count: countData && countData.total ? Number(countData.total) : 0,
   };
 };

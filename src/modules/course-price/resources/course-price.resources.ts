@@ -13,6 +13,6 @@ export const CoursePriceResource = (
   return {
     id: price.id,
     name: price.name,
-    course_count: countData && countData.total ? countData.total : 0,
+    course_count: countData && countData.total ? Number(countData.total) : 0,
   };
 };

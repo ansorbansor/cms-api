@@ -36,13 +36,9 @@ export class CourseCategory extends EntityHelper {
   @OneToMany(() => Course, (course) => course.courseCategory)
   @JoinColumn()
   course?: Course[];
-  course_count: number;
 
   @AfterLoad()
   setCount() {
     this.topic_count = this.topic ? this.topic.length : 0;
-    this.course_count = this.course
-      ? this.course.filter((e) => e.status == 1).length
-      : 0;
   }
 }

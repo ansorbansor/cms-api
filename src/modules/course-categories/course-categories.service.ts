@@ -118,11 +118,17 @@ export class CourseCategoriesService {
       return e.id;
     });
 
-    const topicId = getData.flatMap((e) => {
-      return e.topic.map((elem) => {
-        return elem.id;
-      });
-    });
+    const topicId = withTopics
+      ? getData.flatMap((e) => {
+          if (e.topic) {
+            return e.topic.map((elem) => {
+              return elem.id;
+            });
+          } else {
+            return null;
+          }
+        })
+      : [];
 
     const categoryCourseCount = await getManager().query(
       `SELECT COUNT(id) as total, category_id FROM courses WHERE status = 1 AND deleted_at IS NULL${

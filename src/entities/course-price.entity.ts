@@ -1,4 +1,4 @@
-import { AfterLoad, Column, Entity, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Course } from './course.entity';
 
@@ -10,12 +10,4 @@ export class CoursePrice extends EntityHelper {
   @OneToMany(() => Course, (course) => course.coursePrice)
   @JoinColumn()
   course?: Course[];
-  course_count: number;
-
-  @AfterLoad()
-  setCount() {
-    this.course_count = this.course
-      ? this.course.filter((e) => e.status == 1).length
-      : 0;
-  }
 }

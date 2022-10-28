@@ -53,9 +53,7 @@ export class MailService {
             url: `${this.configService.get(
               'app.frontendDomain',
             )}/password-change/${mailData.data.hash}`,
-            baseUrl: `${this.configService.get(
-              'minio.fullUrl',
-            )}/systems/`,
+            baseUrl: `${this.configService.get('minio.fullUrl')}/systems/`,
             frontendUrl: mailData.data.isAdmin
               ? `${this.configService.get('app.cmsDomain')}/auth`
               : this.configService.get('app.frontendDomain'),
@@ -85,9 +83,7 @@ export class MailService {
           subject: MailSubject.APPROVED_COUPON_SUBMISSION,
           template: './approve-coupon-submission',
           context: {
-            baseUrl: `${this.configService.get(
-              'minio.fullUrl',
-            )}/systems/`,
+            baseUrl: `${this.configService.get('minio.fullUrl')}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             courseUrl: mailData.data.courseUrl,
             courseTitle: mailData.data.courseTitle,
@@ -117,9 +113,7 @@ export class MailService {
           subject: MailSubject.REJECTED_COUPON_SUBMISSION,
           template: './reject-coupon-submission',
           context: {
-            baseUrl: `${this.configService.get(
-              'minio.fullUrl',
-            )}/systems/`,
+            baseUrl: `${this.configService.get('minio.fullUrl')}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             courseUrl: mailData.data.courseUrl,
             courseTitle: mailData.data.courseTitle,
@@ -148,9 +142,7 @@ export class MailService {
           subject: MailSubject.WELCOME,
           template: './welcome',
           context: {
-            baseUrl: `${this.configService.get(
-              'minio.fullUrl',
-            )}/systems/`,
+            baseUrl: `${this.configService.get('minio.fullUrl')}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             email: mailData.data.email,
             password: mailData.data.password,
@@ -182,9 +174,7 @@ export class MailService {
           subject: MailSubject.REGISTER_PROVIDER,
           template: './register-provider',
           context: {
-            baseUrl: `${this.configService.get(
-              'minio.fullUrl',
-            )}/systems/`,
+            baseUrl: `${this.configService.get('minio.fullUrl')}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             providerUrl: mailData.data.providerUrl,
             providerName: mailData.data.providerName,

@@ -276,6 +276,7 @@ export class CouponSubmissionService {
       .addSelect('employeeUnit.name', 'user_unit_name')
       .addSelect('user.level', 'user_level')
       .addSelect('user.blacklist', 'user_blacklist')
+      .addSelect('user.level', 'user_level')
       .addSelect('roleData.id', 'role_id')
       .addSelect('roleData.name', 'role_name')
       .addSelect(
@@ -361,7 +362,7 @@ export class CouponSubmissionService {
     paginationOptions.total = total;
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.take(paginationOptions.limit);
+    data.limit(paginationOptions.limit);
     data.orderBy('id', 'DESC');
 
     const rawData = await data.getRawMany();

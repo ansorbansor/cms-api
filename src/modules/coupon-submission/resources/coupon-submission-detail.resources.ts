@@ -118,6 +118,10 @@ export const CouponSubmissionDetailResource = (
           ? couponSubmission.user.email
           : null,
       categories: mapCat ? mapCat : [],
+      user_level:
+        couponSubmission.user && couponSubmission.user.level
+          ? couponSubmission.user.level
+          : 0,
     },
     coupon: {
       name:

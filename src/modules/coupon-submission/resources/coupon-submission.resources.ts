@@ -37,6 +37,7 @@ export const CouponSubmissionResource = (couponSubmission: any): any => {
         name: couponSubmission.role_name,
       },
       blacklist: couponSubmission.user_blacklist,
+      user_level: couponSubmission.user_level,
     },
     price: couponSubmission.course_price,
     total_submission: Number(couponSubmission.total_submissions),

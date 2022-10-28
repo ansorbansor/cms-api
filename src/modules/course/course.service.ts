@@ -314,7 +314,7 @@ export class CourseService {
     paginationOptions.total = total;
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.limit(paginationOptions.limit);
+    data.take(paginationOptions.limit);
     const getData = await data.getMany();
 
     const returnData = infinityPagination(

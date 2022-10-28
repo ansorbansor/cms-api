@@ -55,7 +55,7 @@ export class MailService {
             )}/password-change/${mailData.data.hash}`,
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
-            )}${this.configService.get('minio.bucketName')}/systems/`,
+            )}/systems/`,
             frontendUrl: mailData.data.isAdmin
               ? `${this.configService.get('app.cmsDomain')}/auth`
               : this.configService.get('app.frontendDomain'),
@@ -87,7 +87,7 @@ export class MailService {
           context: {
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
-            )}${this.configService.get('minio.bucketName')}/systems/`,
+            )}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             courseUrl: mailData.data.courseUrl,
             courseTitle: mailData.data.courseTitle,
@@ -119,7 +119,7 @@ export class MailService {
           context: {
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
-            )}${this.configService.get('minio.bucketName')}/systems/`,
+            )}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             courseUrl: mailData.data.courseUrl,
             courseTitle: mailData.data.courseTitle,
@@ -150,7 +150,7 @@ export class MailService {
           context: {
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
-            )}${this.configService.get('minio.bucketName')}/systems/`,
+            )}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             email: mailData.data.email,
             password: mailData.data.password,
@@ -184,7 +184,7 @@ export class MailService {
           context: {
             baseUrl: `${this.configService.get(
               'minio.fullUrl',
-            )}${this.configService.get('minio.bucketName')}/systems/`,
+            )}/systems/`,
             frontendUrl: this.configService.get('app.frontendDomain'),
             providerUrl: mailData.data.providerUrl,
             providerName: mailData.data.providerName,

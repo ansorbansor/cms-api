@@ -14,7 +14,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailService } from '../mail/mail.service';
-import { RedisKeyEnum } from 'src/utils/enums';
+import { FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
@@ -48,6 +48,8 @@ export class UsersService {
       const uploadedPhoto = await this.fileService.uploadWithMinio(
         photo,
         user_id,
+        FilePath.USER,
+        'User Photo',
       );
 
       createProfileDto.photoFile = uploadedPhoto;
@@ -61,6 +63,8 @@ export class UsersService {
       const uploadedPhoto = await this.fileService.uploadWithMinio(
         photo,
         user_id,
+        FilePath.USER,
+        'User Photo',
       );
 
       await this.usersRepository.update(user.id, {
@@ -269,7 +273,12 @@ export class UsersService {
     }
 
     if (photo) {
-      const img = await this.fileService.uploadWithMinio(photo, id);
+      const img = await this.fileService.uploadWithMinio(
+        photo,
+        id,
+        FilePath.USER,
+        'User Photo',
+      );
       updateProfileDto.photo = img.id;
     }
 

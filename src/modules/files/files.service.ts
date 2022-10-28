@@ -15,7 +15,7 @@ import { failedResponse } from 'src/utils/responses';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { FileResource } from './resources/file.resources';
-import { FileTypeEnum } from 'src/utils/enums';
+import { FilePath, FileTypeEnum } from 'src/utils/enums';
 
 @Injectable()
 export class FilesService {
@@ -65,6 +65,8 @@ export class FilesService {
     file: any,
     userId: number,
     originalName: string,
+    path: string,
+    description: string,
   ) {
     const timestamp = Date.now().toString();
     const hashedFileName = crypto
@@ -92,16 +94,21 @@ export class FilesService {
     return await this.fileRepository.save(
       this.fileRepository.create({
         name: fileName,
-        path: `${minioConfig().bucketName}/${fileName}`,
+        path: `${path}/${fileName}`,
         file_type: FileTypeEnum.image,
         extension: getFileExtension(originalName),
-        description: 'user file',
+        description: description,
         user_id: userId,
       }),
     );
   }
 
-  public async uploadWithMinio(file: BufferedFile, userId: number) {
+  public async uploadWithMinio(
+    file: BufferedFile,
+    userId: number,
+    path: string,
+    description: string,
+  ) {
     if (!(file.mimetype.includes('jpeg') || file.mimetype.includes('png'))) {
       throw new HttpException(
         'File type not supported',
@@ -126,7 +133,7 @@ export class FilesService {
 
     this.client.putObject(
       minioConfig().bucketName,
-      fileName,
+      `${path}/${fileName}`,
       file.buffer,
       file.size,
       metaData,
@@ -144,10 +151,10 @@ export class FilesService {
     return await this.fileRepository.save(
       this.fileRepository.create({
         name: fileName,
-        path: `${minioConfig().bucketName}/${fileName}`,
+        path: `${path}/${fileName}`,
         file_type: getFileType(file.mimetype),
         extension: getFileExtension(file.originalname),
-        description: 'user file',
+        description: description,
         user_id: userId,
       }),
     );
@@ -214,7 +221,12 @@ export class FilesService {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'selectFile');
     }
 
-    const uploadedFile = await this.uploadWithMinio(file, userId);
+    const uploadedFile = await this.uploadWithMinio(
+      file,
+      userId,
+      FilePath.USER,
+      'User Photo',
+    );
 
     await this.userRepository.update(userId, {
       photo: uploadedFile.id,

@@ -4,7 +4,7 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Brackets, getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { RedisKeyEnum } from 'src/utils/enums';
+import { FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { CourseCategoryResource } from './resources/course-category.resources';
 import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
 import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
@@ -40,7 +40,12 @@ export class CourseCategoriesService {
       );
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    const img = await this.fileService.uploadWithMinio(
+      photo,
+      user.id,
+      FilePath.CATEGORY,
+      'Category Thumbnail',
+    );
     createCourseCategoryDto.photo = img;
 
     const category = await this.categoryRepository.save(
@@ -232,7 +237,12 @@ export class CourseCategoriesService {
     let updateData = null;
 
     if (photo) {
-      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      const img = await this.fileService.uploadWithMinio(
+        photo,
+        user.id,
+        FilePath.CATEGORY,
+        'Category Thumbnail',
+      );
       updateData = {
         name: updateCourseCategoryDto.name,
         pkasn_program: updateCourseCategoryDto.pkasn_program,

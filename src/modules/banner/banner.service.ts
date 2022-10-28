@@ -4,7 +4,7 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { In, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { BannerType, RedisKeyEnum } from 'src/utils/enums';
+import { BannerType, FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { Banner } from 'src/entities/banner.entity';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { BannerResource } from './resources/banner.resources';
@@ -86,7 +86,12 @@ export class BannerService {
       }
     }
 
-    const img = await this.fileService.uploadWithMinio(photo, user.id);
+    const img = await this.fileService.uploadWithMinio(
+      photo,
+      user.id,
+      FilePath.BANNER,
+      'Banner Thumbnail',
+    );
     createBannerDto.photo = img;
 
     const category = await this.bannerRepository.save(
@@ -211,7 +216,12 @@ export class BannerService {
     }
 
     if (photo) {
-      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      const img = await this.fileService.uploadWithMinio(
+        photo,
+        user.id,
+        FilePath.BANNER,
+        'Banner Thumbnail',
+      );
       updateBannerDto.photo = img;
     }
 

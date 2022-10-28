@@ -12,6 +12,7 @@ import {
   CouponSubmissionStatus,
   CoursePriceType,
   CourseScheduleType,
+  FilePath,
   Rating,
   RedisKeyEnum,
 } from 'src/utils/enums';
@@ -51,7 +52,12 @@ export class CourseService {
     ip: string,
   ) {
     if (photo) {
-      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      const img = await this.fileService.uploadWithMinio(
+        photo,
+        user.id,
+        FilePath.COURSE,
+        'Course Thumbnail',
+      );
       createCourseDto.photo = img;
     }
 
@@ -389,7 +395,12 @@ export class CourseService {
     ip: string,
   ) {
     if (photo) {
-      const img = await this.fileService.uploadWithMinio(photo, user.id);
+      const img = await this.fileService.uploadWithMinio(
+        photo,
+        user.id,
+        FilePath.COURSE,
+        'Course Thumbnail',
+      );
       updateCourseDto.photo = img;
     }
 

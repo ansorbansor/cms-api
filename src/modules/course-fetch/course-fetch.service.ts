@@ -22,6 +22,7 @@ import { FilesService } from '../files/files.service';
 import {
   CourseFetchSettingType,
   CoursePriceType,
+  FilePath,
   NotificationSource,
   NotificationType,
   RedisKeyEnum,
@@ -320,6 +321,8 @@ export class CourseFetchService {
                 resBuffer,
                 userId,
                 `${data.id}.${fileExt}`,
+                FilePath.COURSE,
+                'Course Thumbnail',
               );
             }
 
@@ -508,6 +511,8 @@ export class CourseFetchService {
       });
       url = baseUrl;
     }
+
+    console.log(`START FETCH : ${url}`);
 
     const httpsAgent = new https.Agent({
       rejectUnauthorized: false,

@@ -125,3 +125,12 @@ export enum CourseFetchSettingType {
   BASE_URL_GET_COURSE_DETAIL = 'base-url-get-course-detail',
   BASE_URL_COURSE_PAGE = 'base-url-course-page',
 }
+
+export enum FilePath {
+  USER = 'users',
+  COURSE = 'courses',
+  BANNER = 'banners',
+  CATEGORY = 'courses/categories',
+  PROVIDER = 'providers',
+  OTHER = 'others',
+}

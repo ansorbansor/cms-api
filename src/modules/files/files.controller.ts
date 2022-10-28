@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FilesService } from 'src/modules/files/files.service';
 import { successResponse } from 'src/utils/responses';
 import { BufferedFile } from 'src/utils/file-helper';
+import { FilePath } from 'src/utils/enums';
 
 @ApiTags('Files')
 @Controller({
@@ -31,7 +32,12 @@ export class FilesController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: BufferedFile, @Request() request) {
     return successResponse(
-      await this.filesService.uploadWithMinio(file, request.user.id),
+      await this.filesService.uploadWithMinio(
+        file,
+        request.user.id,
+        FilePath.OTHER,
+        'Other Files',
+      ),
       'success',
     );
   }
@@ -46,7 +52,12 @@ export class FilesController {
     @Request() request,
   ) {
     return successResponse(
-      await this.filesService.uploadWithMinio(file, request.user.id),
+      await this.filesService.uploadWithMinio(
+        file,
+        request.user.id,
+        FilePath.USER,
+        'Other Files',
+      ),
       'success',
     );
   }

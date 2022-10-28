@@ -361,7 +361,7 @@ export class CouponSubmissionService {
     const total = await data.getCount();
     paginationOptions.total = total;
 
-    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.offset((paginationOptions.page - 1) * paginationOptions.limit);
     data.limit(paginationOptions.limit);
     data.orderBy('id', 'DESC');
 

@@ -616,4 +616,38 @@ export class CourseFetchService {
       `Berhasil menghapus data course dari provider ID ${providerId}`,
     );
   }
+
+  async updateCourseFetchTopic() {
+    const topicList = await this.topicRepository.find();
+    // const tempCourse = await this.temporaryCourseRepository.find();
+    const tempCourse = await getManager().query(
+      'SELECT id, external_id, topic FROM temporary_courses',
+    );
+
+    const courses = await getManager().query(
+      'SELECT id, external_id FROM courses WHERE external_id IS NOT NULL',
+    );
+
+    for (const element of tempCourse) {
+      const selectedTopicID = topicList.find((e) => {
+        return e.name && element.topic
+          ? e.name.toLowerCase() == element.topic.toLowerCase()
+          : false;
+      });
+
+      if (selectedTopicID) {
+        const selectedCourseId = courses.find((e) => {
+          return e.external_id == element.external_id;
+        });
+
+        if (selectedCourseId) {
+          await this.courseRepository.update(selectedCourseId, {
+            topic_id: selectedTopicID.id,
+          });
+        }
+      }
+    }
+
+    return 'done';
+  }
 }

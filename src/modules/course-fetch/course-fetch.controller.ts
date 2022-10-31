@@ -25,6 +25,15 @@ import { Throttle } from '@nestjs/throttler';
 export class CourseFetchController {
   constructor(private readonly courseFetchService: CourseFetchService) {}
 
+  @Get('update-topic')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(CourseFetchController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateCourseTopic() {
+    return await this.courseFetchService.updateCourseFetchTopic();
+  }
+
   @Throttle(1, 60)
   @Get(':id')
   @Permissions(MenuPermission.CREATE)

@@ -25,13 +25,31 @@ import { Throttle } from '@nestjs/throttler';
 export class CourseFetchController {
   constructor(private readonly courseFetchService: CourseFetchService) {}
 
-  @Get('update-topic')
+  @Get('update-course-topic')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async updateCourseTopic() {
     return await this.courseFetchService.updateCourseFetchTopic();
+  }
+
+  @Get('update-categories')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(CourseFetchController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateCategories() {
+    return await this.courseFetchService.getUdemyTopics();
+  }
+
+  @Get('activate-completed-course')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(CourseFetchController.name)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async activateCompletedCourse() {
+    return await this.courseFetchService.activatedCompleteCourse();
   }
 
   @Throttle(1, 60)

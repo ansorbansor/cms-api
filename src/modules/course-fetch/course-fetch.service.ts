@@ -650,4 +650,128 @@ export class CourseFetchService {
 
     return 'done';
   }
+
+  async getUdemyTopics() {
+    const listTopics = [];
+    const addCategories = [];
+
+    let catC = 0,
+      subcatC = 0,
+      topC = 0;
+    let categories = await fetch(
+      'https://www.udemy.com/api-2.0/course-categories/?locale=id_ID&navigation_locale=id_ID',
+    );
+    categories = await categories.json();
+
+    for (const cat of categories.results) {
+      catC = catC + 1;
+      addCategories.push(cat.title);
+      console.log(`Category ${catC} | ${categories.results.length}`);
+
+      let subcategories = await fetch(
+        `https://www.udemy.com/api-2.0/course-categories/${cat.id}/subcategories/?locale=id_ID&navigation_locale=id_ID`,
+      );
+      subcategories = await subcategories.json();
+
+      subcatC = 0;
+      for (const subcat of subcategories.results) {
+        subcatC = subcatC + 1;
+        console.log(`SubCat ${subcatC} | ${subcategories.results.length}`);
+        let topics = await fetch(
+          `https://www.udemy.com/api-2.0/course-subcategories/${subcat.id}/labels/?locale=id_ID&navigation_locale=id_ID&page_size=60`,
+        );
+        topics = await topics.json();
+
+        topC = 0;
+        for (const top of topics.results) {
+          topC = topC + 1;
+          console.log(`Topic ${topC} | ${topics.results.length}`);
+          listTopics.push({
+            category: cat.title,
+            topic: top.title,
+          });
+        }
+      }
+    }
+
+    const existingCategories = await getManager().query(
+      `SELECT id, name FROM categories`,
+    );
+    const existingTopics = await getManager().query(`SELECT name FROM topics`);
+
+    const notExistsCategories = listTopics.filter((e) => {
+      return !existingCategories.find(
+        (x) =>
+          e.category.replace('&', 'dan').toLowerCase() ==
+          x.name.replace('&', 'dan').toLowerCase(),
+      );
+    });
+
+    const notExistsTopics = listTopics.filter((e) => {
+      return !existingTopics.find(
+        (x) =>
+          e.topic.replace('&', 'dan').toLowerCase() ==
+          x.name.replace('&', 'dan').toLowerCase(),
+      );
+    });
+
+    const insertCategories = [];
+
+    notExistsCategories.forEach((element) => {
+      const insert = {
+        name: element.category,
+      };
+
+      if (!insertCategories.some((e) => e.name == element.category)) {
+        insertCategories.push(insert);
+      }
+    });
+
+    if (insertCategories) {
+      await this.courseCategoryRepository.insert(insertCategories);
+    }
+
+    const insertTopics = notExistsTopics.flatMap((e) => {
+      return {
+        category_id: existingCategories.find((x) => {
+          return (
+            x.name.replace('&', 'dan').toLowerCase() ==
+            e.category.replace('&', 'dan').toLowerCase()
+          );
+        }).id,
+        name: e.topic,
+      };
+    });
+
+    if (insertTopics) {
+      await this.topicRepository.insert(insertTopics);
+    }
+
+    return insertTopics;
+  }
+
+  async activatedCompleteCourse() {
+    await getManager().query(
+      `UPDATE courses 
+        SET status = 1 
+        WHERE external_id IS NOT NULL
+        AND name IS NOT NULL
+        AND coach IS NOT NULL
+        AND duration IS NOT NULL
+        AND provider_id IS NOT NULL
+        AND category_id IS NOT NULL
+        AND topic_id IS NOT NULL
+        AND level_id IS NOT NULL
+        AND rating IS NOT NULL
+        AND rating_count IS NOT NULL
+        AND description IS NOT NULL
+        AND url IS NOT NULL
+        AND price_id IS NOT NULL
+        AND price IS NOT NULL
+        AND photo IS NOT NULL
+        AND deleted_at IS NULL`,
+    );
+
+    return 'done';
+  }
 }

@@ -335,7 +335,11 @@ export class CourseFetchService {
             post.provider_id = providerId;
             post.category_id = findCategory ? findCategory.id : null;
             post.topic_id = findTopic ? findTopic.id : null;
-            post.level_id = findLevel ? findLevel.id : null;
+            post.level_id = findLevel
+              ? findLevel.id
+              : existingLevels && existingLevels.length > 0
+              ? existingLevels[0].id
+              : null;
             post.date_course = null;
             post.rating = Math.round(data.rating);
             post.description = data.description;

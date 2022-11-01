@@ -8,6 +8,8 @@ import { CreateEditorChoiceCourseDto } from './dto/create-editor-choice-course.d
 import { User } from 'src/entities/user.entity';
 import { EditorChoiceCourseResource } from './resources/editor-choice-course.resources';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import { RedisService } from '../redis/redis.service';
+import { RedisKeyEnum } from 'src/utils/enums';
 
 @Injectable()
 export class EditorChoiceCourseService {
@@ -15,6 +17,7 @@ export class EditorChoiceCourseService {
     @InjectRepository(EditorChoiceCourse)
     private editorChoiceCourseRepository: Repository<EditorChoiceCourse>,
     private activityLogService: ActivityLogService,
+    private redisService: RedisService,
   ) {}
 
   async create(
@@ -50,6 +53,9 @@ export class EditorChoiceCourseService {
       description: `Ubah Course Pilihan Editor`,
       ip: ip,
     });
+
+    const redisKey = `${RedisKeyEnum.course}:`;
+    this.redisService.del(redisKey);
 
     return this.findManyWithPagination({
       page: 1,

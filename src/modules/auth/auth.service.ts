@@ -33,6 +33,7 @@ import { Menu } from 'src/entities/menu.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActiveDirectoryUtils } from 'src/utils/active-directory-utils';
+import { isNumber } from 'class-validator';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -125,6 +126,106 @@ export class AuthService {
         id: user.id,
         role: user.userRoles,
       });
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
+        ip: ip,
+      });
+
+      let menus = null;
+      if (
+        user.userRoles.find((e) => {
+          return e.roleData.grant_all_access;
+        })
+      ) {
+        menus = await this.menuRepository.find();
+      }
+
+      return { token, user: user, menus };
+    } else {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'incorrectPassword',
+      );
+    }
+  }
+
+  async validateLoginCustomExpiration(
+    loginDto: AuthEmailLoginDto,
+    onlyAdmin: boolean,
+    ip: string,
+  ): Promise<{ token: string; user: User; menus: Menu[] }> {
+    if (!loginDto.expiration || !isNumber(loginDto.expiration)) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Expiration tidak boleh kosong',
+      );
+    }
+
+    const user = await this.usersService.findOneFull({
+      email: loginDto.email,
+    });
+
+    if (!user) {
+      //check Active Directory user
+      const ADResult = await new ActiveDirectoryUtils().authAD(
+        loginDto.email,
+        loginDto.password,
+      );
+
+      if (!ADResult || !ADResult.code || ADResult.code != 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          `Pengguna tidak ditemukan (${ADResult.code} : ${ADResult.description})`,
+        );
+      } else {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'REGISTERKAN AKUN AD DISINI!',
+        );
+      }
+    } else if (user && user.userRoles.length == 0) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Pengguna tidak ditemukan',
+      );
+    }
+
+    if (
+      onlyAdmin &&
+      !user.userRoles.some(
+        (b) =>
+          b.roleData &&
+          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
+      )
+    ) {
+      throw failedResponse(
+        HttpStatus.FORBIDDEN,
+        'Akun tidak bisa mengakses CMS admin',
+      );
+    }
+
+    if (authConfig().emailVerification && user.hash != null) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'account not verified',
+      );
+    }
+
+    const isValidPassword = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+
+    if (isValidPassword) {
+      const token = await this.jwtService.sign(
+        {
+          id: user.id,
+          role: user.userRoles,
+        },
+        { expiresIn: `${loginDto.expiration}s` },
+      );
 
       await this.activityLogService.create({
         user_id: user.id,

@@ -81,15 +81,20 @@ export class FilesService {
     // We need to append the extension at the end otherwise Minio will save it as a generic file
     const fileName = hashedFileName + extension;
 
-    this.client.putObject(minioConfig().bucketName, fileName, file, (error) => {
-      if (error) {
-        // throw failedResponse(HttpStatus.BAD_REQUEST, 'Error upload file');
-        throw new HttpException(
-          `Error uploading file ${error}`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    });
+    this.client.putObject(
+      minioConfig().bucketName,
+      `${path}/${fileName}`,
+      file,
+      (error) => {
+        if (error) {
+          // throw failedResponse(HttpStatus.BAD_REQUEST, 'Error upload file');
+          throw new HttpException(
+            `Error uploading file ${error}`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      },
+    );
 
     return await this.fileRepository.save(
       this.fileRepository.create({

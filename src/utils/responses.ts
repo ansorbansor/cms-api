@@ -29,17 +29,34 @@ export const successResponseList = (datax: any, message: string) => {
   const currentPage = datax.page;
   const limitRow = datax.limit;
   const totalPage = Math.ceil(count / limitRow);
-  const nextPage =
-    currentPage < totalPage
-      ? currentPage + 1
-      : currentPage == totalPage
-      ? currentPage
-      : null;
-  const prevPage =
-    currentPage > 1 ? currentPage - 1 : currentPage <= 1 ? 1 : null;
-  const firstPage = 1;
   const lastPage = totalPage;
+  const nextPage = currentPage < totalPage ? currentPage + 1 : null;
+  const prevPage =
+    currentPage > 1 && currentPage <= lastPage ? currentPage - 1 : null;
+  const firstPage = 1;
   const total = count;
+  // const from =
+  //   prevPage * limitRow < total
+  //     ? currentPage > 1
+  //       ? 1 + prevPage * limitRow
+  //       : 1
+  //     : null;
+  const from =
+    prevPage || nextPage
+      ? prevPage * limitRow < total
+        ? currentPage > 1
+          ? 1 + prevPage * limitRow
+          : 1
+        : null
+      : null;
+  const to =
+    currentPage * limitRow < total
+      ? currentPage * limitRow
+      : from
+      ? from - 1 + (total % limitRow)
+      : null;
+
+  // const to = nextPage ? currentPage * limitRow : from - 1 + (total % limitRow);
 
   return {
     meta: {
@@ -56,6 +73,8 @@ export const successResponseList = (datax: any, message: string) => {
       limit: limitRow,
       total: total,
       total_page: totalPage,
+      from: from,
+      to: to,
     },
   };
 };

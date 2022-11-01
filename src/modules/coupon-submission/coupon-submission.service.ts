@@ -287,20 +287,20 @@ export class CouponSubmissionService {
         '`couponSubmissionApproved`.total_submissions_approved',
         'total_submissions_approved',
       )
-      .leftJoin('couponSubmission.user', 'user')
-      .leftJoin('couponSubmission.course', 'course')
-      .leftJoin('course.provider', 'provider')
-      .leftJoin('user.employeePosition', 'employeePosition')
-      .leftJoin('user.employeeLevel', 'employeeLevel')
-      .leftJoin('user.employeeUnit', 'employeeUnit')
-      .leftJoin('user.userRoles', 'userRoles')
-      .leftJoin('userRoles.roleData', 'roleData')
-      .leftJoin(
+      .innerJoin('couponSubmission.user', 'user')
+      .innerJoin('couponSubmission.course', 'course')
+      .innerJoin('course.provider', 'provider')
+      .innerJoin('user.employeePosition', 'employeePosition')
+      .innerJoin('user.employeeLevel', 'employeeLevel')
+      .innerJoin('user.employeeUnit', 'employeeUnit')
+      .innerJoin('user.userRoles', 'userRoles')
+      .innerJoin('userRoles.roleData', 'roleData')
+      .innerJoin(
         '(' + subquery.getQuery() + ')',
         'couponSubmissionTotal',
         '`couponSubmission`.user_id = `couponSubmissionTotal`.user_id',
       )
-      .leftJoin(
+      .innerJoin(
         '(' + subqueryApprovedCoupon.getQuery() + ')',
         'couponSubmissionApproved',
         '`couponSubmission`.user_id = `couponSubmissionApproved`.user_id',
@@ -383,21 +383,21 @@ export class CouponSubmissionService {
   async findOne(fields: EntityCondition<CouponSubmission>) {
     const data = await this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
-      .leftJoinAndSelect('couponSubmission.user', 'user')
-      .leftJoinAndSelect('couponSubmission.course', 'course')
+      .innerJoinAndSelect('couponSubmission.user', 'user')
+      .innerJoinAndSelect('couponSubmission.course', 'course')
       .leftJoinAndSelect('couponSubmission.coupon', 'coupon')
-      .leftJoinAndSelect('course.provider', 'provider')
-      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
-      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
-      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
-      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .innerJoinAndSelect('course.provider', 'provider')
+      .innerJoinAndSelect('user.employeePosition', 'employeePosition')
+      .innerJoinAndSelect('user.employeeLevel', 'employeeLevel')
+      .innerJoinAndSelect('user.employeeUnit', 'employeeUnit')
+      .innerJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('userRole.roleData', 'role')
+      .innerJoinAndSelect('userRole.roleData', 'role')
       .leftJoinAndSelect('coupon.provider', 'couponProvider')
       .leftJoinAndSelect('coupon.course', 'couponCourse')
-      .leftJoinAndSelect('user.userTopic', 'userTopic')
-      .leftJoinAndSelect('userTopic.category', 'category')
-      .leftJoinAndSelect('userTopic.topic', 'topic')
+      .innerJoinAndSelect('user.userTopic', 'userTopic')
+      .innerJoinAndSelect('userTopic.category', 'category')
+      .innerJoinAndSelect('userTopic.topic', 'topic')
       .where(fields)
       .getOne();
 
@@ -468,8 +468,8 @@ export class CouponSubmissionService {
 
     const exists = await this.couponSubmissionRepository
       .createQueryBuilder('submission')
-      .leftJoinAndSelect('submission.course', 'course')
-      .leftJoinAndSelect('submission.user', 'user')
+      .innerJoinAndSelect('submission.course', 'course')
+      .innerJoinAndSelect('submission.user', 'user')
       .where({
         id: submissionId,
       })

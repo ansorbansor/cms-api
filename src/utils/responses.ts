@@ -35,12 +35,6 @@ export const successResponseList = (datax: any, message: string) => {
     currentPage > 1 && currentPage <= lastPage ? currentPage - 1 : null;
   const firstPage = 1;
   const total = count;
-  // const from =
-  //   prevPage * limitRow < total
-  //     ? currentPage > 1
-  //       ? 1 + prevPage * limitRow
-  //       : 1
-  //     : null;
   const from =
     prevPage || nextPage
       ? prevPage * limitRow < total
@@ -55,8 +49,6 @@ export const successResponseList = (datax: any, message: string) => {
       : from
       ? from - 1 + (total % limitRow)
       : null;
-
-  // const to = nextPage ? currentPage * limitRow : from - 1 + (total % limitRow);
 
   return {
     meta: {

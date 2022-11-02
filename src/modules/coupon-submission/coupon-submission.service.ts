@@ -295,12 +295,12 @@ export class CouponSubmissionService {
       .innerJoin('user.employeeUnit', 'employeeUnit')
       .innerJoin('user.userRoles', 'userRoles')
       .innerJoin('userRoles.roleData', 'roleData')
-      .innerJoin(
+      .leftJoin(
         '(' + subquery.getQuery() + ')',
         'couponSubmissionTotal',
         '`couponSubmission`.user_id = `couponSubmissionTotal`.user_id',
       )
-      .innerJoin(
+      .leftJoin(
         '(' + subqueryApprovedCoupon.getQuery() + ')',
         'couponSubmissionApproved',
         '`couponSubmission`.user_id = `couponSubmissionApproved`.user_id',

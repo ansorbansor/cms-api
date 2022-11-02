@@ -11,7 +11,9 @@ export const CourseCategoryResource = (
       ? category.topic.map((topic) => {
           const topicCount =
             courseCount && courseCount.topicCourseCount
-              ? courseCount.topicCourseCount.find((e) => e.topic_id == topic.id)
+              ? courseCount.topicCourseCount.find(
+                  (e) => e.topic_id == topic.id && e.category_id == category.id,
+                )
               : null;
           return {
             id: topic.id,

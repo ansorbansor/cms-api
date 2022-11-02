@@ -142,9 +142,9 @@ export class CourseCategoriesService {
     );
 
     const courseTopicCount = await getManager().query(
-      `SELECT COUNT(id) as total, topic_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
+      `SELECT COUNT(id) as total, topic_id, category_id FROM courses WHERE status = 1 AND deleted_at IS NULL${
         topicId.length > 0 ? ` AND topic_id IN (${topicId})` : ''
-      } GROUP BY topic_id`,
+      } GROUP BY topic_id, category_id`,
     );
 
     const returnData = infinityPagination(

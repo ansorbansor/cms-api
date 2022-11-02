@@ -291,6 +291,10 @@ export class UsersService {
 
     if (updateProfileDto.categories) {
       await this.createUserTopic(updateProfileDto.categories, id);
+    } else {
+      await this.userTopicsRepository.softDelete({
+        user_id: id,
+      });
     }
 
     await this.activityLogService.create({

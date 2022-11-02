@@ -35,10 +35,14 @@ export class RolesGuard implements CanActivate {
         return false;
       }
       return data.some(function (e) {
-        if (!e.role || !e.role.roleAccess || e.role.roleAccess.length == 0) {
+        if (
+          !e.roleData ||
+          !e.roleData.roleAccess ||
+          e.roleData.roleAccess.length == 0
+        ) {
           return false;
         }
-        return e.role.roleAccess.some(function (x) {
+        return e.roleData.roleAccess.some(function (x) {
           if (
             controllers == x.menu.be_controller &&
             permissions == x.menu_access

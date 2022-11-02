@@ -238,7 +238,7 @@ export class CourseFetchService {
           );
         }
 
-        itemCount += formattedData.length;
+        itemCount += limit;
 
         //arrange temporary course
         const mapDataTemporary = [];
@@ -255,136 +255,127 @@ export class CourseFetchService {
 
         const mapDataCourse = [];
         const mapDataCourseLanguage = [];
-        for (const data of formattedData) {
-          if (!existingCourse.find((e) => e.external_id == data.id)) {
-            //set temporary course data
-            const temporaryData = new CreateTemporaryCourseDto();
-            temporaryData.external_id = data.id;
-            temporaryData.name = data.title;
-            temporaryData.coach = data.coach;
-            temporaryData.duration = data.duration;
-            temporaryData.provider_id = providerId;
-            temporaryData.category = data.category.name;
-            temporaryData.topic = data.topic.name;
-            temporaryData.level = data.level;
-            temporaryData.date_course = null;
-            temporaryData.rating = Math.round(data.rating);
-            temporaryData.description = data.description;
-            temporaryData.url = data.url;
-            temporaryData.price = data.price;
-            temporaryData.freemium_code = null;
-            temporaryData.photo = data.image ? data.image : null;
-            temporaryData.language = data.language;
-            temporaryData.rating_count = data.rating_count;
-            mapDataTemporary.push(temporaryData);
+        await new Promise(async (resolve) => {
+          for (const data of formattedData) {
+            if (!existingCourse.find((e) => e.external_id == data.id)) {
+              //set temporary course data
+              const temporaryData = new CreateTemporaryCourseDto();
+              temporaryData.external_id = data.id;
+              temporaryData.name = data.title;
+              temporaryData.coach = data.coach;
+              temporaryData.duration = data.duration;
+              temporaryData.provider_id = providerId;
+              temporaryData.category = data.category.name;
+              temporaryData.topic = data.topic.name;
+              temporaryData.level = data.level;
+              temporaryData.date_course = null;
+              temporaryData.rating = Math.round(data.rating);
+              temporaryData.description = data.description;
+              temporaryData.url = data.url;
+              temporaryData.price = data.price;
+              temporaryData.freemium_code = null;
+              temporaryData.photo = data.image ? data.image : null;
+              temporaryData.language = data.language;
+              temporaryData.rating_count = data.rating_count;
+              mapDataTemporary.push(temporaryData);
 
-            //find category
-            const findCategory =
-              data.category && data.category.name
-                ? existingCategories.find((e) =>
-                    e.name
-                      .toLowerCase()
-                      .includes(categoryItem.name.toLowerCase()),
+              //find category
+              const findCategory =
+                data.category && data.category.name
+                  ? existingCategories.find((e) =>
+                      e.name
+                        .toLowerCase()
+                        .includes(categoryItem.name.toLowerCase()),
+                    )
+                  : null;
+              //find category
+              const findTopic =
+                data.topic && data.topic.name
+                  ? existingTopics.find((e) =>
+                      e.name
+                        .toLowerCase()
+                        .includes(data.topic.name.toLowerCase()),
+                    )
+                  : null;
+              //find level
+              const findLevel =
+                data.level && data.level
+                  ? existingLevels.find((e) =>
+                      e.name.toLowerCase().includes(data.level.toLowerCase()),
+                    )
+                  : null;
+              //find language
+              const findLanguage = data.language
+                ? existingLanguages.find((e) =>
+                    e.name.toLowerCase().includes(data.language.toLowerCase()),
                   )
                 : null;
-            //find category
-            const findTopic =
-              data.topic && data.topic.name
-                ? existingTopics.find((e) =>
-                    e.name
-                      .toLowerCase()
-                      .includes(data.topic.name.toLowerCase()),
-                  )
+              //get file image
+              let img = null;
+              if (data.image) {
+                const fileExt = getFileExtension(data.image);
+                const res = await fetch(data.image);
+                const resBuffer = await res.buffer();
+
+                //save get image
+                img = await this.fileService.uploadWithMinioBuffer(
+                  resBuffer,
+                  userId,
+                  `${data.id}.${fileExt}`,
+                  FilePath.COURSE,
+                  'Course Thumbnail',
+                );
+              }
+
+              //set course data
+              const post = new CreateCourseDto();
+              post.external_id = data.id;
+              post.name = data.title;
+              post.coach = data.coach;
+              post.duration = data.duration;
+              post.provider_id = providerId;
+              post.category_id = findCategory ? findCategory.id : null;
+              post.topic_id = findTopic ? findTopic.id : null;
+              post.level_id = findLevel
+                ? findLevel.id
+                : existingLevels && existingLevels.length > 0
+                ? existingLevels[0].id
                 : null;
-            //find level
-            const findLevel =
-              data.level && data.level
-                ? existingLevels.find((e) =>
-                    e.name.toLowerCase().includes(data.level.toLowerCase()),
-                  )
-                : null;
-            //find language
-            const findLanguage = data.language
-              ? existingLanguages.find((e) =>
-                  e.name.toLowerCase().includes(data.language.toLowerCase()),
-                )
-              : null;
-            //get file image
-            let img = null;
-            if (data.image) {
-              const fileExt = getFileExtension(data.image);
-              const res = await fetch(data.image);
-              const resBuffer = await res.buffer();
+              post.date_course = null;
+              post.rating = Math.round(data.rating);
+              post.description = data.description;
+              post.url = data.url;
+              post.price_id =
+                data.price && data.price > 0
+                  ? CoursePriceType.PAID
+                  : CoursePriceType.FREE;
+              post.price = data.price;
+              post.freemium_code = null;
+              post.photo = img && img.id ? img.id : null;
+              post.rating_count = data.rating_count;
+              mapDataCourse.push(post);
 
-              //save get image
-              img = await this.fileService.uploadWithMinioBuffer(
-                resBuffer,
-                userId,
-                `${data.id}.${fileExt}`,
-                FilePath.COURSE,
-                'Course Thumbnail',
-              );
-            }
-
-            //set course data
-            const post = new CreateCourseDto();
-            post.external_id = data.id;
-            post.name = data.title;
-            post.coach = data.coach;
-            post.duration = data.duration;
-            post.provider_id = providerId;
-            post.category_id = findCategory ? findCategory.id : null;
-            post.topic_id = findTopic ? findTopic.id : null;
-            post.level_id = findLevel
-              ? findLevel.id
-              : existingLevels && existingLevels.length > 0
-              ? existingLevels[0].id
-              : null;
-            post.date_course = null;
-            post.rating = Math.round(data.rating);
-            post.description = data.description;
-            post.url = data.url;
-            post.price_id =
-              data.price && data.price > 0
-                ? CoursePriceType.PAID
-                : CoursePriceType.FREE;
-            post.price = data.price;
-            post.freemium_code = null;
-            post.photo = img && img.id ? img.id : null;
-            post.rating_count = data.rating_count;
-            mapDataCourse.push(post);
-
-            if (findLanguage) {
-              mapDataCourseLanguage.push({
-                external_id: data.id,
-                language_id: findLanguage.id,
-              });
+              if (findLanguage) {
+                mapDataCourseLanguage.push({
+                  external_id: data.id,
+                  language_id: findLanguage.id,
+                });
+              }
             }
           }
-        }
+
+          resolve(null);
+        });
 
         if (mapDataTemporary.length > 0) {
           //save to temporary course
           await this.temporaryCourseRepository.save(mapDataTemporary);
         }
 
-        //get last page
-        let lastPage = page + 1;
-        if (categoryItem.providerData.name.toLowerCase().includes('udemy')) {
-          lastPage = data.unit.pagination.current_page + 1;
-        } else if (
-          categoryItem.providerData.name.toLowerCase().includes('skill academy')
-        ) {
-          lastPage = data.data.totalPage;
-        } else if (
-          categoryItem.providerData.name.toLowerCase().includes('terampil')
-        ) {
-          lastPage = Math.ceil(data.data.Trainings.filtered / limit);
-        }
-
+        let savedData = [];
         if (mapDataCourse.length > 0) {
           //save to course
-          const savedData = await this.courseRepository.save(mapDataCourse);
+          savedData = await this.courseRepository.save(mapDataCourse);
           savedDataCount += savedData.length;
 
           //mapping data course language
@@ -404,33 +395,33 @@ export class CourseFetchService {
 
           //save to course language
           await this.courseLanguageTransactionRepository.save(saveLanguage);
-
-          //save history fetch
-          const saveHistoryFetch = new CreateCourseFetchHistoryDto();
-          saveHistoryFetch.provider_id = providerId;
-          saveHistoryFetch.first_page = page;
-          saveHistoryFetch.last_page = lastPage;
-          saveHistoryFetch.limit = limit;
-          saveHistoryFetch.item_count = itemCount;
-          saveHistoryFetch.total_item_count = totalItemCount;
-          saveHistoryFetch.total_item_inserted = savedData.length;
-          saveHistoryFetch.provider_category_id = categoryItem.id;
-
-          await this.courseFetchHistoryRepository.save(
-            this.courseFetchHistoryRepository.create({
-              ...saveHistoryFetch,
-            }),
-          );
-
-          const redisKey = `${RedisKeyEnum.course}:`;
-          this.redisService.del(redisKey);
-
-          await this.providerRepository.update(providerId, {
-            last_update: new Date(),
-          });
         }
 
-        page = lastPage;
+        //save history fetch
+        const saveHistoryFetch = new CreateCourseFetchHistoryDto();
+        saveHistoryFetch.provider_id = providerId;
+        saveHistoryFetch.first_page = page;
+        saveHistoryFetch.last_page = page + 1;
+        saveHistoryFetch.limit = limit;
+        saveHistoryFetch.item_count = itemCount;
+        saveHistoryFetch.total_item_count = totalItemCount;
+        saveHistoryFetch.total_item_inserted = savedData.length;
+        saveHistoryFetch.provider_category_id = categoryItem.id;
+
+        await this.courseFetchHistoryRepository.save(
+          this.courseFetchHistoryRepository.create({
+            ...saveHistoryFetch,
+          }),
+        );
+
+        const redisKey = `${RedisKeyEnum.course}:`;
+        this.redisService.del(redisKey);
+
+        await this.providerRepository.update(providerId, {
+          last_update: new Date(),
+        });
+
+        page = page + 1;
       }
     }
 
@@ -670,7 +661,6 @@ export class CourseFetchService {
     for (const cat of categories.results) {
       catC = catC + 1;
       addCategories.push(cat.title);
-      console.log(`Category ${catC} | ${categories.results.length}`);
 
       let subcategories = await fetch(
         `https://www.udemy.com/api-2.0/course-categories/${cat.id}/subcategories/?locale=id_ID&navigation_locale=id_ID`,
@@ -680,7 +670,6 @@ export class CourseFetchService {
       subcatC = 0;
       for (const subcat of subcategories.results) {
         subcatC = subcatC + 1;
-        console.log(`SubCat ${subcatC} | ${subcategories.results.length}`);
         let topics = await fetch(
           `https://www.udemy.com/api-2.0/course-subcategories/${subcat.id}/labels/?locale=id_ID&navigation_locale=id_ID&page_size=60`,
         );
@@ -689,7 +678,6 @@ export class CourseFetchService {
         topC = 0;
         for (const top of topics.results) {
           topC = topC + 1;
-          console.log(`Topic ${topC} | ${topics.results.length}`);
           listTopics.push({
             category: cat.title,
             topic: top.title,

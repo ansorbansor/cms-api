@@ -18,7 +18,7 @@ export const FetchCourseResource = (
     return {
       id: data.id ? data.id : null,
       title: data.title ? data.title : null,
-      url: data.url ? `${coursePageUrl}/${data.url}` : null,
+      url: data.url ? `${coursePageUrl}${data.url}` : null,
       coach: mapCoach,
       image: data.image_480x270 ? data.image_480x270 : null,
       headline: data.headline ? data.headline : null,

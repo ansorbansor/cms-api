@@ -7,7 +7,12 @@ import { UsersService } from '../users/users.service';
 import { ForgotPasswordService } from '../forgot-password/forgot-password.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
-import { AuthProvidersEnum, RedisKeyEnum, RoleEnum } from 'src/utils/enums';
+import {
+  AuthProvidersEnum,
+  ErrorMessage,
+  RedisKeyEnum,
+  RoleEnum,
+} from 'src/utils/enums';
 import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
@@ -80,18 +85,18 @@ export class AuthService {
       if (!ADResult || !ADResult.code || ADResult.code != 0) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `Pengguna tidak ditemukan (${ADResult.code} : ${ADResult.description})`,
+          `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
         );
       } else {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          'REGISTERKAN AKUN AD DISINI!',
+          'REGISTERKAN AKUN AD!',
         );
       }
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pengguna tidak ditemukan',
+        ErrorMessage.EMAIL_NOT_EXISTS,
       );
     }
 
@@ -103,16 +108,13 @@ export class AuthService {
           (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
       )
     ) {
-      throw failedResponse(
-        HttpStatus.FORBIDDEN,
-        'Akun tidak bisa mengakses CMS admin',
-      );
+      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.USER_NOT_FOUND);
     }
 
     if (authConfig().emailVerification && user.hash != null) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'account not verified',
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 
@@ -146,7 +148,7 @@ export class AuthService {
     } else {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'incorrectPassword',
+        ErrorMessage.PASSWORD_WRONG,
       );
     }
   }
@@ -177,7 +179,7 @@ export class AuthService {
       if (!ADResult || !ADResult.code || ADResult.code != 0) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `Pengguna tidak ditemukan (${ADResult.code} : ${ADResult.description})`,
+          `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
         );
       } else {
         throw failedResponse(
@@ -188,7 +190,7 @@ export class AuthService {
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pengguna tidak ditemukan',
+        ErrorMessage.EMAIL_NOT_EXISTS,
       );
     }
 
@@ -200,16 +202,13 @@ export class AuthService {
           (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
       )
     ) {
-      throw failedResponse(
-        HttpStatus.FORBIDDEN,
-        'Akun tidak bisa mengakses CMS admin',
-      );
+      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.USER_NOT_FOUND);
     }
 
     if (authConfig().emailVerification && user.hash != null) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'account not verified',
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 
@@ -246,7 +245,7 @@ export class AuthService {
     } else {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'incorrectPassword',
+        ErrorMessage.PASSWORD_WRONG,
       );
     }
   }
@@ -331,7 +330,7 @@ export class AuthService {
       user.provider = authProvider;
       await this.usersService.update(user.id, user, user, ip);
     } else {
-      throw failedResponse(HttpStatus.NOT_FOUND, 'Pengguna tidak ditemukan');
+      throw failedResponse(HttpStatus.NOT_FOUND, ErrorMessage.EMAIL_NOT_EXISTS);
     }
 
     const jwtToken = await this.jwtService.sign({
@@ -403,7 +402,7 @@ export class AuthService {
     if (!user || (user && user.userRoles.length == 0)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pengguna tidak ditemukan',
+        ErrorMessage.EMAIL_NOT_EXISTS,
       );
     }
 
@@ -455,7 +454,7 @@ export class AuthService {
     if (!forgot) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Data tidak ditemukan',
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 
@@ -486,7 +485,7 @@ export class AuthService {
     if (!forgot) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Data tidak ditemukan',
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 
@@ -549,7 +548,7 @@ export class AuthService {
     if (!currentUser || (currentUser && currentUser.userRoles.length == 0)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pengguna tidak ditemukan',
+        ErrorMessage.EMAIL_NOT_EXISTS,
       );
     }
 
@@ -561,7 +560,7 @@ export class AuthService {
     if (!isValidOldPassword) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Password lama salah',
+        ErrorMessage.PASSWORD_WRONG,
       );
     }
 

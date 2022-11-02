@@ -4,7 +4,7 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { FilePath, RedisKeyEnum } from 'src/utils/enums';
+import { ErrorMessage, FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { Provider } from 'src/entities/provider.entity';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { ProviderResource } from './resources/provider.resources';
@@ -199,7 +199,7 @@ export class ProvidersService {
     if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Pengguna tidak ditemukan',
+        ErrorMessage.EMAIL_NOT_EXISTS,
       );
     }
 

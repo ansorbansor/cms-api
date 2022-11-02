@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, Validate } from 'class-validator';
+import { ErrorMessage } from 'src/utils/enums';
 import { IsExist } from 'src/utils/validators';
 
 export class CreateUserNotificationDto {
   @Validate(IsExist, ['User', 'id'], {
-    message: 'Pengguna tidak ditemukan',
+    message: ErrorMessage.EMAIL_NOT_EXISTS,
   })
   user_id: number;
 

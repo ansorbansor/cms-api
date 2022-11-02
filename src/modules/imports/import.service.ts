@@ -10,7 +10,7 @@ import { User } from 'src/entities/user.entity';
 import { BufferedFile } from 'src/utils/file-helper';
 import { failedResponse } from 'src/utils/responses';
 import { Stream } from 'stream';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { MailService } from '../mail/mail.service';
 import * as tmp from 'tmp';
 import { Provider } from 'src/entities/provider.entity';
@@ -645,16 +645,11 @@ export class ImportService {
 
         //course master data
         const courseSheet = wb.addWorksheet('Daftar Pembelajaran');
-        const courseData = await this.courseRepository
-          .createQueryBuilder('course')
-          .leftJoinAndSelect('course.provider', 'provider')
-          .leftJoinAndSelect('course.courseCategory', 'category')
-          .leftJoinAndSelect('course.topic', 'topic')
-          .leftJoinAndSelect('course.courseLevel', 'courseLevel')
-          .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
-          .leftJoinAndSelect('course.coursePrice', 'coursePrice')
-          .leftJoinAndSelect('course.photoFile', 'photoFile')
-          .getMany();
+        const courseData = await getManager().query(
+          `SELECT c.id, c.name 'course_name', p.name 'provider_name', c.price 
+            FROM courses c, providers p
+            WHERE c.provider_id = p.id`,
+        );
 
         rows = [];
 

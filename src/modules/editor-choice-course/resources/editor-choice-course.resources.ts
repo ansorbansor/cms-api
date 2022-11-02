@@ -68,9 +68,14 @@ export const EditorChoiceCourseResource = (
           : 'Mandiri',
         value: editorChoiceCourse.courseData.dateCourseParse,
       },
-      rating: editorChoiceCourse.courseData.rating
-        ? editorChoiceCourse.courseData.rating
-        : null,
+      rating: {
+        value: editorChoiceCourse.courseData.rating
+          ? editorChoiceCourse.courseData.rating
+          : 0,
+        count: editorChoiceCourse.courseData.rating_count
+          ? editorChoiceCourse.courseData.rating_count
+          : 0,
+      },
       description: editorChoiceCourse.courseData.description,
       url: editorChoiceCourse.courseData.url,
       price_name: editorChoiceCourse.courseData.coursePrice

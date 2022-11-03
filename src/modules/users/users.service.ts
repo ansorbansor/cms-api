@@ -303,6 +303,10 @@ export class UsersService {
       ip: ip,
     });
 
+    const redisKey = `${RedisKeyEnum.user}:${id}`;
+
+    this.redisService.del(redisKey);
+
     return await this.findOne({ id: id });
   }
 

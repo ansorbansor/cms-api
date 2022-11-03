@@ -10,11 +10,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Controllers, Permissions } from 'src/utils/decorator';
-import { MenuPermission } from 'src/utils/enums';
 import { RolesGuard } from 'src/utils/guards';
 import { successResponseList } from 'src/utils/responses';
-import { EditorChoiceCourseController } from '../editor-choice-course/editor-choice-course.controller';
 import { EmployeeLevelService } from './employee-level.service';
 
 @ApiBearerAuth()
@@ -25,8 +22,6 @@ import { EmployeeLevelService } from './employee-level.service';
 export class EmployeeLevelController {
   constructor(private readonly employeeLevelService: EmployeeLevelService) {}
   @Get('employee-level')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(EditorChoiceCourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(

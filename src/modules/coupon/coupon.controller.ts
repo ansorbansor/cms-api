@@ -45,8 +45,6 @@ export class CouponController {
   }
 
   @Get()
-  @Permissions(MenuPermission.READ)
-  @Controllers(CouponController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(

@@ -177,8 +177,6 @@ export class CourseController {
   }
 
   @Get('admin/courses/:id')
-  @Permissions(MenuPermission.READ)
-  @Controllers(CourseController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOneAdmin(@Param('id') id: string, @Request() req) {

@@ -1,7 +1,7 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CacheModule, CACHE_MANAGER, Inject, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule, HeaderResolver, I18nJsonParser } from 'nestjs-i18n';
@@ -47,6 +47,7 @@ import { UserNotificationModule } from './modules/user-notification/user-notific
 import { UsersModule } from './modules/users/users.module';
 import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.module';
 import { CustomThrottlerGuard } from './utils/guards';
+import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 
 @Module({
   imports: [
@@ -125,6 +126,10 @@ import { CustomThrottlerGuard } from './utils/guards';
     {
       provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
 })

@@ -141,4 +141,5 @@ export enum ErrorMessage {
   USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan email yang telah terdaftar.',
   FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',
   UNAUTHORIZED = 'Session anda telah habis, silahkan login kembali.',
+  GENERAL = 'Terjadi kesalahan pada server, silahkan coba beberapa saat kembali atau hubungi admin',
 }

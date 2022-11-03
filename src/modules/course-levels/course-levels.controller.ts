@@ -14,8 +14,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { CourseLevelsService } from './course-levels.service';
 import { CreateCourseLevelDto } from './dto/create-course-level.dto';
 import { UpdateCourseLevelDto } from './dto/update-course-level.dto';
@@ -31,7 +30,7 @@ export class CourseLevelsController {
   constructor(private readonly courseLevelServices: CourseLevelsService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCourseLevelDto: CreateCourseLevelDto) {
     return successResponse(
@@ -70,7 +69,7 @@ export class CourseLevelsController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCourseLevelDto: UpdateCourseLevelDto) {
     return successResponse(
@@ -80,7 +79,7 @@ export class CourseLevelsController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(
       await this.courseLevelServices.softDelete(id),

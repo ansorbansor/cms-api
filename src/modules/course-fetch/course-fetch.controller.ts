@@ -9,8 +9,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { CourseFetchService } from './course-fetch.service';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
@@ -28,7 +27,7 @@ export class CourseFetchController {
   @Get('update-course-topic')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async updateCourseTopic() {
     return await this.courseFetchService.updateCourseFetchTopic();
@@ -37,7 +36,7 @@ export class CourseFetchController {
   @Get('update-categories')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async updateCategories() {
     return await this.courseFetchService.getUdemyTopics();
@@ -46,7 +45,7 @@ export class CourseFetchController {
   @Get('activate-completed-course')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async activateCompletedCourse() {
     return await this.courseFetchService.activatedCompleteCourse();
@@ -56,7 +55,7 @@ export class CourseFetchController {
   @Get(':id')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: number, @Request() req) {
     return await this.courseFetchService.fetchData(id, req.user.id, req.ip);
@@ -65,7 +64,7 @@ export class CourseFetchController {
   @Delete(':id')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseFetchController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async deleteAll(@Param('id') id: number, @Request() req) {
     return await this.courseFetchService.deleteAllFetchData(

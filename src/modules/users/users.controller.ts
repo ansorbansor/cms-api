@@ -18,8 +18,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -41,7 +40,7 @@ export class UsersController {
   @Post('users')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -64,7 +63,7 @@ export class UsersController {
   @Get('users')
   @Permissions(MenuPermission.READ)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -97,7 +96,7 @@ export class UsersController {
   @Get('users/:id')
   @Permissions(MenuPermission.READ)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -111,7 +110,7 @@ export class UsersController {
   @Patch('users/:id')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -136,7 +135,7 @@ export class UsersController {
   @Delete('users/:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.usersService.softDelete(id, req.user, req.ip),
@@ -145,7 +144,7 @@ export class UsersController {
   }
 
   @Post('user/topics')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createUserTopic(
     @Body(new ParseArrayPipe({ items: CreateUserTopicDto, whitelist: true }))

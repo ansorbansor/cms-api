@@ -5,6 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ErrorMessage } from './enums';
 import { failedResponse } from './responses';
@@ -96,5 +97,15 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       HttpStatus.TOO_MANY_REQUESTS,
       'Terlalu banyak permintaan',
     );
+  }
+}
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  handleRequest(err: any, user: any, info: any, context: any, status: any) {
+    if (info) {
+      throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);
+    }
+
+    return super.handleRequest(err, user, info, context, status);
   }
 }

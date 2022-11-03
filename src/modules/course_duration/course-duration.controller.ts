@@ -14,8 +14,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
@@ -34,7 +33,7 @@ export class CourseDurationController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseDurationController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCourseDurationDto: CreateCourseDurationDto) {
     return successResponse(
@@ -75,7 +74,7 @@ export class CourseDurationController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CourseDurationController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCourseDurationDto: UpdateCourseDurationDto) {
     return successResponse(
@@ -87,7 +86,7 @@ export class CourseDurationController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseDurationController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(
       await this.courseDurationServices.softDelete(id),

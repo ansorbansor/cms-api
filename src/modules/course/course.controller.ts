@@ -17,8 +17,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
@@ -41,7 +40,7 @@ export class CourseController {
   @Post('courses')
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -120,7 +119,7 @@ export class CourseController {
   @Get('admin/courses')
   @Permissions(MenuPermission.READ)
   @Controllers(CourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAllAdmin(
     @Request() req,
@@ -177,7 +176,7 @@ export class CourseController {
   }
 
   @Get('admin/courses/:id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOneAdmin(@Param('id') id: string, @Request() req) {
     return successResponse(
@@ -199,7 +198,7 @@ export class CourseController {
   @Patch('courses')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -222,7 +221,7 @@ export class CourseController {
   @Patch('courses-bulk')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async bulkUpdate(@Body() updateCourseDto: BulkUpdateCourseDto) {
     return successResponse(
@@ -234,7 +233,7 @@ export class CourseController {
   @Delete('courses/:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.courseServices.softDelete(id, req.user, req.ip),
@@ -243,7 +242,7 @@ export class CourseController {
   }
 
   @Post('course/like')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async postUserLike(@Query('course_id') courseId: number, @Request() request) {
     return await this.courseServices.postLike(

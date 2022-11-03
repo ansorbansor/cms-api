@@ -17,8 +17,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { ProvidersService } from './providers.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
@@ -38,7 +37,7 @@ export class ProvidersController {
   constructor(private readonly providerServices: ProvidersService) {}
 
   @Get('register/:id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async sendMailRegisterProvider(
     @Param('id') providerId: number,
@@ -56,7 +55,7 @@ export class ProvidersController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(ProvidersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -110,7 +109,7 @@ export class ProvidersController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(ProvidersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -133,7 +132,7 @@ export class ProvidersController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(ProvidersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() request) {
     return successResponse(
       await this.providerServices.softDelete(id, request.user, request.ip),

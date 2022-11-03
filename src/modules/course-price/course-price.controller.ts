@@ -14,8 +14,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { CoursePriceService } from './course-price.service';
 import { CreateCoursePriceDto } from './dto/create-course-price.dto';
@@ -31,7 +30,7 @@ export class CoursePriceController {
   constructor(private readonly coursePriceervices: CoursePriceService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCoursePriceDto: CreateCoursePriceDto) {
     return successResponse(
@@ -70,7 +69,7 @@ export class CoursePriceController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCoursePriceDto: UpdateCoursePriceDto) {
     return successResponse(
@@ -80,7 +79,7 @@ export class CoursePriceController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(
       await this.coursePriceervices.softDelete(id),

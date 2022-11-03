@@ -18,8 +18,7 @@ import {
   ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { CourseCategoriesService } from './course-categories.service';
 import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
@@ -40,7 +39,7 @@ export class CourseCategoriesController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(CourseCategoriesController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -102,7 +101,7 @@ export class CourseCategoriesController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CourseCategoriesController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -125,7 +124,7 @@ export class CourseCategoriesController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseCategoriesController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.categoryServices.softDelete(id, req.user, req.ip),

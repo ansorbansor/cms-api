@@ -14,8 +14,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
@@ -33,7 +32,7 @@ export class CouponSubmissionController {
   ) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Query('course_id') courseId: number, @Request() req) {
     return await this.couponSubmissionServices.create(
@@ -46,7 +45,7 @@ export class CouponSubmissionController {
   @Get()
   @Permissions(MenuPermission.READ)
   @Controllers(CouponSubmissionController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -92,7 +91,7 @@ export class CouponSubmissionController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CouponSubmissionController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(
       await this.couponSubmissionServices.softDelete(id),
@@ -103,7 +102,7 @@ export class CouponSubmissionController {
   @Patch(':id')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CouponSubmissionController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async update(
     @Param('id') id: number,
     @Query('status') status: number,

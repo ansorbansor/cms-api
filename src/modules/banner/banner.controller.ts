@@ -16,8 +16,7 @@ import {
   ParseArrayPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { MenuPermission } from 'src/utils/enums';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -40,7 +39,7 @@ export class BannerController {
   @Post('banners')
   @Permissions(MenuPermission.CREATE)
   @Controllers(BannerController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -63,7 +62,7 @@ export class BannerController {
   @Patch('banner-position')
   @Permissions(MenuPermission.CREATE)
   @Controllers(BannerController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async updatePosition(
     @Body(
@@ -131,7 +130,7 @@ export class BannerController {
   @Patch('banners')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(BannerController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   @HttpCode(HttpStatus.OK)
@@ -154,7 +153,7 @@ export class BannerController {
   @Delete('banners/:id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(BannerController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.bannerServices.softDelete(id, req.user, req.ip),

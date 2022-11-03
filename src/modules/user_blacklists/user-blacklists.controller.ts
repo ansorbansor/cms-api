@@ -14,8 +14,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -35,7 +34,7 @@ export class BlacklistController {
   @Get('blacklist/users')
   @Permissions(MenuPermission.READ)
   @Controllers(BlacklistController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -69,7 +68,7 @@ export class BlacklistController {
   @Get('blacklist/users/:id')
   @Permissions(MenuPermission.READ)
   @Controllers(BlacklistController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -84,7 +83,7 @@ export class BlacklistController {
   @Patch('blacklist/users/:id')
   @Permissions(MenuPermission.UPDATE)
   @Controllers(BlacklistController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))

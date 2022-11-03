@@ -14,8 +14,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { MenuPermission } from 'src/utils/enums';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { TopicsService } from './topics.service';
@@ -35,7 +34,7 @@ export class TopicsController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(TopicsController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createTopicDto: CreateTopicDto) {
     return successResponse(
@@ -76,7 +75,7 @@ export class TopicsController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(TopicsController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateTopicDto: UpdateTopicDto) {
     return successResponse(
@@ -88,7 +87,7 @@ export class TopicsController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(TopicsController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(await this.topicService.softDelete(id), 'success');
   }

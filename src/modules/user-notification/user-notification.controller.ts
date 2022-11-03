@@ -14,8 +14,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { UserNotificationService } from './user-notification.service';
 import { CreateUserNotificationDto } from './dto/create-user-notification.dto';
@@ -34,7 +33,7 @@ export class UserNotificationController {
   ) {}
 
   @Post('venus-test')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserNotificationDto: CreateUserNotificationDto) {
     return successResponse(
@@ -46,7 +45,7 @@ export class UserNotificationController {
   }
 
   @Post('token')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async postUserNotificationToken(
     @Body() updateUserNotificationTokenDto: UpdateUserNotificationTokenDto,
@@ -60,7 +59,7 @@ export class UserNotificationController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('source') source: string,
@@ -85,7 +84,7 @@ export class UserNotificationController {
   }
 
   @Patch(':notification_id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('notification_id') notificationId: number,

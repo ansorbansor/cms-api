@@ -14,8 +14,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { CourseLanguageService } from './course-language.service';
 import { CreateCourseLanguageDto } from './dto/create-course-language.dto';
 import { UpdateCourseLanguageDto } from './dto/update-course-language.dto';
@@ -31,7 +30,7 @@ export class CourseLanguageController {
   constructor(private readonly courseLanguageServices: CourseLanguageService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCourseLanguageDto: CreateCourseLanguageDto) {
     return successResponse(
@@ -70,7 +69,7 @@ export class CourseLanguageController {
   }
 
   @Patch()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCourseLanguageDto: UpdateCourseLanguageDto) {
     return successResponse(
@@ -80,7 +79,7 @@ export class CourseLanguageController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number) {
     return successResponse(
       await this.courseLanguageServices.softDelete(id),

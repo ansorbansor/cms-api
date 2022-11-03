@@ -8,9 +8,8 @@ import {
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponseList } from 'src/utils/responses';
 import { EmployeeLevelService } from './employee-level.service';
 
@@ -22,7 +21,7 @@ import { EmployeeLevelService } from './employee-level.service';
 export class EmployeeLevelController {
   constructor(private readonly employeeLevelService: EmployeeLevelService) {}
   @Get('employee-level')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,

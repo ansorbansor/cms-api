@@ -13,8 +13,7 @@ import {
   ParseArrayPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { MenuPermission } from 'src/utils/enums';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -33,7 +32,7 @@ export class EditorChoiceCourseController {
   @Post('editor-choice-course')
   @Permissions(MenuPermission.CREATE)
   @Controllers(EditorChoiceCourseController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(

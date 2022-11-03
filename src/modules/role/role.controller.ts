@@ -15,8 +15,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { MenuPermission } from 'src/utils/enums';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -36,7 +35,7 @@ export class RoleController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(RoleController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createRoleDto: CreateRoleDto, @Request() req) {
     return successResponse(
@@ -46,7 +45,7 @@ export class RoleController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -69,7 +68,7 @@ export class RoleController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -81,7 +80,7 @@ export class RoleController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(RoleController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateRoleDto: UpdateRoleDto, @Request() req) {
@@ -94,7 +93,7 @@ export class RoleController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(RoleController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.roleService.softDelete(id, req.user, req.ip),

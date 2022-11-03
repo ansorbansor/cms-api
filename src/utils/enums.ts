@@ -140,4 +140,5 @@ export enum ErrorMessage {
   PASSWORD_WRONG = 'Maaf, password yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali password anda.',
   USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan email yang telah terdaftar.',
   FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',
+  UNAUTHORIZED = 'Session anda telah habis, silahkan login kembali.',
 }

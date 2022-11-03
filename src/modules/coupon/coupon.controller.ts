@@ -15,8 +15,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
@@ -35,7 +34,7 @@ export class CouponController {
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(CouponController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createCouponDto: CreateCouponDto, @Request() req) {
     return successResponse(
@@ -45,7 +44,7 @@ export class CouponController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -78,7 +77,7 @@ export class CouponController {
   @Get(':id')
   @Permissions(MenuPermission.READ)
   @Controllers(CouponController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return successResponse(
@@ -90,7 +89,7 @@ export class CouponController {
   @Patch()
   @Permissions(MenuPermission.UPDATE)
   @Controllers(CouponController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateCouponDto: UpdateCouponDto, @Request() req) {
     return successResponse(
@@ -102,7 +101,7 @@ export class CouponController {
   @Delete(':id')
   @Permissions(MenuPermission.DELETE)
   @Controllers(CouponController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: number, @Request() req) {
     return successResponse(
       await this.couponServices.softDelete(id, req.user, req.ip),

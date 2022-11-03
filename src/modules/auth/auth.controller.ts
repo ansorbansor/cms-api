@@ -14,7 +14,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthConfirmEmailDto } from 'src/modules/auth/dtos/auth-confirm-email.dto';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
@@ -30,6 +29,7 @@ import { successResponse } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
+import { JwtAuthGuard } from 'src/utils/guards';
 
 @ApiTags('Auth')
 @Controller({
@@ -184,7 +184,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Get('me')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   public async me(@Request() request) {
     return successResponse(await this.service.me(request.user), 'success');
@@ -192,7 +192,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Patch('me')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
@@ -209,7 +209,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Patch('me/password')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   public async updatePassword(
     @Request() request,
@@ -223,7 +223,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @Delete('me')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   public async delete(@Request() request) {
     return successResponse(
@@ -234,7 +234,7 @@ export class AuthController {
 
   @Get('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async logout(@Request() req) {
     return successResponse(
       await this.service.logout(req.user, req.ip),

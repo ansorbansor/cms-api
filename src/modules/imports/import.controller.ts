@@ -11,13 +11,12 @@ import {
   Res,
   Request,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
 import { BufferedFile } from 'src/utils/file-helper';
-import { RolesGuard } from 'src/utils/guards';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
 import { UsersController } from '../users/users.controller';
 import { ImportService } from './import.service';
@@ -34,7 +33,7 @@ export class ImportController {
   @Post('user')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
@@ -48,7 +47,7 @@ export class ImportController {
   @Post('user-blacklist')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
@@ -65,7 +64,7 @@ export class ImportController {
   @Post('user-level')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
@@ -79,7 +78,7 @@ export class ImportController {
   @Post('coupon')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)

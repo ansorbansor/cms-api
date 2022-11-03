@@ -186,7 +186,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  public async me(request: any) {
+  public async me(@Request() request) {
     return successResponse(await this.service.me(request.user), 'success');
   }
 

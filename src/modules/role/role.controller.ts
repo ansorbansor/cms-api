@@ -69,8 +69,6 @@ export class RoleController {
   }
 
   @Get(':id')
-  @Permissions(MenuPermission.READ)
-  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {

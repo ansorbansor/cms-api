@@ -46,8 +46,6 @@ export class RoleController {
   }
 
   @Get()
-  @Permissions(MenuPermission.READ)
-  @Controllers(RoleController.name)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(

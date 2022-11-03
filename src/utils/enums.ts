@@ -138,5 +138,6 @@ export enum FilePath {
 export enum ErrorMessage {
   EMAIL_NOT_EXISTS = 'Maaf, Email yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali Email yang telah tervalidasi.',
   PASSWORD_WRONG = 'Maaf, password yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali password anda.',
-  USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan email yang telah terdaftar',
+  USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan email yang telah terdaftar.',
+  FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',
 }

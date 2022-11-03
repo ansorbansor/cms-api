@@ -113,7 +113,7 @@ export class AuthService {
           (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
       )
     ) {
-      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.USER_NOT_FOUND);
+      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
     }
 
     if (authConfig().emailVerification && user.hash != null) {

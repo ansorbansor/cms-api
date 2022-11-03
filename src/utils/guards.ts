@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { ErrorMessage } from './enums';
 import { failedResponse } from './responses';
 
 @Injectable()
@@ -32,7 +33,7 @@ export class RolesGuard implements CanActivate {
 
     const canAccess = function (data) {
       if (!data || data.length == 0) {
-        return false;
+        throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
       }
       return data.some(function (e) {
         if (
@@ -40,16 +41,20 @@ export class RolesGuard implements CanActivate {
           !e.roleData.roleAccess ||
           e.roleData.roleAccess.length == 0
         ) {
-          return false;
+          throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
+        } else if (
+          !e.roleData.roleAccess.some(function (x) {
+            if (
+              controllers == x.menu.be_controller &&
+              permissions == x.menu_access
+            ) {
+              return true;
+            }
+          })
+        ) {
+          throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
         }
-        return e.roleData.roleAccess.some(function (x) {
-          if (
-            controllers == x.menu.be_controller &&
-            permissions == x.menu_access
-          ) {
-            return true;
-          }
-        });
+        return true;
       });
     };
 
@@ -63,14 +68,23 @@ export class RolesGuard implements CanActivate {
     if (controllers && permissions) {
       return canAccess(request.user.role);
     } else if (roles) {
-      return (
-        roles.filter((a) => request.user?.role.some((b) => a === b.id)).length >
-        0
-      );
+      if (
+        roles.filter((a) => request.user?.role.some((b) => a === b.id))
+          .length <= 0
+      ) {
+        throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
+      }
+      return true;
     } else {
-      return (
-        request.user && request.user?.role && request.user?.role.length > 0
-      );
+      if (
+        request.user &&
+        request.user?.role &&
+        request.user?.role.length <= 0
+      ) {
+        throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
+      }
+
+      return true;
     }
   }
 }

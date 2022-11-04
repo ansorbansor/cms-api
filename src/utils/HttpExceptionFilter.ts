@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
+import appConfig from 'src/config/app.config';
 import { ErrorMessage } from './enums';
 
 @Catch(TypeError)
@@ -17,6 +18,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    if (appConfig().nodeEnv != 'production') {
+      console.log(`${exception.message} \n ${exception.stack}`);
+    }
 
     response.status(status).json({
       meta: {

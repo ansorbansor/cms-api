@@ -71,29 +71,45 @@ export class AuthService {
     onlyAdmin: boolean,
     ip: string,
   ): Promise<{ token: string; user: User; menus: Menu[] }> {
-    const user = await this.usersService.findOneFull({
+    let user = await this.usersService.findOneFull({
       email: loginDto.email,
     });
 
-    if (!user) {
+    if (!onlyAdmin && authConfig().activateLDAP == 'true') {
       //check Active Directory user
       const ADResult = await new ActiveDirectoryUtils().authAD(
         loginDto.email,
         loginDto.password,
       );
 
-      if (!ADResult || !ADResult.code || ADResult.code != 0) {
+      if (!ADResult) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
+          `${ErrorMessage.EMAIL_NOT_EXISTS}`,
         );
-      } else {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'REGISTERKAN AKUN AD!',
-        );
-      }
+      } else if (!user) {
+        const photo = null; //hardcoded, set if get data from simsdm
+        const dto = new AuthRegisterLoginDto();
+        dto.email = loginDto.email;
+        dto.name = `User ${loginDto.email}`; //hardcoded, set if get data from simsdm
+        dto.nip = loginDto.email; //hardcoded, set if get data from simsdm
+        dto.password = loginDto.password;
+        dto.position_id = 4; //hardcoded, set if get data from simsdm
+        dto.provider = AuthProvidersEnum.ldap;
+        dto.role_id = 2; //hardcoded user
+        dto.status = 1;
+        dto.level_id = 4; //hardcoded, set if get data from simsdm
+        dto.unit_id = 4; //hardcoded, set if get data from simsdm
+        dto.level = 0;
 
+        await this.register(photo, dto, ip);
+        user = await this.usersService.findOneFull({
+          email: loginDto.email,
+        });
+      }
+    }
+
+    if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.EMAIL_NOT_EXISTS,
@@ -101,7 +117,7 @@ export class AuthService {
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.EMAIL_NOT_EXISTS,
+        ErrorMessage.FORBIDDEN,
       );
     }
 
@@ -354,10 +370,13 @@ export class AuthService {
     dto: AuthRegisterLoginDto,
     ip: string,
   ): Promise<void> {
-    const hash = crypto
-      .createHash('sha256')
-      .update(randomStringGenerator())
-      .digest('hex');
+    const hash =
+      authConfig().emailVerification == 'true'
+        ? crypto
+            .createHash('sha256')
+            .update(randomStringGenerator())
+            .digest('hex')
+        : null;
 
     const user = await this.usersService.create(
       {
@@ -366,7 +385,7 @@ export class AuthService {
         role_id: RoleEnum.user,
         status: 1,
         name: dto.name,
-        provider: AuthProvidersEnum.email,
+        provider: dto.provider ? dto.provider : AuthProvidersEnum.email,
         notification_token: null,
         hash: hash,
         categories: null,

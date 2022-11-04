@@ -91,11 +91,19 @@ export class UsersService {
       },
     });
 
-    await this.activityLogService.create({
-      user_id: user_id,
-      description: `Tambah Pengguna ${user.email}`,
-      ip: ip,
-    });
+    if (user_id) {
+      await this.activityLogService.create({
+        user_id: user_id,
+        description: `Tambah Pengguna ${user.email}`,
+        ip: ip,
+      });
+    } else {
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Pendaftaran Pengguna ${user.email}`,
+        ip: ip,
+      });
+    }
 
     return this.findOne({ id: user.id });
   }

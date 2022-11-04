@@ -12,21 +12,16 @@ export class ActiveDirectoryUtils {
       password: activeDirectoryConfig().password,
     };
 
-    console.log(config);
-
     this.ad = new ActiveDirectory(config);
   }
 
   async authAD(username: string, password: string): Promise<any> {
     return await new Promise((resolve) => {
       return this.ad.authenticate(username, password, (err, auth) => {
-        if (err) {
-          console.log('AD ERROR: ' + JSON.stringify(err));
-          resolve(err);
-        }
-
         if (auth) {
           resolve(auth);
+        } else if (err) {
+          console.log('AD ERROR: ' + JSON.stringify(err));
         }
 
         resolve(null);

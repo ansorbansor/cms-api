@@ -4,6 +4,7 @@ export enum AuthProvidersEnum {
   google = 'google',
   twitter = 'twitter',
   apple = 'apple',
+  ldap = 'ldap',
 }
 
 export enum RoleEnum {

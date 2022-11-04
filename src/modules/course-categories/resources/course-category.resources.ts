@@ -34,7 +34,12 @@ export const CourseCategoryResource = (
   return {
     id: category.id,
     name: category.name,
-    pkasn_program: category.pkasn_program,
+    pkasn_program: category.pkasnProgram
+      ? {
+          id: category.pkasnProgram.id ? category.pkasnProgram.id : null,
+          name: category.pkasnProgram.name ? category.pkasnProgram.name : null,
+        }
+      : null,
     photo: category.photoFile
       ? minioConfig().fullUrl + category.photoFile?.path
       : null,

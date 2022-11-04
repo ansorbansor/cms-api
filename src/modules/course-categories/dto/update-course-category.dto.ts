@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, Validate } from 'class-validator';
-import { IsNotExist } from 'src/utils/validators';
+import {
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  Validate,
+} from 'class-validator';
+import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseCategoryDto {
   @ApiProperty()
@@ -14,9 +19,13 @@ export class UpdateCourseCategoryDto {
   @IsNotEmpty()
   name: string | null;
 
-  @ApiProperty({ example: 'Program A' })
+  @ApiProperty({ example: 1 })
   @IsOptional()
-  pkasn_program: string | null;
+  @IsNumberString(null, { message: 'Kirimkan ID PKASN Program' })
+  @Validate(IsExist, ['PKASNProgram', 'id'], {
+    message: 'PKASN Program tidak tersedia.',
+  })
+  pkasn_program: number;
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;

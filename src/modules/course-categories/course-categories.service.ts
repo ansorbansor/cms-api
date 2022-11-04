@@ -93,7 +93,8 @@ export class CourseCategoriesService {
 
     const data = this.categoryRepository
       .createQueryBuilder('category')
-      .leftJoinAndSelect('category.photoFile', 'photoFile');
+      .leftJoinAndSelect('category.photoFile', 'photoFile')
+      .leftJoinAndSelect('category.pkasnProgram', 'pkasnProgram');
 
     if (withTopics) {
       data.leftJoinAndSelect('category.topic', 'topic');
@@ -171,7 +172,7 @@ export class CourseCategoriesService {
       return value;
     }
 
-    const relation = [];
+    const relation = ['pkasnProgram'];
     if (withTopics) {
       relation.push('topic');
     }
@@ -181,9 +182,16 @@ export class CourseCategoriesService {
       relations: relation,
     });
 
-    const topicId = data.topic.map((elem) => {
-      return elem.id;
-    });
+    if (!data) {
+      throw failedResponse(HttpStatus.NOT_FOUND, 'Data tidak ditemukan');
+    }
+
+    const topicId =
+      withTopics && data.topic
+        ? data.topic.map((elem) => {
+            return elem.id;
+          })
+        : [];
 
     const categoryCourseCount = await getManager().query(
       `SELECT COUNT(id) as total, category_id FROM courses WHERE status = 1 AND deleted_at IS NULL AND category_id = ${fields.id} GROUP BY category_id`,

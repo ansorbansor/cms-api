@@ -77,22 +77,22 @@ export class AuthService {
 
     if (!user) {
       //check Active Directory user
-      // const ADResult = await new ActiveDirectoryUtils().authAD(
-      //   loginDto.email,
-      //   loginDto.password,
-      // );
+      const ADResult = await new ActiveDirectoryUtils().authAD(
+        loginDto.email,
+        loginDto.password,
+      );
 
-      // if (!ADResult || !ADResult.code || ADResult.code != 0) {
-      //   throw failedResponse(
-      //     HttpStatus.UNPROCESSABLE_ENTITY,
-      //     `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
-      //   );
-      // } else {
-      //   throw failedResponse(
-      //     HttpStatus.UNPROCESSABLE_ENTITY,
-      //     'REGISTERKAN AKUN AD!',
-      //   );
-      // }
+      if (!ADResult || !ADResult.code || ADResult.code != 0) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
+        );
+      } else {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'REGISTERKAN AKUN AD!',
+        );
+      }
 
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

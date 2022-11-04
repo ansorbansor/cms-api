@@ -10,6 +10,7 @@ import { EntityHelper } from 'src/utils/entity-helper';
 import { Topic } from './topic.entity';
 import { FileEntity } from './file.entity';
 import { Course } from './course.entity';
+import { PKASNProgram } from './pkasn-program.entity';
 
 @Entity({ name: 'categories' })
 export class CourseCategory extends EntityHelper {
@@ -20,7 +21,7 @@ export class CourseCategory extends EntityHelper {
   photo: number;
 
   @Column()
-  pkasn_program: string;
+  pkasn_program: number;
 
   @OneToMany(() => Topic, (topics) => topics.category)
   @JoinColumn()
@@ -36,6 +37,10 @@ export class CourseCategory extends EntityHelper {
   @OneToMany(() => Course, (course) => course.courseCategory)
   @JoinColumn()
   course?: Course[];
+
+  @OneToOne(() => PKASNProgram)
+  @JoinColumn({ name: 'pkasn_program' })
+  pkasnProgram?: PKASNProgram;
 
   @AfterLoad()
   setCount() {

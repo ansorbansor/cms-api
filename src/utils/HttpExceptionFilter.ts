@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import appConfig from 'src/config/app.config';
+import { QueryFailedError } from 'typeorm';
 import { ErrorMessage } from './enums';
 
-@Catch(TypeError)
+@Catch(TypeError, QueryFailedError)
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: TypeError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

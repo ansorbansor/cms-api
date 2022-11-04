@@ -30,6 +30,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller({
@@ -39,6 +40,7 @@ import { JwtAuthGuard } from 'src/utils/guards';
 export class AuthController {
   constructor(public service: AuthService) {}
 
+  @Throttle(5, 300)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
@@ -66,6 +68,7 @@ export class AuthController {
     );
   }
 
+  @Throttle(5, 300)
   @Post('admin/email/login')
   @HttpCode(HttpStatus.OK)
   public async adminLogin(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
@@ -76,6 +79,7 @@ export class AuthController {
     );
   }
 
+  @Throttle(5, 300)
   @Post('google/login')
   @HttpCode(HttpStatus.OK)
   async loginGoogle(@Body() loginDto: AuthGoogleLoginDto, @Request() req) {
@@ -87,6 +91,7 @@ export class AuthController {
     );
   }
 
+  @Throttle(5, 300)
   @Post('facebook/login')
   @HttpCode(HttpStatus.OK)
   async loginFacebook(@Body() loginDto: AuthFacebookLoginDto, @Request() req) {
@@ -98,6 +103,7 @@ export class AuthController {
     );
   }
 
+  @Throttle(5, 300)
   @Post('apple/login')
   @HttpCode(HttpStatus.OK)
   async loginApple(@Body() loginDto: AuthAppleLoginDto, @Request() req) {

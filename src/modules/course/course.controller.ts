@@ -117,8 +117,6 @@ export class CourseController {
   }
 
   @Get('admin/courses')
-  @Permissions(MenuPermission.READ)
-  @Controllers(CourseController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAllAdmin(

@@ -29,6 +29,8 @@ import { UserNotificationService } from '../user-notification/user-notification.
 import { CouponSubmissionController } from './coupon-submission.controller';
 import { CreateUserNotificationDto } from '../user-notification/dto/create-user-notification.dto';
 import { RedisService } from '../redis/redis.service';
+import { FinishCourseDto } from './dto/finish-course.dto';
+import { FinishCourseResource } from './resources/finish-course.resources';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -601,6 +603,38 @@ export class CouponSubmissionService {
 
       return successResponse(null, `Pengajuan telah ditolak`);
     }
+  }
+
+  async finishCourse(dto: FinishCourseDto) {
+    const user = await this.userRepository.findOne({ nip: dto.nip });
+
+    if (!user) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'NIP tidak ditemukan');
+    }
+
+    const userCourse = await this.userCourseRepository.findOne({
+      user_id: user.id,
+      course_id: dto.course_id,
+    });
+
+    if (!userCourse) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Pembelajaran pengguna tidak ditemukan',
+      );
+    }
+
+    await this.userCourseRepository.update(userCourse.id, {
+      progress: 100,
+      certificate_date: dto.certificate_date,
+      certificate_number: dto.certificate_number,
+      certificate_image: dto.certificate_image,
+    });
+
+    return successResponse(
+      FinishCourseResource(dto),
+      'Berhasil menyelesaikan pelatihan!',
+    );
   }
 
   async softDelete(id: number): Promise<void> {

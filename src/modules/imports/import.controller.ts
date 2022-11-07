@@ -21,6 +21,8 @@ import { successResponse } from 'src/utils/responses';
 import { UsersController } from '../users/users.controller';
 import { ImportService } from './import.service';
 import { Response } from 'express';
+import { BlacklistController } from '../user_blacklists/user-blacklists.controller';
+import { CouponController } from '../coupon/coupon.controller';
 
 @ApiBearerAuth()
 @ApiTags('Imports')
@@ -46,7 +48,7 @@ export class ImportController {
 
   @Post('user-blacklist')
   @Permissions(MenuPermission.CREATE)
-  @Controllers(UsersController.name)
+  @Controllers(BlacklistController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
@@ -77,7 +79,7 @@ export class ImportController {
 
   @Post('coupon')
   @Permissions(MenuPermission.CREATE)
-  @Controllers(UsersController.name)
+  @Controllers(CouponController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))

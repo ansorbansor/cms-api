@@ -60,17 +60,6 @@ export class UsersController {
     );
   }
 
-  @Post('users-venus-311312')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
-  async createWithoutToken(@Body() createProfileDto: CreateUserDto) {
-    return successResponse(
-      await this.usersService.createSuperadmin(createProfileDto),
-      'success',
-    );
-  }
-
   @Get('users')
   @Permissions(MenuPermission.READ)
   @Controllers(UsersController.name)

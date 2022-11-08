@@ -108,6 +108,33 @@ export class UsersService {
     return this.findOne({ id: user.id });
   }
 
+  async createSuperadmin(createProfileDto: CreateUserDto) {
+    const user = await this.usersRepository.save(
+      this.usersRepository.create(createProfileDto),
+    );
+
+    await this.userRolesRepository.save(
+      this.userRolesRepository.create({
+        user_id: user.id,
+        role_id: createProfileDto.role_id,
+      }),
+    );
+
+    if (createProfileDto.categories) {
+      await this.createUserTopic(createProfileDto.categories, user.id);
+    }
+
+    await this.mailService.welcome({
+      to: user.email,
+      data: {
+        email: user.email,
+        password: createProfileDto.password,
+      },
+    });
+
+    return this.findOne({ id: user.id });
+  }
+
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data = this.usersRepository
       .createQueryBuilder('user')

@@ -68,6 +68,9 @@ export class CourseCategoriesService {
       await this.topicService.createBulk(topics);
     }
 
+    this.redisService.del(`${RedisKeyEnum.category}`);
+    this.redisService.del(`${RedisKeyEnum.course}`);
+
     await this.activityLogService.create({
       user_id: user.id,
       description: `Tambah Kategori ${createCourseCategoryDto.name}`,

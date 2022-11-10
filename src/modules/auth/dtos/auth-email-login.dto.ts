@@ -8,7 +8,7 @@ export class AuthEmailLoginDto {
   @Transform(({ value }) =>
     isEmail(value)
       ? value.toLowerCase().trim()
-      : `${value.toLowerCase.trim()}@setneg.go.id`,
+      : `${value.toLowerCase().trim()}@setneg.go.id`,
   )
   email: string;
 

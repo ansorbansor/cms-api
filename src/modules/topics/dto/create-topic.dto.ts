@@ -3,11 +3,11 @@ import { IsNotEmpty, Validate } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class CreateTopicDto {
-  @ApiProperty({ example: 'Topic A' })
+  @ApiProperty({ example: 'Topik A' })
   @Validate(IsNotExist, ['Topic', 'name'], {
-    message: 'Nama topic sudah ada',
+    message: 'Nama topik sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama topik tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty()

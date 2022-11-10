@@ -4,14 +4,14 @@ import { IsExist } from 'src/utils/validators';
 
 export class CreateUserTopicDto {
   @ApiProperty({ example: 1, type: Number })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID kategori tidak boleh kosong' })
   @Validate(IsExist, ['CourseCategory', 'id'], {
     message: 'Kategori tidak tersedia',
   })
   category_id: number;
 
   @ApiProperty({ example: [2, 3, 4], type: Number })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID topik tidak boleh kosong' })
   @Validate(IsExist, ['Topic', 'id'], {
     message: 'Topic tidak tersedia',
   })

@@ -7,6 +7,6 @@ export class CreateMenuDto {
   @Validate(IsNotExist, ['Menu', 'name'], {
     message: 'Nama menu sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama menu tidak boleh kosong' })
   name: string;
 }

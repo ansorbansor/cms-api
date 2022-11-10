@@ -3,6 +3,6 @@ import { IsNotEmpty } from 'class-validator';
 
 export class AuthFacebookLoginDto {
   @ApiProperty({ example: 'abc' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Access token tidak boleh kosong' })
   accessToken: string;
 }

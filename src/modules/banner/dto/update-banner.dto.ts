@@ -6,18 +6,18 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateBannerDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID Banner tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: 'Banner A' })
   @Validate(IsNotExist, ['Banner', 'name'], {
     message: 'Nama banner sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama banner tidak boleh kosong' })
   name: string;
 
   @ApiProperty({ example: 0 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tipe Banner tidak boleh kosong' })
   @NotEquals(
     [BannerType.COURSE, BannerType.ANNOUNCEMENT, BannerType.EXTERNAL_URL],
     {
@@ -47,7 +47,7 @@ export class UpdateBannerDto {
   position: number;
 
   @ApiProperty({ example: true })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Status banner tidak boleh kosong' })
   @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status: number;
 }

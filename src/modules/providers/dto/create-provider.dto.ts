@@ -7,13 +7,13 @@ export class CreateProviderDto {
   @Validate(IsNotExist, ['Provider', 'name'], {
     message: 'Nama penyelenggara sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama penyelenggara tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty({ type: 'string', format: 'binary' })
   photo: any;
 
   @ApiProperty({ example: 'https://www.udemy.com' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'URL penyelenggara tidak boleh kosong' })
   url: string;
 }

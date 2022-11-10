@@ -6,7 +6,7 @@ export class CreateActivityLogDto {
   user_id: number;
 
   @ApiProperty({ example: 'Lorem ipsum' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Deskripsi tidak boleh kosong' })
   description: string;
 
   @ApiProperty({ example: '123.123.123.123' })

@@ -4,13 +4,13 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateMenuDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID menu tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: 'Menu A' })
   @Validate(IsNotExist, ['Menu', 'name'], {
     message: 'Nama menu sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama menu tidak boleh kosong' })
   name: string;
 }

@@ -13,9 +13,9 @@ import { IsExist, IsNotExist } from 'src/utils/validators';
 export class CreateCourseDto {
   @ApiProperty({ example: 'Course A' })
   @Validate(IsNotExist, ['Course', 'name'], {
-    message: 'Nama course sudah ada',
+    message: 'Nama pelatihan sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama pelatihan tidak boleh kosong' })
   name: string;
 
   @IsOptional()

@@ -14,34 +14,34 @@ export class UpdateCouponDto {
   @Validate(IsExist, ['Coupon', 'id'], {
     message: 'Kupon tidak ditemukan',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID kupon tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: 'Coupon A' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama kupon tidak boleh kosong' })
   name: string;
 
   @ApiProperty({ example: 'CODE#123' })
   @Validate(IsNotExist, ['Coupon', 'code'], {
     message: 'Kode kupon sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Kode kupon tidak boleh kosong' })
   code: string;
 
   @ApiProperty({ example: 1 })
   @Validate(IsExist, ['Provider', 'id'], {
     message: 'Penyelenggara tidak ditemukan',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Penyelenggara tidak boleh kosong' })
   provider_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNumber()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Amount tidak boleh kosong' })
   amount: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tipe kupon tidak boleh kosong' })
   @IsEnum(CouponType, {
     message: 'Tipe kupon tidak sesuai',
   })
@@ -58,14 +58,14 @@ export class UpdateCouponDto {
   @IsEnum(CouponStatus, {
     message: 'Status kupon tidak sesuai',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Status kupon tidak boleh kosong' })
   status: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tanggal mulai tidak boleh kosong' })
   start_date: Date;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Tanggal berakhir tidak boleh kosong' })
   end_date: Date;
 }

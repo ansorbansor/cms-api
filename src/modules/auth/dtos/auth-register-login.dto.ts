@@ -15,16 +15,16 @@ import { CreateUserTopicDto } from 'src/modules/users/dto/create-user-topic.dto'
 
 export class AuthRegisterLoginDto {
   @ApiProperty({ example: '1234567890' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'NIP tidak boleh kosong' })
   nip: string | null;
 
   @ApiProperty({ example: 'John' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty({ example: 'john.tor@example.com' })
   @Transform(({ value }) => value?.toLowerCase().trim())
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email tidak boleh kosong' })
   @Validate(IsNotExist, ['User'], {
     message: 'Email telah digunakan',
   })
@@ -36,7 +36,7 @@ export class AuthRegisterLoginDto {
   password?: string;
 
   @ApiProperty({ default: 'email' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Provider tidak boleh kosong' })
   provider?: string;
 
   @IsOptional()
@@ -46,7 +46,7 @@ export class AuthRegisterLoginDto {
   photo?: FileEntity | null;
 
   @ApiProperty({ default: true })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Status tidak boleh kosong' })
   @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status: number;
 
@@ -57,7 +57,7 @@ export class AuthRegisterLoginDto {
 
   @ApiProperty()
   @Validate(IsExist, ['Role', 'id'], {
-    message: 'Role Tidak Tersedia',
+    message: 'Role tidak Tersedia',
   })
   role_id: number;
 

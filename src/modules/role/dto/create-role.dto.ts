@@ -9,7 +9,7 @@ export class CreateRoleDto {
   @Validate(IsNotExist, ['Role', 'name'], {
     message: 'Nama role sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama role tidak boleh kosong' })
   name: string;
 
   @ApiProperty()
@@ -26,11 +26,11 @@ class Menu {
   @Validate(IsExist, ['Menu', 'id'], {
     message: 'Menu tidak tersedia',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID menu tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: [0, 1, 2, 3] })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Akses tidak boleh kosong' })
   @Validate(
     IsArrayValid,
     [

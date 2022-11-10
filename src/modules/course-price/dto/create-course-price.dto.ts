@@ -7,6 +7,6 @@ export class CreateCoursePriceDto {
   @Validate(IsNotExist, ['CoursePrice', 'name'], {
     message: 'Nama harga sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama harga tidak boleh kosong' })
   name: string | null;
 }

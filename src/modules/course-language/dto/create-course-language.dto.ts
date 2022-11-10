@@ -7,6 +7,6 @@ export class CreateCourseLanguageDto {
   @Validate(IsNotExist, ['CourseLanguage', 'name'], {
     message: 'Nama bahasa sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama bahasa tidak boleh kosong' })
   name: string | null;
 }

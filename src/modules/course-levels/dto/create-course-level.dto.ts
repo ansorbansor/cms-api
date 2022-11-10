@@ -7,6 +7,6 @@ export class CreateCourseLevelDto {
   @Validate(IsNotExist, ['CourseLevel', 'name'], {
     message: 'Nama level sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama level tidak boleh kosong' })
   name: string | null;
 }

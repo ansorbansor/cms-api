@@ -3,10 +3,10 @@ import { IsNotEmpty } from 'class-validator';
 
 export class AuthResetPasswordDto {
   @ApiProperty({ example: 'Password9' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Password tidak boleh kosong' })
   password: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Hash code tidak boleh kosong' })
   hash: string;
 }

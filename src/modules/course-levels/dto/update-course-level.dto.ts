@@ -4,13 +4,13 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseLevelDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID level tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: 'Level A' })
   @Validate(IsNotExist, ['CourseLevel', 'name', 'id'], {
     message: 'Nama level sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama level tidak boleh kosong' })
   name: string | null;
 }

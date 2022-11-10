@@ -9,14 +9,14 @@ import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseCategoryDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID kategori tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: 'Category A' })
   @Validate(IsNotExist, ['CourseCategory', 'name', 'id'], {
     message: 'Nama kategori sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama kategori tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty({ example: 1 })

@@ -4,14 +4,14 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class UpdateCourseDurationDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID durasi tidak boleh kosong' })
   id: number;
 
   @ApiProperty({ example: '1-5 JP' })
   @Validate(IsNotExist, ['CourseDuration', 'name'], {
     message: 'Nama durasi sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama durasi tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty({ example: 40 })

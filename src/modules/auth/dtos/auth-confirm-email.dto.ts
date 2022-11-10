@@ -3,6 +3,6 @@ import { IsNotEmpty } from 'class-validator';
 
 export class AuthConfirmEmailDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Hash code tidak boleh kosong' })
   hash: string;
 }

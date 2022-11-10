@@ -7,10 +7,10 @@ export class CreateEditorChoiceCourseDto {
   @Validate(IsExist, ['Course', 'id'], {
     message: 'Course tidak tersedia',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID pelatihan tidak boleh kosong' })
   course_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Posisi tidak boleh kosong' })
   position: number;
 }

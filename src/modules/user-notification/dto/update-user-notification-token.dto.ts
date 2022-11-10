@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
 export class UpdateUserNotificationTokenDto {
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Notification token tidak boleh kosong' })
   notification_token: string;
 }

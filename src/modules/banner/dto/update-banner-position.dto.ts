@@ -3,7 +3,7 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class UpdateBannerPositionDto {
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'ID banner tidak boleh kosong' })
   banner_id: number;
 
   @ApiProperty({ example: 1 })

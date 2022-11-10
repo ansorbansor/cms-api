@@ -9,7 +9,7 @@ export class CreateBannerDto {
   @Validate(IsNotExist, ['Banner', 'name'], {
     message: 'Nama banner sudah ada',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama banner tidak boleh kosong' })
   name: string;
 
   @ApiProperty({ example: 0 })
@@ -20,7 +20,7 @@ export class CreateBannerDto {
     },
   )
   @IsNotEmpty({
-    message: 'Tipe tidak boleh kosong',
+    message: 'Tipe banner tidak boleh kosong',
   })
   type: number;
 

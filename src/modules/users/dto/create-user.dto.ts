@@ -15,19 +15,19 @@ import { CreateUserTopicDto } from './create-user-topic.dto';
 
 export class CreateUserDto {
   @ApiProperty({ example: '1234567890' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'NIP tidak boleh kosong' })
   @Validate(IsNotExist, ['User'], {
     message: 'NIP telah terdaftar',
   })
   nip: string | null;
 
   @ApiProperty({ example: 'John' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Nama tidak boleh kosong' })
   name: string | null;
 
   @ApiProperty({ example: 'john.tor@example.com' })
   @Transform(({ value }) => value?.toLowerCase().trim())
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email tidak boleh kosong' })
   @Validate(IsNotExist, ['User'], {
     message: 'Email telah digunakan',
   })
@@ -39,7 +39,7 @@ export class CreateUserDto {
   password?: string;
 
   @ApiProperty({ default: 'email' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Provider tidak boleh kosong' })
   provider?: string;
 
   @IsOptional()
@@ -50,7 +50,7 @@ export class CreateUserDto {
   photoFile?: FileEntity | null;
 
   @ApiProperty({ default: 1 })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Status tidak boleh kosong' })
   @Transform(({ value }) => (value === 'true' ? 1 : 0))
   status: number;
 

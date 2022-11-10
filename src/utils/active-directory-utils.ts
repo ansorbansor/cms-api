@@ -1,6 +1,6 @@
 import * as ActiveDirectory from 'activedirectory2';
 import activeDirectoryConfig from 'src/config/active-directory.config';
-import { MCrypt } from 'MCrypt';
+import { MCrypt } from 'mcrypt';
 
 export class ActiveDirectoryUtils {
   private ad: ActiveDirectory;

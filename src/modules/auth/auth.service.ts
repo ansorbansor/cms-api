@@ -75,7 +75,7 @@ export class AuthService {
       email: loginDto.email,
     });
 
-    if (!onlyAdmin && authConfig().activateLDAP == 'true') {
+    if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
       //check Active Directory user
       const ADResult = await new ActiveDirectoryUtils().authAD(
         loginDto.email,

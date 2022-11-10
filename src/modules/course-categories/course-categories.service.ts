@@ -108,9 +108,13 @@ export class CourseCategoriesService {
         new Brackets((qb) => {
           qb.where(
             `LOWER(category.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(
-            `LOWER(category.pkasn_program) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          );
+          )
+            .orWhere(
+              `LOWER(pkasnProgram.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            )
+            .orWhere(
+              `LOWER(pkasnProgram.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
+            );
         }),
       );
     }

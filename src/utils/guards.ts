@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { decryptText } from './encryption-helper';
 import { ErrorMessage } from './enums';
 import { failedResponse } from './responses';
 
@@ -14,7 +15,7 @@ import { failedResponse } from './responses';
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.getAllAndOverride<number[]>('roles', [
       context.getClass(),
       context.getHandler(),
@@ -32,6 +33,25 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
+    const decryptPayload = [];
+
+    for (const e of request.user.role) {
+      decryptPayload.push({
+        roleData: {
+          id: await decryptText(e.roleData.id),
+          grant_all_access: await decryptText(e.roleData.grant_all_access),
+          roleAccess: await Promise.all(
+            e.roleData.roleAccess.map(async (roleAccess) => {
+              return {
+                be_controller: await decryptText(roleAccess.be_controller),
+                menu_access: await decryptText(roleAccess.menu_access),
+              };
+            }),
+          ),
+        },
+      });
+    }
+
     const canAccess = function (data) {
       if (!data || data.length == 0) {
         throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
@@ -46,7 +66,7 @@ export class RolesGuard implements CanActivate {
         } else if (
           !e.roleData.roleAccess.some(function (x) {
             if (
-              controllers == x.menu.be_controller &&
+              controllers == x.be_controller &&
               permissions == x.menu_access
             ) {
               return true;
@@ -62,15 +82,17 @@ export class RolesGuard implements CanActivate {
     if (
       request.user &&
       request.user.role &&
-      request.user.role.some((b) => b.roleData && b.roleData.grant_all_access)
+      decryptPayload.some(
+        (b) => b.roleData && b.roleData.grant_all_access == 'true',
+      )
     ) {
       return true;
     }
     if (controllers && permissions) {
-      return canAccess(request.user.role);
+      return canAccess(decryptPayload);
     } else if (roles) {
       if (
-        roles.filter((a) => request.user?.role.some((b) => a === b.id))
+        roles.filter((a) => decryptPayload.some((b) => a === b.roleData.id))
           .length <= 0
       ) {
         throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);

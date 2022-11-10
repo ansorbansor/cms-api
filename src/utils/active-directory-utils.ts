@@ -1,5 +1,6 @@
 import * as ActiveDirectory from 'activedirectory2';
 import activeDirectoryConfig from 'src/config/active-directory.config';
+import { MCrypt } from 'MCrypt';
 
 export class ActiveDirectoryUtils {
   private ad: ActiveDirectory;
@@ -27,5 +28,17 @@ export class ActiveDirectoryUtils {
         resolve(null);
       });
     });
+  }
+
+  decryptSIMSDMData(value: string) {
+    const encrypted = Buffer.from(value, 'base64'); //holds our encrypted data
+    const key = 'Buk43nkr1p$1!nYA'; // holds our 32 bytes key
+
+    const desEcb = new MCrypt('rijndael-256', 'ecb');
+    desEcb.open(key); // we are set the key
+
+    const plaintext = desEcb.decrypt(encrypted);
+
+    return plaintext.toString().replace(/\0/g, '');
   }
 }

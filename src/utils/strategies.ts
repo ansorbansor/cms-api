@@ -5,8 +5,9 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/entities/user.entity';
 import { failedResponse } from './responses';
+import { decryptText } from './encryption-helper';
 
-type JwtPayload = Pick<User, 'id' | 'userRoles'> & { iat: number; exp: number };
+type JwtPayload = Pick<User, 'id'> & { iat: number; exp: number };
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,10 +18,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  public validate(payload: JwtPayload) {
+  public async validate(payload: JwtPayload) {
     if (!payload.id) {
       throw failedResponse(HttpStatus.UNAUTHORIZED, 'Unauthorized');
     }
+
+    payload.id = Number(await decryptText(payload.id));
 
     return payload;
   }

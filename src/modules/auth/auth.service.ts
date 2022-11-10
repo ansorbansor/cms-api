@@ -10,9 +10,11 @@ import { User } from 'src/entities/user.entity';
 import {
   AuthProvidersEnum,
   ErrorMessage,
+  FilePath,
   RedisKeyEnum,
   RoleEnum,
 } from 'src/utils/enums';
+import fetch from 'node-fetch';
 import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
@@ -28,7 +30,7 @@ import { Facebook } from 'fb';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
 import { RedisService } from '../redis/redis.service';
-import { BufferedFile } from 'src/utils/file-helper';
+import { BufferedFile, getFileExtension } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
 import { ResetPasswordResource } from './resources/reset-password.resources';
@@ -39,6 +41,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActiveDirectoryUtils } from 'src/utils/active-directory-utils';
 import { isNumber } from 'class-validator';
+import simsdmConfig from 'src/config/simsdm.config';
+import { encryptText } from 'src/utils/encryption-helper';
+import { EmployeeLevel } from 'src/entities/employee-level.entity';
+import { EmployeePosition } from 'src/entities/employee-position.entity';
+import { EmployeeUnit } from 'src/entities/employee-unit.entity';
+import { FilesService } from '../files/files.service';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -52,8 +61,17 @@ export class AuthService {
     private configService: ConfigService,
     private redisService: RedisService,
     private activityLogService: ActivityLogService,
+    private fileService: FilesService,
     @InjectRepository(Menu)
     private menuRepository: Repository<Menu>,
+    @InjectRepository(EmployeeLevel)
+    private employeeLevelRepository: Repository<EmployeeLevel>,
+    @InjectRepository(EmployeePosition)
+    private employeePositionRepository: Repository<EmployeePosition>,
+    @InjectRepository(EmployeeUnit)
+    private employeeUnitRepository: Repository<EmployeeUnit>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {
     this.google = new OAuth2Client(
       configService.get('google.clientId'),
@@ -71,41 +89,141 @@ export class AuthService {
     onlyAdmin: boolean,
     ip: string,
   ): Promise<{ token: string; user: User; menus: Menu[] }> {
-    let user = await this.usersService.findOneFull({
-      email: loginDto.email,
-    });
+    let user = await this.usersService.findOneFull({ nip: loginDto.nip });
 
     if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
       //check Active Directory user
       const ADResult = await new ActiveDirectoryUtils().authAD(
-        loginDto.email,
+        loginDto.nip,
         loginDto.password,
       );
 
-      if (!ADResult) {
+      if (ADResult) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
           `${ErrorMessage.EMAIL_NOT_EXISTS}`,
         );
-      } else if (!user) {
-        const photo = null; //hardcoded, set if get data from simsdm
-        const dto = new AuthRegisterLoginDto();
-        dto.email = loginDto.email;
-        dto.name = `User ${loginDto.email}`; //hardcoded, set if get data from simsdm
-        dto.nip = loginDto.email; //hardcoded, set if get data from simsdm
-        dto.password = loginDto.password;
-        dto.position_id = 4; //hardcoded, set if get data from simsdm
-        dto.provider = AuthProvidersEnum.ldap;
-        dto.role_id = 2; //hardcoded user
-        dto.status = 1;
-        dto.level_id = 4; //hardcoded, set if get data from simsdm
-        dto.unit_id = 4; //hardcoded, set if get data from simsdm
-        dto.level = 0;
+      } else {
+        try {
+          const simsdmData = await fetch(`${simsdmConfig().url}/${user.nip}`);
 
-        await this.register(photo, dto, ip);
-        user = await this.usersService.findOneFull({
-          email: loginDto.email,
-        });
+          const adHelper = new ActiveDirectoryUtils();
+
+          //set dto register for new user
+          const dto = new AuthRegisterLoginDto();
+          dto.email = adHelper.decryptSIMSDMData(simsdmData.email)
+            ? adHelper.decryptSIMSDMData(simsdmData.email)
+            : adHelper.decryptSIMSDMData(simsdmData.email_dinas)
+            ? adHelper.decryptSIMSDMData(simsdmData.email_dinas)
+            : loginDto.nip;
+          dto.name = adHelper.decryptSIMSDMData(simsdmData.nmpeg)
+            ? adHelper.decryptSIMSDMData(simsdmData.nmpeg)
+            : `User ${loginDto.nip}`;
+          dto.nip = adHelper.decryptSIMSDMData(simsdmData.nipbaru)
+            ? adHelper.decryptSIMSDMData(simsdmData.nipbaru)
+            : adHelper.decryptSIMSDMData(simsdmData.niplama)
+            ? adHelper.decryptSIMSDMData(simsdmData.niplama)
+            : adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
+            ? adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
+            : loginDto.nip;
+          dto.password = loginDto.password;
+
+          //find existing position
+          let position = await this.employeePositionRepository.findOne({
+            where: {
+              name: adHelper.decryptSIMSDMData(simsdmData.jabatanakhir),
+            },
+          });
+
+          //create position if not exists
+          if (!position) {
+            position = await this.employeePositionRepository.save({
+              name: adHelper.decryptSIMSDMData(simsdmData.jabatanakhir),
+            });
+          }
+
+          dto.position_id = position.id;
+          dto.provider = AuthProvidersEnum.ldap;
+          dto.role_id = RoleEnum.user; //hardcoded user
+          dto.status = 1;
+
+          //find existing level
+          let level = await this.employeeLevelRepository.findOne({
+            where: {
+              name: adHelper.decryptSIMSDMData(simsdmData.pangkatakhir),
+            },
+          });
+
+          //create level if not exists
+          if (!level) {
+            level = await this.employeeLevelRepository.save({
+              name: adHelper.decryptSIMSDMData(simsdmData.pangkatakhir),
+            });
+          }
+
+          dto.level_id = level.id;
+
+          //find existing unit
+          let unit = await this.employeeUnitRepository.findOne({
+            where: {
+              name: adHelper.decryptSIMSDMData(simsdmData.satorg),
+            },
+          });
+
+          //create unit if not exists
+          if (!unit) {
+            unit = await this.employeeUnitRepository.save({
+              name: adHelper.decryptSIMSDMData(simsdmData.satorg),
+            });
+          }
+          dto.unit_id = unit.id;
+
+          dto.level = 0;
+          dto.photo = null;
+
+          user = await this.register(null, dto, ip);
+
+          let photo = null;
+          if (adHelper.decryptSIMSDMData(simsdmData.foto)) {
+            try {
+              const fileExt = getFileExtension(
+                adHelper.decryptSIMSDMData(simsdmData.foto),
+              );
+              const res = await fetch(
+                `${simsdmConfig().imageUrl}/${adHelper.decryptSIMSDMData(
+                  simsdmData.foto,
+                )}`,
+              );
+
+              const resBuffer = await res.buffer();
+
+              //save get image
+              photo = await this.fileService.uploadWithMinioBuffer(
+                resBuffer,
+                user.id,
+                `${user.nip}.${fileExt}`,
+                FilePath.USER,
+                'User Photo',
+              );
+            } catch (err) {
+              console.log(err);
+            }
+          }
+
+          await this.usersService.update(
+            user.id,
+            new UpdateUserDto(),
+            user,
+            ip,
+            photo,
+          );
+        } catch (e) {
+          console.log(e);
+          throw failedResponse(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            ErrorMessage.USER_NOT_FOUND,
+          );
+        }
       }
     }
 
@@ -145,9 +263,28 @@ export class AuthService {
     );
 
     if (isValidPassword) {
-      const token = await this.jwtService.sign({
-        id: user.id,
-        role: user.userRoles,
+      const token = this.jwtService.sign({
+        id: await encryptText(user.id),
+        role: await Promise.all(
+          user.userRoles.map(async (e) => {
+            return {
+              roleData: {
+                id: await encryptText(e.roleData.id),
+                grant_all_access: await encryptText(
+                  e.roleData.grant_all_access,
+                ),
+                roleAccess: await Promise.all(
+                  e.roleData.roleAccess.map(async (role) => {
+                    return {
+                      be_controller: await encryptText(role.menu.be_controller),
+                      menu_access: await encryptText(role.menu_access),
+                    };
+                  }),
+                ),
+              },
+            };
+          }),
+        ),
       });
 
       await this.activityLogService.create({
@@ -187,13 +324,13 @@ export class AuthService {
     }
 
     const user = await this.usersService.findOneFull({
-      email: loginDto.email,
+      email: loginDto.nip,
     });
 
     if (!user) {
       //check Active Directory user
       const ADResult = await new ActiveDirectoryUtils().authAD(
-        loginDto.email,
+        loginDto.nip,
         loginDto.password,
       );
 
@@ -369,7 +506,7 @@ export class AuthService {
     photo: BufferedFile,
     dto: AuthRegisterLoginDto,
     ip: string,
-  ): Promise<void> {
+  ): Promise<User> {
     const hash =
       authConfig().emailVerification == 'true'
         ? crypto
@@ -416,6 +553,8 @@ export class AuthService {
         hash,
       },
     });
+
+    return user;
   }
 
   async confirmEmail(hash: string): Promise<void> {

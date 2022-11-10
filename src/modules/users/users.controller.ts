@@ -28,6 +28,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { MenuPermission } from 'src/utils/enums';
+import { UserResource } from './resources/user.resources';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -50,11 +51,13 @@ export class UsersController {
     @UploadedFile() file?: BufferedFile,
   ) {
     return successResponse(
-      await this.usersService.create(
-        createProfileDto,
-        req.user.id,
-        file,
-        req.ip,
+      UserResource(
+        await this.usersService.create(
+          createProfileDto,
+          req.user.id,
+          file,
+          req.ip,
+        ),
       ),
       'success',
     );

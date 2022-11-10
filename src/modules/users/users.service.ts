@@ -105,7 +105,7 @@ export class UsersService {
       });
     }
 
-    return this.findOne({ id: user.id });
+    return this.findOneFull({ id: user.id });
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {

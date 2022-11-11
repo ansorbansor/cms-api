@@ -45,10 +45,6 @@ with Diagram('playbook infrastructure with on-premise', show=True, direction='TB
         pionir = EC2('Pionir')
         api << Edge(label= 'Send User Course & Get Certificate', color='firebrick', style='dashed') >>  pionir
 
-    with Cluster('Open API'):
-        lxp = EC2('LXP')
-        api << Edge(label= 'Get Data', color='firebrick', style='dashed') <<  lxp
-
     with Cluster('Third Party'):
         webmail = SNS('Webmail')
         api << Edge(label= '587/465', color='firebrick', style='dashed') >> webmail

@@ -376,13 +376,29 @@ export class AuthService {
     );
 
     if (isValidPassword) {
-      const token = await this.jwtService.sign(
-        {
-          id: user.id,
-          role: user.userRoles,
-        },
-        { expiresIn: `${loginDto.expiration}s` },
-      );
+      const token = this.jwtService.sign({
+        id: await encryptText(user.id),
+        role: await Promise.all(
+          user.userRoles.map(async (e) => {
+            return {
+              roleData: {
+                id: await encryptText(e.roleData.id),
+                grant_all_access: await encryptText(
+                  e.roleData.grant_all_access,
+                ),
+                roleAccess: await Promise.all(
+                  e.roleData.roleAccess.map(async (role) => {
+                    return {
+                      be_controller: await encryptText(role.menu.be_controller),
+                      menu_access: await encryptText(role.menu_access),
+                    };
+                  }),
+                ),
+              },
+            };
+          }),
+        ),
+      });
 
       await this.activityLogService.create({
         user_id: user.id,
@@ -491,13 +507,30 @@ export class AuthService {
       throw failedResponse(HttpStatus.NOT_FOUND, ErrorMessage.EMAIL_NOT_EXISTS);
     }
 
-    const jwtToken = await this.jwtService.sign({
-      id: user.id,
-      role: user.userRoles,
+    const token = this.jwtService.sign({
+      id: await encryptText(user.id),
+      role: await Promise.all(
+        user.userRoles.map(async (e) => {
+          return {
+            roleData: {
+              id: await encryptText(e.roleData.id),
+              grant_all_access: await encryptText(e.roleData.grant_all_access),
+              roleAccess: await Promise.all(
+                e.roleData.roleAccess.map(async (role) => {
+                  return {
+                    be_controller: await encryptText(role.menu.be_controller),
+                    menu_access: await encryptText(role.menu_access),
+                  };
+                }),
+              ),
+            },
+          };
+        }),
+      ),
     });
 
     return {
-      token: jwtToken,
+      token: token,
       user,
     };
   }

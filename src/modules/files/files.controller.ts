@@ -62,6 +62,16 @@ export class FilesController {
     );
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('upload-from-local')
+  async uploadPhotoProfilee() {
+    return successResponse(
+      await this.filesService.uploadCourseImageToMinioFromLocal(),
+      'success',
+    );
+  }
+
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
   async download(@Param('path') path) {

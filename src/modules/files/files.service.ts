@@ -16,6 +16,8 @@ import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import { FileResource } from './resources/file.resources';
 import { FilePath, FileTypeEnum } from 'src/utils/enums';
+import * as fs from 'fs';
+import * as mime from 'mime';
 
 @Injectable()
 export class FilesService {
@@ -163,6 +165,43 @@ export class FilesService {
         user_id: userId,
       }),
     );
+  }
+
+  public async uploadCourseImageToMinioFromLocal() {
+    const files = fs.readdirSync(
+      '/Users/bayu/Downloads/playbook-assets/courses',
+    );
+    const x = [];
+
+    for (const f of files) {
+      const path = `/Users/bayu/Downloads/playbook-assets/courses/${f}`;
+
+      const metaData = {
+        'Content-Type': mime.lookup(path),
+      };
+
+      await new Promise((resolve) => {
+        try {
+          this.client.fPutObject(
+            'playbook',
+            `courses/${f}`,
+            path,
+            metaData,
+            function (err, objInfo) {
+              if (err) {
+                return console.log(err);
+              }
+              console.log(`Success (${f})`, objInfo.etag, objInfo.versionId);
+              resolve(null);
+            },
+          );
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    }
+
+    return x;
   }
 
   async delete(id: number, bucketName: string = minioConfig().bucketName) {

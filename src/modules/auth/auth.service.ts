@@ -432,7 +432,8 @@ export class AuthService {
         idToken: loginDto.idToken,
         audience: [this.configService.get('google.clientId')],
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log(`Firebase Auth Error (${err})`);
         throw failedResponse(HttpStatus.BAD_REQUEST, 'Token tidak dikenal');
       });
 

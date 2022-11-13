@@ -109,6 +109,8 @@ export class AuthService {
             `${simsdmConfig().url}/${loginDto.nip}`,
           );
 
+          console.log(`505 ${simsdmData}`);
+
           const adHelper = new ActiveDirectoryUtils();
 
           //set dto register for new user
@@ -193,12 +195,6 @@ export class AuthService {
               );
               const res = await fetch(
                 `${simsdmConfig().imageUrl}/${adHelper.decryptSIMSDMData(
-                  simsdmData.foto,
-                )}`,
-              );
-
-              console.log(
-                `505 ${simsdmConfig().imageUrl}/${adHelper.decryptSIMSDMData(
                   simsdmData.foto,
                 )}`,
               );

@@ -109,7 +109,7 @@ export class AuthService {
             `${simsdmConfig().url}/${loginDto.nip}`,
           );
 
-          console.log(`505 ${simsdmData}`);
+          console.log(`505 ${JSON.stringify(simsdmData)}`);
 
           const adHelper = new ActiveDirectoryUtils();
 

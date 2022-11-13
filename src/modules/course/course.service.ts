@@ -682,4 +682,15 @@ export class CourseService {
       },
     ];
   }
+
+  async tidyCourse() {
+    await getManager().query(
+      `UPDATE 
+      courses, (SELECT id, category_id FROM topics) topp 
+      SET courses.category_id = topp.category_id
+      WHERE courses.topic_id = topp.id`,
+    );
+
+    return 'success';
+  }
 }

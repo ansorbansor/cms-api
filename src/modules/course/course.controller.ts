@@ -266,4 +266,11 @@ export class CourseController {
   async getCourseRating() {
     return successResponse(await this.courseServices.courseRating(), 'success');
   }
+
+  @Get('course/tidyup')
+  @UseGuards(OptionalJwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async tidyCourse() {
+    return successResponse(await this.courseServices.tidyCourse(), 'success');
+  }
 }

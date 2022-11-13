@@ -44,7 +44,7 @@ export class MailService {
   }
 
   async forgotPassword(mailData: MailData<{ hash: string; isAdmin: boolean }>) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+    if (process.env.MAIL_HOST)
       await this.mailerService
         .sendMail({
           to: mailData.to,
@@ -77,7 +77,7 @@ export class MailService {
       couponCode: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+    if (process.env.MAIL_HOST)
       await this.mailerService
         .sendMail({
           to: mailData.to,
@@ -107,7 +107,7 @@ export class MailService {
       reason: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+    if (process.env.MAIL_HOST)
       await this.mailerService
         .sendMail({
           to: mailData.to,
@@ -136,7 +136,7 @@ export class MailService {
       password: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+    if (process.env.MAIL_HOST)
       await this.mailerService
         .sendMail({
           to: mailData.to,
@@ -168,7 +168,7 @@ export class MailService {
       tutorialUrl: string;
     }>,
   ) {
-    if (process.env.MAIL_HOST && process.env.EMAIL_VERIFICATION == 'true')
+    if (process.env.MAIL_HOST)
       await this.mailerService
         .sendMail({
           to: mailData.to,

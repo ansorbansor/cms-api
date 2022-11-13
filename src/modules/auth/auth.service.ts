@@ -47,7 +47,6 @@ import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { FilesService } from '../files/files.service';
-import { UpdateUserDto } from '../users/dto/update-user.dto';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -189,7 +188,6 @@ export class AuthService {
 
           user = await this.register(null, dto, ip);
 
-          let photo = null;
           if (adHelper.decryptSIMSDMData(simsdmData.foto)) {
             try {
               const fileExt = getFileExtension(
@@ -204,25 +202,21 @@ export class AuthService {
               const resBuffer = await res.buffer();
 
               //save get image
-              photo = await this.fileService.uploadWithMinioBuffer(
+              const photo = await this.fileService.uploadWithMinioBuffer(
                 resBuffer,
                 user.id,
                 `${user.nip}.${fileExt}`,
                 FilePath.USER,
                 'User Photo',
               );
+
+              await this.userRepository.update(user.id, {
+                photo: photo.id,
+              });
             } catch (err) {
               console.log(err);
             }
           }
-
-          await this.usersService.update(
-            user.id,
-            new UpdateUserDto(),
-            user,
-            ip,
-            photo,
-          );
         } catch (e) {
           console.log(e);
           throw failedResponse(

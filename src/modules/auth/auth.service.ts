@@ -197,6 +197,12 @@ export class AuthService {
                 )}`,
               );
 
+              console.log(
+                `505 ${simsdmConfig().imageUrl}/${adHelper.decryptSIMSDMData(
+                  simsdmData.foto,
+                )}`,
+              );
+
               const resBuffer = await res.buffer();
 
               //save get image

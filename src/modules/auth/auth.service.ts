@@ -105,7 +105,9 @@ export class AuthService {
         );
       } else {
         try {
-          const simsdmData = await fetch(`${simsdmConfig().url}/${user.nip}`);
+          const simsdmData = await fetch(
+            `${simsdmConfig().url}/${loginDto.nip}`,
+          );
 
           const adHelper = new ActiveDirectoryUtils();
 

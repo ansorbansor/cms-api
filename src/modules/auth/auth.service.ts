@@ -109,8 +109,9 @@ export class AuthService {
 
           simsdmData = await simsdmData.json();
 
-          console.log(`504 ${simsdmConfig().url}${loginDto.nip}`);
-          console.log(`505 ${JSON.stringify(simsdmData)}`);
+          if (Array.isArray(simsdmData) && simsdmData.length > 0) {
+            simsdmData = simsdmData[0];
+          }
 
           const adHelper = new ActiveDirectoryUtils();
 

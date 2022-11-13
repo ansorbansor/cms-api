@@ -94,11 +94,11 @@ export class AuthService {
     if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
       //check Active Directory user
       const ADResult = await new ActiveDirectoryUtils().authAD(
-        loginDto.nip,
+        `${loginDto.nip}@setneg.go.id`,
         loginDto.password,
       );
 
-      if (ADResult) {
+      if (!ADResult) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
           `${ErrorMessage.EMAIL_NOT_EXISTS}`,

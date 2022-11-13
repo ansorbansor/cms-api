@@ -105,9 +105,9 @@ export class AuthService {
         );
       } else {
         try {
-          const simsdmData = await fetch(
-            `${simsdmConfig().url}/${loginDto.nip}`,
-          );
+          let simsdmData = await fetch(`${simsdmConfig().url}${loginDto.nip}`);
+
+          simsdmData = await simsdmData.json();
 
           console.log(`504 ${simsdmConfig().url}${loginDto.nip}`);
           console.log(`505 ${JSON.stringify(simsdmData)}`);

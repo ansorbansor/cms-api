@@ -691,6 +691,8 @@ export class CourseService {
       WHERE courses.topic_id = topp.id`,
     );
 
+    this.redisService.del(`${RedisKeyEnum.course}:`);
+
     return 'success';
   }
 }

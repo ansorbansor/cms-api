@@ -100,7 +100,7 @@ export class AuthService {
       if (!ADResult) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `${ErrorMessage.EMAIL_NOT_EXISTS}`,
+          `${ErrorMessage.NIP_NOT_EXISTS}`,
         );
       } else {
         try {
@@ -230,7 +230,7 @@ export class AuthService {
     if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.EMAIL_NOT_EXISTS,
+        ErrorMessage.NIP_NOT_EXISTS,
       );
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
@@ -337,7 +337,7 @@ export class AuthService {
       if (!ADResult || !ADResult.code || ADResult.code != 0) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `${ErrorMessage.EMAIL_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
+          `${ErrorMessage.NIP_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
         );
       } else {
         throw failedResponse(
@@ -348,7 +348,7 @@ export class AuthService {
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.EMAIL_NOT_EXISTS,
+        ErrorMessage.NIP_NOT_EXISTS,
       );
     }
 
@@ -745,7 +745,7 @@ export class AuthService {
     if (!currentUser || (currentUser && currentUser.userRoles.length == 0)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.EMAIL_NOT_EXISTS,
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 

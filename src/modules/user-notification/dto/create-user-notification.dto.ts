@@ -5,7 +5,7 @@ import { IsExist } from 'src/utils/validators';
 
 export class CreateUserNotificationDto {
   @Validate(IsExist, ['User', 'id'], {
-    message: ErrorMessage.EMAIL_NOT_EXISTS,
+    message: ErrorMessage.USER_NOT_FOUND,
   })
   user_id: number;
 

@@ -83,11 +83,11 @@ export class AuthController {
   @Throttle(5, 300)
   @Post('google/login')
   @HttpCode(HttpStatus.OK)
-  async loginGoogle(@Body() loginDto: AuthGoogleLoginDto, @Request() req) {
+  async loginGoogle(@Body() loginDto: AuthGoogleLoginDto) {
     const socialData = await this.service.getProfileByTokenGoogle(loginDto);
 
     return successResponse(
-      await this.service.validateSocialLogin('google', socialData, req.ip),
+      await this.service.validateSocialLogin('google', socialData),
       'success',
     );
   }
@@ -95,11 +95,11 @@ export class AuthController {
   @Throttle(5, 300)
   @Post('facebook/login')
   @HttpCode(HttpStatus.OK)
-  async loginFacebook(@Body() loginDto: AuthFacebookLoginDto, @Request() req) {
+  async loginFacebook(@Body() loginDto: AuthFacebookLoginDto) {
     const socialData = await this.service.getProfileByTokenFacebook(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('facebook', socialData, req.ip),
+      this.service.validateSocialLogin('facebook', socialData),
       'success',
     );
   }
@@ -107,11 +107,11 @@ export class AuthController {
   @Throttle(5, 300)
   @Post('apple/login')
   @HttpCode(HttpStatus.OK)
-  async loginApple(@Body() loginDto: AuthAppleLoginDto, @Request() req) {
+  async loginApple(@Body() loginDto: AuthAppleLoginDto) {
     const socialData = await this.service.getProfileByTokenApple(loginDto);
 
     return successResponse(
-      this.service.validateSocialLogin('apple', socialData, req.ip),
+      this.service.validateSocialLogin('apple', socialData),
       'success',
     );
   }

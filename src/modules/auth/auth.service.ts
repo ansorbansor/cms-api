@@ -493,7 +493,6 @@ export class AuthService {
   async validateSocialLogin(
     authProvider: string,
     socialData: SocialInterface,
-    ip: string,
   ): Promise<{ token: string; user: User }> {
     const socialEmail = socialData.email?.toLowerCase();
 
@@ -502,8 +501,9 @@ export class AuthService {
     });
 
     if (user || (user && user.userRoles.length == 0)) {
-      user.provider = authProvider;
-      await this.usersService.update(user.id, user, user, ip);
+      await this.userRepository.update(user.id, {
+        provider: authProvider,
+      });
     } else {
       throw failedResponse(HttpStatus.NOT_FOUND, ErrorMessage.EMAIL_NOT_EXISTS);
     }

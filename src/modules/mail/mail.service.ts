@@ -66,6 +66,7 @@ export class MailService {
           },
         })
         .catch((err) => {
+          console.log('SMTP Error');
           console.log(err);
         });
   }

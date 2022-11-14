@@ -138,7 +138,7 @@ export enum FilePath {
 
 export enum ErrorMessage {
   NIP_NOT_EXISTS = 'Maaf, NIP yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali NIP yang telah tervalidasi.',
-  EMAIL_NOT_EXISTS = 'Maaf, email yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali email yang telah tervalidasi.',
+  EMAIL_NOT_EXISTS = 'Maaf, Akun yang anda pilih tidak sesuai. Silahkan coba pilih kembali Akun yang telah tervalidasi.',
   PASSWORD_WRONG = 'Maaf, password yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali password anda.',
   USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan NIP yang telah terdaftar.',
   FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',

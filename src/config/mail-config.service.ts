@@ -47,7 +47,7 @@ export class MailConfigService implements MailerOptionsFactory {
   } as MailerOptions;
 
   configStageProd = {
-    transport: `smtps://${this.configService.get(
+    transport: `smtp://${this.configService.get(
       'mail.user',
     )}:${this.configService.get('mail.password')}@${this.configService.get(
       'mail.host',

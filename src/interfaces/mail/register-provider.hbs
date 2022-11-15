@@ -7,8 +7,247 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{baseUrl}}style.css">
+    <link rel="stylesheet" href="/src/style.css">
     <title>Register</title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            max-width: 720px;
+            max-height: 940px;
+        }
+
+        a {
+            color: #FE9516;
+            text-decoration: none;
+        }
+
+        p {
+            font-size: 16px;
+            font-weight: 400;
+            color: #444444;
+            line-height: 24px;
+            margin: unset;
+        }
+
+        p span {
+            color: #FE9516;
+        }
+
+        h4, h6 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            width: 308px;
+            margin-bottom: 20px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            background-color: #FE9516;
+            border: none;
+            border-radius: 6px;
+        }
+        .btn-primary:hover,
+        .btn-primary:active,
+        .btn-primary:focus {
+            background-color: #D47C12;
+            border: none;
+            box-shadow: none;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 60px 0;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header .header-logo {
+            width: 320px;
+            height: 63px;
+            margin-bottom: 12px;
+        }
+
+        .header .header-logo img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .header .header-address p {
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content h4,
+        .content p {
+            margin-bottom: 20px;
+        }
+
+        .content .user-auth {
+            margin-bottom: 20px;
+        }
+
+        .content .user-auth p {
+            margin-bottom: unset;
+        }
+
+        .content .user-auth span {
+            font-weight: 600;
+            color: #444444;
+        }
+
+        .content .course {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .content .course-kupon {
+            min-width: 204px;
+            height: 104px;
+            padding: 16px 40px;
+            text-align: center;
+            background-color: #FFEAD0;
+            border: 1px solid #FE9516;
+            border-radius: 12px;
+        }
+
+        .content .course-kupon p {
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .content .course-kupon h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #FE9516;
+        }
+
+        .content .btn-primary {
+            margin: 0 auto 20px auto;
+            align-self: center;
+        }
+
+        .content .regards h6 {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+        }
+
+        .footer {
+            padding: 24px 60px;
+            background-color: #444444;
+            text-align: center;
+        }
+
+        .footer .message-footer {
+            font-size: 12px;
+            font-weight: 400;
+            color: #ffffff;
+        }
+
+        .footer .info-footer {
+            margin-bottom: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: row;
+        }
+
+        .footer .info-footer a {
+            color: #ffffff;
+        }
+
+        .footer .info-footer .social-media {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer .info-footer .social-media .social-media-item {
+            width: 32px;
+            height: 32px;
+            margin: 0 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer .info-footer .social-media .social-media-item img {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media screen and (max-width: 450px) {
+            body {
+                max-width: 100%;
+                max-height: 100%;
+            }
+
+            h4, h6 {
+                font-size: 18px;
+            }
+
+            .btn-primary {
+                width: 280px;
+                font-size: 14px;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 40px 20px;
+            }
+
+            .header .header-logo {
+                width: 100%;
+                height: fit-content;
+            }
+
+            .header .header-logo img {
+                width: 100%;
+                height: 100%;
+            }
+
+            .footer {
+                padding: 24px 30px;
+            }
+
+            .footer .info-footer {
+                margin-bottom: 36px;
+            }
+
+            .footer .info-footer .social-media .social-media-item {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    </style>
   </head>
   <body>
     <main class="main-wrapper">
@@ -57,7 +296,6 @@
                     </h6>
                 </div>
             </div>
-
         </div>
     </main>
     <footer class="footer">
@@ -67,16 +305,16 @@
             </a>
             <div class="social-media">
                 <a class="social-media-item" href="{{facebookUrl}}">
-                    <img src="{{baseUrl}}images/facebook.svg" alt="Social Media" />
+                    <img src="{{baseUrl}}images/facebook.png" alt="Social Media" />
                 </a>
                 <a class="social-media-item" href="{{twitterUrl}}">
-                    <img src="{{baseUrl}}images/twitter.svg" alt="Social Media" />
+                    <img src="{{baseUrl}}images/twitter.png" alt="Social Media" />
                 </a>
                 <a class="social-media-item" href="{{instagramUrl}}">
-                    <img src="{{baseUrl}}images/instagram.svg" alt="Social Media" />
+                    <img src="{{baseUrl}}images/instagram.png" alt="Social Media" />
                 </a>
                 <a class="social-media-item" href="{{whatsappUrl}}">
-                    <img src="{{baseUrl}}images/whatsapp.svg" alt="Social Media" />
+                    <img src="{{baseUrl}}images/whatsapp.png" alt="Social Media" />
                 </a>
             </div>
         </div>

@@ -144,4 +144,5 @@ export enum ErrorMessage {
   FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',
   UNAUTHORIZED = 'Session anda telah habis, silahkan login kembali.',
   GENERAL = 'Terjadi kesalahan pada server, silahkan coba beberapa saat kembali atau hubungi admin',
+  TWO_FACTOR_AUTH_FAILED = 'Kode 2FA salah, silahkan coba kembali',
 }

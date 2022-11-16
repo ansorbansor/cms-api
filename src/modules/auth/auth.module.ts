@@ -17,6 +17,7 @@ import { EmployeePosition } from 'src/entities/employee-position.entity';
 import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { User } from 'src/entities/user.entity';
+import { TwoFactorAuthService } from '../two-factor-auth/two-factor-auth.service';
 
 @Module({
   imports: [
@@ -47,7 +48,13 @@ import { User } from 'src/entities/user.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, AnonymousStrategy, RedisService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    AnonymousStrategy,
+    RedisService,
+    TwoFactorAuthService,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

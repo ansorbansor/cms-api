@@ -24,6 +24,10 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
+  public previousPassword: string;
+
+  public generatePassword?: boolean;
+
   @Index()
   @Column()
   name: string | null;
@@ -37,38 +41,11 @@ export class User extends EntityHelper {
   @Column()
   password: string;
 
-  public previousPassword: string;
-
-  public generatePassword?: boolean;
-
-  @AfterLoad()
-  public loadPreviousPassword(): void {
-    this.previousPassword = this.password;
-  }
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  async setPassword() {
-    if (this.previousPassword !== this.password) {
-      const salt = await bcrypt.genSalt();
-      this.password = await bcrypt.hash(this.password, salt);
-    } else if (this.generatePassword) {
-      const salt = await bcrypt.genSalt();
-      this.password = await bcrypt.hash(randomStringGenerator(), salt);
-    }
-  }
-
   @Column({ default: AuthProvidersEnum.email })
   provider: string;
 
   @Column()
   photo?: number;
-
-  @OneToOne(() => FileEntity, {
-    eager: true,
-  })
-  @JoinColumn({ name: 'photo' })
-  photoFile?: FileEntity;
 
   @Column({})
   unit_id: number;
@@ -98,6 +75,15 @@ export class User extends EntityHelper {
 
   @Column()
   level: number;
+
+  @Column()
+  two_factor_auth_code: string;
+
+  @OneToOne(() => FileEntity, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'photo' })
+  photoFile?: FileEntity;
 
   @OneToMany(() => UserRoles, (userRole) => userRole.user, {
     eager: true,
@@ -154,6 +140,23 @@ export class User extends EntityHelper {
           }
         });
       }
+    }
+  }
+
+  @AfterLoad()
+  public loadPreviousPassword(): void {
+    this.previousPassword = this.password;
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async setPassword() {
+    if (this.previousPassword !== this.password) {
+      const salt = await bcrypt.genSalt();
+      this.password = await bcrypt.hash(this.password, salt);
+    } else if (this.generatePassword) {
+      const salt = await bcrypt.genSalt();
+      this.password = await bcrypt.hash(randomStringGenerator(), salt);
     }
   }
 }

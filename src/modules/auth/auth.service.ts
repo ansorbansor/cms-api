@@ -10,11 +10,9 @@ import { User } from 'src/entities/user.entity';
 import {
   AuthProvidersEnum,
   ErrorMessage,
-  FilePath,
   RedisKeyEnum,
   RoleEnum,
 } from 'src/utils/enums';
-import fetch from 'node-fetch';
 import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
@@ -30,7 +28,7 @@ import { Facebook } from 'fb';
 import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
 import appleSigninAuth from 'apple-signin-auth';
 import { RedisService } from '../redis/redis.service';
-import { BufferedFile, getFileExtension } from 'src/utils/file-helper';
+import { BufferedFile } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
 import { ResetPasswordResource } from './resources/reset-password.resources';
@@ -41,12 +39,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActiveDirectoryUtils } from 'src/utils/active-directory-utils';
 import { isNumber } from 'class-validator';
-import simsdmConfig from 'src/config/simsdm.config';
 import { encryptText } from 'src/utils/encryption-helper';
-import { EmployeeLevel } from 'src/entities/employee-level.entity';
-import { EmployeePosition } from 'src/entities/employee-position.entity';
-import { EmployeeUnit } from 'src/entities/employee-unit.entity';
-import { FilesService } from '../files/files.service';
+import { authenticator } from 'otplib';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -60,15 +54,8 @@ export class AuthService {
     private configService: ConfigService,
     private redisService: RedisService,
     private activityLogService: ActivityLogService,
-    private fileService: FilesService,
     @InjectRepository(Menu)
     private menuRepository: Repository<Menu>,
-    @InjectRepository(EmployeeLevel)
-    private employeeLevelRepository: Repository<EmployeeLevel>,
-    @InjectRepository(EmployeePosition)
-    private employeePositionRepository: Repository<EmployeePosition>,
-    @InjectRepository(EmployeeUnit)
-    private employeeUnitRepository: Repository<EmployeeUnit>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {
@@ -88,161 +75,7 @@ export class AuthService {
     onlyAdmin: boolean,
     ip: string,
   ): Promise<{ token: string; user: User; menus: Menu[] }> {
-    let user = await this.usersService.findOneFull({ nip: loginDto.nip });
-
-    if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
-      let simsdmData = await fetch(`${simsdmConfig().url}${loginDto.nip}`);
-
-      simsdmData = await simsdmData.json();
-
-      if (Array.isArray(simsdmData)) {
-        simsdmData = simsdmData[0];
-      }
-
-      const adHelper = new ActiveDirectoryUtils();
-
-      if (simsdmData) {
-        //check Active Directory user with nip baru
-        let ADResult = await new ActiveDirectoryUtils().authAD(
-          `${adHelper.decryptSIMSDMData(simsdmData.nipbaru)}@setneg.go.id`,
-          loginDto.password,
-        );
-
-        //check Active Directory user with nip lama if nip baru not authenticate
-        if (!ADResult) {
-          ADResult = await new ActiveDirectoryUtils().authAD(
-            `${adHelper.decryptSIMSDMData(simsdmData.niplama)}@setneg.go.id`,
-            loginDto.password,
-          );
-        }
-
-        if (!ADResult) {
-          throw failedResponse(
-            HttpStatus.UNPROCESSABLE_ENTITY,
-            `${ErrorMessage.NIP_NOT_EXISTS}`,
-          );
-        } else {
-          try {
-            //set dto register for new user
-            const dto = new AuthRegisterLoginDto();
-            dto.email = adHelper.decryptSIMSDMData(simsdmData.email)
-              ? adHelper.decryptSIMSDMData(simsdmData.email)
-              : adHelper.decryptSIMSDMData(simsdmData.email_dinas)
-              ? adHelper.decryptSIMSDMData(simsdmData.email_dinas)
-              : loginDto.nip;
-            dto.name = adHelper.decryptSIMSDMData(simsdmData.nmpeg)
-              ? adHelper.decryptSIMSDMData(simsdmData.nmpeg)
-              : `User ${loginDto.nip}`;
-            dto.nip = adHelper.decryptSIMSDMData(simsdmData.nipbaru)
-              ? adHelper.decryptSIMSDMData(simsdmData.nipbaru)
-              : adHelper.decryptSIMSDMData(simsdmData.niplama)
-              ? adHelper.decryptSIMSDMData(simsdmData.niplama)
-              : adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
-              ? adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
-              : loginDto.nip;
-
-            dto.password = loginDto.password;
-            console.log(dto.password);
-
-            //find existing position
-            let position = await this.employeePositionRepository.findOne({
-              where: {
-                name: adHelper.decryptSIMSDMData(simsdmData.jabatanakhir),
-              },
-            });
-
-            //create position if not exists
-            if (!position) {
-              position = await this.employeePositionRepository.save({
-                name: adHelper.decryptSIMSDMData(simsdmData.jabatanakhir),
-              });
-            }
-
-            dto.position_id = position.id;
-            dto.provider = AuthProvidersEnum.ldap;
-            dto.role_id = RoleEnum.user; //hardcoded user
-            dto.status = 1;
-
-            //find existing level
-            let level = await this.employeeLevelRepository.findOne({
-              where: {
-                name: adHelper.decryptSIMSDMData(simsdmData.pangkatakhir),
-              },
-            });
-
-            //create level if not exists
-            if (!level) {
-              level = await this.employeeLevelRepository.save({
-                name: adHelper.decryptSIMSDMData(simsdmData.pangkatakhir),
-              });
-            }
-
-            dto.level_id = level.id;
-
-            //find existing unit
-            let unit = await this.employeeUnitRepository.findOne({
-              where: {
-                name: adHelper.decryptSIMSDMData(simsdmData.satorg),
-              },
-            });
-
-            //create unit if not exists
-            if (!unit) {
-              unit = await this.employeeUnitRepository.save({
-                name: adHelper.decryptSIMSDMData(simsdmData.satorg),
-              });
-            }
-            dto.unit_id = unit.id;
-
-            dto.level = 0;
-            dto.photo = null;
-
-            user = await this.register(null, dto, ip);
-
-            if (adHelper.decryptSIMSDMData(simsdmData.foto)) {
-              try {
-                const fileExt = getFileExtension(
-                  adHelper.decryptSIMSDMData(simsdmData.foto),
-                );
-                const res = await fetch(
-                  `${simsdmConfig().imageUrl}/${adHelper.decryptSIMSDMData(
-                    simsdmData.foto,
-                  )}`,
-                );
-
-                const resBuffer = await res.buffer();
-
-                //save get image
-                const photo = await this.fileService.uploadWithMinioBuffer(
-                  resBuffer,
-                  user.id,
-                  `${user.nip}.${fileExt}`,
-                  FilePath.USER,
-                  'User Photo',
-                );
-
-                await this.userRepository.update(user.id, {
-                  photo: photo.id,
-                });
-              } catch (err) {
-                console.log(err);
-              }
-            }
-          } catch (e) {
-            console.log(e);
-            throw failedResponse(
-              HttpStatus.UNPROCESSABLE_ENTITY,
-              ErrorMessage.USER_NOT_FOUND,
-            );
-          }
-        }
-      } else {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          ErrorMessage.USER_NOT_FOUND,
-        );
-      }
-    }
+    const user = await this.usersService.findOneFull({ nip: loginDto.nip });
 
     if (!user) {
       throw failedResponse(
@@ -280,6 +113,18 @@ export class AuthService {
     );
 
     if (isValidPassword) {
+      const twoFAVerify = authenticator.verify({
+        token: loginDto.two_factor_auth_code,
+        secret: user.two_factor_auth_code,
+      });
+
+      if (!twoFAVerify) {
+        throw failedResponse(
+          HttpStatus.BAD_REQUEST,
+          ErrorMessage.TWO_FACTOR_AUTH_FAILED,
+        );
+      }
+
       const token = this.jwtService.sign({
         id: await encryptText(user.id),
         role: await Promise.all(

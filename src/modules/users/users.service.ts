@@ -402,4 +402,10 @@ export class UsersService {
 
     return 'success';
   }
+
+  async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
+    return this.usersRepository.update(userId, {
+      two_factor_auth_code: secret,
+    });
+  }
 }

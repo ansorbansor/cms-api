@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthService } from 'src/modules/auth/auth.service';
@@ -31,6 +32,8 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
 import { Throttle } from '@nestjs/throttler';
+import { TwoFactorAuthService } from '../two-factor-auth/two-factor-auth.service';
+import { TwoFactorAuthDto } from './dtos/two-factor-auth.dto';
 
 @ApiTags('Auth')
 @Controller({
@@ -38,13 +41,16 @@ import { Throttle } from '@nestjs/throttler';
   version: '1',
 })
 export class AuthController {
-  constructor(public service: AuthService) {}
+  constructor(
+    public service: AuthService,
+    public twoFactorAuthService: TwoFactorAuthService,
+  ) {}
 
-  @Throttle(5, 300)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, false, req.ip);
+
     return successResponse(
       AuthResource(data.token, data.user, data.menus),
       'success',
@@ -114,6 +120,44 @@ export class AuthController {
       this.service.validateSocialLogin('apple', socialData),
       'success',
     );
+  }
+
+  @Throttle(5, 300)
+  @Post('2fa/generate')
+  @HttpCode(HttpStatus.OK)
+  public async twoFactorAuthGenerate(
+    @Res() response: Response,
+    @Body() twoFactorAuthDto: TwoFactorAuthDto,
+    @Request() req,
+  ) {
+    const data =
+      await this.twoFactorAuthService.generateTwoFactorAuthenticationSecret(
+        response,
+        twoFactorAuthDto,
+        false,
+        req.ip,
+      );
+
+    return data;
+  }
+
+  @Throttle(5, 300)
+  @Post('/admin/2fa/generate')
+  @HttpCode(HttpStatus.OK)
+  public async adminTwoFactorAuthGenerate(
+    @Res() response: Response,
+    @Body() twoFactorAuthDto: TwoFactorAuthDto,
+    @Request() req,
+  ) {
+    const data =
+      await this.twoFactorAuthService.generateTwoFactorAuthenticationSecret(
+        response,
+        twoFactorAuthDto,
+        true,
+        req.ip,
+      );
+
+    return data;
   }
 
   @Post('email/register')

@@ -46,6 +46,7 @@ export class AuthController {
     public twoFactorAuthService: TwoFactorAuthService,
   ) {}
 
+  @Throttle(5, 300)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
@@ -126,7 +127,7 @@ export class AuthController {
   @Post('2fa/generate')
   @HttpCode(HttpStatus.OK)
   public async twoFactorAuthGenerate(
-    @Res() response: Response,
+    @Res() response,
     @Body() twoFactorAuthDto: TwoFactorAuthDto,
     @Request() req,
   ) {
@@ -145,7 +146,7 @@ export class AuthController {
   @Post('/admin/2fa/generate')
   @HttpCode(HttpStatus.OK)
   public async adminTwoFactorAuthGenerate(
-    @Res() response: Response,
+    @Res() response,
     @Body() twoFactorAuthDto: TwoFactorAuthDto,
     @Request() req,
   ) {

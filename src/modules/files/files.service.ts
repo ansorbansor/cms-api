@@ -187,11 +187,10 @@ export class FilesService {
             `courses/${f}`,
             path,
             metaData,
-            function (err, objInfo) {
+            function (err) {
               if (err) {
                 return console.log(err);
               }
-              console.log(`Success (${f})`, objInfo.etag, objInfo.versionId);
               resolve(null);
             },
           );

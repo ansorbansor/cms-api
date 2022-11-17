@@ -122,7 +122,6 @@ export class AuthController {
     );
   }
 
-  @Throttle(5, 300)
   @Post('2fa/generate')
   @HttpCode(HttpStatus.OK)
   public async twoFactorAuthGenerate(

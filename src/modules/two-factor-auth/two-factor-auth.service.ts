@@ -50,7 +50,7 @@ export class TwoFactorAuthService {
     onlyAdmin: boolean,
     ip: string,
   ) {
-    const user = await this.userRepository
+    let user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
@@ -58,7 +58,38 @@ export class TwoFactorAuthService {
       .orWhere('user.nip_lama = :nip', { nip: authDto.nip })
       .getOne();
 
-    if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
+    //throw error if not exists user and try login admin
+    if (!user && onlyAdmin) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorMessage.USER_NOT_FOUND,
+      );
+    }
+
+    //throw error if user exists but not have any roles
+    if (user && user.userRoles.length == 0) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorMessage.FORBIDDEN,
+      );
+    }
+
+    //throw error if login admin but not have any menu access
+    if (
+      onlyAdmin &&
+      !user.userRoles.some(
+        (b) =>
+          b.roleData &&
+          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
+      )
+    ) {
+      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
+    }
+
+    if (
+      (!user || user.provider == AuthProvidersEnum.ldap) &&
+      authConfig().activateLDAP == 'true'
+    ) {
       let simsdmData = await fetch(`${simsdmConfig().url}${authDto.nip}`);
 
       simsdmData = await simsdmData.json();
@@ -169,7 +200,21 @@ export class TwoFactorAuthService {
             dto.level = 0;
             dto.photo = null;
 
-            const user = await this.authService.register(null, dto, ip);
+            //register user if not exists and not admin
+            if (!user && !onlyAdmin) {
+              user = await this.authService.register(null, dto, ip);
+            } else {
+              //update user data if exists
+              user.email = dto.email;
+              user.name = dto.name;
+              user.nip = dto.nip;
+              user.nip_lama = dto.nip_lama;
+              user.password = dto.password;
+              user.position_id = dto.position_id;
+              user.level_id = dto.level_id;
+              user.unit_id = dto.unit_id;
+              user = await this.userRepository.save(user);
+            }
 
             if (adHelper.decryptSIMSDMData(simsdmData.foto)) {
               try {
@@ -216,29 +261,7 @@ export class TwoFactorAuthService {
       }
     }
 
-    if (!user) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.USER_NOT_FOUND,
-      );
-    } else if (user && user.userRoles.length == 0) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.FORBIDDEN,
-      );
-    }
-
-    if (
-      onlyAdmin &&
-      !user.userRoles.some(
-        (b) =>
-          b.roleData &&
-          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
-      )
-    ) {
-      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
-    }
-
+    //throw error if not verified email
     if (authConfig().emailVerification && user.hash != null) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

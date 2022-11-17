@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { authenticator } from 'otplib';
 import { User } from 'src/entities/user.entity';
 import { UsersService } from '../users/users.service';
-import { toFileStream } from 'qrcode';
+import { toDataURL } from 'qrcode';
 import { failedResponse } from 'src/utils/responses';
 import {
   AuthProvidersEnum,
@@ -26,6 +26,7 @@ import { FilesService } from '../files/files.service';
 import { AuthService } from '../auth/auth.service';
 import fetch from 'node-fetch';
 import * as bcrypt from 'bcryptjs';
+import { TwoFactorAuthResource } from './resources/two-factor-auth.resources';
 
 @Injectable()
 export class TwoFactorAuthService {
@@ -45,7 +46,6 @@ export class TwoFactorAuthService {
   ) {}
 
   async generateTwoFactorAuthenticationSecret(
-    stream: Response,
     authDto: TwoFactorAuthDto,
     onlyAdmin: boolean,
     ip: string,
@@ -265,7 +265,10 @@ export class TwoFactorAuthService {
 
       await this.usersService.setTwoFactorAuthenticationSecret(secret, user.id);
 
-      return this.pipeQrCodeStream(stream, otpauthUrl);
+      return TwoFactorAuthResource(
+        await this.pipeQrCodeStream(otpauthUrl),
+        user,
+      );
     }
 
     throw failedResponse(
@@ -274,8 +277,8 @@ export class TwoFactorAuthService {
     );
   }
 
-  public async pipeQrCodeStream(stream: Response, otpauthUrl: string) {
-    return toFileStream(stream, otpauthUrl);
+  public async pipeQrCodeStream(otpauthUrl: string) {
+    return toDataURL(otpauthUrl);
   }
 
   isTwoFactorAuthenticationCodeValid(

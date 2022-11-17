@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthService } from 'src/modules/auth/auth.service';
@@ -127,38 +126,34 @@ export class AuthController {
   @Post('2fa/generate')
   @HttpCode(HttpStatus.OK)
   public async twoFactorAuthGenerate(
-    @Res() response,
     @Body() twoFactorAuthDto: TwoFactorAuthDto,
     @Request() req,
   ) {
     const data =
       await this.twoFactorAuthService.generateTwoFactorAuthenticationSecret(
-        response,
         twoFactorAuthDto,
         false,
         req.ip,
       );
 
-    return data;
+    return successResponse(data, 'Berhasil generate QR Code 2FA');
   }
 
   @Throttle(5, 300)
   @Post('/admin/2fa/generate')
   @HttpCode(HttpStatus.OK)
   public async adminTwoFactorAuthGenerate(
-    @Res() response,
     @Body() twoFactorAuthDto: TwoFactorAuthDto,
     @Request() req,
   ) {
     const data =
       await this.twoFactorAuthService.generateTwoFactorAuthenticationSecret(
-        response,
         twoFactorAuthDto,
         true,
         req.ip,
       );
 
-    return data;
+    return successResponse(data, 'Berhasil generate QR Code 2FA');
   }
 
   @Post('email/register')

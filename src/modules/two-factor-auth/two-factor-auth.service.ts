@@ -53,6 +53,7 @@ export class TwoFactorAuthService {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
+      .leftJoinAndSelect('userRole.roleData', 'role')
       .where('user.nip = :nip', { nip: authDto.nip })
       .orWhere('user.nip_lama = :nip', { nip: authDto.nip })
       .getOne();

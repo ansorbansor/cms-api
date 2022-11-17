@@ -234,9 +234,11 @@ export class ImportService {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
 
-    const nip = [];
+    const blacklistUsers = await this.usersRepository.find({ blacklist: 1 });
 
+    const nip = [];
     const saveData = [];
+
     const workbook = new Workbook();
     const stream = new Stream.Readable();
     stream.push(file.buffer); // file is ArrayBuffer variable
@@ -260,6 +262,19 @@ export class ImportService {
               throw failedResponse(
                 HttpStatus.BAD_REQUEST,
                 'Kolom tidak sesuai',
+              );
+            }
+
+            if (
+              blacklistUsers.find((e) => {
+                return e.nip == currRow.getCell(1).text;
+              })
+            ) {
+              throw failedResponse(
+                HttpStatus.BAD_REQUEST,
+                `Pengguna dengan NIP ${
+                  currRow.getCell(1).text
+                } sudah masuk dalam daftar blacklist`,
               );
             }
 

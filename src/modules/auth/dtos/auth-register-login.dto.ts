@@ -18,6 +18,10 @@ export class AuthRegisterLoginDto {
   @IsNotEmpty({ message: 'NIP tidak boleh kosong' })
   nip: string | null;
 
+  @ApiProperty({ example: '1234567890' })
+  @IsOptional()
+  nip_lama: string | null;
+
   @ApiProperty({ example: 'John' })
   @IsNotEmpty({ message: 'Nama tidak boleh kosong' })
   name: string | null;

@@ -46,14 +46,19 @@ export class TwoFactorAuthService {
 
   async generateTwoFactorAuthenticationSecret(
     stream: Response,
-    dto: TwoFactorAuthDto,
+    authDto: TwoFactorAuthDto,
     onlyAdmin: boolean,
     ip: string,
   ) {
-    const user = await this.usersService.findOneFull({ nip: dto.nip });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRole')
+      .where('user.nip = :nip', { nip: authDto.nip })
+      .orWhere('user.nip_lama = :nip', { nip: authDto.nip })
+      .getOne();
 
     if (!user && !onlyAdmin && authConfig().activateLDAP == 'true') {
-      let simsdmData = await fetch(`${simsdmConfig().url}${dto.nip}`);
+      let simsdmData = await fetch(`${simsdmConfig().url}${authDto.nip}`);
 
       simsdmData = await simsdmData.json();
 
@@ -67,14 +72,14 @@ export class TwoFactorAuthService {
         //check Active Directory user with nip baru
         let ADResult = await new ActiveDirectoryUtils().authAD(
           `${adHelper.decryptSIMSDMData(simsdmData.nipbaru)}@setneg.go.id`,
-          dto.password,
+          authDto.password,
         );
 
         //check Active Directory user with nip lama if nip baru not authenticate
         if (!ADResult) {
           ADResult = await new ActiveDirectoryUtils().authAD(
             `${adHelper.decryptSIMSDMData(simsdmData.niplama)}@setneg.go.id`,
-            dto.password,
+            authDto.password,
           );
         }
 
@@ -91,19 +96,24 @@ export class TwoFactorAuthService {
               ? adHelper.decryptSIMSDMData(simsdmData.email)
               : adHelper.decryptSIMSDMData(simsdmData.email_dinas)
               ? adHelper.decryptSIMSDMData(simsdmData.email_dinas)
-              : dto.nip;
+              : authDto.nip;
             dto.name = adHelper.decryptSIMSDMData(simsdmData.nmpeg)
               ? adHelper.decryptSIMSDMData(simsdmData.nmpeg)
-              : `User ${dto.nip}`;
+              : `User ${authDto.nip}`;
             dto.nip = adHelper.decryptSIMSDMData(simsdmData.nipbaru)
               ? adHelper.decryptSIMSDMData(simsdmData.nipbaru)
               : adHelper.decryptSIMSDMData(simsdmData.niplama)
               ? adHelper.decryptSIMSDMData(simsdmData.niplama)
               : adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
               ? adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
-              : dto.nip;
+              : authDto.nip;
+            dto.nip_lama = adHelper.decryptSIMSDMData(simsdmData.niplama)
+              ? adHelper.decryptSIMSDMData(simsdmData.niplama)
+              : adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
+              ? adHelper.decryptSIMSDMData(simsdmData.pns_niplama)
+              : authDto.nip;
 
-            dto.password = dto.password;
+            dto.password = authDto.password;
 
             //find existing position
             let position = await this.employeePositionRepository.findOne({
@@ -235,7 +245,10 @@ export class TwoFactorAuthService {
       );
     }
 
-    const isValidPassword = await bcrypt.compare(dto.password, user.password);
+    const isValidPassword = await bcrypt.compare(
+      authDto.password,
+      user.password,
+    );
 
     if (isValidPassword) {
       let secret = user.two_factor_auth_code;

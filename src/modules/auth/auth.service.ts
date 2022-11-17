@@ -623,7 +623,12 @@ export class AuthService {
       );
     }
 
-    await this.usersService.update(user.id, userDto, user, ip);
+    await this.userRepository.save(
+      this.userRepository.create({
+        id: user.id,
+        password: userDto.password,
+      }),
+    );
 
     this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 

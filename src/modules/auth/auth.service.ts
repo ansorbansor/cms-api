@@ -80,7 +80,7 @@ export class AuthService {
     if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.NIP_NOT_EXISTS,
+        ErrorMessage.USER_NOT_FOUND,
       );
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
@@ -199,7 +199,7 @@ export class AuthService {
       if (!ADResult || !ADResult.code || ADResult.code != 0) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          `${ErrorMessage.NIP_NOT_EXISTS} (${ADResult.code} : ${ADResult.description})`,
+          `${ErrorMessage.USER_NOT_FOUND} (${ADResult.code} : ${ADResult.description})`,
         );
       } else {
         throw failedResponse(
@@ -210,7 +210,7 @@ export class AuthService {
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.NIP_NOT_EXISTS,
+        ErrorMessage.USER_NOT_FOUND,
       );
     }
 
@@ -598,7 +598,6 @@ export class AuthService {
   async changePassword(
     user: User,
     userDto: AuthUpdatePasswordDto,
-    ip: string,
   ): Promise<User> {
     const currentUser = await this.usersService.findOneFull({
       id: user.id,

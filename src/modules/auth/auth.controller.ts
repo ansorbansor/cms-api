@@ -268,7 +268,7 @@ export class AuthController {
     @Body() userDto: AuthUpdatePasswordDto,
   ) {
     return successResponse(
-      await this.service.changePassword(request.user, userDto, request.ip),
+      await this.service.changePassword(request.user, userDto),
       'success',
     );
   }

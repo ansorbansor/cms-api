@@ -221,6 +221,11 @@ export class ImportService {
       });
 
       return `Berhasil menambah ${saveData.length} data pengguna`;
+    } else {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Harap isi data terlebih dahulu',
+      );
     }
   }
 
@@ -304,6 +309,11 @@ export class ImportService {
       });
 
       return `Berhasil mengubah data blacklist ${saveData.length} data pengguna`;
+    } else {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Harap isi data terlebih dahulu',
+      );
     }
   }
 
@@ -384,6 +394,11 @@ export class ImportService {
       });
 
       return `Berhasil mengubah data level ${saveData.length} data pengguna`;
+    } else {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Harap isi data terlebih dahulu',
+      );
     }
   }
 
@@ -480,6 +495,11 @@ export class ImportService {
       });
 
       return `Berhasil menambah ${saveData.length} data kupon`;
+    } else {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        'Harap isi data terlebih dahulu',
+      );
     }
   }
 

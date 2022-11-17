@@ -87,7 +87,7 @@ export class TwoFactorAuthService {
         if (!ADResult) {
           throw failedResponse(
             HttpStatus.UNPROCESSABLE_ENTITY,
-            `${ErrorMessage.NIP_NOT_EXISTS}`,
+            `${ErrorMessage.USER_NOT_FOUND}`,
           );
         } else {
           try {
@@ -219,7 +219,7 @@ export class TwoFactorAuthService {
     if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.NIP_NOT_EXISTS,
+        ErrorMessage.USER_NOT_FOUND,
       );
     } else if (user && user.userRoles.length == 0) {
       throw failedResponse(

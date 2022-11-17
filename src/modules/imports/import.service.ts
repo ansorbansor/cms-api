@@ -75,8 +75,16 @@ export class ImportService {
           const currRow = worksheet.getRow(rowNumber);
           if (
             rowNumber > 1 &&
-            currRow.getCell(1).text != null &&
-            currRow.getCell(1).text != ''
+            currRow.getCell(1).text &&
+            currRow.getCell(2).text &&
+            currRow.getCell(3).text &&
+            currRow.getCell(4).text &&
+            currRow.getCell(5).text &&
+            currRow.getCell(6).text &&
+            currRow.getCell(7).text &&
+            currRow.getCell(8).text &&
+            currRow.getCell(9).text &&
+            currRow.getCell(10).text
           ) {
             nip.push(currRow.getCell(1).text);
             email.push(currRow.getCell(3).text);
@@ -248,11 +256,7 @@ export class ImportService {
       if (worksheet) {
         worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
           const currRow = worksheet.getRow(rowNumber);
-          if (
-            rowNumber > 1 &&
-            currRow.getCell(1).text != null &&
-            currRow.getCell(1).text != ''
-          ) {
+          if (rowNumber > 1) {
             if (
               !currRow.getCell(1).text ||
               !currRow.getCell(2).text ||
@@ -351,8 +355,8 @@ export class ImportService {
           const currRow = worksheet.getRow(rowNumber);
           if (
             rowNumber > 1 &&
-            currRow.getCell(1).text != null &&
-            currRow.getCell(1).text != ''
+            currRow.getCell(1).text &&
+            currRow.getCell(2).text
           ) {
             if (
               Number(currRow.getCell(2).text) < 0 ||
@@ -439,8 +443,14 @@ export class ImportService {
           const currRow = worksheet.getRow(rowNumber);
           if (
             rowNumber > 1 &&
-            currRow.getCell(1).text != null &&
-            currRow.getCell(1).text != ''
+            currRow.getCell(1).text &&
+            currRow.getCell(2).text &&
+            currRow.getCell(3).text &&
+            currRow.getCell(4).text &&
+            currRow.getCell(5).text &&
+            currRow.getCell(6).text &&
+            currRow.getCell(7).text &&
+            currRow.getCell(8).text
           ) {
             coupon_name.push(String(currRow.getCell(1).text));
             coupon_code.push(String(currRow.getCell(2).text));

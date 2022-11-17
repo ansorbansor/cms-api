@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css">
     <title>Course Penolakan</title>
     <style type="text/css">
         * {
@@ -206,6 +207,8 @@
             height: 100%;
         }
 
+    </style>
+    <style>
         @media screen and (max-width: 450px) {
             body {
                 max-width: 100%;
@@ -263,7 +266,7 @@
   <body>
     <main class="main-wrapper">
         <div class="container">
-            <div class="header">
+            <div class="header" style="justify-content: center; align-items: center; flex-direction: column;">
                 <div class="header-logo">
                     <img src="{{baseUrl}}images/logo-setneg.png" alt="Logo Setneg">
                 </div>
@@ -274,20 +277,22 @@
                     </p>
                 </div>
             </div>
-            <div class="content">
-                <h4>
-                    Mohon Maaf
-                </h4>
-                <p>
-                    Pengajuan pendaftaran course <span><a href="{{courseUrl}}">{{courseTitle}}</a></span>, telah ditolak.
-                </p>
-                <p>
-                    Alasan :<br/>
-                    {{reason}}
-                </p>
-                <p>
-                    Hubungi CS kami untuk informasi lebih lanjut. Terimakasih.
-                </p>
+            <div class="content" style="flex-direction: column;">
+                <div class="body-content" style="display: flex; flex-direction: column;">
+                    <h4>
+                        Mohon Maaf
+                    </h4>
+                    <p>
+                        Pengajuan pendaftaran course <span><a href="{{courseUrl}}" style="color: #FE9516;">{{courseTitle}}</a></span>, telah ditolak.
+                    </p>
+                    <p>
+                        Alasan :<br/>
+                        {{reason}}
+                    </p>
+                    <p>
+                        Hubungi CS kami untuk informasi lebih lanjut. Terimakasih.
+                    </p>
+                </div>
                 <div class="regards">
                     <h6>
                         Setneg Playbook<br/>The Ultimate Learning Hub
@@ -297,8 +302,8 @@
         </div>
     </main>
     <footer class="footer">
-        <div class="info-footer">
-            <a href="#">
+        <div class="info-footer" style="justify-content: space-between; align-items: center;">
+            <a href="#" style="text-decoration: none;">
                 FAQ
             </a>
             <div class="social-media">

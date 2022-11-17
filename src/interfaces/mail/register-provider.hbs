@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <title>Register</title>
     <style type="text/css">
         * {
@@ -203,6 +204,8 @@
             height: 100%;
         }
 
+    </style>
+    <style>
         @media screen and (max-width: 450px) {
             body {
                 max-width: 100%;
@@ -251,7 +254,7 @@
   <body>
     <main class="main-wrapper">
         <div class="container">
-            <div class="header">
+            <div class="header" style="justify-content: center; align-items: center; flex-direction: column;">
                 <div class="header-logo">
                     <img src="{{baseUrl}}images/logo-setneg.png" alt="Logo Setneg">
                 </div>
@@ -262,30 +265,32 @@
                     </p>
                 </div>
             </div>
-            <div class="content">
-                <h4>
-                    Selamat!
-                </h4>
-                <p>
-                    Atas pilihan Anda untuk bergabung dalam course <span><a href="{{providerUrl}}">{{providerName}}</a></span>.
-                </p>
-                <p>
-                    Langkah selanjutnya untuk memulai course adalah dengan membuat akun di <span><a href="{{providerUrl}}">{{providerName}}</a></span> terlebih dahulu seperti pada tutorial berikut <span><a href="{{frontendUrl}}{{tutorialUrl}}">Tutorial Daftar di {{providerName}}</a></span>.
-                </p>
-                <p>
-                    Selanjutnya, setelah membuat akun silakan untuk mendaftar dan memulai course melalui tombol di bawah ini.
-                </p>
-                <a class="btn btn-primary" href="{{providerUrl}}" role="button">
-                    Daftar dan Mulai Course
-                </a>
-                <p>
-                    Jika Anda mengalami kendala dengan tombol di atas, Anda bisa klik link di bawah ini. <br/>
-                    <span>
-                        <a href="{{providerUrl}}">
-                            {{providerUrl}}
-                        </a>
-                    </span>
-                </p>
+            <div class="content" style="flex-direction: column;">
+                <div class="body-content" style="display: flex; flex-direction: column;">
+                    <h4>
+                        Selamat!
+                    </h4>
+                    <p>
+                        Atas pilihan Anda untuk bergabung dalam course <span><a href="{{providerUrl}}" style="color: #FE9516;">{{providerName}}</a></span>.
+                    </p>
+                    <p>
+                        Langkah selanjutnya untuk memulai course adalah dengan membuat akun di <span><a href="{{providerUrl}}" style="color: #FE9516;">{{providerName}}</a></span> terlebih dahulu seperti pada tutorial berikut <span><a href="#" style="color: #FE9516;">Tutorial Daftar di Udemy</a></span>.
+                    </p>
+                    <p>
+                        Selanjutnya, setelah membuat akun silakan untuk mendaftar dan memulai course melalui tombol di bawah ini.
+                    </p>
+                    <a class="btn btn-primary" href="{{providerUrl}}" role="button" style="background-color: #FE9516; border-color: #FE9516;">
+                        Daftar dan Mulai Course
+                    </a>
+                    <p>
+                        Jika Anda mengalami kendala dengan tombol di atas, Anda bisa klik link di bawah ini. <br/>
+                        <span>
+                            <a href="{{providerUrl}}" style="color: #FE9516;">
+                                {{providerUrl}}
+                            </a>
+                        </span>
+                    </p>
+                </div>
                 <div class="regards">
                     <p>
                         Terimakasih.
@@ -298,8 +303,8 @@
         </div>
     </main>
     <footer class="footer">
-        <div class="info-footer">
-            <a href="#">
+        <div class="info-footer" style="justify-content: space-between; align-items: center;">
+            <a href="#" style="text-decoration: none;">
                 FAQ
             </a>
             <div class="social-media">

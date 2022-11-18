@@ -144,4 +144,5 @@ export enum ErrorMessage {
   UNAUTHORIZED = 'Session anda telah habis, silahkan login kembali.',
   GENERAL = 'Terjadi kesalahan pada server, silahkan coba beberapa saat kembali atau hubungi admin',
   TWO_FACTOR_AUTH_FAILED = 'Kode 2FA salah, silahkan coba kembali',
+  PARTNER_NOT_EXISTS = 'Client ID atau Client Secret tidak sesuai.',
 }

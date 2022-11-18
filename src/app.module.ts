@@ -39,6 +39,7 @@ import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
 import { MenuModule } from './modules/menu/menu.module';
+import { PartnerModule } from './modules/partner/partner.module';
 import { PKASNProgramModule } from './modules/pkasn-program/pkasn-program.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { RoleModule } from './modules/role/role.module';
@@ -123,6 +124,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     CourseFetchModule,
     UserNotificationModule,
     PKASNProgramModule,
+    PartnerModule,
   ],
   providers: [
     {

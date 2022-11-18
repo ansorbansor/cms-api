@@ -12,7 +12,6 @@ import {
   HttpCode,
   Request,
   Patch,
-  Body,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
@@ -20,7 +19,6 @@ import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
 import { CouponSubmissionService } from './coupon-submission.service';
-import { FinishCourseDto } from './dto/finish-course.dto';
 
 @ApiBearerAuth()
 @ApiTags('Coupon Submission')
@@ -120,11 +118,5 @@ export class CouponSubmissionController {
       req.user,
       req.ip,
     );
-  }
-
-  @Post('finish-course')
-  @HttpCode(HttpStatus.CREATED)
-  async finishCourse(@Body() data: FinishCourseDto) {
-    return await this.couponSubmissionServices.finishCourse(data);
   }
 }

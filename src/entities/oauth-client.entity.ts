@@ -2,7 +2,7 @@ import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
 
-@Entity({ name: 'oauth_client' })
+@Entity({ name: 'oauth_clients' })
 export class OauthClient extends EntityHelper {
   @Column()
   user_id: number;

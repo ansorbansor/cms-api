@@ -29,7 +29,7 @@ export class PartnerService {
     private oauthClientRepository: Repository<OauthClient>,
   ) {}
 
-  async validateLogin(loginDto: PartnerLoginDto, ip: string): Promise<any> {
+  async validateLogin(loginDto: PartnerLoginDto): Promise<any> {
     const client = await this.oauthClientRepository
       .createQueryBuilder('client')
       .where('id = :id AND secret = :secret', {

@@ -5,7 +5,6 @@ import {
   HttpCode,
   Body,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/utils/guards';
@@ -26,8 +25,8 @@ export class PartnerController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  public async login(@Request() req, @Body() loginDto: PartnerLoginDto) {
-    const data = await this.partnerService.validateLogin(loginDto, req.ip);
+  public async login(@Body() loginDto: PartnerLoginDto) {
+    const data = await this.partnerService.validateLogin(loginDto);
     return successResponse(data, 'success');
   }
 

@@ -38,9 +38,6 @@ import { TwoFactorAuthService } from '../two-factor-auth/two-factor-auth.service
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('auth.secret'),
-        signOptions: {
-          expiresIn: configService.get('auth.expires'),
-        },
       }),
     }),
     CacheModule.registerAsync({

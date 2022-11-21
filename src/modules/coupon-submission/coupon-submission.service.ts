@@ -29,6 +29,9 @@ import { UserNotificationService } from '../user-notification/user-notification.
 import { CouponSubmissionController } from './coupon-submission.controller';
 import { CreateUserNotificationDto } from '../user-notification/dto/create-user-notification.dto';
 import { RedisService } from '../redis/redis.service';
+import fetch from 'node-fetch';
+import pionirConfig from 'src/config/pionir.config';
+import * as moment from 'moment';
 
 @Injectable()
 export class CouponSubmissionService {
@@ -54,6 +57,7 @@ export class CouponSubmissionService {
       .createQueryBuilder('course')
       .leftJoinAndSelect('course.provider', 'provider')
       .leftJoinAndSelect('course.courseCategory', 'category')
+      .leftJoinAndSelect('category.pkasnProgram', 'pkasnProgram')
       .leftJoinAndSelect('course.topic', 'topic')
       .leftJoinAndSelect('course.courseLevel', 'courseLevel')
       .leftJoinAndSelect('course.courseLanguage', 'courseLanguage')
@@ -85,6 +89,9 @@ export class CouponSubmissionService {
             progress: 50,
           }),
         );
+
+        //send user course data to pionir
+        await this.updateCourseToPionir(user.id, course);
       }
 
       await this.activityLogService.create({
@@ -485,7 +492,7 @@ export class CouponSubmissionService {
     if (exists.status == CouponSubmissionStatus.APPROVED) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'Permintaan yang telah disetujui tidab bisa diubah',
+        'Permintaan yang telah disetujui tidak bisa diubah',
       );
     }
 
@@ -541,6 +548,9 @@ export class CouponSubmissionService {
           progress: 50,
         }),
       );
+
+      //send user course data to pionir
+      await this.updateCourseToPionir(user.id, exists.course);
 
       await this.mailService.approveSubmission({
         to: exists.user.email,
@@ -605,5 +615,64 @@ export class CouponSubmissionService {
 
   async softDelete(id: number): Promise<void> {
     await this.couponSubmissionRepository.softDelete(id);
+  }
+
+  async updateCourseToPionir(userId: number, course: Course) {
+    {
+      let response = null;
+      try {
+        const requestOptions = {
+          method: 'GET',
+        };
+
+        let token = await fetch(pionirConfig().tokenUrl, requestOptions).catch(
+          (error) => console.log('error', error),
+        );
+
+        //set header cookie (needed for pionir)
+        const myHeaders = new Headers();
+        myHeaders.append('Cookie', token.headers.get('set-cookie'));
+
+        //parse token to plain string
+        token = await token.text();
+
+        if (token) {
+          const userData = await this.userRepository.findOne({ id: userId });
+
+          const urlencoded = new URLSearchParams();
+          urlencoded.append('csrf_test_name', token);
+          urlencoded.append('id_pelatihan', String(course.id));
+          urlencoded.append('nama_pelatihan', course.name);
+          urlencoded.append('nip', userData.nip);
+          urlencoded.append('tahun', String(new Date().getFullYear()));
+          urlencoded.append('penyelenggara', course.provider.name);
+          urlencoded.append(
+            'id_pkasn5',
+            course.courseCategory.pkasnProgram.name,
+          );
+          urlencoded.append('jp', String(course.lesson_hours));
+          urlencoded.append(
+            'waktu_mulai',
+            String(moment(new Date()).format('yyyy-MM-DD')),
+          );
+
+          const requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: urlencoded,
+          };
+
+          response = await fetch(pionirConfig().postCourseUrl, requestOptions)
+            .then(async (response) => await response.json())
+            .catch((error) => console.log('error', error));
+
+          console.log(`response ${JSON.stringify(response)}`);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+
+      return response;
+    }
   }
 }

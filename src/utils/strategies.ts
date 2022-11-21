@@ -44,7 +44,7 @@ export class AnonymousStrategy extends PassportStrategy(AnonStrategy) {
 @Injectable()
 export class ClientStrategy extends PassportStrategy(
   Strategy,
-  'partnetStrategy',
+  'clientStrategy',
 ) {
   constructor(
     private oauthClientService: OauthClientService,

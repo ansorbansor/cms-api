@@ -132,7 +132,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 }
 @Injectable()
-export class ClientAuthGuard extends AuthGuard('partnetStrategy') {
+export class ClientAuthGuard extends AuthGuard('clientStrategy') {
   handleRequest(err: any, user: any, info: any, context: any, status: any) {
     if (info) {
       throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);

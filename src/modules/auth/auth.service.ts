@@ -37,7 +37,6 @@ import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { Menu } from 'src/entities/menu.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ActiveDirectoryUtils } from 'src/utils/active-directory-utils';
 import { isNumber } from 'class-validator';
 import { encryptText } from 'src/utils/encryption-helper';
 import { authenticator } from 'otplib';
@@ -186,28 +185,10 @@ export class AuthService {
     }
 
     const user = await this.usersService.findOneFull({
-      email: loginDto.nip,
+      nip: loginDto.nip,
     });
 
     if (!user) {
-      //check Active Directory user
-      const ADResult = await new ActiveDirectoryUtils().authAD(
-        loginDto.nip,
-        loginDto.password,
-      );
-
-      if (!ADResult || !ADResult.code || ADResult.code != 0) {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          `${ErrorMessage.USER_NOT_FOUND} (${ADResult.code} : ${ADResult.description})`,
-        );
-      } else {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'REGISTERKAN AKUN AD DISINI!',
-        );
-      }
-    } else if (user && user.userRoles.length == 0) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.USER_NOT_FOUND,

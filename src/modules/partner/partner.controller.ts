@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/utils/guards';
+import { ClientAuthGuard, JwtAuthGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
 import { FinishCourseDto } from './dto/finish-course.dto';
 import { GeneratePartnerDto } from './dto/generate-partner.dto';
@@ -31,6 +31,7 @@ export class PartnerController {
   }
 
   @Post('generate')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   public async generate(@Body() generateDto: GeneratePartnerDto) {
     const data = await this.partnerService.generatePartner(generateDto);
@@ -38,7 +39,7 @@ export class PartnerController {
   }
 
   @Post('finish-course')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ClientAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async finishCourse(@Body() data: FinishCourseDto) {
     return await this.partnerService.finishCourse(data);

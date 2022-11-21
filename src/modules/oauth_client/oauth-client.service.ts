@@ -13,7 +13,7 @@ export class OauthClientService {
 
   async validateClient(id: number, secret: string) {
     const client = await getManager().query(
-      `SELECT * FROM oauth_client WHERE id = ${id} AND secret = '${secret}'`,
+      `SELECT * FROM oauth_clients WHERE id = ${id} AND secret = '${secret}'`,
     );
 
     if (!client) {

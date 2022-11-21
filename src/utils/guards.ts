@@ -131,3 +131,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.handleRequest(err, user, info, context, status);
   }
 }
+@Injectable()
+export class ClientAuthGuard extends AuthGuard('sec') {
+  handleRequest(err: any, user: any, info: any, context: any, status: any) {
+    if (info) {
+      throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);
+    }
+
+    return super.handleRequest(err, user, info, context, status);
+  }
+}

@@ -36,10 +36,11 @@ import appConfig from 'src/config/app.config';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { Menu } from 'src/entities/menu.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { isNumber } from 'class-validator';
 import { encryptText } from 'src/utils/encryption-helper';
 import { authenticator } from 'otplib';
+import * as moment from 'moment';
 @Injectable()
 export class AuthService {
   private google: OAuth2Client;
@@ -124,30 +125,6 @@ export class AuthService {
         );
       }
 
-      const token = this.jwtService.sign({
-        id: await encryptText(user.id),
-        role: await Promise.all(
-          user.userRoles.map(async (e) => {
-            return {
-              roleData: {
-                id: await encryptText(e.roleData.id),
-                grant_all_access: await encryptText(
-                  e.roleData.grant_all_access,
-                ),
-                roleAccess: await Promise.all(
-                  e.roleData.roleAccess.map(async (role) => {
-                    return {
-                      be_controller: await encryptText(role.menu.be_controller),
-                      menu_access: await encryptText(role.menu_access),
-                    };
-                  }),
-                ),
-              },
-            };
-          }),
-        ),
-      });
-
       await this.activityLogService.create({
         user_id: user.id,
         description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
@@ -162,6 +139,8 @@ export class AuthService {
       ) {
         menus = await this.menuRepository.find();
       }
+
+      const token = await this.generateToken(user);
 
       return { token, user: user, menus };
     } else {
@@ -219,30 +198,6 @@ export class AuthService {
     );
 
     if (isValidPassword) {
-      const token = this.jwtService.sign({
-        id: await encryptText(user.id),
-        role: await Promise.all(
-          user.userRoles.map(async (e) => {
-            return {
-              roleData: {
-                id: await encryptText(e.roleData.id),
-                grant_all_access: await encryptText(
-                  e.roleData.grant_all_access,
-                ),
-                roleAccess: await Promise.all(
-                  e.roleData.roleAccess.map(async (role) => {
-                    return {
-                      be_controller: await encryptText(role.menu.be_controller),
-                      menu_access: await encryptText(role.menu_access),
-                    };
-                  }),
-                ),
-              },
-            };
-          }),
-        ),
-      });
-
       await this.activityLogService.create({
         user_id: user.id,
         description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
@@ -257,6 +212,8 @@ export class AuthService {
       ) {
         menus = await this.menuRepository.find();
       }
+
+      const token = await this.generateToken(user);
 
       return { token, user: user, menus };
     } else {
@@ -351,27 +308,7 @@ export class AuthService {
       throw failedResponse(HttpStatus.NOT_FOUND, ErrorMessage.EMAIL_NOT_EXISTS);
     }
 
-    const token = this.jwtService.sign({
-      id: await encryptText(user.id),
-      role: await Promise.all(
-        user.userRoles.map(async (e) => {
-          return {
-            roleData: {
-              id: await encryptText(e.roleData.id),
-              grant_all_access: await encryptText(e.roleData.grant_all_access),
-              roleAccess: await Promise.all(
-                e.roleData.roleAccess.map(async (role) => {
-                  return {
-                    be_controller: await encryptText(role.menu.be_controller),
-                    menu_access: await encryptText(role.menu_access),
-                  };
-                }),
-              ),
-            },
-          };
-        }),
-      ),
-    });
+    const token = await this.generateToken(user);
 
     return {
       token: token,
@@ -624,5 +561,86 @@ export class AuthService {
 
   async logout(user: User, ip: string) {
     await this.usersService.logout(user, ip);
+  }
+
+  async generateToken(user: User) {
+    //generate token
+    const token = this.jwtService.sign({
+      id: await encryptText(user.id),
+      role: await Promise.all(
+        user.userRoles.map(async (e) => {
+          return {
+            roleData: {
+              id: await encryptText(e.roleData.id),
+              grant_all_access: await encryptText(e.roleData.grant_all_access),
+              roleAccess: await Promise.all(
+                e.roleData.roleAccess.map(async (role) => {
+                  return {
+                    be_controller: await encryptText(role.menu.be_controller),
+                    menu_access: await encryptText(role.menu_access),
+                  };
+                }),
+              ),
+            },
+          };
+        }),
+      ),
+    });
+
+    //revoke other token
+    await getManager().query(
+      `UPDATE oauth_tokens SET revoked = 1 WHERE user_id = ${user.id}`,
+    );
+
+    //insert new token
+    const expired = moment()
+      .add(authConfig().expires, 'm')
+      .format('YYYY-MM-DD HH:mm:ss');
+
+    await getManager().query(
+      `INSERT INTO oauth_tokens (user_id, token, expired_at) VALUES (${user.id}, '${token}', '${expired}')`,
+    );
+
+    return token;
+  }
+
+  async checkExpiredToken(token: string, userId: number) {
+    let tokenData = await getManager().query(
+      ` SELECT 
+          id, user_id, token, expired_at, revoked 
+        FROM 
+          oauth_tokens 
+        WHERE 
+          user_id = ${userId} 
+        ORDER by 
+          id 
+        DESC LIMIT 1`,
+    );
+
+    tokenData = tokenData[0];
+    const currentDate = moment().toDate();
+    const expiredDate = moment(
+      tokenData.expired_at,
+      'YYYY-MM-DD HH:mm:ss',
+    ).toDate();
+
+    if (
+      !tokenData ||
+      token != tokenData.token ||
+      currentDate > expiredDate ||
+      tokenData.revoked == 1
+    ) {
+      throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);
+    }
+
+    const addedTime = moment()
+      .add(authConfig().expires, 'm')
+      .format('YYYY-MM-DD HH:mm:ss');
+
+    await getManager().query(
+      `UPDATE oauth_tokens SET expired_at = '${addedTime}' WHERE id = ${tokenData.id}`,
+    );
+
+    return true;
   }
 }

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RoleResource } from './resource/role.resources';
 import { Role } from 'src/entities/role.entity';
@@ -135,6 +135,21 @@ export class RoleService {
       description: `Update Peran Pengguna ${updateRoleDto.name}`,
       ip: ip,
     });
+
+    //revoked token
+    await getManager().query(
+      ` UPDATE 
+          oauth_tokens 
+        SET 
+          revoked = 1 
+        WHERE 
+          user_id IN (
+            SELECT users.id 
+            FROM users, user_roles 
+            WHERE users.id = user_roles.user_id 
+              AND user_roles.role_id = ${exists.id}
+          )`,
+    );
 
     return await this.findOne({ id: updateRoleDto.id });
   }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { User } from 'src/entities/user.entity';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, getManager, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
@@ -362,6 +362,12 @@ export class UsersService {
   }
 
   async logout(user: User, ip: string): Promise<void> {
+    //revoked token
+    await getManager().query(
+      `UPDATE oauth_tokens SET revoked = 1 WHERE user_id = ${user.id}`,
+    );
+
+    //disable notification
     await this.usersRepository.update(user.id, {
       notification_token: null,
     });

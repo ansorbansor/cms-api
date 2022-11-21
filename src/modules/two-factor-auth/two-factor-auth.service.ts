@@ -54,6 +54,7 @@ export class TwoFactorAuthService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
       .where('user.nip = :nip', { nip: authDto.nip })
       .orWhere('user.nip_lama = :nip', { nip: authDto.nip })
       .getOne();

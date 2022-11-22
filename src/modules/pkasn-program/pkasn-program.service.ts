@@ -18,8 +18,6 @@ export class PKASNProgramService {
     paginationOptions.total = total;
 
     const getData = await this.pkasnProgramRepository.find({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
       order: {
         name: 'DESC',
       },

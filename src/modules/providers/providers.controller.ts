@@ -52,6 +52,15 @@ export class ProvidersController {
     );
   }
 
+  @Get('activate-fetch-provider')
+  @HttpCode(HttpStatus.OK)
+  async activateFetchProvider(@Query('provider_id') providerId: string) {
+    return successResponse(
+      await this.providerServices.activateFetchProvider(providerId),
+      'success',
+    );
+  }
+
   @Post()
   @Permissions(MenuPermission.CREATE)
   @Controllers(ProvidersController.name)

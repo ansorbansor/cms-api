@@ -171,6 +171,21 @@ export class ProvidersService {
     return await this.findOne({ id: updateProfileDto.id });
   }
 
+  async activateFetchProvider(providerId: string) {
+    const exists = await this.findOne({ id: providerId });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Penyelenggara tidak ditemukan',
+      );
+    }
+
+    await this.providerRepository.update(providerId, {
+      fetch_data: !exists.fetch_data,
+    });
+  }
+
   async softDelete(id: number, user: User, ip: string): Promise<void> {
     this.redisService.del(`${RedisKeyEnum.provider}:${id}`);
     this.redisService.del(`${RedisKeyEnum.course}`);

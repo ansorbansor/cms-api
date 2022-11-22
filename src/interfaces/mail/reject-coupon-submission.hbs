@@ -68,10 +68,6 @@
 
         .header {
             width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
             text-align: center;
             margin-bottom: 40px;
         }
@@ -79,7 +75,7 @@
         .header .header-logo {
             width: 320px;
             height: 63px;
-            margin-bottom: 12px;
+            margin: 0 auto 12px auto;
         }
 
         .header .header-logo img {
@@ -93,11 +89,6 @@
             font-size: 14px;
             font-weight: 500;
             line-height: 20px;
-        }
-
-        .content {
-            display: flex;
-            flex-direction: column;
         }
 
         .content h4,
@@ -120,10 +111,6 @@
 
         .content .course {
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
         }
 
         .content .course-kupon {
@@ -175,37 +162,38 @@
         }
 
         .footer .info-footer {
+            height: 32px;
             margin-bottom: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-direction: row;
+            position: relative;
         }
 
         .footer .info-footer a {
             color: #ffffff;
         }
 
+        .footer .info-footer .faq {
+            height: 32px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
         .footer .info-footer .social-media {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            position: absolute;
+            top: 0;
+            right: 0;
         }
 
         .footer .info-footer .social-media .social-media-item {
             width: 32px;
             height: 32px;
             margin: 0 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .footer .info-footer .social-media .social-media-item img {
-            width: 100%;
-            height: 100%;
+            width: 32px;
+            height: 32px;
         }
-
     </style>
     <style>
         @media screen and (max-width: 450px) {
@@ -259,15 +247,20 @@
                 width: 24px;
                 height: 24px;
             }
+
+            .footer .info-footer .social-media .social-media-item img {
+                width: 24px;
+                height: 24px;
+            }
         }
     </style>
   </head>
   <body>
     <main class="main-wrapper">
         <div class="container">
-            <div class="header" style="justify-content: center; align-items: center; flex-direction: column;">
+            <div class="header">
                 <div class="header-logo">
-                    <img src="{{baseUrl}}images/logo-setneg.png" alt="Logo Setneg">
+                    <img src="{{baseUrl}}/images/logo-setneg.png" alt="Logo Setneg">
                 </div>
                 <div class="header-address">
                     <p>
@@ -276,8 +269,8 @@
                     </p>
                 </div>
             </div>
-            <div class="content" style="flex-direction: column;">
-                <div class="body-content" style="display: flex; flex-direction: column;">
+            <div class="content">
+                <div class="body-content">
                     <h4>
                         Mohon Maaf
                     </h4>
@@ -301,8 +294,8 @@
         </div>
     </main>
     <footer class="footer">
-        <div class="info-footer" style="justify-content: space-between; align-items: center;">
-            <a href="#" style="text-decoration: none;">
+        <div class="info-footer">
+            <a class="faq" href="#" style="text-decoration: none;">
                 FAQ
             </a>
             <div class="social-media">

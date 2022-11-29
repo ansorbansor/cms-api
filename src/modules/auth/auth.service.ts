@@ -567,24 +567,6 @@ export class AuthService {
     //generate token
     const token = this.jwtService.sign({
       id: await encryptText(user.id),
-      role: await Promise.all(
-        user.userRoles.map(async (e) => {
-          return {
-            roleData: {
-              id: await encryptText(e.roleData.id),
-              grant_all_access: await encryptText(e.roleData.grant_all_access),
-              roleAccess: await Promise.all(
-                e.roleData.roleAccess.map(async (role) => {
-                  return {
-                    be_controller: await encryptText(role.menu.be_controller),
-                    menu_access: await encryptText(role.menu_access),
-                  };
-                }),
-              ),
-            },
-          };
-        }),
-      ),
     });
 
     //revoke other token

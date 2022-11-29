@@ -626,7 +626,7 @@ export class CouponSubmissionService {
         };
 
         let token = await fetch(pionirConfig().tokenUrl, requestOptions).catch(
-          (error) => console.log('error', error),
+          (error) => console.log(`${pionirConfig().tokenUrl} | error`, error),
         );
 
         //set header cookie (needed for pionir)
@@ -664,7 +664,9 @@ export class CouponSubmissionService {
 
           response = await fetch(pionirConfig().postCourseUrl, requestOptions)
             .then(async (response) => await response.json())
-            .catch((error) => console.log('error', error));
+            .catch((error) =>
+              console.log(`${pionirConfig().postCourseUrl} | error`, error),
+            );
 
           console.log(`response ${JSON.stringify(response)}`);
         }

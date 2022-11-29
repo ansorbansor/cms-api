@@ -630,7 +630,7 @@ export class CouponSubmissionService {
         );
 
         //set header cookie (needed for pionir)
-        const myHeaders = new Headers();
+        const myHeaders = new fetch.Headers();
         myHeaders.append('Cookie', token.headers.get('set-cookie'));
 
         //parse token to plain string

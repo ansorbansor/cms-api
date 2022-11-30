@@ -539,6 +539,7 @@ export class CouponSubmissionService {
       await this.couponSubmissionRepository.update(submissionId, {
         coupon_id: coupon.id,
         status: status,
+        status_by: user.id,
       });
 
       await this.userCourseRepository.save(
@@ -582,6 +583,7 @@ export class CouponSubmissionService {
       await this.couponSubmissionRepository.update(submissionId, {
         status: status,
         reason: reason,
+        status_by: user.id,
       });
 
       await this.mailService.rejectSubmission({

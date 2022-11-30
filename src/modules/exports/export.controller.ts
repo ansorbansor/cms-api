@@ -35,4 +35,19 @@ export class ExportController {
 
     res.download(`${response}`);
   }
+
+  @Get('coupon-submission')
+  @Header('Content-Type', 'text/xlsx')
+  @Permissions(MenuPermission.READ)
+  @Controllers(UsersController.name)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportCouponSubmission(@Res() res: Response, @Request() req) {
+    const response = await this.exportService.exportCouponSubmission(
+      req.user,
+      req.ip,
+    );
+
+    res.download(`${response}`);
+  }
 }

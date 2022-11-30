@@ -112,7 +112,7 @@ export class ExportService {
 
     data.forEach((d) => {
       count++;
-      data.no = count;
+      d.no = count;
       rows.push(Object.values(ExportCouponSubmissionResource(d)));
     });
 

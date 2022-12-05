@@ -145,4 +145,5 @@ export enum ErrorMessage {
   GENERAL = 'Terjadi kesalahan pada server, silahkan coba beberapa saat kembali atau hubungi admin',
   TWO_FACTOR_AUTH_FAILED = 'Kode 2FA salah, silahkan coba kembali',
   PARTNER_NOT_EXISTS = 'Client ID atau Client Secret tidak sesuai.',
+  DATA_NOT_FOUND = 'Data tidak ditemukan.',
 }

@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Workbook } from 'exceljs';
 import { User } from 'src/entities/user.entity';
+import { ErrorMessage } from 'src/utils/enums';
 import { failedResponse } from 'src/utils/responses';
 import * as tmp from 'tmp';
 import { getManager, Repository } from 'typeorm';
@@ -75,7 +76,7 @@ export class ExportService {
     return f;
   }
 
-  async exportCouponSubmission(user: User, ip: string) {
+  async exportCouponSubmission(user: User, ip: string, year: string) {
     const data = await getManager().query(
       `SELECT 
         c.id,
@@ -105,8 +106,14 @@ export class ExportService {
         ON cs.course_id = cour.id
       LEFT JOIN users uu
         ON cs.status_by = uu.id
+      ${year ? `WHERE YEAR(c.created_at) = '${year}'` : ''}
       ORDER BY cs.updated_at DESC`,
     );
+
+    if (!data || data.length == 0) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, ErrorMessage.DATA_NOT_FOUND);
+    }
+
     const rows = [];
     let count = 0;
 

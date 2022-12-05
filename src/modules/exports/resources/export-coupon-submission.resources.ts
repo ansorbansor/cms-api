@@ -2,7 +2,7 @@ import { CouponStatus, CouponType } from 'src/utils/enums';
 
 export const ExportCouponSubmissionResource = (data: any): any => {
   return {
-    No: data.no,
+    No: data.no ? data.no : '-',
     Nama_Kupon: data.coupon_name ? data.coupon_name : '-',
     Kode_Unik: data.code ? data.code : '-',
     Penyelenggara: data.provider_name ? data.provider_name : '-',

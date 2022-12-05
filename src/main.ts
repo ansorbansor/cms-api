@@ -26,11 +26,15 @@ async function bootstrap() {
     .setTitle('API')
     .setDescription('API docs')
     .setVersion('1.0')
-    .addBearerAuth()
-    .setExternalDoc('Postman Collection', '/docs-json')
-    .build();
+    .addBearerAuth();
 
-  const document = SwaggerModule.createDocument(app, options);
+  if (configService.get('app.nodeEnv') == 'staging') {
+    options.setExternalDoc('Postman Collection', '/playbook/docs-json');
+  } else if (configService.get('app.nodeEnv') == 'development') {
+    options.setExternalDoc('Postman Collection', '/docs-json');
+  }
+
+  const document = SwaggerModule.createDocument(app, options.build());
   if (configService.get('app.nodeEnv') == 'staging') {
     SwaggerModule.setup('playbook/docs', app, document);
   } else if (configService.get('app.nodeEnv') == 'development') {

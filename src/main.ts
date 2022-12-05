@@ -31,7 +31,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  if (configService.get('app.nodeEnv') == 'staging') {
+    SwaggerModule.setup('playbook/docs', app, document);
+  } else if (configService.get('app.nodeEnv') == 'development') {
+    SwaggerModule.setup('docs', app, document);
+  }
 
   await app.listen(configService.get('app.port'));
 }

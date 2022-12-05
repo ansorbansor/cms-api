@@ -8,7 +8,7 @@ import { FinishCourseDto } from '../coupon-submission/dto/finish-course.dto';
 import { FinishCourseResource } from './resources/finish-course.resources';
 import { PartnerLoginDto } from './dto/partner-login.dto';
 import { OauthClient } from 'src/entities/oauth-client.entity';
-import { ErrorMessage } from 'src/utils/enums';
+import { ErrorMessage, RedisKeyEnum } from 'src/utils/enums';
 import { JwtService } from '@nestjs/jwt';
 import { encryptText } from 'src/utils/encryption-helper';
 import { LoginPartnerResource } from './resources/login-partner.resources';
@@ -16,6 +16,7 @@ import * as crypto from 'crypto';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { GeneratePartnerResource } from './resources/generate-partner.resources';
 import { GeneratePartnerDto } from './dto/generate-partner.dto';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class PartnerService {
@@ -27,6 +28,7 @@ export class PartnerService {
     private userRepository: Repository<User>,
     @InjectRepository(OauthClient)
     private oauthClientRepository: Repository<OauthClient>,
+    private redisService: RedisService,
   ) {}
 
   async validateLogin(loginDto: PartnerLoginDto): Promise<any> {
@@ -94,6 +96,8 @@ export class PartnerService {
       certificate_number: dto.certificate_number,
       certificate_image: dto.certificate_image,
     });
+
+    this.redisService.del(`${RedisKeyEnum.course}:`);
 
     return successResponse(
       FinishCourseResource(dto),

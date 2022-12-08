@@ -45,47 +45,51 @@ export class CouponService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(coupon.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          )
-            .orWhere(
-              `LOWER(coupon.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            )
-            .orWhere(
-              `coupon.amount LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            );
+          qb.where(`LOWER(coupon.name) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          })
+            .orWhere(`LOWER(coupon.code) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            })
+            .orWhere(`coupon.amount LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            });
         }),
       );
     }
 
     if (paginationOptions.start_date) {
-      data.andWhere(`coupon.start_date >= '${paginationOptions.start_date}'`);
+      data.andWhere(`coupon.start_date >= :start_date`, {
+        start_date: `${paginationOptions.start_date}`,
+      });
     }
 
     if (paginationOptions.end_date) {
-      data.andWhere(`coupon.end_date <= '${paginationOptions.end_date}'`);
+      data.andWhere(`coupon.end_date <= :end_date`, {
+        end_date: `${paginationOptions.end_date}`,
+      });
     }
 
     if (paginationOptions.provider_id) {
-      data.andWhere(`provider.id = ${paginationOptions.provider_id}`);
+      data.andWhere(`provider.id = :provider_id`, {
+        provider_id: `${paginationOptions.provider_id}`,
+      });
     }
 
     if (
       paginationOptions.status_string != undefined &&
       paginationOptions.status_string != ''
     ) {
-      data.andWhere(`coupon.status = ${paginationOptions.status_string}`);
+      data.andWhere(`coupon.status = :status`, {
+        status: `${paginationOptions.status_string}`,
+      });
       if (paginationOptions.status_string == '0') {
-        data.andWhere(
-          `coupon.start_date <= '${moment(new Date()).format(
-            'yyyy-MM-D HH:mm:ss',
-          )}'`,
-        );
-        data.andWhere(
-          `coupon.end_date >= '${moment(new Date()).format(
-            'yyyy-MM-D HH:mm:ss',
-          )}'`,
-        );
+        data.andWhere(`coupon.start_date <= :start_date`, {
+          start_date: `${moment(new Date()).format('yyyy-MM-D HH:mm:ss')}`,
+        });
+        data.andWhere(`coupon.end_date >= :end_date`, {
+          end_date: `${moment(new Date()).format('yyyy-MM-D HH:mm:ss')}`,
+        });
       }
     }
 

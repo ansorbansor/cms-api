@@ -32,22 +32,26 @@ export class ActivityLogService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(acl.description) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          )
-            .orWhere(
-              `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            )
-            .orWhere(
-              `LOWER(acl.ip) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            );
+          qb.where(`LOWER(acl.description) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          })
+            .orWhere(`LOWER(user.name) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            })
+            .orWhere(`LOWER(acl.ip) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            });
         }),
       );
     }
 
     if (paginationOptions.start_date && paginationOptions.end_date) {
-      data.andWhere(`acl.created_at >= '${paginationOptions.start_date}'`);
-      data.andWhere(`acl.created_at <= '${paginationOptions.end_date}'`);
+      data.andWhere(`acl.created_at >= :start_date`, {
+        start_date: `${paginationOptions.start_date}`,
+      });
+      data.andWhere(`acl.created_at <= :end_date`, {
+        end_date: `${paginationOptions.end_date}`,
+      });
     }
 
     if (paginationOptions.role && paginationOptions.role.length > 0) {

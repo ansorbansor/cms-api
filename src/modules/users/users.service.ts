@@ -132,11 +132,11 @@ export class UsersService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(
-            `LOWER(user.nip) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          );
+          qb.where(`LOWER(user.name) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          }).orWhere(`LOWER(user.nip) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          });
         }),
       );
     }

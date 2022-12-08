@@ -260,9 +260,9 @@ export class CouponSubmissionService {
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
       .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
-      .andWhere(
-        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
-      );
+      .andWhere(`couponSubmissionApproved.status = :status`, {
+        status: CouponSubmissionStatus.APPROVED,
+      });
 
     const data = this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
@@ -316,35 +316,37 @@ export class CouponSubmissionService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(user.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(
-            `user.nip LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          );
+          qb.where(`LOWER(user.name) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          }).orWhere(`user.nip LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          });
         }),
       );
     }
 
     if (paginationOptions.start_date && paginationOptions.end_date) {
-      data.andWhere(
-        `couponSubmission.created_at >= '${paginationOptions.start_date}'`,
-      );
-      data.andWhere(
-        `couponSubmission.created_at <= '${paginationOptions.end_date}'`,
-      );
+      data.andWhere(`couponSubmission.created_at >= :start_date`, {
+        start_date: paginationOptions.start_date,
+      });
+      data.andWhere(`couponSubmission.created_at <= :end_date`, {
+        end_date: paginationOptions.end_date,
+      });
     }
 
     if (paginationOptions.employeePosition) {
-      data.andWhere(
-        `employeePosition.id = ${paginationOptions.employeePosition}`,
-      );
+      data.andWhere(`employeePosition.id = :employeePosition`, {
+        employeePosition: paginationOptions.employeePosition,
+      });
     }
 
     if (
       paginationOptions.level != undefined &&
       paginationOptions.level.length > 0
     ) {
-      data.andWhere(`user.level = ${paginationOptions.level}`);
+      data.andWhere(`user.level = :level`, {
+        level: paginationOptions.level,
+      });
     }
 
     if (
@@ -360,9 +362,9 @@ export class CouponSubmissionService {
       paginationOptions.status_string != undefined &&
       paginationOptions.status_string != ''
     ) {
-      data.andWhere(
-        `couponSubmission.status = ${paginationOptions.status_string}`,
-      );
+      data.andWhere(`couponSubmission.status = :status`, {
+        status: paginationOptions.status_string,
+      });
     }
 
     const total = await data.getCount();
@@ -421,7 +423,9 @@ export class CouponSubmissionService {
       .addSelect('couponSubmissionTotal.user_id', 'user_id')
       .groupBy('couponSubmissionTotal.user_id')
       .where(`YEAR(couponSubmissionTotal.created_at) = YEAR(CURRENT_DATE)`)
-      .andWhere(`couponSubmissionTotal.user_id = ${data.user_id}`)
+      .andWhere(`couponSubmissionTotal.user_id = :userId`, {
+        userId: data.user_id,
+      })
       .getRawOne();
 
     const couponSubmissionApproved = await this.couponSubmissionRepository
@@ -433,10 +437,12 @@ export class CouponSubmissionService {
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
       .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
-      .andWhere(
-        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
-      )
-      .andWhere(`couponSubmissionApproved.user_id = ${data.user_id}`)
+      .andWhere(`couponSubmissionApproved.status = :status`, {
+        status: CouponSubmissionStatus.APPROVED,
+      })
+      .andWhere(`couponSubmissionApproved.user_id = :userId`, {
+        userId: data.user_id,
+      })
       .getRawOne();
 
     return CouponSubmissionDetailResource(

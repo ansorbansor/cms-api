@@ -250,7 +250,9 @@ export class FilesService {
 
     const fileNotExists = this.fileRepository
       .createQueryBuilder('file')
-      .where(`file.name NOT IN (${fileNames})`)
+      .where(`file.name NOT IN (:fileNames)`, {
+        fileNames: fileNames,
+      })
       .delete();
 
     return fileNotExists;

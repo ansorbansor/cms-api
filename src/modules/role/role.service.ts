@@ -59,9 +59,9 @@ export class RoleService {
       .leftJoinAndSelect('roleAccess.menu', 'menu');
 
     if (paginationOptions.search) {
-      data.andWhere(
-        `LOWER(role.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-      );
+      data.andWhere(`LOWER(role.name) LIKE :search`, {
+        search: `%${paginationOptions.search.toLowerCase()}%`,
+      });
     }
 
     const total = await this.roleRepository.count();

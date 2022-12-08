@@ -68,9 +68,9 @@ export class ProvidersService {
       .leftJoinAndSelect('provider.photoFile', 'photoFile');
 
     if (paginationOptions.search) {
-      data.andWhere(
-        `LOWER(provider.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-      );
+      data.andWhere(`LOWER(provider.name) LIKE :search`, {
+        search: `%${paginationOptions.search.toLowerCase()}%`,
+      });
     }
 
     const total = await this.providerRepository.count();

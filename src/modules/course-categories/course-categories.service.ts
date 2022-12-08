@@ -106,15 +106,15 @@ export class CourseCategoriesService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(category.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          )
-            .orWhere(
-              `LOWER(pkasnProgram.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            )
-            .orWhere(
-              `LOWER(pkasnProgram.code) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-            );
+          qb.where(`LOWER(category.name) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          })
+            .orWhere(`LOWER(pkasnProgram.name) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            })
+            .orWhere(`LOWER(pkasnProgram.code) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            });
         }),
       );
     }

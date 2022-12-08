@@ -156,11 +156,15 @@ export class CourseService {
       paginationOptions.user_id &&
       (paginationOptions.owned || paginationOptions.is_admin)
     ) {
-      data.andWhere(`userCourse.user_id = ${paginationOptions.user_id}`);
+      data.andWhere(`userCourse.user_id = :userId`, {
+        userId: paginationOptions.user_id,
+      });
     }
 
     if (paginationOptions.user_id && paginationOptions.liked) {
-      data.andWhere(`userLike.user_id = ${paginationOptions.user_id}`);
+      data.andWhere(`userLike.user_id = :userId`, {
+        userId: paginationOptions.user_id,
+      });
     }
 
     if (paginationOptions.submission) {
@@ -181,11 +185,11 @@ export class CourseService {
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
-          qb.where(
-            `LOWER(courses.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          ).orWhere(
-            `LOWER(courses.coach) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-          );
+          qb.where(`LOWER(courses.name) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          }).orWhere(`LOWER(courses.coach) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          });
         }),
       );
     }
@@ -197,7 +201,9 @@ export class CourseService {
     ) {
       data.andWhere(`courses.provider_id IS NULL`);
     } else if (paginationOptions.provider) {
-      data.andWhere(`provider.id IN (${paginationOptions.provider})`);
+      data.andWhere(`provider.id IN (:provider)`, {
+        provider: paginationOptions.provider,
+      });
     }
 
     if (
@@ -207,7 +213,9 @@ export class CourseService {
     ) {
       data.andWhere(`courses.category_id IS NULL`);
     } else if (paginationOptions.category) {
-      data.andWhere(`category.id IN (${paginationOptions.category})`);
+      data.andWhere(`category.id IN (:category)`, {
+        category: paginationOptions.category,
+      });
     }
 
     if (
@@ -217,7 +225,9 @@ export class CourseService {
     ) {
       data.andWhere(`courses.topic_id IS NULL`);
     } else if (paginationOptions.topic) {
-      data.andWhere(`topic.id IN (${paginationOptions.topic})`);
+      data.andWhere(`topic.id IN (:topic)`, {
+        topic: paginationOptions.topic,
+      });
     }
 
     if (
@@ -227,7 +237,9 @@ export class CourseService {
     ) {
       data.andWhere(`courses.level_id IS NULL`);
     } else if (paginationOptions.level) {
-      data.andWhere(`courseLevel.id IN (${paginationOptions.level})`);
+      data.andWhere(`courseLevel.id IN (:level)`, {
+        level: paginationOptions.level,
+      });
     }
 
     if (
@@ -241,12 +253,17 @@ export class CourseService {
       paginationOptions.duration.length > 0
     ) {
       const dur = await getManager().query(
-        `SELECT MIN(minimum) as min, MAX(maximum) as max FROM course_durations WHERE id IN (${paginationOptions.duration})`,
+        `SELECT MIN(minimum) as min, MAX(maximum) as max FROM course_durations WHERE id IN (?)`,
+        [paginationOptions.duration],
       );
 
       if (dur[0] && dur[0].min != null && dur[0].max != null) {
-        data.andWhere(`courses.duration >= ${dur[0].min}`);
-        data.andWhere(`courses.duration <= ${dur[0].max}`);
+        data.andWhere(`courses.duration >= :min`, {
+          min: dur[0].min,
+        });
+        data.andWhere(`courses.duration <= :max`, {
+          max: dur[0].max,
+        });
       }
     }
 
@@ -260,7 +277,9 @@ export class CourseService {
       const subquery = this.courseLanguageTransactionRepository
         .createQueryBuilder('lang')
         .select(`\`lang\`.\`course_id\``, 'langCourse_id')
-        .where(`\`lang\`.\`language_id\` IN (${paginationOptions.language})`);
+        .where(`\`lang\`.\`language_id\` IN (:language)`, {
+          language: paginationOptions.language,
+        });
 
       data.innerJoinAndSelect(
         `(` + subquery.getQuery() + `)`,
@@ -276,7 +295,9 @@ export class CourseService {
     ) {
       data.andWhere(`courses.price_id IS NULL`);
     } else if (paginationOptions.price) {
-      data.andWhere(`coursePrice.id IN (${paginationOptions.price})`);
+      data.andWhere(`coursePrice.id IN (:price)`, {
+        price: paginationOptions.price,
+      });
     }
 
     if (paginationOptions.schedule) {
@@ -290,7 +311,9 @@ export class CourseService {
     }
 
     if (paginationOptions.rating) {
-      data.andWhere(`courses.rating IN (${paginationOptions.rating})`);
+      data.andWhere(`courses.rating IN (:rating)`, {
+        rating: paginationOptions.rating,
+      });
     }
 
     if (paginationOptions.popular) {
@@ -507,7 +530,9 @@ export class CourseService {
         .leftJoinAndSelect('courses.courseLevel', 'courseLevel')
         .leftJoinAndSelect('courses.courseLanguage', 'courseLanguage')
         .leftJoinAndSelect('courses.coursePrice', 'coursePrice')
-        .where(`courses.id IN (${updateCourseDto.course_id})`)
+        .where(`courses.id IN (:courseId)`, {
+          courseId: updateCourseDto.course_id,
+        })
         .getMany();
 
       const isNotValid = checkData.find(

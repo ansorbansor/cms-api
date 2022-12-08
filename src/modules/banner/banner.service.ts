@@ -125,9 +125,9 @@ export class BannerService {
       .leftJoinAndSelect('banner.courseData', 'course');
 
     if (paginationOptions.search) {
-      data.andWhere(
-        `LOWER(banner.name) LIKE '%${paginationOptions.search.toLowerCase()}%'`,
-      );
+      data.andWhere(`LOWER(banner.name) LIKE :search`, {
+        search: `%${paginationOptions.search.toLowerCase()}%`,
+      });
     }
 
     if (paginationOptions.is_admin) {

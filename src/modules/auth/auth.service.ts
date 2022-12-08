@@ -113,17 +113,17 @@ export class AuthService {
     );
 
     if (isValidPassword) {
-      const twoFAVerify = authenticator.verify({
-        token: loginDto.two_factor_auth_code,
-        secret: user.two_factor_auth_code,
-      });
+      // const twoFAVerify = authenticator.verify({
+      //   token: loginDto.two_factor_auth_code,
+      //   secret: user.two_factor_auth_code,
+      // });
 
-      if (!twoFAVerify) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          ErrorMessage.TWO_FACTOR_AUTH_FAILED,
-        );
-      }
+      // if (!twoFAVerify) {
+      //   throw failedResponse(
+      //     HttpStatus.BAD_REQUEST,
+      //     ErrorMessage.TWO_FACTOR_AUTH_FAILED,
+      //   );
+      // }
 
       await this.activityLogService.create({
         user_id: user.id,

@@ -146,4 +146,5 @@ export enum ErrorMessage {
   TWO_FACTOR_AUTH_FAILED = 'Kode 2FA salah, silahkan coba kembali',
   PARTNER_NOT_EXISTS = 'Client ID atau Client Secret tidak sesuai.',
   DATA_NOT_FOUND = 'Data tidak ditemukan.',
+  DATA_TYPE_NOT_EXPECTED = 'Parameter tidak sesuai!',
 }

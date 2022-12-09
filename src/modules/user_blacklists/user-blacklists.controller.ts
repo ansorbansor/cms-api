@@ -22,6 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MenuPermission } from 'src/utils/enums';
 import { UpdateBlacklistUserDto } from './dto/update-blacklist-user.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -70,10 +71,10 @@ export class BlacklistController {
   @Controllers(BlacklistController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
       await this.usersService.findOne({
-        id: +id,
+        id: +param.id,
         blacklist: true,
       }),
       'success',
@@ -88,7 +89,7 @@ export class BlacklistController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
-    @Param('id') id: number,
+    @Param() param: IDParamDto,
     @Body() updateBlacklistUserDto: UpdateBlacklistUserDto,
     @Request() req,
   ) {
@@ -97,7 +98,7 @@ export class BlacklistController {
 
     return successResponse(
       await this.usersService.updateBlacklist(
-        id,
+        param.id,
         updateProfileDto.blacklist,
         req.user,
         req.ip,

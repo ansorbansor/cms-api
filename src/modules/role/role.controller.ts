@@ -22,6 +22,7 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Role')
@@ -70,9 +71,9 @@ export class RoleController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.roleService.findOne({ id: +id }),
+      await this.roleService.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -94,9 +95,9 @@ export class RoleController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(RoleController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.roleService.softDelete(id, req.user, req.ip),
+      await this.roleService.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

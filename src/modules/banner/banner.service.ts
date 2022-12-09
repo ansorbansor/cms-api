@@ -4,7 +4,12 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { In, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { BannerType, FilePath, RedisKeyEnum } from 'src/utils/enums';
+import {
+  BannerType,
+  ErrorMessage,
+  FilePath,
+  RedisKeyEnum,
+} from 'src/utils/enums';
 import { Banner } from 'src/entities/banner.entity';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { BannerResource } from './resources/banner.resources';
@@ -173,6 +178,13 @@ export class BannerService {
   }
 
   async findOne(fields: EntityCondition<Banner>) {
+    if (Number.isNaN(fields.id)) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        ErrorMessage.DATA_TYPE_NOT_EXPECTED,
+      );
+    }
+
     const value = await this.redisService.get(
       `${RedisKeyEnum.banner}:${fields.id}`,
       typeof BannerResource,

@@ -4,7 +4,7 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { RedisKeyEnum } from 'src/utils/enums';
+import { ErrorMessage, RedisKeyEnum } from 'src/utils/enums';
 import { Topic } from 'src/entities/topic.entity';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicResource } from './resources/topic.resources';
@@ -49,6 +49,13 @@ export class TopicsService {
   }
 
   async findOne(fields: EntityCondition<Topic>) {
+    if (Number.isNaN(fields.id)) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        ErrorMessage.DATA_TYPE_NOT_EXPECTED,
+      );
+    }
+
     const value = await this.redisService.get(
       `${RedisKeyEnum.topic}:${fields.id}`,
       typeof TopicResource,

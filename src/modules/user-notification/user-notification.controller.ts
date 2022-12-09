@@ -20,6 +20,7 @@ import { UserNotificationService } from './user-notification.service';
 import { CreateUserNotificationDto } from './dto/create-user-notification.dto';
 import { UserNotificationResource } from './resources/user-notification.resources';
 import { UpdateUserNotificationTokenDto } from './dto/update-user-notification-token.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('User Notification')
@@ -83,14 +84,11 @@ export class UserNotificationController {
     );
   }
 
-  @Patch(':notification_id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async update(
-    @Param('notification_id') notificationId: number,
-    @Request() req,
-  ) {
-    await this.userNotificationService.read(notificationId, req.user.id);
+  async update(@Param() param: IDParamDto, @Request() req) {
+    await this.userNotificationService.read(param.id, req.user.id);
     return successResponse(null, 'success');
   }
 }

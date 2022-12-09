@@ -19,6 +19,7 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Menu')
@@ -64,9 +65,9 @@ export class MenuController {
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.menuService.findOne({ id: +id }),
+      await this.menuService.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -84,7 +85,10 @@ export class MenuController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.menuService.softDelete(id), 'success');
+  async remove(@Param() param: IDParamDto) {
+    return successResponse(
+      await this.menuService.softDelete(param.id),
+      'success',
+    );
   }
 }

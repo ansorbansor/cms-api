@@ -263,7 +263,7 @@ export class TwoFactorAuthService {
     }
 
     //throw error if not verified email
-    if (authConfig().emailVerification && user.hash != null) {
+    if (!user || (authConfig().emailVerification && user.hash != null)) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.USER_NOT_FOUND,

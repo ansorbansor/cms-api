@@ -22,6 +22,7 @@ import { MenuPermission } from 'src/utils/enums';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { CouponService } from './coupon.service';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 @ApiBearerAuth()
 @ApiTags('Coupon')
 @Controller({
@@ -79,9 +80,9 @@ export class CouponController {
   @Controllers(CouponController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.couponServices.findOne({ id: +id }),
+      await this.couponServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -102,9 +103,9 @@ export class CouponController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CouponController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.couponServices.softDelete(id, req.user, req.ip),
+      await this.couponServices.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

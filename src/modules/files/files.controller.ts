@@ -16,6 +16,7 @@ import { successResponse } from 'src/utils/responses';
 import { BufferedFile } from 'src/utils/file-helper';
 import { FilePath } from 'src/utils/enums';
 import { JwtAuthGuard } from 'src/utils/guards';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiTags('Files')
 @Controller({
@@ -85,7 +86,7 @@ export class FilesController {
 
   @Delete(':id')
   @ApiParam({ name: 'id', example: '1' })
-  async delete(@Param('id') id) {
-    return successResponse(await this.filesService.delete(id), 'success');
+  async delete(@Param() param: IDParamDto) {
+    return successResponse(await this.filesService.delete(param.id), 'success');
   }
 }

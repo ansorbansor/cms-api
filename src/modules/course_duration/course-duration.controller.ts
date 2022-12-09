@@ -21,6 +21,7 @@ import { MenuPermission } from 'src/utils/enums';
 import { CourseDurationService } from './course-duration.service';
 import { CreateCourseDurationDto } from './dto/create-course-duration.dto';
 import { UpdateCourseDurationDto } from './dto/update-course-duration.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 @ApiBearerAuth()
 @ApiTags('Course Duration')
 @Controller({
@@ -64,9 +65,9 @@ export class CourseDurationController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseDurationServices.findOne({ id: +id }),
+      await this.courseDurationServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -87,9 +88,9 @@ export class CourseDurationController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseDurationController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseDurationServices.softDelete(id),
+      await this.courseDurationServices.softDelete(param.id),
       'success',
     );
   }

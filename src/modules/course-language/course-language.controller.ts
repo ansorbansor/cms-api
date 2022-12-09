@@ -19,6 +19,7 @@ import { CourseLanguageService } from './course-language.service';
 import { CreateCourseLanguageDto } from './dto/create-course-language.dto';
 import { UpdateCourseLanguageDto } from './dto/update-course-language.dto';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Course Language')
@@ -61,9 +62,9 @@ export class CourseLanguageController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseLanguageServices.findOne({ id: +id }),
+      await this.courseLanguageServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -80,9 +81,9 @@ export class CourseLanguageController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseLanguageServices.softDelete(id),
+      await this.courseLanguageServices.softDelete(param.id),
       'success',
     );
   }

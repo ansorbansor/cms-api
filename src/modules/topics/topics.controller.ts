@@ -21,6 +21,7 @@ import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Topics')
@@ -65,9 +66,9 @@ export class TopicsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.topicService.findOne({ id: +id }),
+      await this.topicService.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -88,7 +89,10 @@ export class TopicsController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(TopicsController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
-    return successResponse(await this.topicService.softDelete(id), 'success');
+  async remove(@Param() param: IDParamDto) {
+    return successResponse(
+      await this.topicService.softDelete(param.id),
+      'success',
+    );
   }
 }

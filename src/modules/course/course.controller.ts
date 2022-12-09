@@ -28,6 +28,8 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { MenuPermission } from 'src/utils/enums';
 import { OptionalJwtAuthGuard } from 'src/utils/custom-auth-guard';
 import { BulkUpdateCourseDto } from './dto/bulk-update-course.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
+import { LikeCourseDto } from './dto/like-course.dto';
 
 @ApiBearerAuth()
 @ApiTags('Course')
@@ -176,9 +178,9 @@ export class CourseController {
   @Get('admin/courses/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOneAdmin(@Param('id') id: string, @Request() req) {
+  async findOneAdmin(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.courseServices.findOneAdmin({ id: +id }, req.user),
+      await this.courseServices.findOneAdmin({ id: +param.id }, req.user),
       'success',
     );
   }
@@ -186,9 +188,9 @@ export class CourseController {
   @Get('courses/:id')
   @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string, @Request() req) {
+  async findOne(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.courseServices.findOne({ id: +id }, req.user),
+      await this.courseServices.findOne({ id: +param.id }, req.user),
       'success',
     );
   }
@@ -232,9 +234,9 @@ export class CourseController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.courseServices.softDelete(id, req.user, req.ip),
+      await this.courseServices.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }
@@ -242,9 +244,9 @@ export class CourseController {
   @Post('course/like')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async postUserLike(@Query('course_id') courseId: number, @Request() request) {
+  async postUserLike(@Query() param: LikeCourseDto, @Request() request) {
     return await this.courseServices.postLike(
-      courseId,
+      param.course_id,
       request.user,
       request.ip,
     );

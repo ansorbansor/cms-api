@@ -19,6 +19,8 @@ import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
 import { CouponSubmissionService } from './coupon-submission.service';
+import { IDParamDto } from 'src/utils/id-param.dto';
+import { CreateSubmissionCouponDto } from './dto/create-submission-coupon.dto';
 
 @ApiBearerAuth()
 @ApiTags('Coupon Submission')
@@ -34,10 +36,10 @@ export class CouponSubmissionController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Query('course_id') courseId: number, @Request() req) {
+  async create(@Query() param: CreateSubmissionCouponDto, @Request() req) {
     return await this.couponSubmissionServices.create(
       req.user,
-      courseId,
+      param.course_id,
       req.ip,
     );
   }
@@ -81,9 +83,9 @@ export class CouponSubmissionController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.couponSubmissionServices.findOne({ id: +id }),
+      await this.couponSubmissionServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -92,9 +94,9 @@ export class CouponSubmissionController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CouponSubmissionController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param() param: IDParamDto) {
     return successResponse(
-      await this.couponSubmissionServices.softDelete(id),
+      await this.couponSubmissionServices.softDelete(param.id),
       'success',
     );
   }
@@ -104,14 +106,14 @@ export class CouponSubmissionController {
   @Controllers(CouponSubmissionController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   async update(
-    @Param('id') id: number,
+    @Param() param: IDParamDto,
     @Query('status') status: number,
     @Query('coupon_id') couponId: number,
     @Query('reason') reason: string,
     @Request() req,
   ) {
     return await this.couponSubmissionServices.update(
-      id,
+      param.id,
       status,
       couponId,
       reason,

@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
+import { IDParamDto } from 'src/utils/id-param.dto';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { CoursePriceService } from './course-price.service';
 import { CreateCoursePriceDto } from './dto/create-course-price.dto';
@@ -61,9 +62,9 @@ export class CoursePriceController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.coursePriceervices.findOne({ id: +id }),
+      await this.coursePriceervices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -80,9 +81,9 @@ export class CoursePriceController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param() param: IDParamDto) {
     return successResponse(
-      await this.coursePriceervices.softDelete(id),
+      await this.coursePriceervices.softDelete(param.id),
       'success',
     );
   }

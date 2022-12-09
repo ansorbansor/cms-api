@@ -260,9 +260,9 @@ export class CouponSubmissionService {
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
       .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
-      .andWhere(`couponSubmissionApproved.status = :status`, {
-        status: CouponSubmissionStatus.APPROVED,
-      });
+      .andWhere(
+        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
+      );
 
     const data = this.couponSubmissionRepository
       .createQueryBuilder('couponSubmission')
@@ -437,9 +437,9 @@ export class CouponSubmissionService {
       .addSelect('couponSubmissionApproved.user_id', 'user_id')
       .groupBy('couponSubmissionApproved.user_id')
       .where(`YEAR(couponSubmissionApproved.created_at) = YEAR(CURRENT_DATE)`)
-      .andWhere(`couponSubmissionApproved.status = :status`, {
-        status: CouponSubmissionStatus.APPROVED,
-      })
+      .andWhere(
+        `couponSubmissionApproved.status = ${CouponSubmissionStatus.APPROVED}`,
+      )
       .andWhere(`couponSubmissionApproved.user_id = :userId`, {
         userId: data.user_id,
       })

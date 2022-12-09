@@ -29,6 +29,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { MenuPermission } from 'src/utils/enums';
 import { UserResource } from './resources/user.resources';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -101,10 +102,10 @@ export class UsersController {
   @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
       await this.usersService.findOne({
-        id: +id,
+        id: +param.id,
       }),
       'success',
     );
@@ -118,14 +119,14 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
-    @Param('id') id: number,
+    @Param() param: IDParamDto,
     @Body() updateProfileDto: UpdateUserDto,
     @Request() req,
     @UploadedFile() photo?: BufferedFile,
   ) {
     return successResponse(
       await this.usersService.update(
-        id,
+        param.id,
         updateProfileDto,
         req.user,
         req.ip,
@@ -139,9 +140,9 @@ export class UsersController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.usersService.softDelete(id, req.user, req.ip),
+      await this.usersService.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

@@ -26,6 +26,7 @@ import { Controllers, Permissions } from 'src/utils/decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Providers')
@@ -40,12 +41,12 @@ export class ProvidersController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async sendMailRegisterProvider(
-    @Param('id') providerId: number,
+    @Param() providerId: IDParamDto,
     @Request() request,
   ) {
     return successResponse(
       await this.providerServices.sendMailRegisterProvider(
-        providerId,
+        providerId.id,
         request.user.id,
       ),
       'Berhasil mengirim email',
@@ -108,9 +109,9 @@ export class ProvidersController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.providerServices.findOne({ id: +id }),
+      await this.providerServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -142,9 +143,13 @@ export class ProvidersController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(ProvidersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() request) {
+  async remove(@Param() param: IDParamDto, @Request() request) {
     return successResponse(
-      await this.providerServices.softDelete(id, request.user, request.ip),
+      await this.providerServices.softDelete(
+        param.id,
+        request.user,
+        request.ip,
+      ),
       'success',
     );
   }

@@ -14,6 +14,7 @@ import { CourseFetchService } from './course-fetch.service';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
 import { Throttle } from '@nestjs/throttler';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Course Fetch')
@@ -57,8 +58,12 @@ export class CourseFetchController {
   @Controllers(CourseFetchController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: number, @Request() req) {
-    return await this.courseFetchService.fetchData(id, req.user.id, req.ip);
+  async findOne(@Param() param: IDParamDto, @Request() req) {
+    return await this.courseFetchService.fetchData(
+      param.id,
+      req.user.id,
+      req.ip,
+    );
   }
 
   @Delete(':id')
@@ -66,9 +71,9 @@ export class CourseFetchController {
   @Controllers(CourseFetchController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteAll(@Param('id') id: number, @Request() req) {
+  async deleteAll(@Param() param: IDParamDto, @Request() req) {
     return await this.courseFetchService.deleteAllFetchData(
-      id,
+      param.id,
       req.user.id,
       req.ip,
     );

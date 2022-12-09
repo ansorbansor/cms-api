@@ -4,7 +4,7 @@ import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Brackets, getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RedisService } from '../redis/redis.service';
-import { FilePath, RedisKeyEnum } from 'src/utils/enums';
+import { ErrorMessage, FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { CourseCategoryResource } from './resources/course-category.resources';
 import { CreateCourseCategoryDto } from './dto/create-course-category.dto';
 import { UpdateCourseCategoryDto } from './dto/update-course-category.dto';
@@ -171,6 +171,13 @@ export class CourseCategoriesService {
   }
 
   async findOne(fields: EntityCondition<CourseCategory>, withTopics?: boolean) {
+    if (Number.isNaN(fields.id)) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        ErrorMessage.DATA_TYPE_NOT_EXPECTED,
+      );
+    }
+
     const value = await this.redisService.get(
       `${RedisKeyEnum.category}:${fields.id}`,
       typeof CourseCategoryResource,

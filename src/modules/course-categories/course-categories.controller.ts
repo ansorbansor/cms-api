@@ -27,6 +27,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { MenuPermission } from 'src/utils/enums';
+import { IDParamDto } from 'src/utils/id-param.dto';
 @ApiBearerAuth()
 @ApiTags('Course Categories')
 @Controller({
@@ -88,12 +89,12 @@ export class CourseCategoriesController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(
-    @Param('id') id: string,
+    @Param() param: IDParamDto,
     @Query('with_topics', new DefaultValuePipe(true), ParseBoolPipe)
     withTopics?: boolean,
   ) {
     return successResponse(
-      await this.categoryServices.findOne({ id: +id }, withTopics),
+      await this.categoryServices.findOne({ id: +param.id }, withTopics),
       'success',
     );
   }
@@ -125,9 +126,9 @@ export class CourseCategoriesController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(CourseCategoriesController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.categoryServices.softDelete(id, req.user, req.ip),
+      await this.categoryServices.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

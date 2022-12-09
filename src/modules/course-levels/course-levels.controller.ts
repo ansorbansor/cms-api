@@ -19,6 +19,7 @@ import { CourseLevelsService } from './course-levels.service';
 import { CreateCourseLevelDto } from './dto/create-course-level.dto';
 import { UpdateCourseLevelDto } from './dto/update-course-level.dto';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Course Level')
@@ -61,9 +62,9 @@ export class CourseLevelsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseLevelServices.findOne({ id: +id }),
+      await this.courseLevelServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -80,9 +81,9 @@ export class CourseLevelsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param() param: IDParamDto) {
     return successResponse(
-      await this.courseLevelServices.softDelete(id),
+      await this.courseLevelServices.softDelete(param.id),
       'success',
     );
   }

@@ -99,6 +99,13 @@ export class ProvidersService {
   }
 
   async findOne(fields: EntityCondition<Provider>) {
+    if (Number.isNaN(fields.id)) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        ErrorMessage.DATA_TYPE_NOT_EXPECTED,
+      );
+    }
+
     const value = await this.redisService.get(
       `${RedisKeyEnum.provider}:${fields.id}`,
       typeof ProviderResource,

@@ -14,6 +14,8 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseArrayPipe,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
@@ -26,7 +28,7 @@ import { UpdateBannerDto } from './dto/update-banner.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UpdateBannerPositionDto } from './dto/update-banner-position.dto';
-import { GetBannerDto } from './dto/get-banner.dto';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('Banner')
@@ -78,19 +80,25 @@ export class BannerController {
 
   @Get('banners')
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query() queryParams: GetBannerDto) {
-    if (queryParams.limit > 50) {
-      queryParams.limit = 50;
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search: string,
+    @Query('status') status: string,
+    @Query('type') type: number,
+  ) {
+    if (limit > 50) {
+      limit = 50;
     }
 
     return successResponseList(
       await this.bannerServices.findManyWithPagination({
-        page: queryParams.page,
-        limit: queryParams.limit,
+        page: page,
+        limit: limit,
         total: 0,
-        search: queryParams.search,
-        status_string: queryParams.status,
-        type: queryParams.type,
+        search: search,
+        status_string: status,
+        type: type,
         is_admin: false,
       }),
       'success',
@@ -102,19 +110,25 @@ export class BannerController {
   @Controllers(BannerController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findAllAdmin(@Query() queryParams: GetBannerDto) {
-    if (queryParams.limit > 50) {
-      queryParams.limit = 50;
+  async findAllAdmin(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search: string,
+    @Query('status') status: string,
+    @Query('type') type: number,
+  ) {
+    if (limit > 50) {
+      limit = 50;
     }
 
     return successResponseList(
       await this.bannerServices.findManyWithPagination({
-        page: queryParams.page,
-        limit: queryParams.limit,
+        page: page,
+        limit: limit,
         total: 0,
-        search: queryParams.search,
-        status_string: queryParams.status,
-        type: queryParams.type,
+        search: search,
+        status_string: status,
+        type: type,
         is_admin: true,
       }),
       'success',
@@ -123,9 +137,9 @@ export class BannerController {
 
   @Get('banners/:id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.bannerServices.findOne({ id: +id }),
+      await this.bannerServices.findOne({ id: +param.id }),
       'success',
     );
   }
@@ -157,9 +171,9 @@ export class BannerController {
   @Permissions(MenuPermission.DELETE)
   @Controllers(BannerController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: number, @Request() req) {
+  async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.bannerServices.softDelete(id, req.user, req.ip),
+      await this.bannerServices.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

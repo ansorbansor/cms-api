@@ -20,6 +20,7 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 import { ActivityLogService } from './activity-log.service';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
 import { OptionalJwtAuthGuard } from 'src/utils/custom-auth-guard';
+import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiBearerAuth()
 @ApiTags('ActivityLogs')
@@ -66,9 +67,9 @@ export class ActivityLogController {
   @Controllers(ActivityLogController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.activityLogService.findOne({ id: +id }),
+      await this.activityLogService.findOne({ id: +param.id }),
       'success',
     );
   }

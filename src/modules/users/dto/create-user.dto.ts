@@ -4,6 +4,7 @@ import {
   IsArray,
   IsEmail,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
   MinLength,
   Validate,
@@ -12,6 +13,7 @@ import {
 import { IsExist, IsNotExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 import { CreateUserTopicDto } from './create-user-topic.dto';
+import { ErrorMessage } from 'src/utils/enums';
 
 export class CreateUserDto {
   @ApiProperty({ example: '1234567890' })
@@ -96,5 +98,6 @@ export class CreateUserDto {
 
   @ApiProperty()
   @IsOptional()
-  level: number;
+  @IsNumberString(null, { message: ErrorMessage.DATA_TYPE_NOT_EXPECTED })
+  level?: number;
 }

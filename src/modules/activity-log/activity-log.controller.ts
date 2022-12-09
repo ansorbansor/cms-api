@@ -81,7 +81,7 @@ export class ActivityLogController {
     @Request() req,
   ) {
     if (!req.user.id || req.user.id == undefined) {
-      return successResponse(null, 'success');
+      return successResponse(null, 'Data not inserted');
     }
 
     const createACL = new CreateActivityLogDto();

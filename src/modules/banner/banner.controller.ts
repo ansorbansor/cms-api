@@ -98,6 +98,9 @@ export class BannerController {
   }
 
   @Get('admin/banners')
+  @Permissions(MenuPermission.READ)
+  @Controllers(BannerController.name)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAllAdmin(@Query() queryParams: GetBannerDto) {
     if (queryParams.limit > 50) {

@@ -146,6 +146,7 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
@@ -267,7 +268,7 @@ export class UsersService {
   async logout(user: User, ip: string): Promise<void> {
     //revoked token
     await getManager().query(
-      `UPDATE oauth_tokens SET revoked = 1 WHERE user_id = ${user.id}`,
+      `UPDATE oauth_tokens SET revoked = true WHERE user_id = ${user.id}`,
     );
 
     //disable notification

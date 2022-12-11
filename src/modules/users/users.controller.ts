@@ -14,7 +14,6 @@ import {
   HttpCode,
   UseInterceptors,
   UploadedFile,
-  ParseArrayPipe,
   Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -26,7 +25,6 @@ import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
-import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { MenuPermission } from 'src/utils/enums';
 import { UserResource } from './resources/user.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
@@ -74,8 +72,6 @@ export class UsersController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search: string,
     @Query('position_id') positionId: number,
-    @Query('unit_id') unitId: number,
-    @Query('level_id') levelId: number,
     @Query('role_id') roleId: number[],
   ) {
     if (limit > 50) {
@@ -89,8 +85,6 @@ export class UsersController {
         total: 0,
         search: search,
         employeePosition: positionId,
-        employeeUnit: unitId,
-        employeeLevel: levelId,
         role: roleId,
       }),
       'success',
@@ -143,23 +137,6 @@ export class UsersController {
   async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
       await this.usersService.softDelete(param.id, req.user, req.ip),
-      'success',
-    );
-  }
-
-  @Post('user/topics')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  async createUserTopic(
-    @Body(new ParseArrayPipe({ items: CreateUserTopicDto, whitelist: true }))
-    createUserTopicDto: CreateUserTopicDto[],
-    @Request() request,
-  ) {
-    return successResponse(
-      await this.usersService.createUserTopic(
-        createUserTopicDto,
-        request.user.id,
-      ),
       'success',
     );
   }

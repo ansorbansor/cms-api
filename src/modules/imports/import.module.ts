@@ -1,11 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Coupon } from 'src/entities/coupon.entity';
-import { Course } from 'src/entities/course.entity';
-import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
-import { EmployeeUnit } from 'src/entities/employee-unit.entity';
-import { Provider } from 'src/entities/provider.entity';
 import { Role } from 'src/entities/role.entity';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { User } from 'src/entities/user.entity';
@@ -16,17 +11,7 @@ import { ImportService } from './import.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      User,
-      Role,
-      EmployeeLevel,
-      EmployeeUnit,
-      EmployeePosition,
-      Provider,
-      Course,
-      Coupon,
-      UserRoles,
-    ]),
+    TypeOrmModule.forFeature([User, Role, EmployeePosition, UserRoles]),
     MailModule,
     ActivityLogModule,
   ],

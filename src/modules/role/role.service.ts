@@ -6,7 +6,6 @@ import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { RoleResource } from './resource/role.resources';
 import { Role } from 'src/entities/role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
-import { RoleAccess } from 'src/entities/role-access.entity';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RoleEnum } from 'src/utils/enums';
 import { ActivityLogService } from '../activity-log/activity-log.service';
@@ -17,8 +16,6 @@ export class RoleService {
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    @InjectRepository(RoleAccess)
-    private roleAccessRepository: Repository<RoleAccess>,
 
     private activityLogService: ActivityLogService,
   ) {}
@@ -29,18 +26,6 @@ export class RoleService {
         ...createRoleDto,
       }),
     );
-
-    createRoleDto.menu.forEach(async (element) => {
-      element.access.forEach(async (element2) => {
-        await this.roleAccessRepository.save(
-          this.roleAccessRepository.create({
-            role_id: role.id,
-            menu_id: element.id,
-            menu_access: element2,
-          }),
-        );
-      });
-    });
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -101,34 +86,9 @@ export class RoleService {
       );
     }
 
-    const existsMenu = [];
-    if (exists.menu.length > 0) {
-      exists.menu.forEach((element) => {
-        existsMenu.push(element.role_access_id);
-      });
-
-      await this.roleAccessRepository.softDelete(existsMenu);
-    }
-
     await this.roleRepository.update(updateRoleDto.id, {
       name: updateRoleDto.name,
     });
-
-    const roleAccess = [];
-
-    updateRoleDto.menu.forEach(async (element) => {
-      element.access.forEach(async (element2) => {
-        roleAccess.push(
-          this.roleAccessRepository.create({
-            role_id: exists.id,
-            menu_id: element.id,
-            menu_access: element2,
-          }),
-        );
-      });
-    });
-
-    await this.roleAccessRepository.save(roleAccess);
 
     await this.activityLogService.create({
       user_id: user.id,

@@ -1,15 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, Validate, ValidateNested } from 'class-validator';
+import { IsEmail, IsOptional, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { Role } from 'src/entities/role.entity';
-import { CreateUserTopicDto } from './create-user-topic.dto';
 
 export class UpdateUserDto {
   @ApiProperty({ example: '1234567890' })
   @IsOptional()
-  nip?: string | null;
+  nik?: string | null;
 
   @ApiProperty({ example: 'John' })
   @IsOptional()
@@ -57,40 +56,10 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
-  @Validate(IsExist, ['EmployeeUnit', 'id'], {
-    message: 'Satuan Kerja Tidak Tersedia',
-  })
-  unit_id?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @Validate(IsExist, ['EmployeeLevel', 'id'], {
-    message: 'Pangkat Tidak Tersedia',
-  })
-  level_id?: number;
-
-  @ApiProperty()
-  @IsOptional()
   @Validate(IsExist, ['EmployeePosition', 'id'], {
     message: 'Jabatan Tidak Tersedia',
   })
-  position_id?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? 1 : 0))
-  blacklist?: number;
+  employee_position_id?: number;
 
   hash?: string | null;
-
-  @ApiProperty()
-  @ValidateNested({
-    each: true,
-  })
-  @Type(() => CreateUserTopicDto)
-  categories?: CreateUserTopicDto[];
-
-  @ApiProperty()
-  @IsOptional()
-  level?: number | null;
 }

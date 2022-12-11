@@ -21,12 +21,9 @@ export enum FileTypeEnum {
 
 export enum RedisKeyEnum {
   user = 'User',
-  category = 'Category',
   provider = 'Provider',
-  topic = 'Topic',
   language = 'CourseLanguage',
   course = 'Course',
-  level = 'CourseLevel',
   price = 'CoursePrice',
   banner = 'Banner',
   duration = 'Duration',
@@ -131,7 +128,6 @@ export enum FilePath {
   USER = 'users',
   COURSE = 'courses',
   BANNER = 'banners',
-  CATEGORY = 'courses/categories',
   PROVIDER = 'providers',
   OTHER = 'others',
 }
@@ -139,7 +135,7 @@ export enum FilePath {
 export enum ErrorMessage {
   EMAIL_NOT_EXISTS = 'User tidak ditemukan. Silahkan coba pilih kembali Akun yang telah tervalidasi.',
   PASSWORD_WRONG = 'Maaf, password yang anda masukkan tidak sesuai. Silahkan coba masukkan kembali password anda.',
-  USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan NIP yang telah terdaftar.',
+  USER_NOT_FOUND = 'User tidak ditemukan. Silahkan coba kembali menggunakan NIK yang telah terdaftar.',
   FORBIDDEN = 'User tidak memiliki hak untuk mengakses halaman ini.',
   UNAUTHORIZED = 'Session anda telah habis, silahkan login kembali.',
   GENERAL = 'Terjadi kesalahan pada server, silahkan coba beberapa saat kembali atau hubungi admin',

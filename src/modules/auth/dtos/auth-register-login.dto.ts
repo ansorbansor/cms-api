@@ -1,26 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsArray,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   MinLength,
   Validate,
-  ValidateNested,
 } from 'class-validator';
 import { IsExist, IsNotExist } from 'src/utils/validators';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { FileEntity } from 'src/entities/file.entity';
-import { CreateUserTopicDto } from 'src/modules/users/dto/create-user-topic.dto';
 
 export class AuthRegisterLoginDto {
   @ApiProperty({ example: '1234567890' })
-  @IsNotEmpty({ message: 'NIP tidak boleh kosong' })
-  nip: string | null;
-
-  @ApiProperty({ example: '1234567890' })
-  @IsOptional()
-  nip_lama: string | null;
+  @IsNotEmpty({ message: 'NIK tidak boleh kosong' })
+  nik: string | null;
 
   @ApiProperty({ example: 'John' })
   @IsNotEmpty({ message: 'Nama tidak boleh kosong' })
@@ -66,33 +59,10 @@ export class AuthRegisterLoginDto {
   role_id: number;
 
   @ApiProperty()
-  @Validate(IsExist, ['EmployeeUnit', 'id'], {
-    message: 'Satuan Kerja Tidak Tersedia',
-  })
-  unit_id: number;
-
-  @ApiProperty()
-  @Validate(IsExist, ['EmployeeLevel', 'id'], {
-    message: 'Pangkat Tidak Tersedia',
-  })
-  level_id: number;
-
-  @ApiProperty()
   @Validate(IsExist, ['EmployeePosition', 'id'], {
     message: 'Jabatan Tidak Tersedia',
   })
-  position_id: number;
+  employee_position_id: number;
 
   hash?: string | null;
-
-  @ApiProperty()
-  @ValidateNested({
-    each: true,
-  })
-  @IsArray()
-  @Type(() => CreateUserTopicDto)
-  categories: CreateUserTopicDto[];
-
-  @ApiProperty()
-  level: number;
 }

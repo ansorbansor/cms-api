@@ -10,21 +10,12 @@ import { AnonymousStrategy, JwtStrategy } from 'src/utils/strategies';
 import { ForgotPasswordModule } from '../forgot-password/forgot-password.module';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Menu } from 'src/entities/menu.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
-import { EmployeeLevel } from 'src/entities/employee-level.entity';
-import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { User } from 'src/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Menu,
-      EmployeePosition,
-      EmployeeLevel,
-      EmployeeUnit,
-      User,
-    ]),
+    TypeOrmModule.forFeature([EmployeePosition, User]),
     UsersModule,
     ForgotPasswordModule,
     PassportModule,

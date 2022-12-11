@@ -2,26 +2,17 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Workbook } from 'exceljs';
-import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
-import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { Role } from 'src/entities/role.entity';
 import { User } from 'src/entities/user.entity';
 import { BufferedFile } from 'src/utils/file-helper';
 import { failedResponse } from 'src/utils/responses';
 import { Stream } from 'stream';
-import { getManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { MailService } from '../mail/mail.service';
 import * as tmp from 'tmp';
-import { Provider } from 'src/entities/provider.entity';
-import { Course } from 'src/entities/course.entity';
-import { MasterProviderResource } from './resource/master-provider.resources';
-import { MasterCourseResource } from './resource/master-course.resources';
 import { MasterRoleResource } from './resource/master-role.resources';
-import { MasterEmployeeUnitResource } from './resource/master-employee-unit.resources';
-import { MasterEmployeeLevelResource } from './resource/master-employee-level.resources';
 import { MasterEmployeePositionResource } from './resource/master-employee-position.resources';
-import { Coupon } from 'src/entities/coupon.entity';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { UserRoles } from 'src/entities/user-role.entity';
 
@@ -32,18 +23,8 @@ export class ImportService {
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    @InjectRepository(EmployeeUnit)
-    private employeeUnitRepository: Repository<EmployeeUnit>,
-    @InjectRepository(EmployeeLevel)
-    private employeeLevelRepository: Repository<EmployeeLevel>,
     @InjectRepository(EmployeePosition)
     private employeePositionRepository: Repository<EmployeePosition>,
-    @InjectRepository(Provider)
-    private providerRepository: Repository<Provider>,
-    @InjectRepository(Course)
-    private courseRepository: Repository<Course>,
-    @InjectRepository(Coupon)
-    private couponRepository: Repository<Coupon>,
     @InjectRepository(UserRoles)
     private userRoleRepository: Repository<UserRoles>,
     private mailService: MailService,
@@ -55,11 +36,9 @@ export class ImportService {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
 
-    const nip = [];
+    const nik = [];
     const email = [];
     const role = [];
-    const unit = [];
-    const level = [];
     const position = [];
 
     const saveData = [];
@@ -86,20 +65,18 @@ export class ImportService {
             currRow.getCell(9).text &&
             currRow.getCell(10).text
           ) {
-            nip.push(currRow.getCell(1).text);
+            nik.push(currRow.getCell(1).text);
             email.push(currRow.getCell(3).text);
             role.push(String(currRow.getCell(5).text).toLowerCase());
-            unit.push(String(currRow.getCell(7).text).toLowerCase());
-            level.push(String(currRow.getCell(8).text).toLowerCase());
             position.push(String(currRow.getCell(9).text).toLowerCase());
 
             roleSaveData.push({
-              nip: currRow.getCell(1).text,
+              nik: currRow.getCell(1).text,
               role_id: currRow.getCell(5).text,
             });
 
             saveData.push({
-              nip: currRow.getCell(1).text,
+              nik: currRow.getCell(1).text,
               name: currRow.getCell(2).text,
               email: currRow.getCell(3).text,
               status:
@@ -107,11 +84,8 @@ export class ImportService {
               role: currRow.getCell(5).text,
               blacklist:
                 currRow.getCell(6).text && currRow.getCell(6).text == 'Ya',
-              unit_id: currRow.getCell(7).text,
-              level_id: currRow.getCell(8).text,
               position_id: currRow.getCell(9).text,
               provider: 'email',
-              level: currRow.getCell(10).text,
               password: randomStringGenerator(),
               generatePassword: true,
             });
@@ -123,17 +97,17 @@ export class ImportService {
     });
 
     if (saveData.length > 0) {
-      //check nip and email not used
+      //check nik and email not used
       const dataUser = await this.usersRepository
         .createQueryBuilder('user')
-        .where(`user.nip IN (:...nip)`, { nip: nip })
+        .where(`user.nik IN (:...nik)`, { nik: nik })
         .orWhere(`user.email IN (:...email)`, { email: email })
         .getOne();
 
       if (dataUser) {
         throw failedResponse(
           HttpStatus.BAD_REQUEST,
-          `Pengguna dengan NIP ${dataUser.nip} atau email ${dataUser.email} sudah ada.`,
+          `Pengguna dengan NIK ${dataUser.nik} atau email ${dataUser.email} sudah ada.`,
         );
       }
 
@@ -149,38 +123,6 @@ export class ImportService {
           throw failedResponse(
             HttpStatus.BAD_REQUEST,
             `Role ${element} tidak tersedia`,
-          );
-        }
-      });
-
-      //check unit exists
-      const dataUnit = await this.employeeUnitRepository
-        .createQueryBuilder('unit')
-        .where(`unit.id IN (:...unit)`, { unit: unit })
-        .getMany();
-
-      unit.forEach((element) => {
-        const check = dataUnit.some((b) => b.id == element);
-        if (!check) {
-          throw failedResponse(
-            HttpStatus.BAD_REQUEST,
-            `Unit ${element} tidak tersedia`,
-          );
-        }
-      });
-
-      //check level exists
-      const dataLevel = await this.employeeLevelRepository
-        .createQueryBuilder('level')
-        .where(`level.id IN (:...level)`, { level: level })
-        .getMany();
-
-      level.forEach((element) => {
-        const check = dataLevel.some((b) => b.id == element);
-        if (!check) {
-          throw failedResponse(
-            HttpStatus.BAD_REQUEST,
-            `Pangkat ${element} tidak tersedia`,
           );
         }
       });
@@ -217,7 +159,7 @@ export class ImportService {
         await this.userRoleRepository.save(
           this.userRoleRepository.create({
             user_id: user.id,
-            role_id: roleSaveData.find((e) => e.nip == user.nip).role_id,
+            role_id: roleSaveData.find((e) => e.nik == user.nik).role_id,
           }),
         );
       });
@@ -237,297 +179,6 @@ export class ImportService {
     }
   }
 
-  async importBlacklistUser(file: BufferedFile, user: User, ip: string) {
-    if (!file) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
-    }
-
-    const blacklistUsers = await this.usersRepository.find({ blacklist: 1 });
-
-    const nip = [];
-    const saveData = [];
-
-    const workbook = new Workbook();
-    const stream = new Stream.Readable();
-    stream.push(file.buffer); // file is ArrayBuffer variable
-    stream.push(null); //set end of file
-    await workbook.xlsx.read(stream).then(function () {
-      const worksheet = workbook.getWorksheet('uploads');
-      if (worksheet) {
-        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-          const currRow = worksheet.getRow(rowNumber);
-          if (rowNumber > 1) {
-            if (
-              !currRow.getCell(1).text ||
-              !currRow.getCell(2).text ||
-              (currRow.getCell(2).text.toString() != 'Ya' &&
-                currRow.getCell(2).text.toString() != 'Tidak')
-            ) {
-              throw failedResponse(
-                HttpStatus.BAD_REQUEST,
-                'Kolom tidak sesuai',
-              );
-            }
-
-            if (
-              blacklistUsers.find((e) => {
-                return e.nip == currRow.getCell(1).text;
-              })
-            ) {
-              throw failedResponse(
-                HttpStatus.BAD_REQUEST,
-                `Pengguna dengan NIP ${
-                  currRow.getCell(1).text
-                } sudah masuk dalam daftar blacklist`,
-              );
-            }
-
-            nip.push(currRow.getCell(1).text);
-            saveData.push({
-              nip: currRow.getCell(1).text,
-              blacklist:
-                currRow.getCell(2).text && currRow.getCell(2).text == 'Ya',
-            });
-          }
-        });
-      } else {
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
-      }
-    });
-
-    if (saveData.length > 0) {
-      //check nip is exists
-      const dataUser = await this.usersRepository
-        .createQueryBuilder('user')
-        .where(`user.nip IN (:...nip)`, { nip: nip })
-        .getMany();
-
-      nip.forEach((element) => {
-        const check = dataUser.some((b) => b.nip.toLowerCase() == element);
-        if (!check) {
-          throw failedResponse(
-            HttpStatus.BAD_REQUEST,
-            `User dengan NIP ${element} tidak tersedia`,
-          );
-        }
-      });
-
-      saveData.forEach(async (user) => {
-        await this.usersRepository.update(
-          { nip: user.nip },
-          {
-            blacklist: user.blacklist,
-          },
-        );
-      });
-
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Tambah ${saveData.length} Data User Blacklist`,
-        ip: ip,
-      });
-
-      return `Berhasil mengubah data blacklist ${saveData.length} data pengguna`;
-    } else {
-      throw failedResponse(
-        HttpStatus.BAD_REQUEST,
-        'Harap isi data terlebih dahulu',
-      );
-    }
-  }
-
-  async importLevelUser(file: BufferedFile, user: User, ip: string) {
-    if (!file) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
-    }
-
-    const nip = [];
-
-    const saveData = [];
-    const workbook = new Workbook();
-    const stream = new Stream.Readable();
-    stream.push(file.buffer); // file is ArrayBuffer variable
-    stream.push(null); //set end of file
-    await workbook.xlsx.read(stream).then(function () {
-      const worksheet = workbook.getWorksheet('uploads');
-      if (worksheet) {
-        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-          const currRow = worksheet.getRow(rowNumber);
-          if (
-            rowNumber > 1 &&
-            currRow.getCell(1).text &&
-            currRow.getCell(2).text
-          ) {
-            if (
-              Number(currRow.getCell(2).text) < 0 ||
-              Number(currRow.getCell(2).text) > 5
-            ) {
-              throw failedResponse(
-                HttpStatus.BAD_REQUEST,
-                'Level antara 0 sampai 5',
-              );
-            }
-
-            nip.push(currRow.getCell(1).text);
-            saveData.push({
-              nip: currRow.getCell(1).text,
-              level: Number(currRow.getCell(2).text),
-            });
-          }
-        });
-      } else {
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
-      }
-    });
-
-    if (saveData.length > 0) {
-      //check nip is exists
-      const dataUser = await this.usersRepository
-        .createQueryBuilder('user')
-        .where(`user.nip IN (:...nip)`, { nip: nip })
-        .getMany();
-
-      nip.forEach((element) => {
-        const check = dataUser.some((b) => b.nip.toLowerCase() == element);
-        if (!check) {
-          throw failedResponse(
-            HttpStatus.BAD_REQUEST,
-            `User dengan NIP ${element} tidak tersedia`,
-          );
-        }
-      });
-
-      saveData.forEach(async (user) => {
-        await this.usersRepository.update(
-          { nip: user.nip },
-          {
-            level: user.level,
-          },
-        );
-      });
-
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Update Level ${saveData.length} Pengguna`,
-        ip: ip,
-      });
-
-      return `Berhasil mengubah data level ${saveData.length} data pengguna`;
-    } else {
-      throw failedResponse(
-        HttpStatus.BAD_REQUEST,
-        'Harap isi data terlebih dahulu',
-      );
-    }
-  }
-
-  async importCoupon(file: BufferedFile, user: User, ip: string) {
-    if (!file) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
-    }
-
-    const coupon_name = [];
-    const coupon_code = [];
-    const provider_id = [];
-    const course_id = [];
-
-    const saveData = [];
-    const workbook = new Workbook();
-    const stream = new Stream.Readable();
-    stream.push(file.buffer); // file is ArrayBuffer variable
-    stream.push(null); //set end of file
-    await workbook.xlsx.read(stream).then(function () {
-      const worksheet = workbook.getWorksheet('uploads');
-      if (worksheet) {
-        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-          const currRow = worksheet.getRow(rowNumber);
-          if (
-            rowNumber > 1 &&
-            currRow.getCell(1).text &&
-            currRow.getCell(2).text &&
-            currRow.getCell(3).text &&
-            currRow.getCell(4).text &&
-            currRow.getCell(5).text &&
-            currRow.getCell(6).text &&
-            currRow.getCell(7).text &&
-            currRow.getCell(8).text
-          ) {
-            coupon_name.push(String(currRow.getCell(1).text));
-            coupon_code.push(String(currRow.getCell(2).text));
-            provider_id.push(currRow.getCell(3).text);
-
-            if (currRow.getCell(5).text) {
-              course_id.push(currRow.getCell(5).text);
-            }
-
-            saveData.push({
-              name: currRow.getCell(1).text,
-              code: currRow.getCell(2).text,
-              provider_id: currRow.getCell(3).text,
-              amount: currRow.getCell(4).text,
-              type: currRow.getCell(5).text ? 1 : 0,
-              course_id: currRow.getCell(5).text,
-              status: currRow.getCell(6).text,
-              start_date: currRow.getCell(7).text,
-              end_date: currRow.getCell(8).text,
-            });
-          }
-        });
-      } else {
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Sheet tidak sesuai');
-      }
-    });
-
-    if (saveData.length > 0) {
-      //check coupon name and code not exists
-      const dataCoupon = await this.couponRepository
-        .createQueryBuilder('coupon')
-        .where(`coupon.name IN (:...name)`, { name: coupon_name })
-        .orWhere(`coupon.code IN (:...code)`, { code: coupon_code })
-        .getOne();
-
-      if (dataCoupon) {
-        throw failedResponse(
-          HttpStatus.BAD_REQUEST,
-          `Kupon dengan Nama ${dataCoupon.name} atau kode ${dataCoupon.code} sudah ada.`,
-        );
-      }
-
-      //check course exists
-      if (course_id.length > 0) {
-        const dataCourse = await this.courseRepository
-          .createQueryBuilder('course')
-          .where(`course.id IN (:...course)`, { course: course_id })
-          .getMany();
-
-        course_id.forEach((element) => {
-          const check = dataCourse.some((b) => b.id == element);
-          if (!check) {
-            throw failedResponse(
-              HttpStatus.BAD_REQUEST,
-              `Pembelajaran ${element} tidak tersedia`,
-            );
-          }
-        });
-      }
-
-      await this.couponRepository.save(this.couponRepository.create(saveData));
-
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Tambah Kupon By Spreadsheet`,
-        ip: ip,
-      });
-
-      return `Berhasil menambah ${saveData.length} data kupon`;
-    } else {
-      throw failedResponse(
-        HttpStatus.BAD_REQUEST,
-        'Harap isi data terlebih dahulu',
-      );
-    }
-  }
-
   async downloadTemplate(name: string) {
     //create workbook
     const wb = new Workbook();
@@ -537,47 +188,11 @@ export class ImportService {
 
     //set header and prefix file
     switch (name) {
-      case 'coupon': {
-        rows = [
-          { header: 'Nama Coupon', key: 'coupon_name', width: 18 },
-          { header: 'Kode Kupon', key: 'coupon_code', width: 18 },
-          { header: 'ID Penyelenggara', key: 'provider_id', width: 18 },
-          {
-            header: 'Nominal',
-            key: 'amount',
-            width: 18,
-          },
-          {
-            header: 'ID Pembelajaran',
-            key: 'course_id',
-            width: 18,
-          },
-          {
-            header: 'Status',
-            key: 'status',
-            width: 18,
-          },
-          {
-            header: 'Berlaku Dari',
-            key: 'start_date',
-            style: { numFmt: 'YYYY-MM-DD HH:mm:ss' },
-            width: 18,
-          },
-          {
-            header: 'Berlaku Sampai',
-            key: 'end_date',
-            style: { numFmt: 'YYYY-MM-DD HH:mm:ss' },
-            width: 18,
-          },
-        ];
-        prefix = 'TemplateImportCoupon-';
-        break;
-      }
       case 'user': {
         rows = [
           {
-            header: 'NIP',
-            key: 'nip',
+            header: 'NIK',
+            key: 'nik',
             width: 18,
             style: { numFmt: '@' },
           },
@@ -599,51 +214,12 @@ export class ImportService {
             width: 18,
           },
           {
-            header: 'Unit',
-            key: 'unit',
-            width: 18,
-          },
-          {
-            header: 'Pangkat',
-            key: 'level',
-            width: 18,
-          },
-          {
             header: 'Jabatan',
             key: 'position',
             width: 18,
           },
-          {
-            header: 'Level Pengguna',
-            key: 'user_level',
-            width: 18,
-          },
         ];
         prefix = 'TemplateImportUser-';
-        break;
-      }
-      case 'user-level': {
-        rows = [
-          { header: 'NIP', key: 'nip', width: 18, style: { numFmt: '@' } },
-          {
-            header: 'Level Pengguna',
-            key: 'user_level',
-            width: 18,
-          },
-        ];
-        prefix = 'TemplateImportUserLevel-';
-        break;
-      }
-      case 'user-blacklist': {
-        rows = [
-          { header: 'NIP', key: 'nip', width: 18, style: { numFmt: '@' } },
-          {
-            header: 'Blacklist',
-            key: 'user_blacklist',
-            width: 18,
-          },
-        ];
-        prefix = 'TemplateImportUserBlacklist-';
         break;
       }
       default: {
@@ -658,66 +234,13 @@ export class ImportService {
 
     //set comment header and inser additional sheet master data
     switch (name) {
-      case 'coupon': {
-        sheet.getCell('A1').note = 'Diisi nama kupon';
-        sheet.getCell('B1').note = 'Diisi kode kupon';
-        sheet.getCell('C1').note = 'Diisi ID penyelenggara';
-        sheet.getCell('D1').note = 'Diisi nominal kupon';
-        sheet.getCell('E1').note =
-          'Diisi ID pembelajaran (jika hanya berlaku untuk 1 pembelajaran)';
-        sheet.getCell('F1').note =
-          'Diisi status kupon (tersedia = 0, terpakai = 1, tidak tersedia = 2)';
-        sheet.getCell('G1').note =
-          'Diisi tanggal mulai berlaku kupon (contoh: 2022-01-23 23:59:59)';
-        sheet.getCell('H1').note =
-          'Diisi tanggal berakhir berlaku kupon (contoh: 2022-01-27 23:59:59)';
-
-        //provider master data
-        const providerSheet = wb.addWorksheet('Daftar Penyelenggara');
-        const providerData = await this.providerRepository
-          .createQueryBuilder('provider')
-          .getMany();
-
-        let rows = [];
-
-        providerData.forEach((d) => {
-          rows.push(Object.values(MasterProviderResource(d)));
-        });
-
-        rows.unshift(Object.keys(MasterProviderResource(providerData[0])));
-
-        providerSheet.addRows(rows);
-
-        //course master data
-        const courseSheet = wb.addWorksheet('Daftar Pembelajaran');
-        const courseData = await getManager().query(
-          `SELECT c.id, c.name 'course_name', p.name 'provider_name', c.price 
-            FROM courses c, providers p
-            WHERE c.provider_id = p.id`,
-        );
-
-        rows = [];
-
-        courseData.forEach((d) => {
-          rows.push(Object.values(MasterCourseResource(d)));
-        });
-
-        rows.unshift(Object.keys(MasterCourseResource(courseData[0])));
-
-        courseSheet.addRows(rows);
-        break;
-      }
       case 'user': {
-        sheet.getCell('A1').note = 'Diisi NIP pengguna';
+        sheet.getCell('A1').note = 'Diisi NIK pengguna';
         sheet.getCell('B1').note = 'Diisi nama pengguna';
         sheet.getCell('C1').note = 'Diisi email pengguna';
         sheet.getCell('D1').note = 'Diisi status "Aktif" atau "Tidak Aktif"';
         sheet.getCell('E1').note = 'Diisi ID peran pengguna';
-        sheet.getCell('F1').note = 'Diisi "Ya" atau "Tidak"';
-        sheet.getCell('G1').note = 'Diisi ID unit pengguna';
-        sheet.getCell('H1').note = 'Diisi ID pangkat pengguna';
         sheet.getCell('I1').note = 'Diisi ID jabatan pengguna';
-        sheet.getCell('J1').note = 'Diisi level pengguna (0-5)';
 
         //role master data
         const roleSheet = wb.addWorksheet('Daftar Peran Pengguna');
@@ -734,42 +257,6 @@ export class ImportService {
         rows.unshift(Object.keys(MasterRoleResource(roleData[0])));
 
         roleSheet.addRows(rows);
-
-        //employee unit master data
-        const employeeUnitSheet = wb.addWorksheet('Daftar Unit');
-        const employeeUnitData = await this.employeeUnitRepository
-          .createQueryBuilder('employeeUnit')
-          .getMany();
-
-        rows = [];
-
-        employeeUnitData.forEach((d) => {
-          rows.push(Object.values(MasterEmployeeUnitResource(d)));
-        });
-
-        rows.unshift(
-          Object.keys(MasterEmployeeUnitResource(employeeUnitData[0])),
-        );
-
-        employeeUnitSheet.addRows(rows);
-
-        //employee level master data
-        const employeeLevelSheet = wb.addWorksheet('Daftar Pangkat');
-        const employeeLevelData = await this.employeeLevelRepository
-          .createQueryBuilder('employeeLevel')
-          .getMany();
-
-        rows = [];
-
-        employeeLevelData.forEach((d) => {
-          rows.push(Object.values(MasterEmployeeLevelResource(d)));
-        });
-
-        rows.unshift(
-          Object.keys(MasterEmployeeLevelResource(employeeLevelData[0])),
-        );
-
-        employeeLevelSheet.addRows(rows);
 
         //employee position master data
         const employeePositionSheet = wb.addWorksheet('Daftar Jabatan');
@@ -788,16 +275,6 @@ export class ImportService {
         );
 
         employeePositionSheet.addRows(rows);
-        break;
-      }
-      case 'user-level': {
-        sheet.getCell('A1').note = 'Diisi NIP pengguna';
-        sheet.getCell('B1').note = 'Diisi level pengguna (0-5)';
-        break;
-      }
-      case 'user-blacklist': {
-        sheet.getCell('A1').note = 'Diisi NIP pengguna';
-        sheet.getCell('B1').note = 'Diisi "Ya" atau "Tidak"';
         break;
       }
     }

@@ -2,7 +2,6 @@ import { AfterLoad, Column, Entity, JoinColumn, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow } from 'class-validator';
 import { EntityHelper } from 'src/utils/entity-helper';
-import { RoleAccess } from './role-access.entity';
 import { UserRoles } from './user-role.entity';
 import { Transform } from 'class-transformer';
 
@@ -17,10 +16,6 @@ export class Role extends EntityHelper {
   @Column()
   @Transform(({ value }) => value === 1)
   grant_all_access?: boolean;
-
-  @OneToMany(() => RoleAccess, (roleAccess) => roleAccess.role)
-  @JoinColumn()
-  roleAccess?: RoleAccess[];
 
   @OneToMany(() => UserRoles, (userRole) => userRole.roleData)
   @JoinColumn()

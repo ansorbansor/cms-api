@@ -8,7 +8,6 @@ import { ForgotPasswordService } from '../forgot-password/forgot-password.servic
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
 import { AuthProvidersEnum, ErrorMessage, RoleEnum } from 'src/utils/enums';
-import { SocialInterface } from 'src/utils/interfaces';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
 import { AuthUpdateDto } from './dtos/auth-update.dto';
@@ -21,10 +20,8 @@ import { ResetPasswordDataResource } from './resources/reset-password-data.resou
 import { ResetPasswordResource } from './resources/reset-password.resources';
 import appConfig from 'src/config/app.config';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
-import { Menu } from 'src/entities/menu.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { isNumber } from 'class-validator';
 import { encryptText } from 'src/utils/encryption-helper';
 import * as moment from 'moment';
 @Injectable()
@@ -36,8 +33,6 @@ export class AuthService {
     private mailService: MailService,
     private configService: ConfigService,
     private activityLogService: ActivityLogService,
-    @InjectRepository(Menu)
-    private menuRepository: Repository<Menu>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
@@ -46,8 +41,8 @@ export class AuthService {
     loginDto: AuthEmailLoginDto,
     onlyAdmin: boolean,
     ip: string,
-  ): Promise<{ token: string; user: User; menus: Menu[] }> {
-    const user = await this.usersService.findOneFull({ nip: loginDto.nip });
+  ): Promise<{ token: string; user: User }> {
+    const user = await this.usersService.findOneFull({ email: loginDto.email });
 
     if (!user) {
       throw failedResponse(
@@ -61,14 +56,7 @@ export class AuthService {
       );
     }
 
-    if (
-      onlyAdmin &&
-      !user.userRoles.some(
-        (b) =>
-          b.roleData &&
-          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
-      )
-    ) {
+    if (onlyAdmin && !user.userRoles.some((b) => b.roleData)) {
       throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
     }
 
@@ -85,141 +73,21 @@ export class AuthService {
     );
 
     if (isValidPassword) {
-      // const twoFAVerify = authenticator.verify({
-      //   token: loginDto.two_factor_auth_code,
-      //   secret: user.two_factor_auth_code,
-      // });
-
-      // if (!twoFAVerify) {
-      //   throw failedResponse(
-      //     HttpStatus.BAD_REQUEST,
-      //     ErrorMessage.TWO_FACTOR_AUTH_FAILED,
-      //   );
-      // }
-
       await this.activityLogService.create({
         user_id: user.id,
         description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
         ip: ip,
       });
 
-      let menus = null;
-      if (
-        user.userRoles.find((e) => {
-          return e.roleData.grant_all_access;
-        })
-      ) {
-        menus = await this.menuRepository.find();
-      }
-
       const token = await this.generateToken(user);
 
-      return { token, user: user, menus };
+      return { token, user: user };
     } else {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.PASSWORD_WRONG,
       );
     }
-  }
-
-  async validateLoginCustomExpiration(
-    loginDto: AuthEmailLoginDto,
-    onlyAdmin: boolean,
-    ip: string,
-  ): Promise<{ token: string; user: User; menus: Menu[] }> {
-    if (!loginDto.expiration || !isNumber(loginDto.expiration)) {
-      throw failedResponse(
-        HttpStatus.BAD_REQUEST,
-        'Expiration tidak boleh kosong',
-      );
-    }
-
-    const user = await this.usersService.findOneFull({
-      nip: loginDto.nip,
-    });
-
-    if (!user) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.USER_NOT_FOUND,
-      );
-    }
-
-    if (
-      onlyAdmin &&
-      !user.userRoles.some(
-        (b) =>
-          b.roleData &&
-          (b.roleData.grant_all_access || b.roleData.roleAccess.length > 0),
-      )
-    ) {
-      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.USER_NOT_FOUND);
-    }
-
-    if (authConfig().emailVerification && user.hash != null) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.USER_NOT_FOUND,
-      );
-    }
-
-    const isValidPassword = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
-
-    if (isValidPassword) {
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Melakukan Login ${onlyAdmin ? 'CMS' : 'Website'}`,
-        ip: ip,
-      });
-
-      let menus = null;
-      if (
-        user.userRoles.find((e) => {
-          return e.roleData.grant_all_access;
-        })
-      ) {
-        menus = await this.menuRepository.find();
-      }
-
-      const token = await this.generateToken(user);
-
-      return { token, user: user, menus };
-    } else {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.PASSWORD_WRONG,
-      );
-    }
-  }
-
-  async validateSocialLogin(
-    authProvider: string,
-    socialData: SocialInterface,
-  ): Promise<{ token: string; user: User }> {
-    const socialEmail = socialData.email?.toLowerCase();
-
-    const user = await this.usersService.findOneFull({
-      email: socialEmail,
-    });
-
-    if (user || (user && user.userRoles.length == 0)) {
-      await this.userRepository.update(user.id, {
-        provider: authProvider,
-      });
-    } else {
-      throw failedResponse(HttpStatus.NOT_FOUND, ErrorMessage.EMAIL_NOT_EXISTS);
-    }
-
-    const token = await this.generateToken(user);
-
-    return {
-      token: token,
-      user,
-    };
   }
 
   async register(
@@ -245,27 +113,12 @@ export class AuthService {
         provider: dto.provider ? dto.provider : AuthProvidersEnum.email,
         notification_token: null,
         hash: hash,
-        categories: null,
+        employee_position_id: dto.employee_position_id,
       },
       null,
       photo,
       ip,
     );
-
-    if (dto.categories) {
-      const saveData = [];
-      dto.categories.map((data) => {
-        data.topic_id.map((dataa) => {
-          saveData.push({
-            user_id: user.id,
-            category_id: data.category_id,
-            topic_id: dataa,
-          });
-        });
-      });
-
-      await this.usersService.createUserTopic(saveData, user.id);
-    }
 
     await this.mailService.userSignUp({
       to: user.email,
@@ -397,10 +250,6 @@ export class AuthService {
     }
 
     await this.usersService.update(user.id, userDto, user, ip, photo);
-
-    if (userDto.topics && userDto.topics.length > 0) {
-      await this.usersService.createUserTopic(userDto.topics, user.id);
-    }
 
     return await this.usersService.findOne({
       id: user.id,

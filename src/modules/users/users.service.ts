@@ -10,9 +10,8 @@ import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
-import { CreateUserTopicDto } from './dto/create-user-topic.dto';
-import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailService } from '../mail/mail.service';
+import { FilePath } from 'src/utils/enums';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
@@ -23,9 +22,6 @@ export class UsersService {
 
     @InjectRepository(UserRoles)
     private userRolesRepository: Repository<UserRoles>,
-
-    @InjectRepository(UserTopic)
-    private userTopicsRepository: Repository<UserTopic>,
 
     private fileService: FilesService,
 
@@ -40,9 +36,33 @@ export class UsersService {
     photo?: BufferedFile,
     ip?: string,
   ) {
+    if (photo && user_id) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        photo,
+        user_id,
+        FilePath.USER,
+        'User Photo',
+      );
+
+      createProfileDto.photoFile = uploadedPhoto;
+    }
+
     const user = await this.usersRepository.save(
       this.usersRepository.create(createProfileDto),
     );
+
+    if (photo && !user_id) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        photo,
+        user_id,
+        FilePath.USER,
+        'User Photo',
+      );
+
+      await this.usersRepository.update(user.id, {
+        photo: uploadedPhoto.id,
+      });
+    }
 
     await this.userRolesRepository.save(
       this.userRolesRepository.create({
@@ -50,10 +70,6 @@ export class UsersService {
         role_id: createProfileDto.role_id,
       }),
     );
-
-    if (createProfileDto.categories) {
-      await this.createUserTopic(createProfileDto.categories, user.id);
-    }
 
     await this.mailService.welcome({
       to: user.email,
@@ -85,44 +101,19 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
       .leftJoinAndSelect('user.userRoles', 'userRole')
-      .leftJoinAndSelect('user.userCourse', 'userCourse')
-      .leftJoinAndSelect('userCourse.course', 'course')
-      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
-      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .leftJoinAndSelect('userRole.roleData', 'role');
-
-    if (
-      paginationOptions.blacklist != undefined &&
-      paginationOptions.blacklist != ''
-    ) {
-      data.where(
-        `user.blacklist = ${paginationOptions.blacklist == 'true' ? 1 : 0}`,
-      );
-    }
 
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
           qb.where(`LOWER(user.name) LIKE :search`, {
             search: `%${paginationOptions.search.toLowerCase()}%`,
-          }).orWhere(`LOWER(user.nip) LIKE :search`, {
+          }).orWhere(`LOWER(user.nik) LIKE :search`, {
             search: `%${paginationOptions.search.toLowerCase()}%`,
           });
         }),
       );
-    }
-
-    if (paginationOptions.employeeUnit) {
-      data.andWhere('employeeUnit.id = :unitId', {
-        unitId: paginationOptions.employeeUnit,
-      });
-    }
-
-    if (paginationOptions.employeeLevel) {
-      data.andWhere('employeeLevel.id = :levelId', {
-        levelId: paginationOptions.employeeLevel,
-      });
     }
 
     if (paginationOptions.employeePosition) {
@@ -155,16 +146,8 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
-      .leftJoinAndSelect('user.userCourse', 'userCourse')
-      .leftJoinAndSelect('userCourse.course', 'course')
-      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
-      .leftJoinAndSelect('user.userTopic', 'userTopic')
-      .leftJoinAndSelect('userTopic.category', 'category')
-      .leftJoinAndSelect('userTopic.topic', 'topic')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
-      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
@@ -184,16 +167,7 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
-      .leftJoinAndSelect('user.userCourse', 'userCourse')
-      .leftJoinAndSelect('userCourse.course', 'course')
-      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
-      .leftJoinAndSelect('roleAccess.menu', 'menu')
-      .leftJoinAndSelect('user.userTopic', 'userTopic')
-      .leftJoinAndSelect('userTopic.category', 'category')
-      .leftJoinAndSelect('userTopic.topic', 'topic')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.employeeUnit', 'employeeUnit')
-      .leftJoinAndSelect('user.employeeLevel', 'employeeLevel')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
@@ -230,15 +204,15 @@ export class UsersService {
       }
     }
 
-    if (updateProfileDto.nip) {
-      const userWithNIP = await this.findOneFull({
-        nip: updateProfileDto.nip,
+    if (updateProfileDto.nik) {
+      const userWithEmail = await this.findOneFull({
+        email: updateProfileDto.email,
       });
 
-      if (userWithNIP && userWithNIP.id != exists.id) {
+      if (userWithEmail && userWithEmail.id != exists.id) {
         throw failedResponse(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          'NIP telah digunakan',
+          'NIK telah digunakan',
         );
       }
     }
@@ -252,6 +226,16 @@ export class UsersService {
       updateProfileDto = saveData;
     }
 
+    if (photo) {
+      const img = await this.fileService.uploadFile(
+        photo,
+        id,
+        FilePath.USER,
+        'User Photo',
+      );
+      updateProfileDto.photo = img.id;
+    }
+
     const savedData = await this.usersRepository.save(
       this.usersRepository.create({
         id,
@@ -259,50 +243,11 @@ export class UsersService {
       }),
     );
 
-    if (updateProfileDto.categories) {
-      await this.createUserTopic(updateProfileDto.categories, id);
-    } else {
-      await this.userTopicsRepository.softDelete({
-        user_id: id,
-      });
-    }
-
     await this.activityLogService.create({
       user_id: user.id,
       description: `Update Data User ${savedData.email}`,
       ip: ip,
     });
-
-    return await this.findOne({ id: id });
-  }
-
-  async updateBlacklist(id: number, blacklist: number, user: User, ip: string) {
-    const exists = await this.findOne({ id: id });
-
-    if (!exists) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'User tidak ditemukan',
-      );
-    }
-
-    await this.usersRepository.update(id, {
-      blacklist: blacklist,
-    });
-
-    if (blacklist == 1) {
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Tambah Blacklist User ${exists.email}`,
-        ip: ip,
-      });
-    } else {
-      await this.activityLogService.create({
-        user_id: user.id,
-        description: `Buka Blacklist User ${exists.email}`,
-        ip: ip,
-      });
-    }
 
     return await this.findOne({ id: id });
   }
@@ -334,38 +279,6 @@ export class UsersService {
       user_id: user.id,
       description: `Melakukan logout`,
       ip: ip,
-    });
-  }
-
-  async createUserTopic(
-    createUserTopicDto: CreateUserTopicDto[],
-    userId: number,
-  ) {
-    const saveData = [];
-    createUserTopicDto.map((data) => {
-      data.topic_id.map((dataa) => {
-        saveData.push({
-          user_id: userId,
-          category_id: data.category_id,
-          topic_id: dataa,
-        });
-      });
-    });
-
-    await this.userTopicsRepository.softDelete({
-      user_id: userId,
-    });
-
-    await this.userTopicsRepository.save(
-      this.userTopicsRepository.create(saveData),
-    );
-
-    return 'success';
-  }
-
-  async setTwoFactorAuthenticationSecret(secret: string, userId: number) {
-    return this.usersRepository.update(userId, {
-      two_factor_auth_code: secret,
     });
   }
 }

@@ -19,18 +19,12 @@ export const ExportUserResource = (user: User): any => {
   }
 
   return {
-    NIP: user.nip,
+    NIK: user.nik,
     Nama: user.name,
     Email: user.email,
     Status: user.status ? 'Aktif' : 'Tidak Aktif',
     Photo: user.photoFile ? minioConfig().fullUrl + user.photoFile.path : null,
     Role: role,
-    Blacklist: user.blacklist ? 'Ya' : 'Tidak',
-    Unit: user.employeeUnit ? user.employeeUnit.name : null,
-    Pangkat: user.employeeLevel ? user.employeeLevel.name : null,
     Jabatan: user.employeePosition ? user.employeePosition.name : null,
-    Jam_Pembelajaran: user.total_lesson_hours,
-    Total_Pembelajaran: user.total_lesson,
-    Level_Pengguna: user.level ? user.level : 0,
   };
 };

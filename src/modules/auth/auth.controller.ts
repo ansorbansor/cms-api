@@ -43,10 +43,7 @@ export class AuthController {
   public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, false, req.ip);
 
-    return successResponse(
-      AuthResource(data.token, data.user, data.menus),
-      'success',
-    );
+    return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
   @Throttle(5, 300)
@@ -54,10 +51,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async adminLogin(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, true, req.ip);
-    return successResponse(
-      AuthResource(data.token, data.user, data.menus),
-      'success',
-    );
+    return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
   @Post('email/register')

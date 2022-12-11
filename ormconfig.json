@@ -1,7 +1,7 @@
 {
-  "type": "mysql",
-  "host": "206.189.91.190",
-  "port": 3306,
+  "type": "postgres",
+  "host": "localhost",
+  "port": 5432,
   "username": "postgres",
   "password": "postgres@123!",
   "database": "nest_boilerplate",
@@ -10,16 +10,16 @@
   "keepConnectionAlive": true,
   "logging": true,
   "entities": [
-    "/Users/bayu/Documents/Project/DST/playbook/api/src/database/../**/*.entity{.ts,.js}"
+    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/../**/*.entity{.ts,.js}"
   ],
   "migrations": [
-    "/Users/bayu/Documents/Project/DST/playbook/api/src/database/migrations/**/*{.ts,.js}"
+    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/migrations/**/*{.ts,.js}"
   ],
   "seeds": [
-    "/Users/bayu/Documents/Project/DST/playbook/api/src/database/seeds/**/*{.ts,.js}"
+    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/seeds/**/*{.ts,.js}"
   ],
   "factories": [
-    "/Users/bayu/Documents/Project/DST/playbook/api/src/database/factories/**/*{.ts,.js}"
+    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/factories/**/*{.ts,.js}"
   ],
   "cli": {
     "entitiesDir": "src",

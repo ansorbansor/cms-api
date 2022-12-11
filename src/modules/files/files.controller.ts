@@ -1,22 +1,25 @@
 import {
   Controller,
-  Delete,
   Get,
   Param,
   Post,
-  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FilesService } from 'src/modules/files/files.service';
 import { successResponse } from 'src/utils/responses';
-import { BufferedFile } from 'src/utils/file-helper';
+import { AuthGuard } from '@nestjs/passport';
 import { FilePath } from 'src/utils/enums';
-import { JwtAuthGuard } from 'src/utils/guards';
-import { IDParamDto } from 'src/utils/id-param.dto';
 
 @ApiTags('Files')
 @Controller({
@@ -27,49 +30,27 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: BufferedFile, @Request() request) {
-    return successResponse(
-      await this.filesService.uploadWithMinio(
-        file,
-        request.user.id,
-        FilePath.OTHER,
-        'Other Files',
-      ),
-      'success',
-    );
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post('upload/profile')
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadPhotoProfile(
-    @UploadedFile() file: BufferedFile,
-    @Request() request,
-  ) {
-    return successResponse(
-      await this.filesService.uploadWithMinio(
-        file,
-        request.user.id,
-        FilePath.USER,
-        'Other Files',
-      ),
-      'success',
-    );
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get('upload-from-local')
-  async uploadPhotoProfilee() {
-    return successResponse(
-      await this.filesService.uploadCourseImageToMinioFromLocal(),
-      'success',
+  async uploadFile(@UploadedFile() file, @Request() request) {
+    return this.filesService.uploadFile(
+      file,
+      request.user.id,
+      FilePath.USER,
+      'Other Files',
     );
   }
 
@@ -77,16 +58,5 @@ export class FilesController {
   @ApiParam({ name: 'path', example: 'background.png' })
   async download(@Param('path') path) {
     return successResponse(await this.filesService.getFiles(path), 'success');
-  }
-
-  @Delete('delete-unused')
-  async deleteUnused() {
-    return successResponse(await this.filesService.deleteUnused(), 'success');
-  }
-
-  @Delete(':id')
-  @ApiParam({ name: 'id', example: '1' })
-  async delete(@Param() param: IDParamDto) {
-    return successResponse(await this.filesService.delete(param.id), 'success');
   }
 }

@@ -21,8 +21,6 @@ import { successResponse } from 'src/utils/responses';
 import { UsersController } from '../users/users.controller';
 import { ImportService } from './import.service';
 import { Response } from 'express';
-import { BlacklistController } from '../user_blacklists/user-blacklists.controller';
-import { CouponController } from '../coupon/coupon.controller';
 
 @ApiBearerAuth()
 @ApiTags('Imports')
@@ -43,51 +41,6 @@ export class ImportController {
     return successResponse(
       null,
       await this.importService.importUser(file, req.user, req.ip),
-    );
-  }
-
-  @Post('user-blacklist')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(BlacklistController.name)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  @HttpCode(HttpStatus.OK)
-  async importBlacklistUser(
-    @UploadedFile() file: BufferedFile,
-    @Request() req,
-  ) {
-    return successResponse(
-      null,
-      await this.importService.importBlacklistUser(file, req.user, req.ip),
-    );
-  }
-
-  @Post('user-level')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(UsersController.name)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  @HttpCode(HttpStatus.OK)
-  async importLevelUser(@UploadedFile() file: BufferedFile, @Request() req) {
-    return successResponse(
-      null,
-      await this.importService.importLevelUser(file, req.user, req.ip),
-    );
-  }
-
-  @Post('coupon')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(CouponController.name)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  @HttpCode(HttpStatus.OK)
-  async importCoupon(@UploadedFile() file: BufferedFile, @Request() req) {
-    return successResponse(
-      null,
-      await this.importService.importCoupon(file, req.user, req.ip),
     );
   }
 

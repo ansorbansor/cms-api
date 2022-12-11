@@ -7,14 +7,12 @@ import {
   Header,
   Res,
   Request,
-  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
-import { CouponSubmissionController } from '../coupon-submission/coupon-submission.controller';
 import { UsersController } from '../users/users.controller';
 import { ExportService } from './export.service';
 
@@ -34,26 +32,6 @@ export class ExportController {
   @HttpCode(HttpStatus.OK)
   async findAll(@Res() res: Response, @Request() req) {
     const response = await this.exportService.exportUser(req.user, req.ip);
-
-    res.download(`${response}`);
-  }
-
-  @Get('coupon-submission')
-  @Header('Content-Type', 'text/xlsx')
-  @Permissions(MenuPermission.READ)
-  @Controllers(CouponSubmissionController.name)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async exportCouponSubmission(
-    @Query('year') year: string,
-    @Res() res: Response,
-    @Request() req,
-  ) {
-    const response = await this.exportService.exportCouponSubmission(
-      req.user,
-      req.ip,
-      year,
-    );
 
     res.download(`${response}`);
   }

@@ -8,13 +8,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
-import { RedisService } from '../redis/redis.service';
 import { FilesService } from '../files/files.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { CreateUserTopicDto } from './dto/create-user-topic.dto';
 import { UserTopic } from 'src/entities/user-topic.entity';
 import { MailService } from '../mail/mail.service';
-import { FilePath, RedisKeyEnum } from 'src/utils/enums';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 
 @Injectable()
@@ -29,8 +27,6 @@ export class UsersService {
     @InjectRepository(UserTopic)
     private userTopicsRepository: Repository<UserTopic>,
 
-    private redisService: RedisService,
-
     private fileService: FilesService,
 
     private mailService: MailService,
@@ -44,33 +40,9 @@ export class UsersService {
     photo?: BufferedFile,
     ip?: string,
   ) {
-    if (photo && user_id) {
-      const uploadedPhoto = await this.fileService.uploadWithMinio(
-        photo,
-        user_id,
-        FilePath.USER,
-        'User Photo',
-      );
-
-      createProfileDto.photoFile = uploadedPhoto;
-    }
-
     const user = await this.usersRepository.save(
       this.usersRepository.create(createProfileDto),
     );
-
-    if (photo && !user_id) {
-      const uploadedPhoto = await this.fileService.uploadWithMinio(
-        photo,
-        user_id,
-        FilePath.USER,
-        'User Photo',
-      );
-
-      await this.usersRepository.update(user.id, {
-        photo: uploadedPhoto.id,
-      });
-    }
 
     await this.userRolesRepository.save(
       this.userRolesRepository.create({
@@ -280,16 +252,6 @@ export class UsersService {
       updateProfileDto = saveData;
     }
 
-    if (photo) {
-      const img = await this.fileService.uploadWithMinio(
-        photo,
-        id,
-        FilePath.USER,
-        'User Photo',
-      );
-      updateProfileDto.photo = img.id;
-    }
-
     const savedData = await this.usersRepository.save(
       this.usersRepository.create({
         id,
@@ -310,10 +272,6 @@ export class UsersService {
       description: `Update Data User ${savedData.email}`,
       ip: ip,
     });
-
-    const redisKey = `${RedisKeyEnum.user}:${id}`;
-
-    this.redisService.del(redisKey);
 
     return await this.findOne({ id: id });
   }
@@ -401,10 +359,6 @@ export class UsersService {
     await this.userTopicsRepository.save(
       this.userTopicsRepository.create(saveData),
     );
-
-    const redisKey = `${RedisKeyEnum.user}:${userId}`;
-
-    this.redisService.del(redisKey);
 
     return 'success';
   }

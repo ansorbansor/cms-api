@@ -1,4 +1,4 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -8,8 +8,6 @@ import { UsersModule } from '../users/users.module';
 import { MailModule } from '../mail/mail.module';
 import { AnonymousStrategy, JwtStrategy } from 'src/utils/strategies';
 import { ForgotPasswordModule } from '../forgot-password/forgot-password.module';
-import { RedisConfigService } from 'src/config/redis-config.service';
-import { RedisService } from '../redis/redis.service';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Menu } from 'src/entities/menu.entity';
@@ -17,7 +15,6 @@ import { EmployeePosition } from 'src/entities/employee-position.entity';
 import { EmployeeLevel } from 'src/entities/employee-level.entity';
 import { EmployeeUnit } from 'src/entities/employee-unit.entity';
 import { User } from 'src/entities/user.entity';
-import { TwoFactorAuthService } from '../two-factor-auth/two-factor-auth.service';
 
 @Module({
   imports: [
@@ -40,18 +37,9 @@ import { TwoFactorAuthService } from '../two-factor-auth/two-factor-auth.service
         secret: configService.get('auth.secret'),
       }),
     }),
-    CacheModule.registerAsync({
-      useClass: RedisConfigService,
-    }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    AnonymousStrategy,
-    RedisService,
-    TwoFactorAuthService,
-  ],
+  providers: [AuthService, JwtStrategy, AnonymousStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

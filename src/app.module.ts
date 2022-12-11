@@ -1,5 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { CacheModule, CACHE_MANAGER, Inject, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -10,44 +10,19 @@ import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
 import databaseConfig from './config/database.config';
 import fileConfig from './config/file.config';
-import googleConfig from './config/google.config';
 import { MailConfigService } from './config/mail-config.service';
 import mailConfig from './config/mail.config';
-import minioConfig from './config/minio.config';
-import { RedisConfigService } from './config/redis-config.service';
-import redisConfig from './config/redis.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { BannerModule } from './modules/banner/banner.module';
-import { CouponSubmissionModule } from './modules/coupon-submission/coupon-submission.module';
-import { CouponModule } from './modules/coupon/coupon.module';
-import { CategoriesModule } from './modules/course-categories/course-categories.module';
-import { CourseFetchModule } from './modules/course-fetch/course-fetch.module';
-import { CourseLanguageModule } from './modules/course-language/course-language.module';
-import { CourseLevelsModule } from './modules/course-levels/course-levels.module';
-import { CoursePriceModule } from './modules/course-price/course-price.module';
-import { CourseModule } from './modules/course/course.module';
-import { CourseDurationModule } from './modules/course_duration/course-duration.module';
-import { EditorChoiceCourseModule } from './modules/editor-choice-course/editor-choice-course.module';
-import { EmployeeLevelModule } from './modules/employee-level/employee-level.module';
 import { EmployeePositionModule } from './modules/employee-position/employee-position.module';
-import { EmployeeUnitModule } from './modules/employee-unit/employee-unit.module';
 import { ExportModule } from './modules/exports/export.module';
 import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
-import { MenuModule } from './modules/menu/menu.module';
-import { PartnerModule } from './modules/partner/partner.module';
-import { PKASNProgramModule } from './modules/pkasn-program/pkasn-program.module';
-import { ProvidersModule } from './modules/providers/providers.module';
 import { RoleModule } from './modules/role/role.module';
-import { TopicsModule } from './modules/topics/topics.module';
-import { FirebaseModule } from './modules/user-notification/firebase.module';
-import { UserNotificationModule } from './modules/user-notification/user-notification.module';
 import { UsersModule } from './modules/users/users.module';
-import { UserBlacklistsModule } from './modules/user_blacklists/user-blacklists.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 
@@ -55,22 +30,10 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        appConfig,
-        authConfig,
-        databaseConfig,
-        fileConfig,
-        googleConfig,
-        mailConfig,
-        redisConfig,
-        minioConfig,
-      ],
+      load: [appConfig, authConfig, databaseConfig, fileConfig, mailConfig],
       envFilePath: ['.env'],
     }),
     ThrottlerModule.forRoot({}),
-    CacheModule.registerAsync({
-      useClass: RedisConfigService,
-    }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
@@ -93,38 +56,17 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
       inject: [ConfigService],
       resolvers: [new HeaderResolver(['x-custom-lang'])],
     }),
-    FirebaseModule,
     UsersModule,
     FilesModule,
     AuthModule,
     ForgotPasswordModule,
     MailModule,
     UsersModule,
-    ProvidersModule,
-    CategoriesModule,
-    TopicsModule,
-    CourseLevelsModule,
-    CourseLanguageModule,
-    CoursePriceModule,
-    CourseModule,
     ActivityLogModule,
-    BannerModule,
-    MenuModule,
     RoleModule,
-    EditorChoiceCourseModule,
-    UserBlacklistsModule,
-    CouponModule,
-    CourseDurationModule,
-    CouponSubmissionModule,
-    EmployeeLevelModule,
     EmployeePositionModule,
-    EmployeeUnitModule,
     ExportModule,
     ImportModule,
-    CourseFetchModule,
-    UserNotificationModule,
-    PKASNProgramModule,
-    PartnerModule,
   ],
   providers: [
     {
@@ -137,12 +79,4 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     },
   ],
 })
-export class AppModule {
-  constructor(@Inject(CACHE_MANAGER) cacheManager) {
-    const client = cacheManager.store.getClient();
-    client.on('error', (error) => {
-      console.error(error);
-      return null;
-    });
-  }
-}
+export class AppModule {}

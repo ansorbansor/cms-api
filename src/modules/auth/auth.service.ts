@@ -7,27 +7,14 @@ import { UsersService } from '../users/users.service';
 import { ForgotPasswordService } from '../forgot-password/forgot-password.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
-import {
-  AuthProvidersEnum,
-  ErrorMessage,
-  RedisKeyEnum,
-  RoleEnum,
-} from 'src/utils/enums';
-import { FacebookInterface, SocialInterface } from 'src/utils/interfaces';
+import { AuthProvidersEnum, ErrorMessage, RoleEnum } from 'src/utils/enums';
+import { SocialInterface } from 'src/utils/interfaces';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
 import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
 import { AuthUpdateDto } from './dtos/auth-update.dto';
 import { failedResponse } from 'src/utils/responses';
 import authConfig from 'src/config/auth.config';
-import { UserResource } from '../users/resources/user.resources';
-import { AuthGoogleLoginDto } from './dtos/auth-google-login.dto';
-import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
-import { AuthFacebookLoginDto } from './dtos/auth-facebook-login.dto';
-import { Facebook } from 'fb';
-import { AuthAppleLoginDto } from './dtos/auth-apple-login.dto';
-import appleSigninAuth from 'apple-signin-auth';
-import { RedisService } from '../redis/redis.service';
 import { BufferedFile } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
@@ -39,36 +26,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { isNumber } from 'class-validator';
 import { encryptText } from 'src/utils/encryption-helper';
-import { authenticator } from 'otplib';
 import * as moment from 'moment';
 @Injectable()
 export class AuthService {
-  private google: OAuth2Client;
-  private fb;
-
   constructor(
     private jwtService: JwtService,
     private usersService: UsersService,
     private forgotService: ForgotPasswordService,
     private mailService: MailService,
     private configService: ConfigService,
-    private redisService: RedisService,
     private activityLogService: ActivityLogService,
     @InjectRepository(Menu)
     private menuRepository: Repository<Menu>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {
-    this.google = new OAuth2Client(
-      configService.get('google.clientId'),
-      configService.get('google.clientSecret'),
-    );
-    this.fb = new Facebook({
-      appId: configService.get('facebook.appId'),
-      appSecret: configService.get('facebook.appSecret'),
-      version: 'v7.0',
-    });
-  }
+  ) {}
 
   async validateLogin(
     loginDto: AuthEmailLoginDto,
@@ -222,72 +194,6 @@ export class AuthService {
         ErrorMessage.PASSWORD_WRONG,
       );
     }
-  }
-
-  async getProfileByTokenGoogle(
-    loginDto: AuthGoogleLoginDto,
-  ): Promise<SocialInterface> {
-    const ticket = await this.google
-      .verifyIdToken({
-        idToken: loginDto.idToken,
-        audience: [this.configService.get('google.clientId')],
-      })
-      .catch((err) => {
-        console.log(`Firebase Auth Error (${err})`);
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Token tidak dikenal');
-      });
-
-    const data = ticket.getPayload();
-
-    return {
-      id: data.sub,
-      email: data.email,
-      firstName: data.given_name,
-      lastName: data.family_name,
-    };
-  }
-
-  async getProfileByTokenFacebook(
-    loginDto: AuthFacebookLoginDto,
-  ): Promise<SocialInterface> {
-    this.fb.setAccessToken(loginDto.accessToken);
-
-    const data: FacebookInterface = await new Promise((resolve) => {
-      this.fb.api(
-        '/me',
-        'get',
-        { fields: 'id,last_name,email,first_name' },
-        (response) => {
-          resolve(response);
-        },
-      );
-    });
-
-    return {
-      id: data.id,
-      email: data.email,
-      firstName: data.first_name,
-      lastName: data.last_name,
-    };
-  }
-
-  async getProfileByTokenApple(
-    loginDto: AuthAppleLoginDto,
-  ): Promise<SocialInterface> {
-    const data = await appleSigninAuth
-      .verifyIdToken(loginDto.idToken, {
-        audience: this.configService.get('apple.appAudience'),
-      })
-      .catch(() => {
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Token tidak dikenal');
-      });
-
-    return {
-      id: data.sub,
-      email: data.email,
-      firstName: loginDto.firstName,
-      lastName: loginDto.lastName,
-    };
   }
 
   async validateSocialLogin(
@@ -470,17 +376,7 @@ export class AuthService {
   }
 
   async me(user: User) {
-    const value = await this.redisService.get(
-      `${RedisKeyEnum.user}:${user.id}`,
-      typeof UserResource,
-    );
-    if (value != null) {
-      return value;
-    }
-
     const me = await this.usersService.findOne({ id: user.id });
-
-    this.redisService.set(`${RedisKeyEnum.user}:${user.id}`, me);
     return me;
   }
 
@@ -505,8 +401,6 @@ export class AuthService {
     if (userDto.topics && userDto.topics.length > 0) {
       await this.usersService.createUserTopic(userDto.topics, user.id);
     }
-
-    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
 
     return await this.usersService.findOne({
       id: user.id,
@@ -547,15 +441,12 @@ export class AuthService {
       }),
     );
 
-    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
-
     return await this.usersService.findOne({
       id: user.id,
     });
   }
 
   async softDelete(user: User, ip: string): Promise<void> {
-    this.redisService.del(`${RedisKeyEnum.user}:${user.id}`);
     await this.usersService.softDelete(user.id, user, ip);
   }
 

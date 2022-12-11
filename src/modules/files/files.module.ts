@@ -1,26 +1,63 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, HttpException, HttpStatus, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from 'src/entities/file.entity';
 import { FilesController } from 'src/modules/files/files.controller';
 import { FilesService } from 'src/modules/files/files.service';
 import { User } from 'src/entities/user.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MinioModule } from 'nestjs-minio-client';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 
 @Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([FileEntity, User]),
-    MinioModule.registerAsync({
+    MulterModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        endPoint: configService.get('MINIO_BASE_URL'),
-        port: parseInt(configService.get('MINIO_PORT')),
-        useSSL: false, // If on localhost, keep it at false. If deployed on https, change to true
-        accessKey: configService.get('MINIO_ACCESS_KEY'),
-        secretKey: configService.get('MINIO_SECRET_KEY'),
-      }),
       inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const storages = {
+          local: () =>
+            diskStorage({
+              destination: './files',
+              filename: (request, file, callback) => {
+                callback(
+                  null,
+                  `${randomStringGenerator()}.${file.originalname
+                    .split('.')
+                    .pop()
+                    .toLowerCase()}`,
+                );
+              },
+            }),
+        };
+
+        return {
+          fileFilter: (request, file, callback) => {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+              return callback(
+                new HttpException(
+                  {
+                    status: HttpStatus.UNPROCESSABLE_ENTITY,
+                    errors: {
+                      file: `cantUploadFileType`,
+                    },
+                  },
+                  HttpStatus.UNPROCESSABLE_ENTITY,
+                ),
+                false,
+              );
+            }
+
+            callback(null, true);
+          },
+          storage: storages[configService.get('file.driver')](),
+          limits: {
+            fileSize: configService.get('file.maxFileSize'),
+          },
+        };
+      },
     }),
   ],
   controllers: [FilesController],

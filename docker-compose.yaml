@@ -1,143 +1,38 @@
 version: '3'
 
-# Settings and configurations that are common for all containers
-x-minio-common: &minio-common
-  image: quay.io/minio/minio:RELEASE.2021-12-10T23-03-39Z
-  command: server --console-address ":9001" http://minio{1...4}/data{1...2}
-  expose:
-    - "9000"
-    - "9001"
-  environment:
-    MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-    MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-    interval: 30s
-    timeout: 20s
-    retries: 3
-
 services:
-  # postgres:
-  #   image: postgres:14.2
-  #   container_name: postgres
-  #   ports:
-  #     - ${DATABASE_PORT}:5432
-  #   volumes:
-  #     - ./.data/db:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: ${DATABASE_USERNAME}
-  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-  #     POSTGRES_DB: ${DATABASE_NAME}
-
-  mysql:
-    image: mysql:8
-    container_name: mysql
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
+  postgres:
+    image: postgres:14.2
+    container_name: postgres
     ports:
-      - ${DATABASE_PORT}:3306
+      - ${DATABASE_PORT}:5432
     volumes:
-      - ./.data/db:/var/lib/mysql
+      - ./.data/db:/var/lib/postgresql/data
     environment:
-      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
-      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-      - MYSQL_USER=${DATABASE_USERNAME}
-      - MYSQL_DATABASE=${DATABASE_NAME}
-      - TZ=Asia/Jakarta
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
 
   adminer:
     image: adminer
-    container_name: adminer
+    container_name: adminer_biosron
     restart: always
     ports:
       - 8080:8080
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - 6479:6379
-    depends_on:
-      - mysql
-  
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: redis-commander
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
-    depends_on:
-        - redis
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 3333:${APP_PORT}
+  #   depends_on:
+  #     - redis
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - 3333:${APP_PORT}
-    depends_on:
-      - redis
-
-  maildev:
-    build:
-      context: .
-      dockerfile: Dockerfile.maildev
-    ports:
-      - ${MAIL_CLIENT_PORT}:1080
-      - ${MAIL_PORT}:1025
-
-  minio1:
-    <<: *minio-common
-    hostname: minio1
-    volumes:
-      - data1-1:/data1
-      - data1-2:/data2
-
-  minio2:
-    <<: *minio-common
-    hostname: minio2
-    volumes:
-      - data2-1:/data1
-      - data2-2:/data2
-
-  minio3:
-    <<: *minio-common
-    hostname: minio3
-    volumes:
-      - data3-1:/data1
-      - data3-2:/data2
-
-  minio4:
-    <<: *minio-common
-    hostname: minio4
-    volumes:
-      - data4-1:/data1
-      - data4-2:/data2
-
-  nginx:
-    image: nginx:1.19.2-alpine
-    hostname: nginx
-    container_name: nginx
-    volumes:
-      - ./minio/nginx.conf:/etc/nginx/nginx.conf:ro
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    depends_on:
-      - minio1
-      - minio2
-      - minio3
-      - minio4
-
-## By default this config uses default local driver,
-## For custom volumes replace with volume driver configuration.
-volumes:
-  data1-1:
-  data1-2:
-  data2-1:
-  data2-2:
-  data3-1:
-  data3-2:
-  data4-1:
-  data4-2:
+  # maildev:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.maildev
+  #   ports:
+  #     - ${MAIL_CLIENT_PORT}:1080
+  #     - ${MAIL_PORT}:1025

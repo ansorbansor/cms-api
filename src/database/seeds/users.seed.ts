@@ -18,11 +18,22 @@ export default class CreateAdmin implements Seeder {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      const employeePosition = new EmployeePosition();
-      employeePosition.name = 'Superadmin Position';
-      const employeePositionData = await queryRunner.manager.save(
-        employeePosition,
-      );
+      let existsEmployeePosition = await connection
+        .createQueryBuilder()
+        .select()
+        .from(EmployeePosition, 'EmployeePosition')
+        .where('EmployeePosition.name = :name', {
+          name: 'Superadmin Position',
+        })
+        .getOne();
+
+      if (!existsEmployeePosition) {
+        const employeePosition = new EmployeePosition();
+        employeePosition.name = 'Superadmin Position';
+        existsEmployeePosition = await queryRunner.manager.save(
+          employeePosition,
+        );
+      }
 
       const user = new User();
 
@@ -31,7 +42,7 @@ export default class CreateAdmin implements Seeder {
       user.email = 'john.tor@example.com';
       user.password = 'Password9';
       user.provider = 'email';
-      user.employee_position_id = employeePositionData.id;
+      user.employee_position_id = existsEmployeePosition.id;
       user.photo = null;
 
       const userData = await queryRunner.manager.save(user);

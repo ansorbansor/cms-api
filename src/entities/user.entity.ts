@@ -75,7 +75,7 @@ export class User extends EntityHelper {
       eager: true,
     },
   )
-  @JoinColumn({ name: 'position_id' })
+  @JoinColumn({ name: 'employee_position_id' })
   employeePosition?: EmployeePosition | null;
 
   @AfterLoad()

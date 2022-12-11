@@ -4,7 +4,7 @@
   "port": 5432,
   "username": "postgres",
   "password": "postgres@123!",
-  "database": "nest_boilerplate",
+  "database": "biosron-simpro",
   "synchronize": false,
   "dropSchema": false,
   "keepConnectionAlive": true,

@@ -28,18 +28,10 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth();
 
-  if (configService.get('app.nodeEnv') == 'staging') {
-    options.setExternalDoc('Postman Collection', '/playbook/docs-json');
-  } else if (configService.get('app.nodeEnv') == 'development') {
-    options.setExternalDoc('Postman Collection', '/docs-json');
-  }
+  options.setExternalDoc('Postman Collection', '/docs-json');
 
   const document = SwaggerModule.createDocument(app, options.build());
-  if (configService.get('app.nodeEnv') == 'staging') {
-    SwaggerModule.setup('playbook/docs', app, document);
-  } else if (configService.get('app.nodeEnv') == 'development') {
-    SwaggerModule.setup('docs', app, document);
-  }
+  SwaggerModule.setup('docs', app, document);
 
   await app.listen(configService.get('app.port'));
 }

@@ -5,7 +5,6 @@ import { FileEntity } from 'src/entities/file.entity';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { FileResource } from './resources/file.resources';
-import * as crypto from 'crypto';
 import { getFileType, getFileExtension } from 'src/utils/file-helper';
 
 @Injectable()
@@ -56,23 +55,11 @@ export class FilesService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const timestamp = Date.now().toString();
-    const hashedFileName = crypto
-      .createHash('md5')
-      .update(timestamp)
-      .digest('hex');
-    const extension = file.originalname.substring(
-      file.originalname.lastIndexOf('.'),
-      file.originalname.length,
-    );
-
-    // We need to append the extension at the end otherwise Minio will save it as a generic file
-    const fileName = hashedFileName + extension;
 
     return await this.fileRepository.save(
       this.fileRepository.create({
-        name: fileName,
-        path: `${path}/${fileName}`,
+        name: file.filename,
+        path: file.path,
         file_type: getFileType(file.mimetype),
         extension: getFileExtension(file.originalname),
         description: description,

@@ -237,16 +237,13 @@ export class UsersService {
       updateProfileDto.photo = img.id;
     }
 
-    const savedData = await this.usersRepository.save(
-      this.usersRepository.create({
-        id,
-        ...updateProfileDto,
-      }),
-    );
+    await this.usersRepository.update(id, {
+      ...updateProfileDto,
+    });
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Update Data User ${savedData.email}`,
+      description: `Update Data User ${exists.email}`,
       ip: ip,
     });
 

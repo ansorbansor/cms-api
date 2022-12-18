@@ -7,6 +7,7 @@ import {
   UseGuards,
   UseInterceptors,
   Request,
+  Response,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -17,7 +18,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { FilesService } from 'src/modules/files/files.service';
-import { successResponse } from 'src/utils/responses';
 import { AuthGuard } from '@nestjs/passport';
 import { FilePath } from 'src/utils/enums';
 
@@ -56,7 +56,7 @@ export class FilesController {
 
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
-  async download(@Param('path') path) {
-    return successResponse(await this.filesService.getFiles(path), 'success');
+  async download(@Param('path') path, @Response() response) {
+    return response.sendFile(path, { root: './files' });
   }
 }

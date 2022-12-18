@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import minioConfig from "src/config/minio.config";
+import appConfig from "src/config/app.config";
 import { User } from "src/entities/user.entity";
 
 export const UserResource = (user: User): any => {
@@ -23,7 +23,7 @@ export const UserResource = (user: User): any => {
     provider: user.provider,
     status: user.status,
     notification_token: user.notification_token,
-    photo: user.photoFile ? minioConfig().fullUrl + user.photoFile.path : null,
+    photo: user.photoFile ? appConfig().fullBackendDomain + user.photoFile.path : null,
     roles: mapRole,
     position: {
       id: user.employeePosition ? user.employeePosition.id : null,

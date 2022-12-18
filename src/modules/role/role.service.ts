@@ -101,7 +101,7 @@ export class RoleService {
       ` UPDATE 
           oauth_tokens 
         SET 
-          revoked = 1 
+          revoked = true 
         WHERE 
           user_id IN (
             SELECT users.id 

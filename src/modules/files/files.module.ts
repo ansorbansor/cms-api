@@ -62,6 +62,6 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
   ],
   controllers: [FilesController],
   providers: [FilesService],
-  exports: [FilesService],
+  exports: [FilesService, MulterModule],
 })
 export class FilesModule {}

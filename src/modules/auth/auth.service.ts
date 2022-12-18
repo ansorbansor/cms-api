@@ -311,7 +311,7 @@ export class AuthService {
 
     //revoke other token
     await getManager().query(
-      `UPDATE oauth_tokens SET revoked = 1 WHERE user_id = ${user.id}`,
+      `UPDATE oauth_tokens SET revoked = true WHERE user_id = ${user.id}`,
     );
 
     //insert new token
@@ -350,7 +350,7 @@ export class AuthService {
       !tokenData ||
       token != tokenData.token ||
       currentDate > expiredDate ||
-      tokenData.revoked == 1
+      tokenData.revoked == true
     ) {
       throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);
     }

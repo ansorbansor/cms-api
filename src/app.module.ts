@@ -22,6 +22,7 @@ import { FilesModule } from './modules/files/files.module';
 import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.module';
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
+import { OperatorModule } from './modules/operator/operator.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
 import { RoleModule } from './modules/role/role.module';
@@ -73,6 +74,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     PurchaseOrdersModule,
     AreaModule,
     RegionModule,
+    OperatorModule,
   ],
   providers: [
     {

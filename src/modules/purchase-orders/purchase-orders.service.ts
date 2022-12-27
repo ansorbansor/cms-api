@@ -1,0 +1,132 @@
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityCondition, IPaginationOptions } from 'src/utils/types';
+import { Brackets, Repository } from 'typeorm';
+import { failedResponse, infinityPagination } from 'src/utils/responses';
+import { PurchaseOrder } from 'src/entities/purchase-order.entity';
+import { ActivityLogService } from '../activity-log/activity-log.service';
+import { CreatePurchaseOrderDTO } from './dto/create-po.dto';
+import { PurchaseOrderResource } from './resources/purchase-order.resources';
+import { User } from 'src/entities/user.entity';
+import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
+
+@Injectable()
+export class PurchaseOrderService {
+  constructor(
+    @InjectRepository(PurchaseOrder)
+    private purchaseOrdersRepository: Repository<PurchaseOrder>,
+    private activityLogService: ActivityLogService,
+  ) {}
+
+  async create(
+    createPurchaseOrderDTO: CreatePurchaseOrderDTO,
+    user_id?: number,
+    ip?: string,
+  ) {
+    const po = await this.purchaseOrdersRepository.save(
+      this.purchaseOrdersRepository.create({
+        user_id: user_id,
+        ...createPurchaseOrderDTO,
+      }),
+    );
+
+    await this.activityLogService.create({
+      user_id: user_id,
+      description: `Tambah PO`,
+      ip: ip,
+    });
+
+    return po;
+  }
+
+  async findManyWithPagination(paginationOptions: IPaginationOptions) {
+    const data = this.purchaseOrdersRepository.createQueryBuilder('po');
+
+    if (paginationOptions.search) {
+      data.andWhere(
+        new Brackets((qb) => {
+          qb.where(`LOWER(po.cc) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          }).orWhere(`LOWER(po.po_number) LIKE :search`, {
+            search: `%${paginationOptions.search.toLowerCase()}%`,
+          });
+        }),
+      );
+    }
+
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    return infinityPagination(
+      await data.getMany(),
+      PurchaseOrderResource,
+      paginationOptions,
+    );
+  }
+
+  async findOne(fields: EntityCondition<PurchaseOrder>) {
+    const data = await this.purchaseOrdersRepository
+      .createQueryBuilder('po')
+      .where(fields)
+      .getOne();
+
+    if (!data) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'PO tidak ditemukan',
+      );
+    }
+
+    return PurchaseOrderResource(data);
+  }
+
+  async findOneFull(fields: EntityCondition<PurchaseOrder>) {
+    const data = await this.purchaseOrdersRepository
+      .createQueryBuilder('po')
+      .where(fields)
+      .getOne();
+
+    return data;
+  }
+
+  async update(
+    id: number,
+    updatePurchaseOrderDto: UpdatePurchaseOrderDTO,
+    user: User,
+    ip: string,
+  ) {
+    const exists = await this.findOneFull({ id: id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'PO tidak ditemukan',
+      );
+    }
+
+    await this.purchaseOrdersRepository.update(id, {
+      ...updatePurchaseOrderDto,
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Data PO`,
+      ip: ip,
+    });
+
+    return await this.findOne({ id: id });
+  }
+
+  async softDelete(id: number, user: User, ip: string): Promise<void> {
+    await this.purchaseOrdersRepository.softDelete(id);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Hapus Data PO`,
+      ip: ip,
+    });
+  }
+}

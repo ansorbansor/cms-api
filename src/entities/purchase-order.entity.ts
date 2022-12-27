@@ -11,9 +11,6 @@ export class PurchaseOrder extends EntityHelper {
   cc: string;
 
   @Column()
-  ip: string;
-
-  @Column()
   line_po_status: number;
 
   @Column()

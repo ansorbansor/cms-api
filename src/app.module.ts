@@ -23,6 +23,7 @@ import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
+import { RegionModule } from './modules/region/region.module';
 import { RoleModule } from './modules/role/role.module';
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
@@ -71,6 +72,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     ImportModule,
     PurchaseOrdersModule,
     AreaModule,
+    RegionModule,
   ],
   providers: [
     {

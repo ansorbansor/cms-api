@@ -17,7 +17,7 @@ import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AreaModule } from './modules/area/area.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BiddingAreaModule } from './modules/bidding-area/site.module';
-import { CustomerModule } from './modules/customer/operator.module';
+import { CustomerModule } from './modules/customer/customer.module';
 import { EmployeePositionModule } from './modules/employee-position/employee-position.module';
 import { ExportModule } from './modules/exports/export.module';
 import { FilesModule } from './modules/files/files.module';
@@ -25,6 +25,7 @@ import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
 import { OperatorModule } from './modules/operator/operator.module';
+import { PDModule } from './modules/pd/pd.module';
 import { PendingTypeModule } from './modules/pending-type/pending-type.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
@@ -85,6 +86,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     BiddingAreaModule,
     RemarkProjectModule,
     PendingTypeModule,
+    PDModule,
   ],
   providers: [
     {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, Validate } from 'class-validator';
-import { IsNotExist } from 'src/utils/validators';
+import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class CreatePurchaseOrderDTO {
   @ApiProperty({ example: '1234567890' })
@@ -28,18 +28,30 @@ export class CreatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Region ID tidak boleh kosong' })
+  @Validate(IsExist, ['Region', 'id'], {
+    message: 'Region tidak ditemukan',
+  })
   region_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Area ID tidak boleh kosong' })
+  @Validate(IsExist, ['Area', 'id'], {
+    message: 'Area tidak ditemukan',
+  })
   area_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Operator ID tidak boleh kosong' })
+  @Validate(IsExist, ['Operator', 'id'], {
+    message: 'Operator tidak ditemukan',
+  })
   operator_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Customer ID tidak boleh kosong' })
+  @Validate(IsExist, ['Customer', 'id'], {
+    message: 'Customer tidak ditemukan',
+  })
   customer_id: number;
 
   @ApiProperty({ example: 1 })

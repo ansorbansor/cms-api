@@ -25,9 +25,10 @@ import { ForgotPasswordModule } from './modules/forgot-password/forgot-password.
 import { ImportModule } from './modules/imports/import.module';
 import { MailModule } from './modules/mail/mail.module';
 import { OperatorModule } from './modules/operator/operator.module';
+import { PendingTypeModule } from './modules/pending-type/pending-type.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
-import { RemarkProjectModule } from './modules/remark-project/site.module';
+import { RemarkProjectModule } from './modules/remark-project/remark-project.module';
 import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
 import { UsersModule } from './modules/users/users.module';
@@ -83,6 +84,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     SiteModule,
     BiddingAreaModule,
     RemarkProjectModule,
+    PendingTypeModule,
   ],
   providers: [
     {

@@ -77,7 +77,7 @@ export class PurchaseOrder extends EntityHelper {
   remaining_from_po: number;
 
   @Column()
-  unit_id: number;
+  unit: string;
 
   @Column()
   payment_terms_id: number;

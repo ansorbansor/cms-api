@@ -44,11 +44,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  project_name: string;
-
-  @ApiProperty({ example: 1 })
-  @IsOptional()
-  project_code: string;
+  project_id: number;
 
   @ApiProperty({ example: 1 })
   @IsOptional()

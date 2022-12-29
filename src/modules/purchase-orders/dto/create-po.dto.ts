@@ -55,15 +55,17 @@ export class CreatePurchaseOrderDTO {
   customer_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Project Name tidak boleh kosong' })
-  project_name: string;
-
-  @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Project Code tidak boleh kosong' })
-  project_code: string;
+  @IsNotEmpty({ message: 'Project ID tidak boleh kosong' })
+  @Validate(IsExist, ['Project', 'id'], {
+    message: 'Project tidak terdaftar',
+  })
+  project_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Site ID tidak boleh kosong' })
+  @Validate(IsExist, ['Site', 'id'], {
+    message: 'Site tidak terdaftar',
+  })
   site_id: number;
 
   @ApiProperty({ example: 1 })
@@ -120,6 +122,9 @@ export class CreatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Bidding Area ID tidak boleh kosong' })
+  @Validate(IsExist, ['BiddingArea', 'id'], {
+    message: 'Bidding Area tidak terdaftar',
+  })
   bidding_area_id: number;
 
   @ApiProperty({ example: 1 })
@@ -144,14 +149,23 @@ export class CreatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Remark Project ID tidak boleh kosong' })
+  @Validate(IsExist, ['RemarkProject', 'id'], {
+    message: 'Remark Project tidak terdaftar',
+  })
   remark_project_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Status Acceptance ID tidak boleh kosong' })
+  @Validate(IsExist, ['StatusAcceptance', 'id'], {
+    message: 'Status Acceptance tidak terdaftar',
+  })
   status_acceptance_id: number;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Pending Type ID tidak boleh kosong' })
+  @Validate(IsExist, ['PendingType', 'id'], {
+    message: 'Pending Type tidak terdaftar',
+  })
   pending_type_id: number;
 
   @ApiProperty({ example: 1 })
@@ -164,6 +178,9 @@ export class CreatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'PD ID tidak boleh kosong' })
+  @Validate(IsExist, ['PD', 'id'], {
+    message: 'PD tidak terdaftar',
+  })
   pd_id: number;
 
   @ApiProperty({ example: 1 })

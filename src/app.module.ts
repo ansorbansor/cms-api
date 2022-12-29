@@ -27,6 +27,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { OperatorModule } from './modules/operator/operator.module';
 import { PDModule } from './modules/pd/pd.module';
 import { PendingTypeModule } from './modules/pending-type/pending-type.module';
+import { ProjectModule } from './modules/projects/project.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
 import { RemarkProjectModule } from './modules/remark-project/remark-project.module';
@@ -89,6 +90,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     PendingTypeModule,
     PDModule,
     StatusAcceptanceModule,
+    ProjectModule,
   ],
   providers: [
     {

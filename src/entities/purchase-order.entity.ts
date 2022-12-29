@@ -35,10 +35,7 @@ export class PurchaseOrder extends EntityHelper {
   customer_id: number;
 
   @Column()
-  project_name: string;
-
-  @Column()
-  project_code: string;
+  project_id: number;
 
   @Column()
   site_id: number;

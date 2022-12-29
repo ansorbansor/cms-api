@@ -16,6 +16,7 @@ import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module';
 import { AreaModule } from './modules/area/area.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BiddingAreaModule } from './modules/bidding-area/site.module';
 import { CustomerModule } from './modules/customer/operator.module';
 import { EmployeePositionModule } from './modules/employee-position/employee-position.module';
 import { ExportModule } from './modules/exports/export.module';
@@ -79,6 +80,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     OperatorModule,
     CustomerModule,
     SiteModule,
+    BiddingAreaModule,
   ],
   providers: [
     {

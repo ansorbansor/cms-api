@@ -32,6 +32,7 @@ import { RegionModule } from './modules/region/region.module';
 import { RemarkProjectModule } from './modules/remark-project/remark-project.module';
 import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
+import { StatusAcceptanceModule } from './modules/status-acceptance/status-acceptance.module';
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
@@ -87,6 +88,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     RemarkProjectModule,
     PendingTypeModule,
     PDModule,
+    StatusAcceptanceModule,
   ],
   providers: [
     {

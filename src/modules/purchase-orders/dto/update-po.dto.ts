@@ -104,7 +104,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  payment_term_id: number;
+  payment_term: string;
 
   @ApiProperty({ example: 1 })
   @IsOptional()

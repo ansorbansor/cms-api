@@ -80,7 +80,7 @@ export class PurchaseOrder extends EntityHelper {
   unit: string;
 
   @Column()
-  payment_terms_id: number;
+  payment_terms: string;
 
   @Column()
   bidding_area_id: number;

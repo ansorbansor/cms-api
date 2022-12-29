@@ -27,6 +27,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { OperatorModule } from './modules/operator/operator.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
+import { RemarkProjectModule } from './modules/remark-project/site.module';
 import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
 import { UsersModule } from './modules/users/users.module';
@@ -81,6 +82,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     CustomerModule,
     SiteModule,
     BiddingAreaModule,
+    RemarkProjectModule,
   ],
   providers: [
     {

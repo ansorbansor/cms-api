@@ -116,7 +116,7 @@ export class CreatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Payment Term tidak boleh kosong' })
-  payment_term: string;
+  payment_terms: string;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Bidding Area ID tidak boleh kosong' })

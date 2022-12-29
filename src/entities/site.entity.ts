@@ -7,4 +7,8 @@ export class Site extends EntityHelper {
   @ApiProperty({ example: 'Test' })
   @Column()
   name?: string;
+
+  @ApiProperty({ example: 'Test' })
+  @Column()
+  code?: string;
 }

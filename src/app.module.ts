@@ -27,6 +27,7 @@ import { OperatorModule } from './modules/operator/operator.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
 import { RoleModule } from './modules/role/role.module';
+import { SiteModule } from './modules/site/site.module';
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
@@ -77,6 +78,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     RegionModule,
     OperatorModule,
     CustomerModule,
+    SiteModule,
   ],
   providers: [
     {

@@ -110,9 +110,9 @@ export class CreatePurchaseOrderDTO {
   @IsNotEmpty({ message: 'Remaining From PO tidak boleh kosong' })
   remaining_from_po: number;
 
-  @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Unit ID tidak boleh kosong' })
-  unit_id: number;
+  @ApiProperty({ example: 'LOT' })
+  @IsNotEmpty({ message: 'Unit tidak boleh kosong' })
+  unit: string;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Payment Term ID tidak boleh kosong' })

@@ -98,9 +98,9 @@ export class UpdatePurchaseOrderDTO {
   @IsOptional()
   remaining_from_po: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 'LOT' })
   @IsOptional()
-  unit_id: number;
+  unit: string;
 
   @ApiProperty({ example: 1 })
   @IsOptional()

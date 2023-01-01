@@ -35,7 +35,7 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
 
         return {
           fileFilter: (request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|xlsx|xls)$/i)) {
               return callback(
                 new HttpException(
                   {

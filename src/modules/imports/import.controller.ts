@@ -6,21 +6,15 @@ import {
   UseInterceptors,
   UploadedFile,
   Post,
-  Get,
-  Param,
-  Res,
   Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Controllers, Permissions } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
-import { BufferedFile } from 'src/utils/file-helper';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
-import { successResponse } from 'src/utils/responses';
 import { UsersController } from '../users/users.controller';
 import { ImportService } from './import.service';
-import { Response } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('Imports')
@@ -30,25 +24,15 @@ import { Response } from 'express';
 })
 export class ImportController {
   constructor(private readonly importService: ImportService) {}
-  @Post('user')
+
+  @Post('po')
   @Permissions(MenuPermission.CREATE)
   @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async importUser(@UploadedFile() file: BufferedFile, @Request() req) {
-    return successResponse(
-      null,
-      await this.importService.importUser(file, req.user, req.ip),
-    );
-  }
-
-  @Get(':path')
-  @ApiParam({ name: 'path', example: 'user.xlsx' })
-  async download(@Param('path') path, @Res() res: Response) {
-    const response = await this.importService.downloadTemplate(path);
-
-    res.download(`${response}`);
+  async importPO(@UploadedFile() file, @Request() req) {
+    return await this.importService.importPO(file, req.user, req.ip);
   }
 }

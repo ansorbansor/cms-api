@@ -340,6 +340,11 @@ export class AuthService {
     );
 
     tokenData = tokenData[0];
+
+    if (!tokenData) {
+      throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.UNAUTHORIZED);
+    }
+
     const currentDate = moment().toDate();
     const expiredDate = moment(
       tokenData.expired_at,

@@ -69,4 +69,84 @@ export class CreateUserDto {
   employee_position_id: number;
 
   hash?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  region: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  gm_region: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  company: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  category: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  team_number: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  uniportal_account: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  project: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  pass_id_number: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  cyber_security_status: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  level_iresource: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  wah_certification_number: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  electrical_certification_number: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  firstaid_certification_number: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  wah_validation_end_date: Date | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  electrical_validation_end_date: Date | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  firstaid_validation_end_date: Date | null;
 }

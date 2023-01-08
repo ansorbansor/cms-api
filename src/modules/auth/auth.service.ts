@@ -143,7 +143,7 @@ export class AuthService {
     }
 
     user.hash = null;
-    user.status = 1;
+    user.status = true;
     await user.save();
   }
 

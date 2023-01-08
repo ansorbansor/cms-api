@@ -35,4 +35,15 @@ export class ImportController {
   async importPO(@UploadedFile() file, @Request() req) {
     return await this.importService.importPO(file, req.user, req.ip);
   }
+
+  @Post('user')
+  @Permissions(MenuPermission.CREATE)
+  @Controllers(UsersController.name)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importUser(@UploadedFile() file, @Request() req) {
+    return await this.importService.importUser(file, req.user, req.ip);
+  }
 }

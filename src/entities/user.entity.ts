@@ -46,15 +46,66 @@ export class User extends EntityHelper {
   @Column({})
   employee_position_id: number;
 
+  @Column({})
+  phone: string;
+
   @Column({ default: 1 })
   @Index()
-  status: number;
+  status: boolean;
 
   @Column({ nullable: true })
   notification_token: string | null;
 
   @Column({ nullable: true })
   hash: string | null;
+
+  @Column({ nullable: true })
+  region: string | null;
+
+  @Column({ nullable: true })
+  gm_region: string | null;
+
+  @Column({ nullable: true })
+  company: string | null;
+
+  @Column({ nullable: true })
+  category: string | null;
+
+  @Column({ nullable: true })
+  team_number: string | null;
+
+  @Column({ nullable: true })
+  uniportal_account: string | null;
+
+  @Column({ nullable: true })
+  project: string | null;
+
+  @Column({ nullable: true })
+  pass_id_number: string | null;
+
+  @Column({ nullable: true })
+  cyber_security_status: boolean | null;
+
+  @Column({ nullable: true })
+  level_iresource: string | null;
+
+  @Column({ nullable: true })
+  wah_certification_number: string | null;
+
+  @Column({ nullable: true })
+  wah_validation_end_date: Date | null;
+
+  @Column({ nullable: true })
+  electrical_certification_number: string | null;
+
+  @Column({ nullable: true })
+  electrical_validation_end_date: Date | null;
+
+  @Column({ nullable: true })
+  firstaid_certification_number: string | null;
+
+  @Column({ nullable: true })
+  firstaid_validation_end_date: Date | null;
 
   @OneToOne(() => FileEntity, {
     eager: true,

@@ -7,14 +7,11 @@ import { UsersService } from '../users/users.service';
 import { ForgotPasswordService } from '../forgot-password/forgot-password.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/entities/user.entity';
-import { AuthProvidersEnum, ErrorMessage, RoleEnum } from 'src/utils/enums';
+import { ErrorMessage } from 'src/utils/enums';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
-import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
-import { AuthUpdateDto } from './dtos/auth-update.dto';
 import { failedResponse } from 'src/utils/responses';
 import authConfig from 'src/config/auth.config';
 import { ConfigService } from '@nestjs/config';
-import { BufferedFile } from 'src/utils/file-helper';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ResetPasswordDataResource } from './resources/reset-password-data.resources';
 import { ResetPasswordResource } from './resources/reset-password.resources';
@@ -88,46 +85,6 @@ export class AuthService {
         ErrorMessage.PASSWORD_WRONG,
       );
     }
-  }
-
-  async register(
-    photo: BufferedFile,
-    dto: AuthRegisterLoginDto,
-    ip: string,
-  ): Promise<User> {
-    const hash =
-      authConfig().emailVerification == 'true'
-        ? crypto
-            .createHash('sha256')
-            .update(randomStringGenerator())
-            .digest('hex')
-        : null;
-
-    const user = await this.usersService.create(
-      {
-        ...dto,
-        email: dto.email,
-        role_id: RoleEnum.user,
-        status: 1,
-        name: dto.name,
-        provider: dto.provider ? dto.provider : AuthProvidersEnum.email,
-        notification_token: null,
-        hash: hash,
-        employee_position_id: dto.employee_position_id,
-      },
-      null,
-      photo,
-      ip,
-    );
-
-    await this.mailService.userSignUp({
-      to: user.email,
-      data: {
-        hash,
-      },
-    });
-
-    return user;
   }
 
   async confirmEmail(hash: string): Promise<void> {
@@ -231,29 +188,6 @@ export class AuthService {
   async me(user: User) {
     const me = await this.usersService.findOne({ id: user.id });
     return me;
-  }
-
-  async update(
-    user: User,
-    userDto: AuthUpdateDto,
-    ip: string,
-    photo?: BufferedFile,
-  ): Promise<User> {
-    if (userDto.email) {
-      const userWithEmail = await this.usersService.findOneFull({
-        email: userDto.email,
-      });
-
-      if (userWithEmail && userWithEmail.id != user.id) {
-        throw failedResponse(HttpStatus.BAD_REQUEST, 'Email telah digunakan');
-      }
-    }
-
-    await this.usersService.update(user.id, userDto, user, ip, photo);
-
-    return await this.usersService.findOne({
-      id: user.id,
-    });
   }
 
   async changePassword(

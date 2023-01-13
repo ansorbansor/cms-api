@@ -9,22 +9,16 @@ import {
   UseGuards,
   Patch,
   Delete,
-  UseInterceptors,
-  UploadedFile,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthConfirmEmailDto } from 'src/modules/auth/dtos/auth-confirm-email.dto';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
-import { AuthRegisterLoginDto } from './dtos/auth-register-login.dto';
 import { AuthForgotPasswordDto } from './dtos/auth-forgot-password.dto';
 import { AuthResetPasswordDto } from './dtos/auth-reset-password.dto';
-import { AuthUpdateDto } from './dtos/auth-update.dto';
 import { AuthResource } from './resources/auth.resources';
 import { successResponse } from 'src/utils/responses';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { BufferedFile } from 'src/utils/file-helper';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
 import { Throttle } from '@nestjs/throttler';
@@ -52,21 +46,6 @@ export class AuthController {
   public async adminLogin(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
     const data = await this.service.validateLogin(loginDto, true, req.ip);
     return successResponse(AuthResource(data.token, data.user), 'success');
-  }
-
-  @Post('email/register')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
-  async register(
-    @UploadedFile() file: BufferedFile,
-    @Body() createUserDto: AuthRegisterLoginDto,
-    @Request() req,
-  ) {
-    return successResponse(
-      this.service.register(file, createUserDto, req.ip),
-      'success',
-    );
   }
 
   @Post('email/confirm')
@@ -133,23 +112,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async me(@Request() request) {
     return successResponse(await this.service.me(request.user), 'success');
-  }
-
-  @ApiBearerAuth()
-  @Patch('me')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
-  public async update(
-    @Request() request,
-    @Body() userDto: AuthUpdateDto,
-    @UploadedFile() photo?: BufferedFile,
-  ) {
-    return successResponse(
-      await this.service.update(request.user, userDto, request.ip, photo),
-      'success',
-    );
   }
 
   @ApiBearerAuth()

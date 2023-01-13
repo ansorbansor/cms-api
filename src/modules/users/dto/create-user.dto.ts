@@ -48,8 +48,11 @@ export class CreateUserDto {
 
   @ApiProperty({ default: 1 })
   @IsNotEmpty({ message: 'Status tidak boleh kosong' })
-  @Transform(({ value }) => (value === 'true' ? 1 : 0))
-  status: number;
+  status: boolean;
+
+  @ApiProperty()
+  @IsNotEmpty({ message: 'Nomor handphone tidak boleh kosong' })
+  phone: string;
 
   @ApiProperty({
     required: false,
@@ -113,7 +116,7 @@ export class CreateUserDto {
   @ApiProperty({
     required: false,
   })
-  cyber_security_status: string | null;
+  cyber_security_status: boolean | null;
 
   @ApiProperty({
     required: false,

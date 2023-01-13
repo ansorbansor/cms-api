@@ -39,8 +39,11 @@ export class UpdateUserDto {
 
   @ApiProperty({ default: true })
   @IsOptional()
-  @Transform(({ value }) => (value === 'true' ? 1 : 0))
-  status?: number;
+  status?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  phone: string;
 
   @ApiProperty({
     required: false,
@@ -106,7 +109,7 @@ export class UpdateUserDto {
   @ApiProperty({
     required: false,
   })
-  cyber_security_status: string | null;
+  cyber_security_status: boolean | null;
 
   @ApiProperty({
     required: false,

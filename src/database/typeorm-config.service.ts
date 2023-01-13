@@ -28,6 +28,8 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         migrationsDir: 'src/database/migrations',
         subscribersDir: 'subscriber',
       },
+      idleTimeoutMillis: 0,
+      connectionTimeoutMillis: 0,
       extra: {
         // based on https://node-postgres.com/api/pool
         // max connection pool size

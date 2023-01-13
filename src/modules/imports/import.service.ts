@@ -268,9 +268,13 @@ export class ImportService {
         return data.cc ? data.cc : null;
       });
 
+      console.log('poCCData');
+
       const workbook = xlsx.readFile(file.path);
+      console.log('workbook read file');
 
       const worksheet = workbook.Sheets['Detail'];
+      console.log('worksheet');
       if (worksheet) {
         const rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
           Object.keys(row).reduce((obj, key) => {
@@ -280,6 +284,7 @@ export class ImportService {
             return obj;
           }, {}),
         );
+        console.log('done rowData');
 
         const updateDataPOList = [];
         const insertDataPOList = [];
@@ -455,6 +460,7 @@ export class ImportService {
             }
           }
         }
+        console.log('done loop');
 
         let successMessage = 'Berhasil ';
 

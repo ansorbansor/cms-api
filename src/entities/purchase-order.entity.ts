@@ -1,6 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
+import { Region } from './region.entity';
+import { Project } from './project.entity';
 
 @Entity({ name: 'purchase_orders' })
 export class PurchaseOrder extends EntityHelper {
@@ -132,4 +134,12 @@ export class PurchaseOrder extends EntityHelper {
   })
   @JoinColumn({ name: 'user_id' })
   user?: User;
+
+  @OneToOne(() => Region)
+  @JoinColumn({ name: 'region_id' })
+  region: Region;
+
+  @OneToOne(() => Project)
+  @JoinColumn({ name: 'project_id' })
+  project: Project;
 }

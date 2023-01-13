@@ -40,7 +40,10 @@ export class PurchaseOrderService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const data = this.purchaseOrdersRepository.createQueryBuilder('po');
+    const data = this.purchaseOrdersRepository
+      .createQueryBuilder('po')
+      .leftJoinAndSelect('po.project', 'project')
+      .leftJoinAndSelect('po.region', 'region');
 
     if (paginationOptions.search) {
       data.andWhere(

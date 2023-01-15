@@ -71,5 +71,17 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     amount_ready_invoice: po.amount_ready_invoice
       ? po.amount_ready_invoice
       : '-',
+    invoices: po.po_invoice
+      ? po.po_invoice.map((e) => {
+          return {
+            invoice_number: e.invoice_number,
+            date: e.invoice_date,
+            status: e.invoice_status,
+            payment_date: e.payment_date,
+            supplier_tax_number: e.supplier_tax_number,
+            supplier_tax_date: e.supplier_tax_date,
+          };
+        })
+      : [],
   };
 };

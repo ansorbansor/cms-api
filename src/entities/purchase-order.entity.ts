@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
 import { Region } from './region.entity';
@@ -12,6 +19,7 @@ import { RemarkProject } from './remark-project.entity';
 import { StatusAcceptance } from './status-acceptance.entity';
 import { PendingType } from './pending-type.entity';
 import { PD } from './pd.entity';
+import { PurchaseOrderInvoice } from './purchase-order-invoice.entity';
 
 @Entity({ name: 'purchase_orders' })
 export class PurchaseOrder extends EntityHelper {
@@ -187,4 +195,8 @@ export class PurchaseOrder extends EntityHelper {
   @OneToOne(() => PD)
   @JoinColumn({ name: 'pd_id' })
   pd: PD;
+
+  @OneToMany(() => PurchaseOrderInvoice, (po_invoice) => po_invoice.po)
+  @JoinColumn()
+  po_invoice?: PurchaseOrderInvoice[];
 }

@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
+import { PurchaseOrder } from './purchase-order.entity';
 
 @Entity({ name: 'purchase_order_invoices' })
 export class PurchaseOrderInvoice extends EntityHelper {
@@ -26,4 +27,8 @@ export class PurchaseOrderInvoice extends EntityHelper {
 
   @Column()
   purchase_order_id?: string;
+
+  @ManyToOne(() => PurchaseOrder, {})
+  @JoinColumn({ name: 'purchase_order_id' })
+  po?: PurchaseOrder;
 }

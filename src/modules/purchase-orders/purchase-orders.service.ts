@@ -87,6 +87,7 @@ export class PurchaseOrderService {
       .leftJoinAndSelect('po.status_acceptance', 'status_acceptance')
       .leftJoinAndSelect('po.pending_type', 'pending_type')
       .leftJoinAndSelect('po.pd', 'pd')
+      .leftJoinAndSelect('po.po_invoice', 'po_invoice')
       .where(fields)
       .getOne();
 

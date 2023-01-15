@@ -84,7 +84,7 @@ export class User extends EntityHelper {
   pass_id_number: string | null;
 
   @Column({ nullable: true })
-  cyber_security_status: boolean | null;
+  cyber_security_status: string | null;
 
   @Column({ nullable: true })
   level_iresource: string | null;
@@ -106,6 +106,9 @@ export class User extends EntityHelper {
 
   @Column({ nullable: true })
   firstaid_validation_end_date: Date | null;
+
+  @Column({ nullable: true })
+  status_description: string | null;
 
   @OneToOne(() => FileEntity, {
     eager: true,

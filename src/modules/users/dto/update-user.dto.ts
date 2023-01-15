@@ -109,7 +109,7 @@ export class UpdateUserDto {
   @ApiProperty({
     required: false,
   })
-  cyber_security_status: boolean | null;
+  cyber_security_status: string | null;
 
   @ApiProperty({
     required: false,

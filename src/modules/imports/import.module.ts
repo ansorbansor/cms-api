@@ -12,8 +12,10 @@ import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { Region } from 'src/entities/region.entity';
 import { RemarkProject } from 'src/entities/remark-project.entity';
+import { Role } from 'src/entities/role.entity';
 import { Site } from 'src/entities/site.entity';
 import { StatusAcceptance } from 'src/entities/status-acceptance.entity';
+import { UserRoles } from 'src/entities/user-role.entity';
 import { User } from 'src/entities/user.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { MailModule } from '../mail/mail.module';
@@ -38,6 +40,8 @@ import { ImportService } from './import.service';
       PurchaseOrderInvoice,
       EmployeePosition,
       User,
+      Role,
+      UserRoles,
     ]),
     MailModule,
     ActivityLogModule,

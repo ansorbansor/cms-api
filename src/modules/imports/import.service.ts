@@ -23,6 +23,8 @@ import * as moment from 'moment';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';
+import { Role } from 'src/entities/role.entity';
+import { UserRoles } from 'src/entities/user-role.entity';
 
 @Injectable()
 export class ImportService {
@@ -55,6 +57,10 @@ export class ImportService {
     private operatorRepository: Repository<Operator>,
     @InjectRepository(EmployeePosition)
     private employeePositionRepository: Repository<EmployeePosition>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(UserRoles)
+    private userRoleRepository: Repository<UserRoles>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private activityLogService: ActivityLogService,
@@ -72,6 +78,8 @@ export class ImportService {
   pendingTypeData = null;
   pdData = null;
   employeePositionData = null;
+  roleData = null;
+  userRoleData = null;
 
   async importUser(file, user: User, ip: string) {
     if (!file) {
@@ -80,6 +88,7 @@ export class ImportService {
 
     try {
       const userData = await getManager().query(`SELECT * FROM users`);
+      this.userRoleData = await getManager().query(`SELECT * FROM user_roles`);
 
       const workbook = xlsx.readFile(file.path);
 
@@ -87,6 +96,10 @@ export class ImportService {
       if (worksheet) {
         this.employeePositionData = await getManager().query(
           `SELECT * FROM employee_positions WHERE deleted_at IS NULL`,
+        );
+
+        this.roleData = await getManager().query(
+          `SELECT * FROM roles WHERE deleted_at IS NULL`,
         );
 
         const updateDataUserList = [];
@@ -114,14 +127,14 @@ export class ImportService {
             );
 
             if (indexDataExisting > -1) {
-              const updateData = await this.validatePOData(
+              const updateData = await this.validateUserData(
                 value,
                 userData[indexDataExisting],
+                this.userRoleData,
               );
 
               if (Object.keys(updateData).length > 0) {
                 //add user to updated object and push to list
-                updateData.user_id = user.id;
                 updateData.id = userData[indexDataExisting].id;
                 updateDataUserList.push(updateData);
               }
@@ -145,9 +158,9 @@ export class ImportService {
               inserUser.project = value['project'];
               inserUser.status =
                 value['employee status'] == 'On Board' ? true : false;
+              inserUser.status_description = value['employee status'];
               inserUser.pass_id_number = value['pass id number'];
-              inserUser.cyber_security_status =
-                value['cyber security status'] == 'PASS' ? true : false;
+              inserUser.cyber_security_status = value['cyber security status'];
               inserUser.level_iresource = value['level in iresource'];
               inserUser.wah_certification_number =
                 value['wah certification number'];
@@ -192,7 +205,7 @@ export class ImportService {
 
         let successMessage = 'Berhasil ';
 
-        //update data PO
+        //update data User
         if (updateDataUserList.length > 0) {
           for (const element of updateDataUserList) {
             await this.userRepository.update(
@@ -205,12 +218,29 @@ export class ImportService {
           successMessage += `mengupdate ${updateDataUserList.length} data Karyawan, `;
         }
 
-        //insert data new PO
+        //insert data new User
         if (insertDataUserList.length > 0) {
           console.log(`insert ${insertDataUserList.length} data`);
-          await this.userRepository.save(insertDataUserList, {
+          const users = await this.userRepository.save(insertDataUserList, {
             chunk: 1000,
           });
+
+          //insert user role
+          const insertUserRole = [];
+          for (const user of users) {
+            const userRole = new UserRoles();
+            userRole.role_id = await this.getEmployeeRoleByName(
+              user.employeePosition.name,
+            );
+            userRole.user_id = user.id;
+            insertUserRole.push(userRole);
+          }
+
+          if (insertUserRole.length > 0) {
+            await this.userRoleRepository.save(insertUserRole, {
+              chunk: 1000,
+            });
+          }
 
           successMessage += `menambah ${insertDataUserList.length} data Karyawan, `;
         }
@@ -604,7 +634,7 @@ export class ImportService {
     return updateData;
   }
 
-  async validateUserData(excelData: any, dbData: any) {
+  async validateUserData(excelData: any, dbData: any, userRoleData: any) {
     const updateData: any = {};
     //check region
     if (excelData['region 1'] && dbData.region != excelData['region 1']) {
@@ -655,8 +685,8 @@ export class ImportService {
       const position = await this.getEmployeePositionByName(
         excelData['position'],
       );
-      if (dbData.position_id != position.id) {
-        updateData.position_id = position.id;
+      if (dbData.employee_position_id != position.id) {
+        updateData.employee_position_id = position.id;
       }
     }
 
@@ -682,14 +712,13 @@ export class ImportService {
     }
 
     //check employee status
-    const employeeStatus = dbData.status == true ? 'On Board' : 'Not On Board';
-
     if (
       excelData['employee status'] &&
-      employeeStatus != excelData['employee status']
+      dbData.status_description != excelData['employee status']
     ) {
       updateData.status =
         excelData['employee status'] == 'On Board' ? true : false;
+      updateData.status_description = excelData['employee status'];
     }
 
     //check pass id number
@@ -701,15 +730,11 @@ export class ImportService {
     }
 
     //check cyber security status
-    const cyberSecurityStatus =
-      dbData.cyber_security_status == true ? 'Pass' : 'Not Pass';
-
     if (
       excelData['cyber security status'] &&
-      cyberSecurityStatus != excelData['cyber security status']
+      dbData.cyber_security_status != excelData['cyber security status']
     ) {
-      updateData.cyber_security_status =
-        excelData['cyber security status'] == 'Pass' ? true : false;
+      updateData.cyber_security_status = excelData['cyber security status'];
     }
 
     //check level in iresource
@@ -786,6 +811,31 @@ export class ImportService {
       updateData.firstaid_validation_end_date =
         excelData['first aid validation end date'];
     }
+
+    //check user role
+    if (excelData['position']) {
+      const role = await this.getEmployeeRoleByName(excelData['position']);
+      const userRole = userRoleData.find((e) => {
+        return e.user_id == dbData.id;
+      });
+
+      if (userRole && role.id != userRole.role_id) {
+        console.log(`${role.id} | ${userRole.role_id}`);
+        await getManager().query(
+          `UPDATE user_roles SET role_id = ${role.id} WHERE role_id = ${userRole.role_id} AND user_id = ${dbData.id}`,
+        );
+      } else if (!userRole) {
+        await getManager().query(
+          `INSERT INTO user_roles(user_id, role_id) VALUES (${dbData.id}, ${role.id})`,
+        );
+        this.userRoleData.push({
+          user_id: dbData.id,
+          role_id: role.id,
+        });
+      }
+    }
+
+    return updateData;
   }
 
   async validatePOData(excelData: any, dbData: any) {
@@ -1137,6 +1187,21 @@ export class ImportService {
     }
 
     return employeePosition;
+  }
+
+  async getEmployeeRoleByName(name: string) {
+    let role = this.roleData.find((data) => {
+      return data.name.toLowerCase() == name.toLowerCase();
+    });
+
+    if (!role) {
+      const newRoleData = new Role();
+      newRoleData.name = name;
+      role = await this.roleRepository.save(newRoleData);
+      await this.roleData.push(role);
+    }
+
+    return role;
   }
 
   async getRegionByName(name: string) {

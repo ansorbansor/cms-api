@@ -6,7 +6,10 @@ import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CreatePurchaseOrderDTO } from './dto/create-po.dto';
-import { PurchaseOrderResource } from './resources/purchase-order.resources';
+import {
+  PurchaseOrderDetailResource,
+  PurchaseOrderResource,
+} from './resources/purchase-order.resources';
 import { User } from 'src/entities/user.entity';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 
@@ -73,6 +76,17 @@ export class PurchaseOrderService {
   async findOne(fields: EntityCondition<PurchaseOrder>) {
     const data = await this.purchaseOrdersRepository
       .createQueryBuilder('po')
+      .leftJoinAndSelect('po.region', 'region')
+      .leftJoinAndSelect('po.area', 'area')
+      .leftJoinAndSelect('po.customer', 'customer')
+      .leftJoinAndSelect('po.operator', 'operator')
+      .leftJoinAndSelect('po.project', 'project')
+      .leftJoinAndSelect('po.site', 'site')
+      .leftJoinAndSelect('po.bidding_area', 'bidding_area')
+      .leftJoinAndSelect('po.remark_project', 'remark_project')
+      .leftJoinAndSelect('po.status_acceptance', 'status_acceptance')
+      .leftJoinAndSelect('po.pending_type', 'pending_type')
+      .leftJoinAndSelect('po.pd', 'pd')
       .where(fields)
       .getOne();
 
@@ -83,7 +97,7 @@ export class PurchaseOrderService {
       );
     }
 
-    return PurchaseOrderResource(data);
+    return PurchaseOrderDetailResource(data);
   }
 
   async findOneFull(fields: EntityCondition<PurchaseOrder>) {

@@ -3,6 +3,15 @@ import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
 import { Region } from './region.entity';
 import { Project } from './project.entity';
+import { Area } from './area.entity';
+import { Operator } from './operator.entity';
+import { Customer } from './customer.entity';
+import { Site } from './site.entity';
+import { BiddingArea } from './bidding_area.entity';
+import { RemarkProject } from './remark-project.entity';
+import { StatusAcceptance } from './status-acceptance.entity';
+import { PendingType } from './pending-type.entity';
+import { PD } from './pd.entity';
 
 @Entity({ name: 'purchase_orders' })
 export class PurchaseOrder extends EntityHelper {
@@ -142,4 +151,40 @@ export class PurchaseOrder extends EntityHelper {
   @OneToOne(() => Project)
   @JoinColumn({ name: 'project_id' })
   project: Project;
+
+  @OneToOne(() => Area)
+  @JoinColumn({ name: 'area_id' })
+  area: Area;
+
+  @OneToOne(() => Operator)
+  @JoinColumn({ name: 'operator_id' })
+  operator: Operator;
+
+  @OneToOne(() => Customer)
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
+
+  @OneToOne(() => Site)
+  @JoinColumn({ name: 'site_id' })
+  site: Site;
+
+  @OneToOne(() => BiddingArea)
+  @JoinColumn({ name: 'bidding_area_id' })
+  bidding_area: BiddingArea;
+
+  @OneToOne(() => RemarkProject)
+  @JoinColumn({ name: 'remark_project_id' })
+  remark_project: RemarkProject;
+
+  @OneToOne(() => StatusAcceptance)
+  @JoinColumn({ name: 'status_acceptance_id' })
+  status_acceptance: StatusAcceptance;
+
+  @OneToOne(() => PendingType)
+  @JoinColumn({ name: 'pending_type_id' })
+  pending_type: PendingType;
+
+  @OneToOne(() => PD)
+  @JoinColumn({ name: 'pd_id' })
+  pd: PD;
 }

@@ -78,13 +78,17 @@ export const infinityPagination = <T>(
   courseCount?: any,
 ) => {
   const returnedData = datas.map((data) => {
-    return resourcex(data, options.user_id, courseCount);
+    return resourcex(
+      data,
+      options && options.user_id ? options.user_id : null,
+      courseCount,
+    );
   });
 
   return {
     data: returnedData,
-    page: options.page,
-    limit: options.limit,
-    total: options.total,
+    page: options && options.page ? options.page : 1,
+    limit: options && options.limit ? options.limit : 0,
+    total: options && options.total ? options.total : 0,
   };
 };

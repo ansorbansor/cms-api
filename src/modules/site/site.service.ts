@@ -9,12 +9,16 @@ import { Site } from 'src/entities/site.entity';
 import { CreateSiteDTO } from './dto/create-site.dto';
 import { SiteResource } from './resources/site.resources';
 import { UpdateSiteDTO } from './dto/update-site.dto';
+import { PurchaseOrder } from 'src/entities/purchase-order.entity';
+import { PurchaseOrderResource } from '../purchase-orders/resources/purchase-order.resources';
 
 @Injectable()
 export class SiteService {
   constructor(
     @InjectRepository(Site)
     private siteRepository: Repository<Site>,
+    @InjectRepository(PurchaseOrder)
+    private poRepository: Repository<PurchaseOrder>,
     private activityLogService: ActivityLogService,
   ) {}
 
@@ -30,6 +34,12 @@ export class SiteService {
     });
 
     return site;
+  }
+
+  async getPOBySite(siteId: number) {
+    const po = await this.poRepository.find({ where: { site_id: siteId } });
+
+    return infinityPagination(po, PurchaseOrderResource, null);
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {

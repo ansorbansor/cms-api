@@ -65,6 +65,16 @@ export class SiteController {
     );
   }
 
+  @Get('po/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getPOBySite(@Param() param: IDParamDto) {
+    return successResponseList(
+      await this.siteService.getPOBySite(param.id),
+      'success',
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

@@ -5,6 +5,7 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
   return {
     id: po.id,
     cc: po.cc,
+    po_number: po.po_number,
     line_po_status:
       po.line_po_status && po.line_po_status == 1 ? 'Active' : 'Non Active',
     region_name: po.region ? po.region.name : '-',

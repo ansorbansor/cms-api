@@ -13,6 +13,7 @@ import { FilesService } from '../files/files.service';
 import { FilePath, SPKStatus } from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
+import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
 
 @Injectable()
 export class SPKService {
@@ -21,6 +22,8 @@ export class SPKService {
     private spkRepository: Repository<SPK>,
     @InjectRepository(SPKInhouseTeam)
     private spkInhouseTeamRepository: Repository<SPKInhouseTeam>,
+    @InjectRepository(SPKCostEvidence)
+    private spkCostEvidenceRepository: Repository<SPKCostEvidence>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
   ) {}
@@ -140,6 +143,10 @@ export class SPKService {
       .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
       .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
       .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
+      .leftJoinAndSelect(
+        'cost_evidences.cost_evidence_photo_file',
+        'cost_evidence_photo_file',
+      )
       .leftJoinAndSelect('spk.created_by_user', 'created_by_user')
       .leftJoinAndSelect('spk.approved_by_user', 'approved_by_user')
       .leftJoinAndSelect(
@@ -318,6 +325,58 @@ export class SPKService {
       cashout: cashout,
       status: updateSPKSettlementDTO.status,
     });
+  }
+
+  async updateCostEvidence(
+    id: number,
+    user: User,
+    ip: string,
+    name: string[],
+    cost: number[],
+    files: Array<Express.Multer.File>,
+    deleted_id: number[],
+  ) {
+    if (!files) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan foto');
+    }
+
+    if (!files || name.length != cost.length || name.length != files.length) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `Jumlah data tidak sesuai`);
+    }
+
+    const evidencePhoto = files.find((e) => {
+      return e.fieldname == 'evidence_photo';
+    });
+
+    if (!evidencePhoto) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan foto');
+    }
+
+    if (deleted_id) {
+      await this.spkCostEvidenceRepository.softDelete(deleted_id);
+    }
+
+    const photoIds = [];
+    for (const e of files) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        e,
+        user.id,
+        FilePath.SPK_COST_EVIDENCE,
+        'Cost Evidence',
+      );
+      photoIds.push(uploadedPhoto.id);
+    }
+
+    const updateData = name.map((value, index) => {
+      return {
+        spk_id: id,
+        name: value,
+        cost: cost[index],
+        photo: photoIds[index],
+      };
+    });
+
+    await this.spkCostEvidenceRepository.insert(updateData);
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {

@@ -101,6 +101,34 @@ export class SPKController {
     );
   }
 
+  @Post('cost-evidence/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
+  @Menus(MenuPermission.SPK_COST_EVIDENCE)
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateCostEvidence(
+    @Request() req,
+    @Param() param: IDParamDto,
+    @Body('name') name: string[],
+    @Body('cost') cost: number[],
+    @Body('deleted_id') deletedId: number[],
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.spkService.updateCostEvidence(
+        param.id,
+        req.user,
+        req.ip,
+        name,
+        cost,
+        files,
+        deletedId,
+      ),
+      'success',
+    );
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

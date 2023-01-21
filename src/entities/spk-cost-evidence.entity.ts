@@ -23,5 +23,5 @@ export class SPKCostEvidence extends EntityHelper {
 
   @OneToOne(() => FileEntity)
   @JoinColumn({ name: 'photo' })
-  photoFile: FileEntity;
+  cost_evidence_photo_file: FileEntity;
 }

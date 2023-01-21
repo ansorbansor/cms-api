@@ -101,8 +101,9 @@ export const SPKResource = (spk: SPK): any => {
             name: costEvidence && costEvidence.name ? costEvidence.name : '-',
             cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
             photo:
-              costEvidence && costEvidence.photoFile
-                ? minioConfig().fullUrl + costEvidence.photoFile.path
+              costEvidence && costEvidence.cost_evidence_photo_file
+                ? minioConfig().fullUrl +
+                  costEvidence.cost_evidence_photo_file.path
                 : null,
           };
         })

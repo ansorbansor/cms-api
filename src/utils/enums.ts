@@ -43,6 +43,7 @@ export enum FilePath {
   SPK_KM_RANGE_END = 'spk/km-range-end',
   SPK_CHECK_IN = 'spk/check-in',
   SPK_CHECK_OUT = 'spk/check-out',
+  SPK_COST_EVIDENCE = 'spk/cost-evidence',
   OTHER = 'others',
 }
 

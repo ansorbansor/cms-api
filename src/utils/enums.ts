@@ -41,6 +41,8 @@ export enum FilePath {
   SPK_SITE_DISTANCE = 'spk/site-distance',
   SPK_KM_RANGE_START = 'spk/km-range-start',
   SPK_KM_RANGE_END = 'spk/km-range-end',
+  SPK_CHECK_IN = 'spk/check-in',
+  SPK_CHECK_OUT = 'spk/check-out',
   OTHER = 'others',
 }
 

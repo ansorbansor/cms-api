@@ -191,6 +191,93 @@ export class SPKService {
     return await this.findOne({ id: id });
   }
 
+  async updateCICOPhoto(
+    id: number,
+    user: User,
+    ip: string,
+    totalRange: string,
+    files: Array<Express.Multer.File>,
+  ) {
+    if (!files) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
+    }
+
+    const exists = await this.findOneFull({ id: id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK tidak ditemukan',
+      );
+    }
+    const kmRangeStartPhoto = files.find((e) => {
+      return e.fieldname == 'km_range_start_photo';
+    });
+    const kmRangeEndPhoto = files.find((e) => {
+      return e.fieldname == 'km_range_end_photo';
+    });
+    const checkInPhoto = files.find((e) => {
+      return e.fieldname == 'check_in_photo';
+    });
+    const checkOutPhoto = files.find((e) => {
+      return e.fieldname == 'check_out_photo';
+    });
+
+    const updateData = {};
+
+    if (kmRangeStartPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmRangeStartPhoto,
+        user.id,
+        FilePath.SPK_KM_RANGE_START,
+        'KM Range Start',
+      );
+
+      updateData['km_range_start_photo'] = uploadedPhoto.id;
+    }
+
+    if (kmRangeEndPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmRangeEndPhoto,
+        user.id,
+        FilePath.SPK_KM_RANGE_END,
+        'KM Range End',
+      );
+
+      updateData['km_range_end_photo'] = uploadedPhoto.id;
+    }
+
+    if (checkInPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        checkInPhoto,
+        user.id,
+        FilePath.SPK_CHECK_IN,
+        'Check In',
+      );
+
+      updateData['check_in_photo'] = uploadedPhoto.id;
+    }
+
+    if (checkOutPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        checkOutPhoto,
+        user.id,
+        FilePath.SPK_CHECK_OUT,
+        'Check Out',
+      );
+
+      updateData['check_out_photo'] = uploadedPhoto.id;
+    }
+
+    if (totalRange) {
+      updateData['total_range'] = totalRange;
+    }
+
+    await this.spkRepository.update(id, updateData);
+
+    return updateData;
+  }
+
   async softDelete(id: number, user: User, ip: string): Promise<void> {
     await this.spkRepository.softDelete(id);
 

@@ -56,6 +56,30 @@ export class SPKController {
     );
   }
 
+  @Post(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
+  @Menus(MenuPermission.SPK_CI_CO)
+  @UseInterceptors(AnyFilesInterceptor())
+  async updateCICOPhoto(
+    @Request() req,
+    @Param() param: IDParamDto,
+    @Body('total_range') totalRange: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.spkService.updateCICOPhoto(
+        param.id,
+        req.user,
+        req.ip,
+        totalRange,
+        files,
+      ),
+      'success',
+    );
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

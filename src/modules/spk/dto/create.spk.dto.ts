@@ -75,4 +75,5 @@ export class CreateSPKDTO {
   km_range_end_photo: number;
   status: number;
   created_by: number;
+  approved_by: number;
 }

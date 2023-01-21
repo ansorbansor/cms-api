@@ -12,6 +12,7 @@ import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { FilesService } from '../files/files.service';
 import { FilePath, SPKStatus } from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
+import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 
 @Injectable()
 export class SPKService {
@@ -75,6 +76,7 @@ export class SPKService {
 
     createSPKDTO.status = SPKStatus.CREATED;
     createSPKDTO.created_by = user_id;
+    createSPKDTO.approved_by = user_id;
 
     const spk = await this.spkRepository.save(
       this.spkRepository.create(createSPKDTO),
@@ -276,6 +278,46 @@ export class SPKService {
     await this.spkRepository.update(id, updateData);
 
     return updateData;
+  }
+
+  async updateSettlement(
+    id: number,
+    updateSPKSettlementDTO: UpdateSPKSettlementDTO,
+    user_id: number,
+    ip: string,
+  ) {
+    const exists = await this.findOneFull({ id: id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK tidak ditemukan',
+      );
+    }
+
+    const deltaOfSettlement =
+      exists.cash_advance - updateSPKSettlementDTO.operation_cost;
+
+    let cashback = 0;
+    let cashout = 0;
+
+    if (deltaOfSettlement < 0) {
+      cashout = Math.abs(deltaOfSettlement);
+    } else {
+      cashback = deltaOfSettlement;
+    }
+
+    await this.spkRepository.update(id, {
+      closing_date: updateSPKSettlementDTO.closing_date,
+      operation_cost: updateSPKSettlementDTO.operation_cost,
+      remark_admin: updateSPKSettlementDTO.remarks,
+      paid_by: user_id,
+      closed_by: user_id,
+      delta_of_settlement: deltaOfSettlement,
+      cashback: cashback,
+      cashout: cashout,
+      status: updateSPKSettlementDTO.status,
+    });
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {

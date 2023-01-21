@@ -85,7 +85,9 @@ export const SPKResource = (spk: SPK): any => {
     check_out_photo: spk.check_out_file
       ? minioConfig().fullUrl + spk.check_out_file.path
       : null,
-    closing_date: spk.closing_date ? spk.closing_date : null,
+    closing_date: spk.closing_date
+      ? moment(spk.closing_date).format('yyyy-MM-D HH:mm:ss')
+      : null,
     operation_cost: spk.operation_cost ? spk.operation_cost : null,
     delta_of_settlement: spk.delta_of_settlement
       ? spk.delta_of_settlement

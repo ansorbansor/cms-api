@@ -27,6 +27,7 @@ import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Menus } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
+import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 
 @ApiBearerAuth()
 @ApiTags('SPK')
@@ -56,7 +57,7 @@ export class SPKController {
     );
   }
 
-  @Post(':id')
+  @Post('cico/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -75,6 +76,26 @@ export class SPKController {
         req.ip,
         totalRange,
         files,
+      ),
+      'success',
+    );
+  }
+
+  @Post('settlement/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Menus(MenuPermission.SPK_KASBON_SETTLEMENT)
+  async updateSettlement(
+    @Request() req,
+    @Param() param: IDParamDto,
+    @Body() updateSPKSettlementDTO: UpdateSPKSettlementDTO,
+  ) {
+    return successResponse(
+      await this.spkService.updateSettlement(
+        param.id,
+        updateSPKSettlementDTO,
+        req.user,
+        req.ip,
       ),
       'success',
     );

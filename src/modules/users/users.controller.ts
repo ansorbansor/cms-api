@@ -21,11 +21,9 @@ import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
-import { MenuPermission } from 'src/utils/enums';
 import { UserResource } from './resources/user.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
 
@@ -38,8 +36,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('users')
-  @Permissions(MenuPermission.CREATE)
-  @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
@@ -63,8 +59,6 @@ export class UsersController {
   }
 
   @Get('users')
-  @Permissions(MenuPermission.READ)
-  @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -92,8 +86,6 @@ export class UsersController {
   }
 
   @Get('users/:id')
-  @Permissions(MenuPermission.READ)
-  @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param() param: IDParamDto) {
@@ -106,8 +98,6 @@ export class UsersController {
   }
 
   @Patch('users/:id')
-  @Permissions(MenuPermission.UPDATE)
-  @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
@@ -131,8 +121,6 @@ export class UsersController {
   }
 
   @Delete('users/:id')
-  @Permissions(MenuPermission.DELETE)
-  @Controllers(UsersController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(

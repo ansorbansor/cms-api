@@ -19,17 +19,6 @@ export enum FileTypeEnum {
   audio = 3,
 }
 
-export enum RedisKeyEnum {
-  user = 'User',
-  provider = 'Provider',
-  language = 'CourseLanguage',
-  course = 'Course',
-  price = 'CoursePrice',
-  banner = 'Banner',
-  duration = 'Duration',
-  notification = 'Notification',
-}
-
 export enum MaxFileSize {
   IMAGE = 2000,
   AUDIO = 3000,
@@ -38,97 +27,20 @@ export enum MaxFileSize {
   JSON = 200,
 }
 
-export enum BannerType {
-  COURSE = '0',
-  ANNOUNCEMENT = '1',
-  EXTERNAL_URL = '2',
-}
-
-export enum Rating {
-  A = '1',
-  B = '2',
-  C = '3',
-  D = '4',
-  E = '5',
-}
-
 export enum MenuPermission {
-  CREATE = 0,
-  READ = 1,
-  UPDATE = 2,
-  DELETE = 3,
-}
-
-export enum CouponType {
-  GENERAL = 0,
-  SPECIFIC = 1,
-}
-
-export enum CouponStatus {
-  AVAILABLE = 0,
-  USED = 1,
-  NOT_AVAILABLE = 2,
-}
-
-export enum CouponSubmissionStatus {
-  PENDING = 0,
-  APPROVED = 1,
-  REJECTED = 2,
-}
-
-export enum CourseUserStatus {
-  REDIRECT = 1,
-  PENDING_VOUCHER = 0,
-  REJECTED_VOUCHER = 2,
-}
-
-export enum MailSubject {
-  FORGOT_PASSWORD = 'Setneg Playbook - Lupa Password',
-  APPROVED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Disetujui',
-  REJECTED_COUPON_SUBMISSION = 'Setneg Playbook - Pengajuan Kupon Ditolak',
-  WELCOME = 'Setneg Playbook - Selamat Datang di Playbook',
-  REGISTER_PROVIDER = 'Setneg Playbook - Register',
-}
-
-export enum CoursePriceType {
-  FREE = 1,
-  PAID = 2,
-  FREEMIUM = 3,
-}
-
-export enum SocialMediaUrl {
-  FACEBOOK = 'https://www.facebook.com/ppkasn.setneg',
-  TWITTER = 'https://twitter.com/ppkasn_setneg',
-  INSTAGRAM = 'https://www.instagram.com/ppkasn.kemensetneg',
-  WHATSAPP = 'https://wa.me/082110002114',
-}
-
-export enum CourseScheduleType {
-  TERJADWAL = 2,
-  MANDIRI = 1,
-}
-
-export enum NotificationSource {
-  CMS = 2,
-  WEBSITE = 1,
-}
-
-export enum NotificationType {
-  COURSE = 1,
-  GENERAL = 0,
-}
-
-export enum CourseFetchSettingType {
-  BASE_URL_GET_COURSE = 'base-url-get-course',
-  BASE_URL_GET_COURSE_DETAIL = 'base-url-get-course-detail',
-  BASE_URL_COURSE_PAGE = 'base-url-course-page',
+  SPK_CREATE = 'spk_create',
+  SPK_KM_RANGE = 'spk_km_range',
+  SPK_CI_CO = 'spk_ci_co',
+  SPK_KASBON_SETTLEMENT = 'spk_kasbon_settlement',
+  SPK_COST_EVIDENCE = 'spk_cost_evidence',
+  SPK_OVER_BUDGET = 'spk_over_budget',
 }
 
 export enum FilePath {
   USER = 'users',
-  COURSE = 'courses',
-  BANNER = 'banners',
-  PROVIDER = 'providers',
+  SPK_SITE_DISTANCE = 'spk/site-distance',
+  SPK_KM_RANGE_START = 'spk/km-range-start',
+  SPK_KM_RANGE_END = 'spk/km-range-end',
   OTHER = 'others',
 }
 
@@ -143,4 +55,12 @@ export enum ErrorMessage {
   PARTNER_NOT_EXISTS = 'Client ID atau Client Secret tidak sesuai.',
   DATA_NOT_FOUND = 'Data tidak ditemukan.',
   DATA_TYPE_NOT_EXPECTED = 'Parameter tidak sesuai!',
+}
+
+export enum SPKStatus {
+  CREATED = 0,
+  APPROVED = 1,
+  APPROVED_OVER_BUDGET = 2,
+  PAID = 3,
+  CLOSED = 4,
 }

@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, Validate, ValidateNested } from 'class-validator';
-import { MenuPermission } from 'src/utils/enums';
-import { IsArrayValid, IsExist, IsNotExist } from 'src/utils/validators';
+import { IsExist, IsNotExist } from 'src/utils/validators';
 
 export class CreateRoleDto {
   @ApiProperty({ example: 'Role A' })
@@ -31,15 +30,5 @@ class Menu {
 
   @ApiProperty({ example: [0, 1, 2, 3] })
   @IsNotEmpty({ message: 'Akses tidak boleh kosong' })
-  @Validate(
-    IsArrayValid,
-    [
-      MenuPermission.CREATE,
-      MenuPermission.READ,
-      MenuPermission.UPDATE,
-      MenuPermission.DELETE,
-    ],
-    { message: 'Akses menu tidak sesuai' },
-  )
   access: number[];
 }

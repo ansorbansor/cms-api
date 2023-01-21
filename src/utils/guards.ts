@@ -21,20 +21,15 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
     ]);
 
-    const controllers = this.reflector.getAllAndOverride<string[]>(
-      'controllers',
-      [context.getClass(), context.getHandler()],
-    );
-
-    const permissions = this.reflector.getAllAndOverride<number[]>(
-      'permissions',
-      [context.getClass(), context.getHandler()],
-    );
+    const menus = this.reflector.getAllAndOverride<string[]>('menus', [
+      context.getClass(),
+      context.getHandler(),
+    ]);
 
     const request = context.switchToHttp().getRequest();
 
     const userRolesData = await getManager().query(`
-      SELECT r.id, r.grant_all_access, ra.menu_access, m.be_controller
+      SELECT r.id, r.grant_all_access, ra.menu_access, m.name
       FROM user_roles ur 
       LEFT JOIN roles r 
       ON ur.role_id = r.id
@@ -51,7 +46,7 @@ export class RolesGuard implements CanActivate {
         throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
       }
       const hasAccess = data.some(function (e) {
-        return controllers == e.be_controller && permissions == e.menu_access;
+        return menus == e.name;
       });
 
       if (!hasAccess) {
@@ -67,7 +62,7 @@ export class RolesGuard implements CanActivate {
     ) {
       return true;
     }
-    if (controllers && permissions) {
+    if (menus) {
       return canAccess(userRolesData);
     } else if (roles) {
       if (

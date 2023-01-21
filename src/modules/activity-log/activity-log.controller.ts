@@ -14,8 +14,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
-import { MenuPermission } from 'src/utils/enums';
-import { Controllers, Permissions } from 'src/utils/decorator';
 import { successResponse, successResponseList } from 'src/utils/responses';
 import { ActivityLogService } from './activity-log.service';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
@@ -32,8 +30,6 @@ export class ActivityLogController {
   constructor(private readonly activityLogService: ActivityLogService) {}
 
   @Get()
-  @Permissions(MenuPermission.READ)
-  @Controllers(ActivityLogController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -63,8 +59,6 @@ export class ActivityLogController {
   }
 
   @Get(':id')
-  @Permissions(MenuPermission.READ)
-  @Controllers(ActivityLogController.name)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param() param: IDParamDto) {

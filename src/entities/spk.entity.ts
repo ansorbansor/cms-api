@@ -1,5 +1,22 @@
-import { Column, Entity } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
+import { Region } from './region.entity';
+import { Transportation } from './transportation.entity';
+import { User } from './user.entity';
+import { Site } from './site.entity';
+import { Area } from './area.entity';
+import { PurchaseOrder } from './purchase-order.entity';
+import { SPKInhouseTeam } from './spk-inhouse-team.entity';
+import { FileEntity } from './file.entity';
+import { SPKCostEvidence } from './spk-cost-evidence.entity';
+import * as moment from 'moment';
 
 @Entity({ name: 'spk' })
 export class SPK extends EntityHelper {
@@ -85,11 +102,94 @@ export class SPK extends EntityHelper {
   approved_by?: number;
 
   @Column()
-  approve_over_budget_by?: number;
+  approved_over_budget_by?: number;
 
   @Column()
   paid_by?: number;
 
   @Column()
   closed_by?: number;
+
+  @OneToOne(() => Region)
+  @JoinColumn({ name: 'region_id' })
+  region: Region;
+
+  @OneToOne(() => Transportation)
+  @JoinColumn({ name: 'transportation_id' })
+  transportation: Transportation;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'pay_to_user_id' })
+  pay_to_user: User;
+
+  @OneToOne(() => Site)
+  @JoinColumn({ name: 'site_id' })
+  site: Site;
+
+  @OneToOne(() => Area)
+  @JoinColumn({ name: 'area_id' })
+  area: Area;
+
+  @OneToOne(() => PurchaseOrder)
+  @JoinColumn({ name: 'po_id' })
+  po: PurchaseOrder;
+
+  @OneToMany(() => SPKInhouseTeam, (spk) => spk.spk)
+  @JoinColumn()
+  inhouse_team: SPKInhouseTeam[];
+
+  @OneToMany(() => Area, (area) => area.po)
+  @JoinColumn()
+  related_po: PurchaseOrder[];
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'distance_to_site_photo' })
+  distance_to_site_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'km_range_start_photo' })
+  km_range_start_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'km_range_end_photo' })
+  km_range_end_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'check_in_photo' })
+  check_in_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'check_out_photo' })
+  check_out_file: FileEntity;
+
+  @OneToMany(() => SPKCostEvidence, (costEvidence) => costEvidence.spk)
+  @JoinColumn()
+  cost_evidences: SPKCostEvidence[];
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'created_by' })
+  created_by_user: User;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'approved_by' })
+  approved_by_user: User;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'approved_over_budget_by' })
+  approved_over_budget_by_user: User;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'paid_by' })
+  paid_by_user: User;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'closed_by' })
+  closed_by_user: User;
+
+  @BeforeInsert()
+  async setSPKNumber() {
+    this.spk_number = `SPK-${moment(new Date()).format(
+      'yyyyMMD',
+    )}-${new Date().valueOf()}`;
+  }
 }

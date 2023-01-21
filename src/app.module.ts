@@ -33,6 +33,7 @@ import { RegionModule } from './modules/region/region.module';
 import { RemarkProjectModule } from './modules/remark-project/remark-project.module';
 import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
+import { SPKModule } from './modules/spk/spk.module';
 import { StatusAcceptanceModule } from './modules/status-acceptance/status-acceptance.module';
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
@@ -91,6 +92,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     PDModule,
     StatusAcceptanceModule,
     ProjectModule,
+    SPKModule,
   ],
   providers: [
     {

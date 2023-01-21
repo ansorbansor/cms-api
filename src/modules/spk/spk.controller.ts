@@ -13,30 +13,45 @@ import {
   HttpStatus,
   HttpCode,
   Request,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse, successResponseList } from 'src/utils/responses';
-import { RoleService } from './role.service';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 import { IDParamDto } from 'src/utils/id-param.dto';
+import { SPKService } from './spk.service';
+import { CreateSPKDTO } from './dto/create.spk.dto';
+import { SPKResource } from './resources/spk.resources';
+import { UpdateSPKDTO } from './dto/update-spk.dto';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { Menus } from 'src/utils/decorator';
+import { MenuPermission } from 'src/utils/enums';
 
 @ApiBearerAuth()
-@ApiTags('Role')
+@ApiTags('SPK')
 @Controller({
-  path: 'role',
+  path: 'spk',
   version: '1',
 })
-export class RoleController {
-  constructor(private readonly roleService: RoleService) {}
+export class SPKController {
+  constructor(private readonly spkService: SPKService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createRoleDto: CreateRoleDto, @Request() req) {
+  @ApiConsumes('multipart/form-data')
+  @Menus(MenuPermission.SPK_CREATE)
+  @UseInterceptors(AnyFilesInterceptor())
+  async create(
+    @Request() req,
+    @Body() createSPKDto: CreateSPKDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
     return successResponse(
-      await this.roleService.create(createRoleDto, req.user, req.ip),
+      SPKResource(
+        await this.spkService.create(createSPKDto, req.user.id, req.ip, files),
+      ),
       'success',
     );
   }
@@ -47,14 +62,14 @@ export class RoleController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('search') search?: string,
+    @Query('search') search: string,
   ) {
     if (limit > 50) {
       limit = 50;
     }
 
     return successResponseList(
-      await this.roleService.findManyWithPagination({
+      await this.spkService.findManyWithPagination({
         page,
         limit,
         total: 0,
@@ -69,18 +84,23 @@ export class RoleController {
   @HttpCode(HttpStatus.OK)
   async findOne(@Param() param: IDParamDto) {
     return successResponse(
-      await this.roleService.findOne({ id: +param.id }),
+      await this.spkService.findOne({
+        id: +param.id,
+      }),
       'success',
     );
   }
 
-  @Patch()
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiConsumes('multipart/form-data')
   @HttpCode(HttpStatus.OK)
-  async update(@Body() updateRoleDto: UpdateRoleDto, @Request() req) {
+  async update(
+    @Param() param: IDParamDto,
+    @Body() updateSPKDto: UpdateSPKDTO,
+    @Request() req,
+  ) {
     return successResponse(
-      await this.roleService.update(updateRoleDto, req.user, req.ip),
+      await this.spkService.update(param.id, updateSPKDto, req.user, req.ip),
       'success',
     );
   }
@@ -89,7 +109,7 @@ export class RoleController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.roleService.softDelete(param.id, req.user, req.ip),
+      await this.spkService.softDelete(param.id, req.user, req.ip),
       'success',
     );
   }

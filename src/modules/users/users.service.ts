@@ -71,14 +71,6 @@ export class UsersService {
       }),
     );
 
-    await this.mailService.welcome({
-      to: user.email,
-      data: {
-        email: user.email,
-        password: createProfileDto.password,
-      },
-    });
-
     if (user_id) {
       await this.activityLogService.create({
         user_id: user_id,

@@ -35,6 +35,7 @@ import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
 import { SPKModule } from './modules/spk/spk.module';
 import { StatusAcceptanceModule } from './modules/status-acceptance/status-acceptance.module';
+import { TransportationModule } from './modules/transportation/transportation.module';
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
@@ -93,6 +94,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     StatusAcceptanceModule,
     ProjectModule,
     SPKModule,
+    TransportationModule,
   ],
   providers: [
     {

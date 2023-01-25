@@ -29,6 +29,8 @@ export class ActivityLogService {
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role');
 
+    data.orderBy('acl.created_at', 'DESC');
+
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
@@ -64,6 +66,10 @@ export class ActivityLogService {
 
     const total = await data.getCount();
     paginationOptions.total = total;
+
+    if (!paginationOptions.limit) {
+      paginationOptions.limit = total;
+    }
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);

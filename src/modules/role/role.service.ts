@@ -49,8 +49,14 @@ export class RoleService {
       });
     }
 
+    data.orderBy('role.name', 'ASC');
+
     const total = await this.roleRepository.count();
     paginationOptions.total = total;
+
+    if (!paginationOptions.limit) {
+      paginationOptions.limit = total;
+    }
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);

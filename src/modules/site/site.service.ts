@@ -51,8 +51,14 @@ export class SiteService {
       });
     }
 
+    data.orderBy('site.name', 'ASC');
+
     const total = await data.getCount();
     paginationOptions.total = total;
+
+    if (!paginationOptions.limit) {
+      paginationOptions.limit = total;
+    }
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);

@@ -27,12 +27,8 @@ export class EmployeePositionController {
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit') limit: number,
   ) {
-    if (limit > 50) {
-      limit = 50;
-    }
-
     return successResponseList(
       await this.employeePositionService.findManyWithPagination({
         page,

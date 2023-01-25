@@ -105,7 +105,34 @@ export class SPKService {
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const data = this.spkRepository.createQueryBuilder('spk');
+    const data = this.spkRepository
+      .createQueryBuilder('spk')
+      .leftJoinAndSelect('spk.region', 'region')
+      .leftJoinAndSelect('spk.transportation', 'transportation')
+      .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
+      .leftJoinAndSelect('spk.site', 'site')
+      .leftJoinAndSelect('spk.area', 'area')
+      .leftJoinAndSelect('spk.po', 'po')
+      .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
+      .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
+      .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
+      .leftJoinAndSelect('spk.km_range_start_file', 'km_range_start_file')
+      .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')
+      .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
+      .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
+      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
+      .leftJoinAndSelect(
+        'cost_evidences.cost_evidence_photo_file',
+        'cost_evidence_photo_file',
+      )
+      .leftJoinAndSelect('spk.created_by_user', 'created_by_user')
+      .leftJoinAndSelect('spk.approved_by_user', 'approved_by_user')
+      .leftJoinAndSelect(
+        'spk.approved_over_budget_by_user',
+        'approved_over_budget_by_user',
+      )
+      .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
+      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
 
     if (paginationOptions.search) {
       data.andWhere('spk.name ILIKE :search', {

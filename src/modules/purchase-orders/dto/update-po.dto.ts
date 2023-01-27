@@ -52,7 +52,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  status: number;
+  status: string;
 
   @ApiProperty({ example: 1 })
   @IsOptional()

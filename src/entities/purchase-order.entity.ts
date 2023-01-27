@@ -60,7 +60,7 @@ export class PurchaseOrder extends EntityHelper {
   site_id: number;
 
   @Column()
-  status: number;
+  status: string;
 
   @Column()
   item_code: string;

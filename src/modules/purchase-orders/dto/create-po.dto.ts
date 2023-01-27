@@ -68,9 +68,9 @@ export class CreatePurchaseOrderDTO {
   })
   site_id: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 'NEW' })
   @IsNotEmpty({ message: 'Status tidak boleh kosong' })
-  status: number;
+  status: string;
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Item Code tidak boleh kosong' })

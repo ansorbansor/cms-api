@@ -73,6 +73,7 @@ export const SPKResource = (spk: SPK): any => {
     remark_inhouse_team: spk.remark_inhouse_team
       ? spk.remark_inhouse_team
       : null,
+    total_range: spk.total_range ? spk.total_range : 0,
     km_range_start_photo: spk.km_range_start_file
       ? minioConfig().fullUrl + spk.km_range_start_file.path
       : null,

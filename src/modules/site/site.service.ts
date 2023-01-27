@@ -46,12 +46,12 @@ export class SiteService {
     const data = this.siteRepository.createQueryBuilder('site');
 
     if (paginationOptions.search) {
-      data.andWhere('site.name ILIKE :search', {
+      data.andWhere('site.code ILIKE :search', {
         search: `%${paginationOptions.search}%`,
       });
     }
 
-    data.orderBy('site.name', 'ASC');
+    data.orderBy('site.code', 'ASC');
 
     const total = await data.getCount();
     paginationOptions.total = total;

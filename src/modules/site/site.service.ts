@@ -10,7 +10,7 @@ import { CreateSiteDTO } from './dto/create-site.dto';
 import { SiteResource } from './resources/site.resources';
 import { UpdateSiteDTO } from './dto/update-site.dto';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
-import { PurchaseOrderResource } from '../purchase-orders/resources/purchase-order.resources';
+import { PurchaseOrderBySiteResource } from '../purchase-orders/resources/purchase-order.resources';
 
 @Injectable()
 export class SiteService {
@@ -39,7 +39,7 @@ export class SiteService {
   async getPOBySite(siteId: number) {
     const po = await this.poRepository.find({ where: { site_id: siteId } });
 
-    return infinityPagination(po, PurchaseOrderResource, null);
+    return infinityPagination(po, PurchaseOrderBySiteResource, null);
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {

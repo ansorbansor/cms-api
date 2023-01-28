@@ -13,6 +13,15 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
   };
 };
 
+export const PurchaseOrderBySiteResource = (po: PurchaseOrder): any => {
+  return {
+    id: po.id,
+    cc: po.cc,
+    po_number: po.po_number,
+    item_description: po.item_description,
+  };
+};
+
 export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
   return {
     id: po.id,

@@ -36,6 +36,9 @@ export const SPKResource = (spk: SPK): any => {
     },
     police_number: spk.police_number,
     cash_advance: spk.cash_advance,
+    total_cash_advance: spk.total_cash_advance
+      ? Number(spk.total_cash_advance)
+      : null,
     pay_to_user: {
       id: spk.pay_to_user.id ? spk.pay_to_user.id : null,
       name: spk.pay_to_user.name ? spk.pay_to_user.name : '-',
@@ -52,6 +55,9 @@ export const SPKResource = (spk: SPK): any => {
     work_type: spk.work_type ? spk.work_type : '-',
     po: {
       item_description: spk.po ? spk.po.item_description : null,
+      total_unit_price: spk.total_po_unit_price
+        ? Number(spk.total_po_unit_price)
+        : null,
     },
     distance_to_site_photo: spk.distance_to_site_file
       ? minioConfig().fullUrl + spk.distance_to_site_file.path

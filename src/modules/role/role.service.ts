@@ -121,7 +121,8 @@ export class RoleService {
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {
-    if (id == RoleEnum.superadmin) {
+    const role = await this.roleRepository.findOne({ where: { id: id } });
+    if (role.code == RoleEnum.SUPERADMIN) {
       throw failedResponse(
         HttpStatus.FORBIDDEN,
         'Superadmin tidak bisa dihapus',

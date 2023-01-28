@@ -19,7 +19,7 @@ export default class CreateAdmin implements Seeder {
         .into(Role)
         .values([
           plainToClass(Role, {
-            id: RoleEnum.superadmin,
+            code: RoleEnum.SUPERADMIN,
             name: 'Super Admin',
           }),
         ])
@@ -31,7 +31,7 @@ export default class CreateAdmin implements Seeder {
         .into(Role)
         .values([
           plainToClass(Role, {
-            id: RoleEnum.user,
+            code: RoleEnum.USER,
             name: 'User',
           }),
         ])

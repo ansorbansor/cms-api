@@ -186,6 +186,12 @@ export class SPK extends EntityHelper {
   @JoinColumn({ name: 'closed_by' })
   closed_by_user: User;
 
+  @Column({ select: false, insert: false, readonly: true })
+  total_cash_advance: number;
+
+  @Column({ select: false, insert: false, readonly: true })
+  total_po_unit_price: number;
+
   @BeforeInsert()
   async setSPKNumber() {
     this.spk_number = `SPK-${moment(new Date()).format(

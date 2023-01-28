@@ -133,17 +133,21 @@ export class SPKController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async findAll(
+    @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit') limit: number,
     @Query('search') search: string,
   ) {
     return successResponseList(
-      await this.spkService.findManyWithPagination({
-        page,
-        limit,
-        total: 0,
-        search: search,
-      }),
+      await this.spkService.findManyWithPagination(
+        {
+          page,
+          limit,
+          total: 0,
+          search: search,
+        },
+        req.user,
+      ),
       'success',
     );
   }

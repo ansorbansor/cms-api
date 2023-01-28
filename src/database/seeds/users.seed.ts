@@ -49,7 +49,7 @@ export default class CreateAdmin implements Seeder {
 
       const userRole = new UserRoles();
       userRole.user_id = userData.id;
-      userRole.role_id = RoleEnum.superadmin;
+      userRole.role_id = 1;
       await queryRunner.manager.save(userRole);
 
       await queryRunner.commitTransaction();

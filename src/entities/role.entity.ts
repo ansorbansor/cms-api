@@ -13,6 +13,10 @@ export class Role extends EntityHelper {
   @Column()
   name?: string;
 
+  @ApiProperty({ example: 'Admin' })
+  @Column()
+  code?: string;
+
   @Allow()
   @Column()
   @Transform(({ value }) => value === 1)

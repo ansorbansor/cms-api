@@ -1,20 +1,15 @@
-/* eslint-disable prettier/prettier */
-
-import minioConfig from "src/config/minio.config";
-import { User } from "src/entities/user.entity";
-import { RoleEnum } from "src/utils/enums";
+import minioConfig from 'src/config/minio.config';
+import { User } from 'src/entities/user.entity';
 
 export const ExportUserResource = (user: User): any => {
   let role = '';
 
   if (user.userRoles != null && user.userRoles.length > 0) {
-    const dataRole = user.userRoles.find(
-      (role) => role.role_id != RoleEnum.user,
-    );
+    const dataRole = user.userRoles.find((role) => role.role_id != 1);
     if (dataRole && dataRole.roleData) {
-      role = dataRole.roleData.name
-    } else if(user.userRoles[0].roleData) {
-      role = user.userRoles[0].roleData.name
+      role = dataRole.roleData.name;
+    } else if (user.userRoles[0].roleData) {
+      role = user.userRoles[0].roleData.name;
     }
   }
 

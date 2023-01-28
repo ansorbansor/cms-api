@@ -8,8 +8,17 @@ export enum AuthProvidersEnum {
 }
 
 export enum RoleEnum {
-  'superadmin' = 1,
-  'user' = 2,
+  SUPERADMIN = 'superadmin',
+  USER = 'user',
+  PM = 'pm',
+  QC = 'qc',
+  ENGINEER = 'engineer',
+  TL = 'tl',
+  MEMBER = 'member',
+  DC = 'dc',
+  SS = 'ss',
+  RPM = 'rpm',
+  ADMINPAYMENT = 'adminpayment',
 }
 
 export enum FileTypeEnum {

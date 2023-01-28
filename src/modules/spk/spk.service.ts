@@ -10,10 +10,12 @@ import { CreateSPKDTO } from './dto/create.spk.dto';
 import { SPKResource } from './resources/spk.resources';
 import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { FilesService } from '../files/files.service';
-import { FilePath, SPKStatus } from 'src/utils/enums';
+import { FilePath, RoleEnum, SPKStatus } from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
+import { UserRoles } from 'src/entities/user-role.entity';
+import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 
 @Injectable()
 export class SPKService {
@@ -24,6 +26,8 @@ export class SPKService {
     private spkInhouseTeamRepository: Repository<SPKInhouseTeam>,
     @InjectRepository(SPKCostEvidence)
     private spkCostEvidenceRepository: Repository<SPKCostEvidence>,
+    @InjectRepository(UserRoles)
+    private userRolesRepository: Repository<UserRoles>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
   ) {}
@@ -104,7 +108,10 @@ export class SPKService {
     return await this.findOne({ id: spk.id });
   }
 
-  async findManyWithPagination(paginationOptions: IPaginationOptions) {
+  async findManyWithPagination(
+    paginationOptions: IPaginationOptions,
+    user: User,
+  ) {
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.region', 'region')
@@ -134,6 +141,63 @@ export class SPKService {
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
       .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
 
+    //add total spk cash advance
+    data.addSelect(
+      'total_cash_advance.total_cash_advance',
+      'spk_total_cash_advance',
+    );
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('s.site_id')
+          .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+          .from(SPK, 's')
+          .groupBy('s.site_id');
+      },
+      'total_cash_advance',
+      '"total_cash_advance"."s_site_id" = spk.site_id',
+    );
+
+    //add total po budget / unit price
+    data.addSelect(
+      'total_unit_price.total_unit_price',
+      'spk_total_po_unit_price',
+    );
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('p.site_id')
+          .addSelect('SUM(p.unit_price)', 'total_unit_price')
+          .from(PurchaseOrder, 'p')
+          .groupBy('p.site_id');
+      },
+      'total_unit_price',
+      '"total_unit_price"."p_site_id" = spk.site_id',
+    );
+
+    const userRole = await this.userRolesRepository.find({
+      where: { user_id: user.id },
+    });
+
+    if (userRole.some((e) => e.roleData.code == RoleEnum.SS)) {
+      data.andWhere('spk.created_by = :createdBy', { createdBy: user.id });
+    } else if (
+      userRole.some(
+        (e) =>
+          e.roleData.code == RoleEnum.TL ||
+          e.roleData.code == RoleEnum.ENGINEER ||
+          e.roleData.code == RoleEnum.MEMBER,
+      )
+    ) {
+      data.andWhere('userInhouse.id = :inHouseUserId', {
+        inHouseUserId: user.id,
+      });
+    } else if (userRole.some((e) => e.roleData.code == RoleEnum.RPM)) {
+      data.andWhere(
+        'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
+      );
+    }
+
     if (paginationOptions.search) {
       data.andWhere('spk.name ILIKE :search', {
         search: `%${paginationOptions.search}%`,
@@ -152,11 +216,9 @@ export class SPKService {
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
 
-    return infinityPagination(
-      await data.getMany(),
-      SPKResource,
-      paginationOptions,
-    );
+    const returnedData = await data.getMany();
+
+    return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
 
   async findOne(fields: EntityCondition<SPK>) {

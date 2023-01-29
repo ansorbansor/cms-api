@@ -93,5 +93,6 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
           };
         })
       : [],
+    budget_percentage: po.budget_percentage,
   };
 };

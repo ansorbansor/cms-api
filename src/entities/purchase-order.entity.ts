@@ -146,6 +146,9 @@ export class PurchaseOrder extends EntityHelper {
   @Column()
   remark_highlight: string;
 
+  @Column()
+  budget_percentage: number;
+
   @ManyToOne(() => User, {
     eager: true,
   })

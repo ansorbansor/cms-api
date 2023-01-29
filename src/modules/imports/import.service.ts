@@ -485,6 +485,7 @@ export class ImportService {
               insertPO.ready_invoice = value['ready invoice'];
               insertPO.amount_ready_invoice = value['amount ready invoice'];
               insertPO.remark_highlight = value['remark highlight'];
+              insertPO.budget_percentage = value['budget percentage'];
 
               insertDataPOList.push(insertPO);
             }
@@ -1167,6 +1168,14 @@ export class ImportService {
       dbData.remark_highlight != excelData['remark highlight']
     ) {
       updateData.remark_highlight = excelData['remark highlight'];
+    }
+
+    //check budget percentage
+    if (
+      excelData['budget percentage'] &&
+      dbData.budget_percentage != excelData['budget percentage']
+    ) {
+      updateData.budget_percentage = excelData['budget percentage'];
     }
 
     return updateData;

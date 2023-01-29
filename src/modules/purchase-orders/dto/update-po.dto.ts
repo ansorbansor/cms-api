@@ -165,4 +165,8 @@ export class UpdatePurchaseOrderDTO {
   @ApiProperty({ example: 1 })
   @IsOptional()
   remark_highlight: string;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  budget_percentage: number;
 }

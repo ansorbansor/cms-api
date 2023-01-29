@@ -198,4 +198,8 @@ export class CreatePurchaseOrderDTO {
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Remark Highlight tidak boleh kosong' })
   remark_highlight: string;
+
+  @ApiProperty({ example: 70 })
+  @IsNotEmpty({ message: 'Budget Percentage tidak boleh kosong' })
+  budget_percentage: number;
 }

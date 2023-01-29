@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, getRepository, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -16,6 +16,7 @@ import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
+import e from 'express';
 
 @Injectable()
 export class SPKService {
@@ -81,7 +82,28 @@ export class SPKService {
       createSPKDTO.km_range_end_photo = uploadedPhoto.id;
     }
 
-    createSPKDTO.status = SPKStatus.CREATED;
+    let maxBudgetBySite = await getManager().query(
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1',
+      [createSPKDTO.area_id],
+    );
+    maxBudgetBySite = maxBudgetBySite[0].sum
+      ? Number(maxBudgetBySite[0].sum)
+      : 0;
+
+    let totalSPKAmount = await getManager().query(
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1',
+      [createSPKDTO.area_id],
+    );
+    totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    const cashAdvance = Number(createSPKDTO.cash_advance);
+
+    if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
+      createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+    } else {
+      createSPKDTO.status = SPKStatus.CREATED;
+    }
+
     createSPKDTO.created_by = user_id;
     createSPKDTO.approved_by = user_id;
 
@@ -192,10 +214,25 @@ export class SPKService {
       data.andWhere('userInhouse.id = :inHouseUserId', {
         inHouseUserId: user.id,
       });
+      data.andWhere((qb) => {
+        qb.where('spk.status = :status', {
+          status: SPKStatus.APPROVED,
+        }).orWhere('spk.status = :status', {
+          status: SPKStatus.APPROVED_OVER_BUDGET,
+        });
+      });
     } else if (userRole.some((e) => e.roleData.code == RoleEnum.RPM)) {
       data.andWhere(
         'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
       );
+    } else if (userRole.some((e) => e.roleData.code == RoleEnum.ADMINPAYMENT)) {
+      data.andWhere((qb) => {
+        qb.where('spk.status = :status', {
+          status: SPKStatus.APPROVED,
+        }).orWhere('spk.status = :status', {
+          status: SPKStatus.APPROVED_OVER_BUDGET,
+        });
+      });
     }
 
     if (paginationOptions.search) {

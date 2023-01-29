@@ -71,8 +71,9 @@ export enum ErrorMessage {
 
 export enum SPKStatus {
   CREATED = 0,
-  APPROVED = 1,
-  APPROVED_OVER_BUDGET = 2,
-  PAID = 3,
-  CLOSED = 4,
+  CREATED_OVER_BUDGET = 1,
+  APPROVED = 2,
+  APPROVED_OVER_BUDGET = 3,
+  PAID = 4,
+  CLOSED = 5,
 }

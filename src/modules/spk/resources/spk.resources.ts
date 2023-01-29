@@ -15,6 +15,8 @@ export const SPKResource = (spk: SPK): any => {
             name:
               spk.status == SPKStatus.CREATED
                 ? 'Dibuat'
+                : spk.status == SPKStatus.CREATED_OVER_BUDGET
+                ? 'Dibuat Over Budget'
                 : spk.status == SPKStatus.APPROVED
                 ? 'Disetujui'
                 : spk.status == SPKStatus.APPROVED_OVER_BUDGET

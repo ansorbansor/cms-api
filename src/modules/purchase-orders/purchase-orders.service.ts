@@ -66,7 +66,7 @@ export class PurchaseOrderService {
     paginationOptions.total = total;
 
     if (!paginationOptions.limit) {
-      paginationOptions.limit = total;
+      paginationOptions.limit = 50;
     }
 
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);

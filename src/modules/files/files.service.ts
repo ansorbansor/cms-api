@@ -49,7 +49,15 @@ export class FilesService {
       );
     }
 
-    if (!(file.mimetype.includes('jpeg') || file.mimetype.includes('png'))) {
+    console.log(`uwuu ${file.mimetype}`);
+
+    if (
+      !(
+        file.mimetype.includes('jpeg') ||
+        file.mimetype.includes('png') ||
+        file.mimetype.includes('image/*')
+      )
+    ) {
       throw new HttpException(
         'File type not supported',
         HttpStatus.BAD_REQUEST,

@@ -101,7 +101,7 @@ export class SPKService {
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
       createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
     } else {
-      createSPKDTO.status = SPKStatus.CREATED;
+      createSPKDTO.status = SPKStatus.APPROVED;
     }
 
     createSPKDTO.created_by = user_id;
@@ -211,27 +211,16 @@ export class SPKService {
           e.roleData.code == RoleEnum.MEMBER,
       )
     ) {
-      data.andWhere('userInhouse.id = :inHouseUserId', {
+      data.where('inhouse_team.user_id = :inHouseUserId', {
         inHouseUserId: user.id,
-      });
-      data.andWhere((qb) => {
-        qb.where('spk.status = :status', {
-          status: SPKStatus.APPROVED,
-        }).orWhere('spk.status = :status', {
-          status: SPKStatus.APPROVED_OVER_BUDGET,
-        });
       });
     } else if (userRole.some((e) => e.roleData.code == RoleEnum.RPM)) {
       data.andWhere(
         'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
       );
     } else if (userRole.some((e) => e.roleData.code == RoleEnum.ADMINPAYMENT)) {
-      data.andWhere((qb) => {
-        qb.where('spk.status = :status', {
-          status: SPKStatus.APPROVED,
-        }).orWhere('spk.status = :status', {
-          status: SPKStatus.APPROVED_OVER_BUDGET,
-        });
+      data.andWhere('spk.status >= :status', {
+        status: SPKStatus.APPROVED,
       });
     }
 

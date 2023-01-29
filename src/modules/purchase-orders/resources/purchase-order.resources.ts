@@ -24,7 +24,7 @@ export const PurchaseOrderBySiteResource = (po: PurchaseOrder): any => {
 
 export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
   return {
-    id: po.id,
+    id: Number(po.id),
     cc: po.cc,
     line_po_number: po.line_po_number ? po.line_po_number : '-',
     po_number: po.po_number ? po.po_number : '-',
@@ -45,15 +45,15 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       code: po.site ? po.site.code : '-',
     },
     item_code: po.item_code ? po.item_code : '-',
-    unit_price: po.unit_price ? po.unit_price : '-',
+    unit_price: po.unit_price ? Number(po.unit_price) : 0,
     item_description: po.item_description ? po.item_description : '-',
-    unit_price_1: po.unit_price_1 ? po.unit_price_1 : '-',
-    unit_price_2: po.unit_price_2 ? po.unit_price_2 : '-',
-    requested_qty: po.requested_qty ? po.requested_qty : '-',
-    billed_qty: po.billed_qty ? po.billed_qty : '-',
-    due_qty: po.due_qty ? po.due_qty : '-',
-    line_amount: po.line_amount ? po.line_amount : '-',
-    remaining_from_po: po.remaining_from_po ? po.remaining_from_po : '-',
+    unit_price_1: po.unit_price_1 ? Number(po.unit_price_1) : 0,
+    unit_price_2: po.unit_price_2 ? Number(po.unit_price_2) : 0,
+    requested_qty: po.requested_qty ? Number(po.requested_qty) : 0,
+    billed_qty: po.billed_qty ? Number(po.billed_qty) : 0,
+    due_qty: po.due_qty ? Number(po.due_qty) : 0,
+    line_amount: po.line_amount ? Number(po.line_amount) : 0,
+    remaining_from_po: po.remaining_from_po ? Number(po.remaining_from_po) : 0,
     unit: po.unit ? po.unit : '-',
     payment_terms: po.payment_terms ? po.payment_terms : '-',
     bidding_area: po.bidding_area ? po.bidding_area.name : '-',
@@ -71,16 +71,16 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     pending_type: po.pending_type ? po.pending_type.name : '-',
     pending_approval_pd: po.pending_approval_pd ? po.pending_approval_pd : '-',
     amount_pending_approval_pd: po.amount_pending_approval_pd
-      ? po.amount_pending_approval_pd
-      : '-',
+      ? Number(po.amount_pending_approval_pd)
+      : 0,
     pd: po.pd ? po.pd.name : '-',
     actual_completion_date_vs_to_pd: po.actual_completion_date
       ? po.actual_completion_date
       : '-',
     ready_invoice: po.ready_invoice ? po.ready_invoice : '-',
     amount_ready_invoice: po.amount_ready_invoice
-      ? po.amount_ready_invoice
-      : '-',
+      ? Number(po.amount_ready_invoice)
+      : 0,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {
@@ -93,6 +93,6 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
           };
         })
       : [],
-    budget_percentage: po.budget_percentage,
+    budget_percentage: Number(po.budget_percentage),
   };
 };

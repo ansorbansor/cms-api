@@ -32,15 +32,29 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     po_status: po.status ? po.status : '-',
     line_po_status:
       po.line_po_status && po.line_po_status == 1 ? 'Active' : 'Non Active',
-    region_name: po.region ? po.region.name : '-',
-    area_name: po.area ? po.area.name : '-',
-    operator_name: po.operator ? po.operator.name : '-',
-    customer_name: po.customer ? po.customer.name : '-',
+    region: {
+      id: po.region ? po.region.id : null,
+      name: po.region ? po.region.name : '-',
+    },
+    area: {
+      id: po.area ? po.area.id : null,
+      name: po.area ? po.area.name : '-',
+    },
+    operator: {
+      id: po.operator ? po.operator.id : null,
+      name: po.operator ? po.operator.name : '-',
+    },
+    customer: {
+      id: po.customer ? po.customer.id : null,
+      name: po.customer ? po.customer.name : '-',
+    },
     project: {
+      id: po.project ? po.project.id : null,
       name: po.project ? po.project.name : '-',
       code: po.project ? po.project.code : '-',
     },
     site: {
+      id: po.site ? po.site.id : null,
       name: po.site ? po.site.name : '-',
       code: po.site ? po.site.code : '-',
     },
@@ -56,24 +70,39 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     remaining_from_po: po.remaining_from_po ? Number(po.remaining_from_po) : 0,
     unit: po.unit ? po.unit : '-',
     payment_terms: po.payment_terms ? po.payment_terms : '-',
-    bidding_area: po.bidding_area ? po.bidding_area.name : '-',
+    bidding_area: {
+      id: po.bidding_area ? po.bidding_area.id : null,
+      name: po.bidding_area ? po.bidding_area.name : '-',
+    },
     publish_date: po.publish_date ? po.publish_date : '-',
     start_date: po.start_date ? po.start_date : '-',
     end_date: po.end_date ? po.end_date : '-',
     remark_weekly: po.remark_weekly ? po.remark_weekly : '-',
-    remark_project: po.remark_project ? po.remark_project.name : '-',
+    remark_project: {
+      id: po.remark_project ? po.remark_project.id : null,
+      name: po.remark_project ? po.remark_project.name : '-',
+    },
     remark_highlight: po.remark_highlight ? po.remark_highlight : '-',
     aging_po: po.publish_date ? moment().diff(po.publish_date, 'day') : '-',
     priority_esar_approve: po.priority_esar_approve
       ? po.priority_esar_approve
       : '-',
-    status_acceptance: po.status_acceptance ? po.status_acceptance.name : '-',
-    pending_type: po.pending_type ? po.pending_type.name : '-',
+    status_acceptance: {
+      id: po.status_acceptance ? po.status_acceptance.id : null,
+      name: po.status_acceptance ? po.status_acceptance.name : '-',
+    },
+    pending_type: {
+      id: po.pending_type ? po.pending_type.id : null,
+      name: po.pending_type ? po.pending_type.name : '-',
+    },
     pending_approval_pd: po.pending_approval_pd ? po.pending_approval_pd : '-',
     amount_pending_approval_pd: po.amount_pending_approval_pd
       ? Number(po.amount_pending_approval_pd)
       : 0,
-    pd: po.pd ? po.pd.name : '-',
+    pd: {
+      id: po.pd ? po.pd.id : null,
+      name: po.pd ? po.pd.name : '-',
+    },
     actual_completion_date_vs_to_pd: po.actual_completion_date
       ? po.actual_completion_date
       : '-',

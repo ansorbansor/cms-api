@@ -79,19 +79,18 @@ export class PurchaseOrderController {
     );
   }
 
-  @Patch('po/:id')
+  @Patch('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
-    @Param() param: IDParamDto,
     @Body() updatePurchaseOrderDto: UpdatePurchaseOrderDTO,
     @Request() req,
   ) {
     return successResponse(
       await this.poService.update(
-        param.id,
+        updatePurchaseOrderDto.id,
         updatePurchaseOrderDto,
         req.user,
         req.ip,

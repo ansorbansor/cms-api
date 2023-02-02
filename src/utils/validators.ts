@@ -10,6 +10,7 @@ type ValidationNotExistsEntity =
       id?: number | string;
       name?: string;
       code?: string;
+      cc?: string;
     }
   | undefined;
 
@@ -46,7 +47,7 @@ export class IsNotExist implements ValidatorConstraintInterface {
       [validationArguments.property]: value,
     };
 
-    if (currentValue.name || currentValue.code) {
+    if (currentValue.name || currentValue.code || currentValue.cc) {
       where = {
         [validationArguments.property]: value,
       };
@@ -56,14 +57,15 @@ export class IsNotExist implements ValidatorConstraintInterface {
     )) as ValidationNotExistsEntity;
 
     if (
-      (currentValue.name &&
+      ((currentValue.name || currentValue.code || currentValue.cc) &&
         currentValue.id &&
         entity?.id == currentValue?.id &&
         ((entity?.name &&
           entity?.name.toLowerCase() === currentValue?.name.toLowerCase()) ||
           (entity?.code &&
-            entity?.code.toLowerCase() ===
-              currentValue?.code.toLowerCase()))) ||
+            entity?.code.toLowerCase() === currentValue?.code.toLowerCase()) ||
+          (entity?.cc &&
+            entity?.cc.toLowerCase() === currentValue?.cc.toLowerCase()))) ||
       !entity
     ) {
       return true;

@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, Validate } from 'class-validator';
+import { IsNotEmpty, IsOptional, Validate } from 'class-validator';
 import { IsNotExist } from 'src/utils/validators';
 
 export class UpdatePurchaseOrderDTO {
+  @ApiProperty()
+  @IsNotEmpty({ message: 'ID PO tidak boleh kosong' })
+  id: number;
+
   @ApiProperty({ example: '1234567890' })
   @IsOptional()
-  @Validate(IsNotExist, ['PurchaseOrder'], {
+  @Validate(IsNotExist, ['PurchaseOrder', 'cc'], {
     message: 'CC telah terdaftar',
   })
   cc: string;
@@ -108,15 +112,15 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  publish_date: Date;
+  publish_date?: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  start_date: Date;
+  start_date?: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  end_date: Date;
+  end_date?: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
@@ -152,7 +156,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  actual_completion_date: Date;
+  actual_completion_date?: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()

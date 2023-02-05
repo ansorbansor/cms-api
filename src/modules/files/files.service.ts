@@ -49,8 +49,6 @@ export class FilesService {
       );
     }
 
-    console.log(`uwuu ${file.mimetype}`);
-
     if (
       !(
         file.mimetype.includes('jpeg') ||

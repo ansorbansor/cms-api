@@ -110,6 +110,7 @@ export class SPKController {
   async updateCostEvidence(
     @Request() req,
     @Param() param: IDParamDto,
+    @Body('id') id: number[],
     @Body('name') name: string[],
     @Body('cost') cost: number[],
     @Body('deleted_id') deletedId: number[],
@@ -120,6 +121,7 @@ export class SPKController {
         param.id,
         req.user,
         req.ip,
+        id,
         name,
         cost,
         files,

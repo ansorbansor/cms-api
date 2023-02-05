@@ -16,7 +16,7 @@ import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
-import e from 'express';
+import * as fs from 'fs';
 
 @Injectable()
 export class SPKService {
@@ -335,6 +335,7 @@ export class SPKService {
     const exists = await this.findOneFull({ id: id });
 
     if (!exists) {
+      this.deleteFiles(files);
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK tidak ditemukan',
@@ -449,55 +450,83 @@ export class SPKService {
   }
 
   async updateCostEvidence(
-    id: number,
+    spkId: number,
     user: User,
     ip: string,
+    id: number[],
     name: string[],
     cost: number[],
     files: Array<Express.Multer.File>,
     deleted_id: number[],
   ) {
-    if (!files) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan foto');
-    }
-
-    if (!files || name.length != cost.length || name.length != files.length) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, `Jumlah data tidak sesuai`);
-    }
-
-    const evidencePhoto = files.find((e) => {
-      return e.fieldname == 'evidence_photo';
-    });
-
-    if (!evidencePhoto) {
-      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan foto');
-    }
-
     if (deleted_id) {
       await this.spkCostEvidenceRepository.softDelete(deleted_id);
     }
 
-    const photoIds = [];
-    for (const e of files) {
-      const uploadedPhoto = await this.fileService.uploadFile(
-        e,
-        user.id,
-        FilePath.SPK_COST_EVIDENCE,
-        'Cost Evidence',
-      );
-      photoIds.push(uploadedPhoto.id);
+    if (id || name || cost) {
+      if (name.length != cost.length || id.length != cost.length) {
+        this.deleteFiles(files);
+        throw failedResponse(
+          HttpStatus.BAD_REQUEST,
+          `Jumlah data tidak sesuai`,
+        );
+      }
+
+      const insertData = [];
+      const updateData = [];
+
+      for (const [index, e] of id.entries()) {
+        const data = {
+          spk_id: spkId,
+          name: name[index],
+          cost: cost[index],
+        };
+
+        const file = files.find(
+          (e) => e.fieldname == `evidence_photo[${index}]`,
+        );
+
+        if (!e && !file) {
+          this.deleteFiles(files);
+          throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan foto!');
+        }
+
+        if (file) {
+          const uploadedPhoto = await this.fileService.uploadFile(
+            file,
+            user.id,
+            FilePath.SPK_COST_EVIDENCE,
+            'Cost Evidence',
+          );
+          data['photo'] = uploadedPhoto.id;
+        }
+
+        if (e) {
+          data['id'] = e;
+          updateData.push(data);
+        } else {
+          insertData.push(data);
+        }
+      }
+
+      if (insertData.length > 0) {
+        await this.spkCostEvidenceRepository.insert(insertData);
+      }
+
+      if (updateData.length > 0) {
+        for (const data of updateData) {
+          await this.spkCostEvidenceRepository.update(data.id, data);
+        }
+      }
     }
+  }
 
-    const updateData = name.map((value, index) => {
-      return {
-        spk_id: id,
-        name: value,
-        cost: cost[index],
-        photo: photoIds[index],
-      };
-    });
-
-    await this.spkCostEvidenceRepository.insert(updateData);
+  deleteFiles(files: Array<Express.Multer.File>) {
+    for (const file of files) {
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+    }
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {

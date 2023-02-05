@@ -245,19 +245,25 @@ export class ImportService {
           successMessage += `menambah ${insertDataUserList.length} data Karyawan, `;
         }
 
-        fs.unlinkSync(file.path);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
 
         return successResponse(null, successMessage.slice(0, -2));
       } else {
-        fs.unlinkSync(file.path);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
         throw failedResponse(
           HttpStatus.BAD_REQUEST,
-          `Sheet "Detail" tidak ditemukan`,
+          "Sheet 'Detail' tidak ditemukan",
         );
       }
     } catch (err) {
       console.log(err);
-      fs.unlinkSync(file.path);
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
     }
   }
 
@@ -267,14 +273,17 @@ export class ImportService {
     }
 
     try {
-      await this.getExistingMasterData();
+      const workbook = xlsx.readFile(file.path);
+      const worksheet = workbook.Sheets['Detail'];
+      if (worksheet) {
+        await this.getExistingMasterData();
 
-      let poData = await getManager().query(
-        `SELECT * FROM purchase_orders WHERE deleted_at IS NULL`,
-      );
+        let poData = await getManager().query(
+          `SELECT * FROM purchase_orders WHERE deleted_at IS NULL`,
+        );
 
-      const poInvoiceData = await getManager().query(
-        `SELECT 
+        const poInvoiceData = await getManager().query(
+          `SELECT 
           poi.id "poi_id",  
           po.id "po_id", 
           poi.invoice_number, 
@@ -292,20 +301,11 @@ export class ImportService {
           poi.deleted_at IS NULL AND 
           po.deleted_at IS NULL AND
           poi.purchase_order_id = po.id`,
-      );
+        );
 
-      const poCCData = poData.map((data) => {
-        return data.cc ? data.cc : null;
-      });
-
-      console.log('poCCData');
-
-      const workbook = xlsx.readFile(file.path);
-      console.log('workbook read file');
-
-      const worksheet = workbook.Sheets['Detail'];
-      console.log('worksheet');
-      if (worksheet) {
+        const poCCData = poData.map((data) => {
+          return data.cc ? data.cc : null;
+        });
         const rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
           Object.keys(row).reduce((obj, key) => {
             obj[key.trim().toLowerCase()] = isString(row[key.trim()])
@@ -570,19 +570,25 @@ export class ImportService {
           successMessage += `menambah ${insertDataPOInvoiceList.length} data Invoice PO, `;
         }
 
-        fs.unlinkSync(file.path);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
 
         return successResponse(null, successMessage.slice(0, -2));
       } else {
-        fs.unlinkSync(file.path);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
         throw failedResponse(
           HttpStatus.BAD_REQUEST,
-          `Sheet "Detail" tidak ditemukan`,
+          "Sheet 'Detail' tidak ditemukan",
         );
       }
     } catch (err) {
-      console.log(err);
-      fs.unlinkSync(file.path);
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      throw err;
     }
   }
 

@@ -12,12 +12,15 @@ import {
 } from './resources/purchase-order.resources';
 import { User } from 'src/entities/user.entity';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
+import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 
 @Injectable()
 export class PurchaseOrderService {
   constructor(
     @InjectRepository(PurchaseOrder)
     private purchaseOrdersRepository: Repository<PurchaseOrder>,
+    @InjectRepository(PurchaseOrderInvoice)
+    private purchaseOrderInvoiceRepository: Repository<PurchaseOrderInvoice>,
     private activityLogService: ActivityLogService,
   ) {}
 
@@ -32,6 +35,16 @@ export class PurchaseOrderService {
         ...createPurchaseOrderDTO,
       }),
     );
+
+    if (createPurchaseOrderDTO.invoices) {
+      const saveInvoice = createPurchaseOrderDTO.invoices;
+      for (const data of saveInvoice) {
+        data['user_id'] = user_id;
+        data['purchase_order_id'] = po.id;
+      }
+
+      await this.purchaseOrderInvoiceRepository.save(saveInvoice);
+    }
 
     await this.activityLogService.create({
       user_id: user_id,
@@ -131,9 +144,28 @@ export class PurchaseOrderService {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { invoices, deleted_invoice_id, ...updatedDataPO } =
+      updatePurchaseOrderDto;
+
     await this.purchaseOrdersRepository.update(id, {
-      ...updatePurchaseOrderDto,
+      ...updatedDataPO,
     });
+
+    if (updatePurchaseOrderDto.invoices) {
+      for (const inv of updatePurchaseOrderDto.invoices) {
+        await this.purchaseOrderInvoiceRepository.update(inv.id, inv);
+      }
+    }
+
+    if (
+      updatePurchaseOrderDto.deleted_invoice_id &&
+      updatePurchaseOrderDto.deleted_invoice_id.length > 0
+    ) {
+      for (const del of updatePurchaseOrderDto.deleted_invoice_id) {
+        await this.purchaseOrderInvoiceRepository.softDelete(del);
+      }
+    }
 
     await this.activityLogService.create({
       user_id: user.id,

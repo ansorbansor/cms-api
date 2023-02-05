@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, Validate } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsOptional,
+  Validate,
+  ValidateNested,
+} from 'class-validator';
 import { IsNotExist } from 'src/utils/validators';
 
 export class UpdatePurchaseOrderDTO {
@@ -173,4 +179,42 @@ export class UpdatePurchaseOrderDTO {
   @ApiProperty({ example: 1 })
   @IsOptional()
   budget_percentage: number;
+
+  @ValidateNested({ each: true })
+  @Type(() => Invoices)
+  invoices: Invoices[];
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  deleted_invoice_id: number[];
+}
+
+class Invoices {
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty()
+  id: number;
+
+  @ApiProperty({ example: 'ABC123' })
+  @IsNotEmpty()
+  invoice_number: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty()
+  invoice_date: Date;
+
+  @ApiProperty({ example: 'ABC123' })
+  @IsNotEmpty()
+  invoice_status: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty()
+  payment_date: Date;
+
+  @ApiProperty({ example: 'ABC123' })
+  @IsNotEmpty()
+  supplier_tax_number: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty()
+  supplier_tax_date: Date;
 }

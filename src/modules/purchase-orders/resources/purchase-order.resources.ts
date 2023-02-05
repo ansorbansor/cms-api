@@ -119,6 +119,7 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {
+            id: e.id,
             invoice_number: e.invoice_number,
             date: e.invoice_date
               ? moment(e.invoice_date).format('yyyy-MM-D HH:mm:ss')

@@ -107,6 +107,7 @@ export const SPKResource = (spk: SPK): any => {
     cost_evidences: spk.cost_evidences
       ? spk.cost_evidences.map((costEvidence) => {
           return {
+            id: costEvidence && costEvidence.id ? costEvidence.id : null,
             name: costEvidence && costEvidence.name ? costEvidence.name : '-',
             cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
             photo:

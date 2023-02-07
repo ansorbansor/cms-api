@@ -7,7 +7,6 @@ import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
 import { SPK } from 'src/entities/spk.entity';
 import { CreateSPKDTO } from './dto/create.spk.dto';
-import { SPKResource } from './resources/spk.resources';
 import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { FilesService } from '../files/files.service';
 import { FilePath, RoleEnum, SPKStatus } from 'src/utils/enums';
@@ -17,6 +16,7 @@ import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
 import { UserRoles } from 'src/entities/user-role.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as fs from 'fs';
+import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 
 @Injectable()
 export class SPKService {
@@ -286,7 +286,7 @@ export class SPKService {
       );
     }
 
-    return SPKResource(data);
+    return SPKResourceDetail(data);
   }
 
   async findOneFull(fields: EntityCondition<SPK>) {

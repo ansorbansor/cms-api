@@ -8,6 +8,36 @@ export const SPKResource = (spk: SPK): any => {
     id: spk.id,
     spk_number: spk.spk_number,
     spk_date: moment(spk.created_at).format('yyyy-MM-D HH:mm:ss'),
+    po_number: spk.po.po_number ? spk.po.po_number : '-',
+    cash_advance: spk.cash_advance,
+    spk_status:
+      spk.status != null && spk.status != undefined
+        ? {
+            status: spk.status,
+            name:
+              spk.status == SPKStatus.CREATED
+                ? 'Dibuat'
+                : spk.status == SPKStatus.CREATED_OVER_BUDGET
+                ? 'Dibuat Over Budget'
+                : spk.status == SPKStatus.APPROVED
+                ? 'Disetujui'
+                : spk.status == SPKStatus.APPROVED_OVER_BUDGET
+                ? 'Disetujui Over Budget'
+                : spk.status == SPKStatus.PAID
+                ? 'Dibayar'
+                : spk.status == SPKStatus.CLOSED
+                ? 'Diselesaikan'
+                : '-',
+          }
+        : null,
+  };
+};
+
+export const SPKResourceDetail = (spk: SPK): any => {
+  return {
+    id: spk.id,
+    spk_number: spk.spk_number,
+    spk_date: moment(spk.created_at).format('yyyy-MM-D HH:mm:ss'),
     spk_status:
       spk.status != null && spk.status != undefined
         ? {

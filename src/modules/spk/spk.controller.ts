@@ -22,12 +22,12 @@ import { successResponse, successResponseList } from 'src/utils/responses';
 import { IDParamDto } from 'src/utils/id-param.dto';
 import { SPKService } from './spk.service';
 import { CreateSPKDTO } from './dto/create.spk.dto';
-import { SPKResource } from './resources/spk.resources';
 import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Menus } from 'src/utils/decorator';
 import { MenuPermission } from 'src/utils/enums';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
+import { SPKResourceDetail } from './resources/spk.resources';
 
 @ApiBearerAuth()
 @ApiTags('SPK')
@@ -50,7 +50,7 @@ export class SPKController {
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return successResponse(
-      SPKResource(
+      SPKResourceDetail(
         await this.spkService.create(createSPKDto, req.user.id, req.ip, files),
       ),
       'success',

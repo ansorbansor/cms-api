@@ -166,6 +166,8 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.userRoles', 'userRole')
       .leftJoinAndSelect('userRole.roleData', 'role')
+      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)

@@ -225,7 +225,7 @@ export class SPKService {
     }
 
     if (paginationOptions.search) {
-      data.andWhere('spk.name ILIKE :search', {
+      data.andWhere('spk.spk_number ILIKE :search', {
         search: `%${paginationOptions.search}%`,
       });
     }
@@ -258,6 +258,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.po', 'po')
       .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
       .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
+      .leftJoinAndSelect('userInhouse.employeePosition', 'employeePosition')
       .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
       .leftJoinAndSelect('spk.km_range_start_file', 'km_range_start_file')
       .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')

@@ -8,7 +8,7 @@ export const SPKResource = (spk: SPK): any => {
     id: spk.id,
     spk_number: spk.spk_number,
     spk_date: moment(spk.created_at).format('yyyy-MM-D HH:mm:ss'),
-    po_number: spk.po.po_number ? spk.po.po_number : '-',
+    po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
     cash_advance: spk.cash_advance,
     spk_status:
       spk.status != null && spk.status != undefined
@@ -59,12 +59,18 @@ export const SPKResourceDetail = (spk: SPK): any => {
           }
         : null,
     region: {
-      id: spk.region.id ? spk.region.id : null,
-      name: spk.region.name ? spk.region.name : '-',
+      id: spk.region && spk.region.id ? spk.region.id : null,
+      name: spk.region && spk.region.name ? spk.region.name : '-',
     },
     transportation: {
-      id: spk.transportation.id ? spk.transportation.id : null,
-      name: spk.transportation.name ? spk.transportation.name : '-',
+      id:
+        spk.transportation && spk.transportation.id
+          ? spk.transportation.id
+          : null,
+      name:
+        spk.transportation && spk.transportation.name
+          ? spk.transportation.name
+          : '-',
     },
     police_number: spk.police_number,
     cash_advance: spk.cash_advance,
@@ -72,21 +78,23 @@ export const SPKResourceDetail = (spk: SPK): any => {
       ? Number(spk.total_cash_advance)
       : null,
     pay_to_user: {
-      id: spk.pay_to_user.id ? spk.pay_to_user.id : null,
-      name: spk.pay_to_user.name ? spk.pay_to_user.name : '-',
+      id: spk.pay_to_user && spk.pay_to_user.id ? spk.pay_to_user.id : null,
+      name:
+        spk.pay_to_user && spk.pay_to_user.name ? spk.pay_to_user.name : '-',
     },
     site: {
-      id: spk.site.id ? spk.site.id : null,
-      name: spk.site.name ? spk.site.name : '-',
+      id: spk.site && spk.site.id ? spk.site.id : null,
+      name: spk.site && spk.site.name ? spk.site.name : '-',
     },
     area: {
-      id: spk.area.id ? spk.area.id : null,
-      name: spk.area.name ? spk.area.name : '-',
+      id: spk.area && spk.area.id ? spk.area.id : null,
+      name: spk.area && spk.area.name ? spk.area.name : '-',
     },
     distance: spk.distance ? spk.distance : '-',
     work_type: spk.work_type ? spk.work_type : '-',
     po: {
-      item_description: spk.po ? spk.po.item_description : null,
+      item_description:
+        spk.po && spk.po.item_description ? spk.po.item_description : '-',
       total_unit_price: spk.total_po_unit_price
         ? Number(spk.total_po_unit_price)
         : null,
@@ -104,6 +112,12 @@ export const SPKResourceDetail = (spk: SPK): any => {
             name:
               inhouseTeam && inhouseTeam.userInhouse
                 ? inhouseTeam.userInhouse.name
+                : '-',
+            position:
+              inhouseTeam &&
+              inhouseTeam.userInhouse &&
+              inhouseTeam.userInhouse.employeePosition
+                ? inhouseTeam.userInhouse.employeePosition.name
                 : '-',
           };
         })

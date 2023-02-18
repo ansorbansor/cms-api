@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { getManager, getRepository, Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -128,6 +128,145 @@ export class SPKService {
     });
 
     return await this.findOne({ id: spk.id });
+  }
+
+  async update(
+    id: number,
+    updateSPKDTO: UpdateSPKDTO,
+    user: User,
+    ip: string,
+    files: Array<Express.Multer.File>,
+  ) {
+    const exists = await this.findOneFull({ id: id });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK tidak ditemukan',
+      );
+    }
+
+    if (exists.status > 2) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK yang sudah dibayar atau approve over budget tidak bisa diedit!',
+      );
+    }
+
+    const distanceToSitePhoto = files.find((e) => {
+      return e.fieldname == 'distance_to_site_photo';
+    });
+    const kmRangeStartPhoto = files.find((e) => {
+      return e.fieldname == 'km_range_start_photo';
+    });
+    const kmRangeEndPhoto = files.find((e) => {
+      return e.fieldname == 'km_range_end_photo';
+    });
+
+    if (distanceToSitePhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        distanceToSitePhoto,
+        user.id,
+        FilePath.SPK_SITE_DISTANCE,
+        'Distance To Site',
+      );
+
+      updateSPKDTO.distance_to_site_photo = uploadedPhoto.id;
+    }
+
+    if (kmRangeStartPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmRangeStartPhoto,
+        user.id,
+        FilePath.SPK_KM_RANGE_START,
+        'KM Range Start',
+      );
+
+      updateSPKDTO.km_range_start_photo = uploadedPhoto.id;
+    }
+
+    if (kmRangeEndPhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmRangeEndPhoto,
+        user.id,
+        FilePath.SPK_KM_RANGE_END,
+        'KM Range End',
+      );
+
+      updateSPKDTO.km_range_end_photo = uploadedPhoto.id;
+    }
+
+    let maxBudgetBySite = await getManager().query(
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1',
+      [updateSPKDTO.area_id],
+    );
+    maxBudgetBySite = maxBudgetBySite[0].sum
+      ? Number(maxBudgetBySite[0].sum)
+      : 0;
+
+    let totalSPKAmount = await getManager().query(
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1',
+      [updateSPKDTO.area_id],
+    );
+    totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    const cashAdvance = Number(updateSPKDTO.cash_advance);
+
+    if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
+      updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+    } else {
+      updateSPKDTO.status = SPKStatus.APPROVED;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { inhouse_team_user_id, ...updatedDataSPK } = updateSPKDTO;
+
+    await this.spkRepository.update(id, {
+      ...updatedDataSPK,
+    });
+
+    //update inhouse team
+    if (
+      updateSPKDTO.inhouse_team_user_id &&
+      updateSPKDTO.inhouse_team_user_id.length > 0
+    ) {
+      const inhouseTeam = [];
+      //check new or recent inhouse team users
+      for (const i of updateSPKDTO.inhouse_team_user_id) {
+        if (!exists.inhouse_team.find((e) => e.userInhouse.id == i)) {
+          const team = new SPKInhouseTeam();
+          team.user_id = i;
+          team.spk_id = id;
+          inhouseTeam.push(team);
+        }
+      }
+
+      const deletedInhouseTeam = [];
+      //check deleted inhouse team
+      for (const i of exists.inhouse_team) {
+        if (
+          !updateSPKDTO.inhouse_team_user_id.find((e) => e == i.userInhouse.id)
+        ) {
+          deletedInhouseTeam.push(i.id);
+        }
+      }
+
+      if (inhouseTeam.length > 0) {
+        await this.spkInhouseTeamRepository.insert(inhouseTeam);
+      }
+
+      if (deletedInhouseTeam.length > 0) {
+        await this.spkInhouseTeamRepository.softDelete(deletedInhouseTeam);
+      }
+    }
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Update Data SPK`,
+      ip: ip,
+    });
+
+    return await this.findOne({ id: id });
   }
 
   async findManyWithPagination(
@@ -293,33 +432,12 @@ export class SPKService {
   async findOneFull(fields: EntityCondition<SPK>) {
     const data = await this.spkRepository
       .createQueryBuilder('spk')
+      .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
+      .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
       .where(fields)
       .getOne();
 
     return data;
-  }
-
-  async update(id: number, updateSPKDTO: UpdateSPKDTO, user: User, ip: string) {
-    const exists = await this.findOneFull({ id: id });
-
-    if (!exists) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'SPK tidak ditemukan',
-      );
-    }
-
-    await this.spkRepository.update(id, {
-      ...updateSPKDTO,
-    });
-
-    await this.activityLogService.create({
-      user_id: user.id,
-      description: `Update Data SPK`,
-      ip: ip,
-    });
-
-    return await this.findOne({ id: id });
   }
 
   async updateCICOPhoto(

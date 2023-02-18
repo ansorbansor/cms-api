@@ -5,14 +5,14 @@ import { IsExist } from 'src/utils/validators';
 export class UpdateSPKDTO {
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['Regions'], {
+  @Validate(IsExist, ['Region', 'id'], {
     message: 'Region tidak ditemukan',
   })
   region_id: number;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['Transportations'], {
+  @Validate(IsExist, ['Transportation', 'id'], {
     message: 'Armada tidak ditemukan',
   })
   transportation_id: number;
@@ -27,21 +27,21 @@ export class UpdateSPKDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['Users'], {
+  @Validate(IsExist, ['User', 'id'], {
     message: 'Pengguna tidak ditemukan',
   })
   pay_to_user_id: number;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['Sites'], {
+  @Validate(IsExist, ['Site', 'id'], {
     message: 'Site tidak ditemukan',
   })
   site_id: number;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['Areas'], {
+  @Validate(IsExist, ['Area', 'id'], {
     message: 'Area tidak ditemukan',
   })
   area_id: number;
@@ -56,7 +56,7 @@ export class UpdateSPKDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
-  @Validate(IsExist, ['purchase_orders'], {
+  @Validate(IsExist, ['PurchaseOrder', 'id'], {
     message: 'PO tidak ditemukan',
   })
   po_id: number;
@@ -69,4 +69,9 @@ export class UpdateSPKDTO {
   @ApiProperty({ example: 'Lorem ipsum' })
   @IsOptional()
   remark_inhouse_team: string;
+
+  distance_to_site_photo: number;
+  km_range_start_photo: number;
+  km_range_end_photo: number;
+  status: number;
 }

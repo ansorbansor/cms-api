@@ -57,6 +57,30 @@ export class SPKController {
     );
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @Menus(MenuPermission.SPK_CREATE)
+  @UseInterceptors(AnyFilesInterceptor())
+  async update(
+    @Param() param: IDParamDto,
+    @Body() updateSPKDto: UpdateSPKDTO,
+    @Request() req,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.spkService.update(
+        param.id,
+        updateSPKDto,
+        req.user,
+        req.ip,
+        files,
+      ),
+      'success',
+    );
+  }
+
   @Post('cico/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -162,20 +186,6 @@ export class SPKController {
       await this.spkService.findOne({
         id: +param.id,
       }),
-      'success',
-    );
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async update(
-    @Param() param: IDParamDto,
-    @Body() updateSPKDto: UpdateSPKDTO,
-    @Request() req,
-  ) {
-    return successResponse(
-      await this.spkService.update(param.id, updateSPKDto, req.user, req.ip),
       'success',
     );
   }

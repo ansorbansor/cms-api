@@ -152,10 +152,29 @@ export class PurchaseOrderService {
       ...updatedDataPO,
     });
 
+    const insertedInvoice = [];
+
     if (updatePurchaseOrderDto.invoices) {
       for (const inv of updatePurchaseOrderDto.invoices) {
-        await this.purchaseOrderInvoiceRepository.update(inv.id, inv);
+        if (inv.id) {
+          await this.purchaseOrderInvoiceRepository.update(inv.id, inv);
+        } else {
+          insertedInvoice.push({
+            invoice_number: inv.invoice_number,
+            invoice_date: inv.invoice_date,
+            invoice_status: inv.invoice_status,
+            payment_date: inv.payment_date,
+            supplier_tax_number: inv.supplier_tax_number,
+            supplier_tax_date: inv.supplier_tax_date,
+            purchase_order_id: id,
+            user_id: user.id,
+          });
+        }
       }
+    }
+
+    if (insertedInvoice.length > 0) {
+      await this.purchaseOrderInvoiceRepository.insert(insertedInvoice);
     }
 
     if (

@@ -191,7 +191,7 @@ export class UpdatePurchaseOrderDTO {
 
 class Invoices {
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   id: number;
 
   @ApiProperty({ example: 'ABC123' })

@@ -93,6 +93,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
     distance: spk.distance ? spk.distance : '-',
     work_type: spk.work_type ? spk.work_type : '-',
     po: {
+      id: spk.po && spk.po.id ? spk.po.id : null,
       item_description:
         spk.po && spk.po.item_description ? spk.po.item_description : '-',
       total_unit_price: spk.total_po_unit_price

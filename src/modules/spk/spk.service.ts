@@ -275,66 +275,7 @@ export class SPKService {
   ) {
     const data = this.spkRepository
       .createQueryBuilder('spk')
-      .leftJoinAndSelect('spk.region', 'region')
-      .leftJoinAndSelect('spk.transportation', 'transportation')
-      .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
-      .leftJoinAndSelect('spk.site', 'site')
-      .leftJoinAndSelect('spk.area', 'area')
-      .leftJoinAndSelect('spk.po', 'po')
-      .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
-      .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
-      .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
-      .leftJoinAndSelect('spk.km_range_start_file', 'km_range_start_file')
-      .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')
-      .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
-      .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
-      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
-      .leftJoinAndSelect(
-        'cost_evidences.cost_evidence_photo_file',
-        'cost_evidence_photo_file',
-      )
-      .leftJoinAndSelect('spk.created_by_user', 'created_by_user')
-      .leftJoinAndSelect('spk.approved_by_user', 'approved_by_user')
-      .leftJoinAndSelect(
-        'spk.approved_over_budget_by_user',
-        'approved_over_budget_by_user',
-      )
-      .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
-      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
-
-    //add total spk cash advance
-    data.addSelect(
-      'total_cash_advance.total_cash_advance',
-      'spk_total_cash_advance',
-    );
-    data.leftJoin(
-      (qb) => {
-        return qb
-          .select('s.site_id')
-          .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
-          .from(SPK, 's')
-          .groupBy('s.site_id');
-      },
-      'total_cash_advance',
-      '"total_cash_advance"."s_site_id" = spk.site_id',
-    );
-
-    //add total po budget / unit price
-    data.addSelect(
-      'total_unit_price.total_unit_price',
-      'spk_total_po_unit_price',
-    );
-    data.leftJoin(
-      (qb) => {
-        return qb
-          .select('p.site_id')
-          .addSelect('SUM(p.unit_price)', 'total_unit_price')
-          .from(PurchaseOrder, 'p')
-          .groupBy('p.site_id');
-      },
-      'total_unit_price',
-      '"total_unit_price"."p_site_id" = spk.site_id',
-    );
+      .leftJoinAndSelect('spk.po', 'po');
 
     const userRole = await this.userRolesRepository.find({
       where: { user_id: user.id },
@@ -350,10 +291,46 @@ export class SPKService {
           e.roleData.code == RoleEnum.MEMBER,
       )
     ) {
+      data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
+
       data.where('inhouse_team.user_id = :inHouseUserId', {
         inHouseUserId: user.id,
       });
     } else if (userRole.some((e) => e.roleData.code == RoleEnum.RPM)) {
+      //add total spk cash advance
+      data.addSelect(
+        'total_cash_advance.total_cash_advance',
+        'spk_total_cash_advance',
+      );
+      data.leftJoin(
+        (qb) => {
+          return qb
+            .select('s.site_id')
+            .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+            .from(SPK, 's')
+            .groupBy('s.site_id');
+        },
+        'total_cash_advance',
+        '"total_cash_advance"."s_site_id" = spk.site_id',
+      );
+
+      //add total po budget / unit price
+      data.addSelect(
+        'total_unit_price.total_unit_price',
+        'spk_total_po_unit_price',
+      );
+      data.leftJoin(
+        (qb) => {
+          return qb
+            .select('p.site_id')
+            .addSelect('SUM(p.unit_price)', 'total_unit_price')
+            .from(PurchaseOrder, 'p')
+            .groupBy('p.site_id');
+        },
+        'total_unit_price',
+        '"total_unit_price"."p_site_id" = spk.site_id',
+      );
+
       data.andWhere(
         'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
       );

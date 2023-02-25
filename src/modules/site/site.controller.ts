@@ -65,7 +65,7 @@ export class SiteController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async getPOBySite(@Param() param: IDParamDto) {
-    return successResponseList(
+    return successResponse(
       await this.siteService.getPOBySite(param.id),
       'success',
     );

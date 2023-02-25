@@ -83,16 +83,16 @@ export class SPKService {
     }
 
     let maxBudgetBySite = await getManager().query(
-      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1',
-      [createSPKDTO.area_id],
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND deleted_at IS NULL',
+      [createSPKDTO.site_id],
     );
     maxBudgetBySite = maxBudgetBySite[0].sum
       ? Number(maxBudgetBySite[0].sum)
       : 0;
 
     let totalSPKAmount = await getManager().query(
-      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1',
-      [createSPKDTO.area_id],
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [createSPKDTO.site_id],
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
@@ -146,7 +146,7 @@ export class SPKService {
       );
     }
 
-    if (exists.status > 2) {
+    if (exists.status >= SPKStatus.PAID) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK yang sudah dibayar atau approve over budget tidak bisa diedit!',
@@ -197,16 +197,16 @@ export class SPKService {
     }
 
     let maxBudgetBySite = await getManager().query(
-      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1',
-      [updateSPKDTO.area_id],
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND deleted_at IS NULL',
+      [updateSPKDTO.site_id],
     );
     maxBudgetBySite = maxBudgetBySite[0].sum
       ? Number(maxBudgetBySite[0].sum)
       : 0;
 
     let totalSPKAmount = await getManager().query(
-      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1',
-      [updateSPKDTO.area_id],
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [updateSPKDTO.site_id],
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
@@ -626,6 +626,16 @@ export class SPKService {
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id);
+    if (!existingSPK) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
+    } else if (existingSPK.status >= SPKStatus.PAID) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK yang sudah dibayar tidak bisa dihapus!`,
+      );
+    }
+
     await this.spkRepository.softDelete(id);
 
     await this.activityLogService.create({
@@ -633,5 +643,45 @@ export class SPKService {
       description: `Hapus Data SPK`,
       ip: ip,
     });
+
+    return null;
+  }
+
+  async approveOverBudget(id: number, user: User): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id);
+    if (!existingSPK) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
+    } else if (existingSPK.status >= SPKStatus.PAID) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK yang sudah dibayar diapprove kembali!`,
+      );
+    }
+
+    let maxBudgetBySite = await getManager().query(
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND deleted_at IS NULL',
+      [existingSPK.site_id],
+    );
+
+    maxBudgetBySite = maxBudgetBySite[0].sum
+      ? Math.round(Number(maxBudgetBySite[0].sum))
+      : 0;
+
+    let totalSPKAmount = await getManager().query(
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [existingSPK.site_id],
+    );
+    totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    if (totalSPKAmount <= maxBudgetBySite) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);
+    }
+
+    await this.spkRepository.update(id, {
+      status: SPKStatus.APPROVED_OVER_BUDGET,
+      approved_over_budget_by: user.id,
+    });
+
+    return null;
   }
 }

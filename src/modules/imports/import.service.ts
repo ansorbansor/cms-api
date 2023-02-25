@@ -87,8 +87,12 @@ export class ImportService {
     }
 
     try {
-      const userData = await getManager().query(`SELECT * FROM users`);
-      this.userRoleData = await getManager().query(`SELECT * FROM user_roles`);
+      const userData = await getManager().query(
+        `SELECT * FROM users WHERE deleted_at IS NULL`,
+      );
+      this.userRoleData = await getManager().query(
+        `SELECT * FROM user_roles WHERE deleted_at IS NULL`,
+      );
 
       const workbook = xlsx.readFile(file.path);
 

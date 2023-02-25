@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -39,7 +39,22 @@ export class SiteService {
   async getPOBySite(siteId: number) {
     const po = await this.poRepository.find({ where: { site_id: siteId } });
 
-    return infinityPagination(po, PurchaseOrderBySiteResource, null);
+    let maxBudgetBySite = await getManager().query(
+      'SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND deleted_at IS NULL',
+      [siteId],
+    );
+
+    maxBudgetBySite = maxBudgetBySite[0].sum
+      ? Math.round(Number(maxBudgetBySite[0].sum))
+      : 0;
+
+    let totalSPKAmount = await getManager().query(
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [siteId],
+    );
+    totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    return PurchaseOrderBySiteResource(po, totalSPKAmount, maxBudgetBySite);
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {

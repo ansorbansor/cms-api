@@ -198,4 +198,15 @@ export class SPKController {
       'success',
     );
   }
+
+  @Get('approve-over-budget/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_OVER_BUDGET)
+  async approveOverBudget(@Param() param: IDParamDto, @Request() req) {
+    return successResponse(
+      await this.spkService.approveOverBudget(param.id, req.user),
+      'success',
+    );
+  }
 }

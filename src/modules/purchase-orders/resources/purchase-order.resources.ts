@@ -13,12 +13,22 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
   };
 };
 
-export const PurchaseOrderBySiteResource = (po: PurchaseOrder): any => {
+export const PurchaseOrderBySiteResource = (
+  po: PurchaseOrder[],
+  currentCashAdvance: number,
+  totalCashAdvance: number,
+): any => {
   return {
-    id: po.id,
-    cc: po.cc,
-    po_number: po.po_number,
-    item_description: po.item_description,
+    current_cash_advance: currentCashAdvance,
+    total_cash_advance: totalCashAdvance,
+    purchase_order: po.map((e) => {
+      return {
+        id: e.id,
+        cc: e.cc,
+        po_number: e.po_number,
+        item_description: e.item_description,
+      };
+    }),
   };
 };
 

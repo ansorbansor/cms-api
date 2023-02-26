@@ -7,7 +7,7 @@ export const SPKResource = (spk: SPK): any => {
   return {
     id: spk.id,
     spk_number: spk.spk_number,
-    spk_date: moment(spk.created_at).format('yyyy-MM-D HH:mm:ss'),
+    spk_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
     cash_advance: spk.cash_advance,
     spk_status:
@@ -37,7 +37,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
   return {
     id: spk.id,
     spk_number: spk.spk_number,
-    spk_date: moment(spk.created_at).format('yyyy-MM-D HH:mm:ss'),
+    spk_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
     spk_status:
       spk.status != null && spk.status != undefined
         ? {
@@ -140,7 +140,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
       ? minioConfig().fullUrl + spk.check_out_file.path
       : null,
     closing_date: spk.closing_date
-      ? moment(spk.closing_date).format('yyyy-MM-D HH:mm:ss')
+      ? moment(spk.closing_date).format('YYYY-MM-DD hh:mm:ss')
       : null,
     operation_cost: spk.operation_cost ? spk.operation_cost : null,
     delta_of_settlement: spk.delta_of_settlement

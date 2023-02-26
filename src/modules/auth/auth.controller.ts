@@ -21,7 +21,6 @@ import { AuthResource } from './resources/auth.resources';
 import { successResponse } from 'src/utils/responses';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
-import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller({

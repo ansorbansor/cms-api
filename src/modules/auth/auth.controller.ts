@@ -31,7 +31,6 @@ import { Throttle } from '@nestjs/throttler';
 export class AuthController {
   constructor(public service: AuthService) {}
 
-  @Throttle(5, 300)
   @Post('email/login')
   @HttpCode(HttpStatus.OK)
   public async login(@Request() req, @Body() loginDto: AuthEmailLoginDto) {
@@ -40,7 +39,6 @@ export class AuthController {
     return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
-  @Throttle(5, 300)
   @Post('admin/email/login')
   @HttpCode(HttpStatus.OK)
   public async adminLogin(@Request() req, @Body() loginDto: AuthEmailLoginDto) {

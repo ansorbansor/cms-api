@@ -6,6 +6,9 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 import { SerializerInterceptor } from './utils/serializer.interceptor';
 import validationOptions from './utils/validation-options';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import * as newrelic from 'newrelic';
+require('newrelic');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });

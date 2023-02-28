@@ -70,6 +70,10 @@ export class CreateSPKDTO {
   @IsOptional()
   remark_inhouse_team: string;
 
+  @ApiProperty({ example: 10 })
+  @IsOptional()
+  total_range: number;
+
   distance_to_site_photo: number;
   km_range_start_photo: number;
   km_range_end_photo: number;

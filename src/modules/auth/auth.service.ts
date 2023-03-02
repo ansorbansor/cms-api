@@ -243,20 +243,6 @@ export class AuthService {
       id: await encryptText(user.id),
     });
 
-    //revoke other token
-    await getManager().query(
-      `UPDATE oauth_tokens SET revoked = true WHERE user_id = ${user.id}`,
-    );
-
-    //insert new token
-    const expired = moment()
-      .add(authConfig().expires, 'm')
-      .format('YYYY-MM-DD HH:mm:ss');
-
-    await getManager().query(
-      `INSERT INTO oauth_tokens (user_id, token, expired_at) VALUES (${user.id}, '${token}', '${expired}')`,
-    );
-
     return token;
   }
 

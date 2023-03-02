@@ -264,9 +264,6 @@ export class UsersService {
 
   async logout(user: User, ip: string): Promise<void> {
     //revoked token
-    await getManager().query(
-      `UPDATE oauth_tokens SET revoked = true WHERE user_id = ${user.id}`,
-    );
 
     //disable notification
     await this.usersRepository.update(user.id, {

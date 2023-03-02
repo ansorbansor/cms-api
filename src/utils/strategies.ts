@@ -23,13 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   public async validate(req: Request, payload: JwtPayload) {
     payload.id = Number(await decryptText(payload.id));
 
-    if (
-      !payload.id ||
-      !(await this.authService.checkExpiredToken(
-        req.headers['authorization'].split('Bearer ')[1],
-        payload.id,
-      ))
-    ) {
+    if (!payload.id) {
       throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.FORBIDDEN);
     }
 

@@ -3,7 +3,6 @@ import { IsEmail, IsOptional, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 import { FileEntity } from 'src/entities/file.entity';
 import { Transform } from 'class-transformer';
-import { Role } from 'src/entities/role.entity';
 
 export class UpdateUserDto {
   @ApiProperty({ example: '1234567890' })
@@ -49,13 +48,6 @@ export class UpdateUserDto {
     required: false,
   })
   notification_token?: string | null;
-
-  @ApiProperty()
-  @IsOptional()
-  @Validate(IsExist, ['Role', 'id'], {
-    message: 'Role Tidak Tersedia',
-  })
-  role?: Role | null;
 
   @ApiProperty()
   @IsOptional()

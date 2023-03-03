@@ -23,8 +23,6 @@ import * as moment from 'moment';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';
-import { Role } from 'src/entities/role.entity';
-import { UserRoles } from 'src/entities/user-role.entity';
 
 @Injectable()
 export class ImportService {
@@ -57,10 +55,6 @@ export class ImportService {
     private operatorRepository: Repository<Operator>,
     @InjectRepository(EmployeePosition)
     private employeePositionRepository: Repository<EmployeePosition>,
-    @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
-    @InjectRepository(UserRoles)
-    private userRoleRepository: Repository<UserRoles>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private activityLogService: ActivityLogService,
@@ -78,8 +72,6 @@ export class ImportService {
   pendingTypeData = null;
   pdData = null;
   employeePositionData = null;
-  roleData = null;
-  userRoleData = null;
 
   async importUser(file, user: User, ip: string) {
     if (!file) {
@@ -90,9 +82,6 @@ export class ImportService {
       const userData = await getManager().query(
         `SELECT * FROM users WHERE deleted_at IS NULL`,
       );
-      this.userRoleData = await getManager().query(
-        `SELECT * FROM user_roles WHERE deleted_at IS NULL`,
-      );
 
       const workbook = xlsx.readFile(file.path);
 
@@ -100,10 +89,6 @@ export class ImportService {
       if (worksheet) {
         this.employeePositionData = await getManager().query(
           `SELECT * FROM employee_positions WHERE deleted_at IS NULL`,
-        );
-
-        this.roleData = await getManager().query(
-          `SELECT * FROM roles WHERE deleted_at IS NULL`,
         );
 
         const updateDataUserList = [];
@@ -134,7 +119,6 @@ export class ImportService {
               const updateData = await this.validateUserData(
                 value,
                 userData[indexDataExisting],
-                this.userRoleData,
               );
 
               if (Object.keys(updateData).length > 0) {
@@ -228,23 +212,6 @@ export class ImportService {
           const users = await this.userRepository.save(insertDataUserList, {
             chunk: 1000,
           });
-
-          //insert user role
-          const insertUserRole = [];
-          for (const user of users) {
-            const userRole = new UserRoles();
-            userRole.role_id = await this.getEmployeeRoleByName(
-              user.employeePosition.name,
-            );
-            userRole.user_id = user.id;
-            insertUserRole.push(userRole);
-          }
-
-          if (insertUserRole.length > 0) {
-            await this.userRoleRepository.save(insertUserRole, {
-              chunk: 1000,
-            });
-          }
 
           successMessage += `menambah ${insertDataUserList.length} data Karyawan, `;
         }
@@ -645,7 +612,7 @@ export class ImportService {
     return updateData;
   }
 
-  async validateUserData(excelData: any, dbData: any, userRoleData: any) {
+  async validateUserData(excelData: any, dbData: any) {
     const updateData: any = {};
     //check region
     if (excelData['region 1'] && dbData.region != excelData['region 1']) {
@@ -821,29 +788,6 @@ export class ImportService {
     ) {
       updateData.firstaid_validation_end_date =
         excelData['first aid validation end date'];
-    }
-
-    //check user role
-    if (excelData['position']) {
-      const role = await this.getEmployeeRoleByName(excelData['position']);
-      const userRole = userRoleData.find((e) => {
-        return e.user_id == dbData.id;
-      });
-
-      if (userRole && role.id != userRole.role_id) {
-        console.log(`${role.id} | ${userRole.role_id}`);
-        await getManager().query(
-          `UPDATE user_roles SET role_id = ${role.id} WHERE role_id = ${userRole.role_id} AND user_id = ${dbData.id}`,
-        );
-      } else if (!userRole) {
-        await getManager().query(
-          `INSERT INTO user_roles(user_id, role_id) VALUES (${dbData.id}, ${role.id})`,
-        );
-        this.userRoleData.push({
-          user_id: dbData.id,
-          role_id: role.id,
-        });
-      }
     }
 
     return updateData;
@@ -1206,21 +1150,6 @@ export class ImportService {
     }
 
     return employeePosition;
-  }
-
-  async getEmployeeRoleByName(name: string) {
-    let role = this.roleData.find((data) => {
-      return data.name.toLowerCase() == name.toLowerCase();
-    });
-
-    if (!role) {
-      const newRoleData = new Role();
-      newRoleData.name = name;
-      role = await this.roleRepository.save(newRoleData);
-      await this.roleData.push(role);
-    }
-
-    return role;
   }
 
   async getRegionByName(name: string) {

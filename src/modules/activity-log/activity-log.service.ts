@@ -26,8 +26,7 @@ export class ActivityLogService {
     const data = this.activityLogRepository
       .createQueryBuilder('acl')
       .leftJoinAndSelect('acl.user', 'user')
-      .leftJoinAndSelect('user.userRoles', 'userRole')
-      .leftJoinAndSelect('userRole.roleData', 'role');
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition');
 
     data.orderBy('acl.created_at', 'DESC');
 

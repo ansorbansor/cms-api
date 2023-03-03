@@ -30,15 +30,15 @@ export class RolesGuard implements CanActivate {
 
     const userRolesData = await getManager().query(`
       SELECT r.id, r.grant_all_access, ra.menu_access, m.name
-      FROM user_roles ur 
-      LEFT JOIN roles r 
-      ON ur.role_id = r.id
+      FROM users ur 
+      LEFT JOIN employee_positions r 
+      ON ur.employee_position_id = r.id
       LEFT JOIN role_access ra 
-      ON ra.role_id = r.id
+      ON ra.employee_position_id = ur.employee_position_id
       LEFT JOIN menus m
       ON ra.menu_id = m.id
       WHERE
-      ur.user_id = ${request.user.id}
+      ur.id = ${request.user.id}
     `);
 
     const canAccess = function (data) {

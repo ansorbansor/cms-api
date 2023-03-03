@@ -13,10 +13,10 @@ import { FilePath, RoleEnum, SPKStatus } from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
-import { UserRoles } from 'src/entities/user-role.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as fs from 'fs';
 import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SPKService {
@@ -27,10 +27,9 @@ export class SPKService {
     private spkInhouseTeamRepository: Repository<SPKInhouseTeam>,
     @InjectRepository(SPKCostEvidence)
     private spkCostEvidenceRepository: Repository<SPKCostEvidence>,
-    @InjectRepository(UserRoles)
-    private userRolesRepository: Repository<UserRoles>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
+    private userService: UsersService,
   ) {}
 
   async create(
@@ -277,26 +276,21 @@ export class SPKService {
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.po', 'po');
 
-    const userRole = await this.userRolesRepository.find({
-      where: { user_id: user.id },
-    });
+    const currentUser = await this.userService.findOneFull({ id: user.id });
 
-    if (userRole.some((e) => e.roleData.code == RoleEnum.SS)) {
+    if (currentUser.employeePosition.code == RoleEnum.SS) {
       data.andWhere('spk.created_by = :createdBy', { createdBy: user.id });
     } else if (
-      userRole.some(
-        (e) =>
-          e.roleData.code == RoleEnum.TL ||
-          e.roleData.code == RoleEnum.ENGINEER ||
-          e.roleData.code == RoleEnum.MEMBER,
-      )
+      currentUser.employeePosition.code == RoleEnum.TL ||
+      currentUser.employeePosition.code == RoleEnum.ENGINEER ||
+      currentUser.employeePosition.code == RoleEnum.MEMBER
     ) {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
 
       data.where('inhouse_team.user_id = :inHouseUserId', {
         inHouseUserId: user.id,
       });
-    } else if (userRole.some((e) => e.roleData.code == RoleEnum.RPM)) {
+    } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
       //add total spk cash advance
       data.addSelect(
         'total_cash_advance.total_cash_advance',
@@ -334,7 +328,7 @@ export class SPKService {
       data.andWhere(
         'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
       );
-    } else if (userRole.some((e) => e.roleData.code == RoleEnum.ADMINPAYMENT)) {
+    } else if (currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT) {
       data.andWhere('spk.status >= :status', {
         status: SPKStatus.APPROVED,
       });

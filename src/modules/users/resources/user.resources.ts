@@ -3,19 +3,6 @@ import { User } from 'src/entities/user.entity';
 import * as moment from 'moment';
 
 export const UserResource = (user: User): any => {
-  const mapRole = [];
-
-  user.userRoles != null
-    ? user.userRoles.map((role) => {
-        if (role.roleData) {
-          mapRole.push({
-            id: role.roleData ? role.roleData.id : null,
-            name: role.roleData ? role.roleData.name : null,
-          });
-        }
-      })
-    : [];
-
   return {
     id: user.id,
     nik: user.nik,
@@ -27,7 +14,6 @@ export const UserResource = (user: User): any => {
     photo: user.photoFile
       ? appConfig().fullBackendDomain + user.photoFile.path
       : null,
-    roles: mapRole,
     position: {
       id: user.employeePosition ? user.employeePosition.id : null,
       name: user.employeePosition ? user.employeePosition.name : null,

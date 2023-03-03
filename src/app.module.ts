@@ -31,7 +31,6 @@ import { ProjectModule } from './modules/projects/project.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { RegionModule } from './modules/region/region.module';
 import { RemarkProjectModule } from './modules/remark-project/remark-project.module';
-import { RoleModule } from './modules/role/role.module';
 import { SiteModule } from './modules/site/site.module';
 import { SPKModule } from './modules/spk/spk.module';
 import { StatusAcceptanceModule } from './modules/status-acceptance/status-acceptance.module';
@@ -77,7 +76,6 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     MailModule,
     UsersModule,
     ActivityLogModule,
-    RoleModule,
     EmployeePositionModule,
     ExportModule,
     ImportModule,

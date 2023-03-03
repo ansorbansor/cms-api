@@ -14,7 +14,6 @@ import * as bcrypt from 'bcryptjs';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { AuthProvidersEnum } from 'src/utils/enums';
 import { FileEntity } from './file.entity';
-import { UserRoles } from './user-role.entity';
 import { EmployeePosition } from './employee-position.entity';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 
@@ -115,12 +114,6 @@ export class User extends EntityHelper {
   })
   @JoinColumn({ name: 'photo' })
   photoFile?: FileEntity;
-
-  @OneToMany(() => UserRoles, (userRole) => userRole.user, {
-    eager: true,
-  })
-  @JoinColumn()
-  userRoles?: UserRoles[];
 
   @ManyToOne(
     () => EmployeePosition,

@@ -53,12 +53,6 @@ export class AuthRegisterLoginDto {
   notification_token: string | null;
 
   @ApiProperty()
-  @Validate(IsExist, ['Role', 'id'], {
-    message: 'Role tidak Tersedia',
-  })
-  role_id: number;
-
-  @ApiProperty()
   @Validate(IsExist, ['EmployeePosition', 'id'], {
     message: 'Jabatan Tidak Tersedia',
   })

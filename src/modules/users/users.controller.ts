@@ -66,7 +66,6 @@ export class UsersController {
     @Query('limit') limit: number,
     @Query('search') search: string,
     @Query('position_id') positionId: number,
-    @Query('role_id') roleId: number[],
   ) {
     return successResponseList(
       await this.usersService.findManyWithPagination({
@@ -75,7 +74,6 @@ export class UsersController {
         total: 0,
         search: search,
         employeePosition: positionId,
-        role: roleId,
       }),
       'success',
     );

@@ -5,7 +5,6 @@ import { User } from 'src/entities/user.entity';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Brackets, getManager, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserRoles } from 'src/entities/user-role.entity';
 import { UserResource } from './resources/user.resources';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { FilesService } from '../files/files.service';
@@ -19,9 +18,6 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-
-    @InjectRepository(UserRoles)
-    private userRolesRepository: Repository<UserRoles>,
 
     private fileService: FilesService,
 
@@ -64,13 +60,6 @@ export class UsersService {
       });
     }
 
-    await this.userRolesRepository.save(
-      this.userRolesRepository.create({
-        user_id: user.id,
-        role_id: createProfileDto.role_id,
-      }),
-    );
-
     if (user_id) {
       await this.activityLogService.create({
         user_id: user_id,
@@ -92,9 +81,7 @@ export class UsersService {
     const data = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.userRoles', 'userRole')
-      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
-      .leftJoinAndSelect('userRole.roleData', 'role');
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition');
 
     if (paginationOptions.search) {
       data.andWhere(
@@ -113,13 +100,6 @@ export class UsersService {
         positionId: paginationOptions.employeePosition,
       });
     }
-
-    if (paginationOptions.role) {
-      data.andWhere('role.id = :roleId', {
-        roleId: paginationOptions.role,
-      });
-    }
-
     data.orderBy('user.name', 'ASC');
 
     const total = await data.getCount();
@@ -142,12 +122,10 @@ export class UsersService {
   async findOne(fields: EntityCondition<User>) {
     const data = await this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.userRoles', 'userRole')
-      .leftJoinAndSelect('userRole.roleData', 'role')
-      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
+      .leftJoinAndSelect('employeePosition.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
 
@@ -164,12 +142,10 @@ export class UsersService {
   async findOneFull(fields: EntityCondition<User>) {
     const data = await this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.userRoles', 'userRole')
-      .leftJoinAndSelect('userRole.roleData', 'role')
-      .leftJoinAndSelect('role.roleAccess', 'roleAccess')
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
+      .leftJoinAndSelect('employeePosition.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .where(fields)
       .getOne();
 

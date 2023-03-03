@@ -46,15 +46,6 @@ export class AuthService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.USER_NOT_FOUND,
       );
-    } else if (user && user.userRoles.length == 0) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        ErrorMessage.FORBIDDEN,
-      );
-    }
-
-    if (onlyAdmin && !user.userRoles.some((b) => b.roleData)) {
-      throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
     }
 
     if (authConfig().emailVerification && user.hash != null) {
@@ -92,7 +83,7 @@ export class AuthService {
       hash,
     });
 
-    if (!user || (user && user.userRoles.length == 0)) {
+    if (!user) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.EMAIL_NOT_EXISTS,
@@ -198,7 +189,7 @@ export class AuthService {
       id: user.id,
     });
 
-    if (!currentUser || (currentUser && currentUser.userRoles.length == 0)) {
+    if (!currentUser) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         ErrorMessage.USER_NOT_FOUND,

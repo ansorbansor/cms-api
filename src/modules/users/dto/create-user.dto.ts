@@ -60,12 +60,6 @@ export class CreateUserDto {
   notification_token: string | null;
 
   @ApiProperty()
-  @Validate(IsExist, ['Role', 'id'], {
-    message: 'Role Tidak Tersedia',
-  })
-  role_id: number;
-
-  @ApiProperty()
   @Validate(IsExist, ['EmployeePosition', 'id'], {
     message: 'Jabatan Tidak Tersedia',
   })

@@ -38,6 +38,7 @@ export class UpdateUserDto {
 
   @ApiProperty({ default: true })
   @IsOptional()
+  @Transform(({ value }) => (value === 'true' ? true : false))
   status?: boolean;
 
   @ApiProperty()

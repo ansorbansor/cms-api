@@ -12,6 +12,7 @@ import { BufferedFile } from 'src/utils/file-helper';
 import { MailService } from '../mail/mail.service';
 import { FilePath } from 'src/utils/enums';
 import { ActivityLogService } from '../activity-log/activity-log.service';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
@@ -211,6 +212,14 @@ export class UsersService {
         'User Photo',
       );
       updateProfileDto.photo = img.id;
+    }
+
+    if (updateProfileDto.password) {
+      const salt = await bcrypt.genSalt();
+      updateProfileDto.password = await bcrypt.hash(
+        updateProfileDto.password,
+        salt,
+      );
     }
 
     await this.usersRepository.update(id, {

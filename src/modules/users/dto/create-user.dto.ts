@@ -48,6 +48,7 @@ export class CreateUserDto {
 
   @ApiProperty({ default: 1 })
   @IsNotEmpty({ message: 'Status tidak boleh kosong' })
+  @Transform(({ value }) => (value === 'true' ? true : false))
   status: boolean;
 
   @ApiProperty()

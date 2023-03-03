@@ -8,6 +8,7 @@ export const UserResource = (user: User): any => {
     nik: user.nik,
     name: user.name,
     email: user.email,
+    phone: user.phone,
     provider: user.provider,
     status: user.status,
     notification_token: user.notification_token,

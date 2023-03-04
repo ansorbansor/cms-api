@@ -320,6 +320,7 @@ export class SPKService {
       data.andWhere('spk.status >= :status', {
         status: SPKStatus.APPROVED,
       });
+    } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
     } else {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
 

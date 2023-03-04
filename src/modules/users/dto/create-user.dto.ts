@@ -156,12 +156,14 @@ export class CreateUserDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   wah_validation_end_date: Date | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   electrical_validation_end_date: Date | null;
 
   @ApiProperty({

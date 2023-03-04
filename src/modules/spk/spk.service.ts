@@ -278,19 +278,7 @@ export class SPKService {
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
 
-    if (currentUser.employeePosition.code == RoleEnum.SS) {
-      data.andWhere('spk.created_by = :createdBy', { createdBy: user.id });
-    } else if (
-      currentUser.employeePosition.code == RoleEnum.TL ||
-      currentUser.employeePosition.code == RoleEnum.ENGINEER ||
-      currentUser.employeePosition.code == RoleEnum.MEMBER
-    ) {
-      data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
-
-      data.where('inhouse_team.user_id = :inHouseUserId', {
-        inHouseUserId: user.id,
-      });
-    } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+    if (currentUser.employeePosition.code == RoleEnum.RPM) {
       //add total spk cash advance
       data.addSelect(
         'total_cash_advance.total_cash_advance',
@@ -332,6 +320,13 @@ export class SPKService {
       data.andWhere('spk.status >= :status', {
         status: SPKStatus.APPROVED,
       });
+    } else {
+      data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
+
+      data.where('inhouse_team.user_id = :inHouseUserId', {
+        inHouseUserId: user.id,
+      });
+      data.orWhere('spk.created_by = :createdBy', { createdBy: user.id });
     }
 
     if (paginationOptions.search) {

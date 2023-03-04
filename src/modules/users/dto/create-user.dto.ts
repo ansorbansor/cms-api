@@ -64,6 +64,7 @@ export class CreateUserDto {
   @Validate(IsExist, ['EmployeePosition', 'id'], {
     message: 'Jabatan Tidak Tersedia',
   })
+  @IsNotEmpty()
   employee_position_id: number;
 
   hash?: string;
@@ -72,84 +73,98 @@ export class CreateUserDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   region: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   gm_region: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   company: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   category: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   team_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   uniportal_account: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   project: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   pass_id_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   cyber_security_status: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   level_iresource: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   wah_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   electrical_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   firstaid_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   status_description: string | null;
 
   @ApiProperty({

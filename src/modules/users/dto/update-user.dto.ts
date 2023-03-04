@@ -7,24 +7,28 @@ import { Transform } from 'class-transformer';
 export class UpdateUserDto {
   @ApiProperty({ example: '1234567890' })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   nik?: string | null;
 
   @ApiProperty({ example: 'John' })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   name?: string | null;
 
   @ApiProperty({ example: 'john.tor@example.com' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(({ value }) => (value == '' ? null : value?.toLowerCase().trim()))
   @IsOptional()
   @IsEmail({}, { message: 'Format email salah' })
   email?: string | null;
 
   @ApiProperty({ example: 'Password9' })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   password?: string;
 
   @ApiProperty({ default: 'email' })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   provider?: string;
 
   @IsOptional()
@@ -43,6 +47,7 @@ export class UpdateUserDto {
 
   @ApiProperty()
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   phone: string;
 
   @ApiProperty({
@@ -65,84 +70,98 @@ export class UpdateUserDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   region: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   gm_region: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   company: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   category: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   team_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   uniportal_account: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   project: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   pass_id_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   cyber_security_status: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   level_iresource: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   wah_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   electrical_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   firstaid_certification_number: string | null;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   status_description: string | null;
 
   @ApiProperty({

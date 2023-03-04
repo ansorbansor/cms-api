@@ -4,6 +4,22 @@ import { User } from 'src/entities/user.entity';
 export const AuthResource = (token: string, user: User): any => {
   const mapAccess = [];
 
+  if (user.employeePosition?.grant_all_access == true) {
+    mapAccess.push({
+      id: 999,
+      name: 'All Access',
+    });
+  } else {
+    for (const roleAccess of user.employeePosition?.roleAccess) {
+      if (roleAccess.menu) {
+        mapAccess.push({
+          id: roleAccess.menu.id,
+          name: roleAccess.menu.name,
+        });
+      }
+    }
+  }
+
   return {
     token: token,
     user: {

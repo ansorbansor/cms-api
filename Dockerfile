@@ -1,5 +1,7 @@
 FROM node:16.15.1
 
+ENV TZ="Asia/Jakarta"
+
 RUN npm i -g @nestjs/cli typescript ts-node
 
 COPY package*.json /tmp/app/

@@ -114,6 +114,10 @@ export const SPKResourceDetail = (spk: SPK): any => {
               inhouseTeam && inhouseTeam.userInhouse
                 ? inhouseTeam.userInhouse.name
                 : '-',
+            nik:
+              inhouseTeam && inhouseTeam.userInhouse
+                ? inhouseTeam.userInhouse.nik
+                : '-',
             position:
               inhouseTeam &&
               inhouseTeam.userInhouse &&

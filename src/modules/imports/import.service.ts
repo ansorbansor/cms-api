@@ -905,7 +905,9 @@ export class ImportService {
       excelData['unit price'] &&
       dbData.unit_price != excelData['unit price']
     ) {
-      updateData.unit_price = excelData['unit price'];
+      updateData.unit_price = isNaN(Number(excelData['unit price']))
+        ? 0
+        : excelData['unit price'];
     }
 
     //check item unit price 1
@@ -913,7 +915,11 @@ export class ImportService {
       excelData['unit price 1 (100/60/70/80)'] &&
       dbData.unit_price_1 != excelData['unit price 1 (100/60/70/80)']
     ) {
-      updateData.unit_price_1 = excelData['unit price 1 (100/60/70/80)'];
+      updateData.unit_price_1 = isNaN(
+        Number(excelData['unit price 1 (100/60/70/80)']),
+      )
+        ? 0
+        : excelData['unit price 1 (100/60/70/80)'];
     }
 
     //check item unit price 2
@@ -921,7 +927,11 @@ export class ImportService {
       excelData['unit price 2 (20/30/40)'] &&
       dbData.unit_price_2 != excelData['unit price 2 (20/30/40)']
     ) {
-      updateData.unit_price_2 = excelData['unit price 2 (20/30/40)'];
+      updateData.unit_price_2 = isNaN(
+        Number(excelData['unit price 2 (20/30/40)']),
+      )
+        ? 0
+        : excelData['unit price 2 (20/30/40)'];
     }
 
     //check item requested qty
@@ -929,7 +939,9 @@ export class ImportService {
       excelData['requested qty'] &&
       dbData.requested_qty != excelData['requested qty']
     ) {
-      updateData.requested_qty = excelData['requested qty'];
+      updateData.requested_qty = isNaN(Number(excelData['requested qty']))
+        ? 0
+        : excelData['requested qty'];
     }
 
     //check item billed qty
@@ -937,12 +949,16 @@ export class ImportService {
       excelData['billed qty'] &&
       dbData.billed_qty != excelData['billed qty']
     ) {
-      updateData.billed_qty = excelData['billed qty'];
+      updateData.billed_qty = isNaN(Number(excelData['billed qty']))
+        ? 0
+        : excelData['billed qty'];
     }
 
     //check item due qty
     if (excelData['due qty'] && dbData.due_qty != excelData['due qty']) {
-      updateData.due_qty = excelData['due qty'];
+      updateData.due_qty = isNaN(Number(excelData['due qty']))
+        ? 0
+        : excelData['due qty'];
     }
 
     //check item line amount
@@ -950,7 +966,9 @@ export class ImportService {
       excelData['line amount'] &&
       dbData.line_amount != excelData['line amount']
     ) {
-      updateData.line_amount = excelData['line amount'];
+      updateData.line_amount = isNaN(Number(excelData['line amount']))
+        ? 0
+        : excelData['line amount'];
     }
 
     //check remaining from po
@@ -958,7 +976,11 @@ export class ImportService {
       excelData['remaining from po'] &&
       dbData.remaining_from_po != excelData['remaining from po']
     ) {
-      updateData.remaining_from_po = excelData['remaining from po'];
+      updateData.remaining_from_po = isNaN(
+        Number(excelData['remaining from po']),
+      )
+        ? 0
+        : excelData['remaining from po'];
     }
 
     //check unit
@@ -1074,8 +1096,11 @@ export class ImportService {
       dbData.amount_pending_approval_pd !=
         excelData['amount pending approval pd']
     ) {
-      updateData.amount_pending_approval_pd =
-        excelData['amount pending approval pd'];
+      updateData.amount_pending_approval_pd = isNaN(
+        Number(excelData['amount pending approval pd']),
+      )
+        ? 0
+        : excelData['amount pending approval pd'];
     }
 
     //check pd
@@ -1113,7 +1138,11 @@ export class ImportService {
       excelData['amount ready invoice'] &&
       dbData.amount_ready_invoice != excelData['amount ready invoice']
     ) {
-      updateData.amount_ready_invoice = excelData['amount ready invoice'];
+      updateData.amount_ready_invoice = isNaN(
+        Number(excelData['amount ready invoice']),
+      )
+        ? 0
+        : excelData['amount ready invoice'];
     }
 
     //check remark highlight

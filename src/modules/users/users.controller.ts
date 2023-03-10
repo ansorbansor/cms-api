@@ -26,6 +26,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UserResource } from './resources/user.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
+import { MenuPermission } from 'src/utils/enums';
+import { Menus } from 'src/utils/decorator';
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -39,6 +41,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
+  @Menus(MenuPermission.USER_CREATE)
   @UseInterceptors(FileInterceptor('photo'))
   async create(
     @Request() req,
@@ -94,6 +97,7 @@ export class UsersController {
   @Patch('users/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.USER_CREATE)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
@@ -116,6 +120,7 @@ export class UsersController {
 
   @Delete('users/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Menus(MenuPermission.USER_CREATE)
   async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
       await this.usersService.softDelete(param.id, req.user, req.ip),

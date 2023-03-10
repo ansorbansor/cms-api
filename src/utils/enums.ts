@@ -43,6 +43,8 @@ export enum MenuPermission {
   SPK_KASBON_SETTLEMENT = 'spk_kasbon_settlement',
   SPK_COST_EVIDENCE = 'spk_cost_evidence',
   SPK_OVER_BUDGET = 'spk_over_budget',
+  USER_CREATE = 'user_create',
+  PO_CREATE = 'po_create',
 }
 
 export enum FilePath {

@@ -10,8 +10,10 @@ import {
   Patch,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { AuthConfirmEmailDto } from 'src/modules/auth/dtos/auth-confirm-email.dto';
 import { AuthEmailLoginDto } from './dtos/auth-email-login.dto';
@@ -21,6 +23,10 @@ import { AuthResource } from './resources/auth.resources';
 import { successResponse } from 'src/utils/responses';
 import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { BufferedFile } from 'src/utils/file-helper';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { AuthUpdateDto } from './dtos/auth-update.dto';
 
 @ApiTags('Auth')
 @Controller({
@@ -109,6 +115,23 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async me(@Request() request) {
     return successResponse(await this.service.me(request.user), 'success');
+  }
+
+  @ApiBearerAuth()
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('photo'))
+  public async update(
+    @Request() request,
+    @Body() updateProfileDto: AuthUpdateDto,
+    @UploadedFile() file?: BufferedFile,
+  ) {
+    return successResponse(
+      await this.service.update(request.user, updateProfileDto),
+      'success',
+    );
   }
 
   @ApiBearerAuth()

@@ -21,6 +21,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { encryptText } from 'src/utils/encryption-helper';
 import * as moment from 'moment';
+import { AuthUpdateDto } from './dtos/auth-update.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -178,6 +179,25 @@ export class AuthService {
 
   async me(user: User) {
     const me = await this.usersService.findOne({ id: user.id });
+    return me;
+  }
+
+  async update(user: User, authUpdateDto: AuthUpdateDto) {
+    const me = await this.usersService.findOne({ id: user.id });
+
+    if (!me) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        ErrorMessage.USER_NOT_FOUND,
+      );
+    }
+
+    await this.userRepository.update(user.id, {
+      email: authUpdateDto.email,
+    });
+
+    me.email = authUpdateDto.email;
+
     return me;
   }
 

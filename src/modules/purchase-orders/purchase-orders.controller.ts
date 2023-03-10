@@ -24,6 +24,8 @@ import { CreatePurchaseOrderDTO } from './dto/create-po.dto';
 import { PurchaseOrderResource } from './resources/purchase-order.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
+import { MenuPermission } from 'src/utils/enums';
+import { Menus } from 'src/utils/decorator';
 
 @ApiBearerAuth()
 @ApiTags('Purchase Order')
@@ -36,6 +38,7 @@ export class PurchaseOrderController {
   @Post('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
+  @Menus(MenuPermission.PO_CREATE)
   async create(
     @Request() req,
     @Body() createPurchaseOrderDto: CreatePurchaseOrderDTO,
@@ -82,6 +85,7 @@ export class PurchaseOrderController {
   @Patch('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.PO_CREATE)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(
@@ -101,6 +105,7 @@ export class PurchaseOrderController {
 
   @Delete('po/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Menus(MenuPermission.PO_CREATE)
   async remove(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
       await this.poService.softDelete(param.id, req.user, req.ip),

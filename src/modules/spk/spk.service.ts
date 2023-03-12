@@ -317,9 +317,14 @@ export class SPKService {
         'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
       );
     } else if (currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT) {
-      data.andWhere('spk.status >= :status', {
-        status: SPKStatus.APPROVED,
-      });
+      if (
+        !paginationOptions.status ||
+        paginationOptions.status < SPKStatus.APPROVED
+      ) {
+        data.andWhere('spk.status >= :status', {
+          status: SPKStatus.APPROVED,
+        });
+      }
     } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
     } else {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
@@ -345,6 +350,12 @@ export class SPKService {
     if (paginationOptions.end_date) {
       data.andWhere('spk.created_at <= :end_date', {
         end_date: `%${paginationOptions.end_date}%`,
+      });
+    }
+
+    if (paginationOptions.status) {
+      data.andWhere('spk.status = :status', {
+        status: paginationOptions.status,
       });
     }
 

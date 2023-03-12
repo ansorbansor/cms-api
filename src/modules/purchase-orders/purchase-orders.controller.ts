@@ -58,6 +58,8 @@ export class PurchaseOrderController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit') limit: number,
     @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
   ) {
     return successResponseList(
       await this.poService.findManyWithPagination({
@@ -65,6 +67,8 @@ export class PurchaseOrderController {
         limit,
         total: 0,
         search: search,
+        start_date: startDate,
+        end_date: endDate,
       }),
       'success',
     );

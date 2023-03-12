@@ -73,6 +73,18 @@ export class PurchaseOrderService {
       );
     }
 
+    if (paginationOptions.start_date) {
+      data.andWhere('po.created_at >= :start_date', {
+        start_date: `%${paginationOptions.start_date}%`,
+      });
+    }
+
+    if (paginationOptions.end_date) {
+      data.andWhere('po.created_at <= :end_date', {
+        end_date: `%${paginationOptions.end_date}%`,
+      });
+    }
+
     data.orderBy('po.created_at', 'DESC');
 
     const total = await data.getCount();

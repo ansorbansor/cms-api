@@ -343,13 +343,13 @@ export class SPKService {
 
     if (paginationOptions.start_date) {
       data.andWhere('spk.created_at >= :start_date', {
-        start_date: `%${paginationOptions.start_date}%`,
+        start_date: `${paginationOptions.start_date}`,
       });
     }
 
     if (paginationOptions.end_date) {
       data.andWhere('spk.created_at <= :end_date', {
-        end_date: `%${paginationOptions.end_date}%`,
+        end_date: `${paginationOptions.end_date}`,
       });
     }
 

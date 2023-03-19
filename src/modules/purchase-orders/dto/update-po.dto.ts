@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsOptional,
@@ -118,6 +118,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   publish_date?: Date;
 
   @ApiProperty({ example: 1 })
@@ -126,6 +127,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   end_date?: Date;
 
   @ApiProperty({ example: 1 })
@@ -162,6 +164,7 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   actual_completion_date?: Date;
 
   @ApiProperty({ example: 1 })
@@ -200,6 +203,7 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
+  @Transform(({ value }) => (value == '' ? null : value))
   invoice_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
@@ -208,6 +212,7 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
+  @Transform(({ value }) => (value == '' ? null : value))
   payment_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
@@ -216,5 +221,6 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
+  @Transform(({ value }) => (value == '' ? null : value))
   supplier_tax_date: Date;
 }

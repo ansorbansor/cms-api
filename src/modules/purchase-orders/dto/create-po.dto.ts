@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsOptional,
@@ -21,7 +21,7 @@ export class CreatePurchaseOrderDTO {
   line_po_status: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Line PO Number tidak boleh kosong' })
+  @IsOptional()
   line_po_number: string;
 
   @ApiProperty({ example: 1 })
@@ -29,7 +29,7 @@ export class CreatePurchaseOrderDTO {
   po_number: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Shipment Number tidak boleh kosong' })
+  @IsOptional()
   shipment_number: string;
 
   @ApiProperty({ example: 1 })
@@ -54,14 +54,14 @@ export class CreatePurchaseOrderDTO {
   operator_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Customer ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['Customer', 'id'], {
     message: 'Customer tidak ditemukan',
   })
   customer_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Project ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['Project', 'id'], {
     message: 'Project tidak terdaftar',
   })
@@ -79,7 +79,7 @@ export class CreatePurchaseOrderDTO {
   status: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Item Code tidak boleh kosong' })
+  @IsOptional()
   item_code: string;
 
   @ApiProperty({ example: 1 })
@@ -119,22 +119,23 @@ export class CreatePurchaseOrderDTO {
   remaining_from_po: number;
 
   @ApiProperty({ example: 'LOT' })
-  @IsNotEmpty({ message: 'Unit tidak boleh kosong' })
+  @IsOptional()
   unit: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Payment Term tidak boleh kosong' })
+  @IsOptional()
   payment_terms: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Bidding Area ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['BiddingArea', 'id'], {
     message: 'Bidding Area tidak terdaftar',
   })
   bidding_area_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Publish Date tidak boleh kosong' })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   publish_date: Date;
 
   @ApiProperty({ example: 1 })
@@ -142,40 +143,41 @@ export class CreatePurchaseOrderDTO {
   start_date: Date;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'End Date tidak boleh kosong' })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   end_date: Date;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Priority Esar Approve tidak boleh kosong' })
+  @IsOptional()
   priority_esar_approve: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Remark Weekly tidak boleh kosong' })
+  @IsOptional()
   remark_weekly: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Remark Project ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['RemarkProject', 'id'], {
     message: 'Remark Project tidak terdaftar',
   })
   remark_project_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Status Acceptance ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['StatusAcceptance', 'id'], {
     message: 'Status Acceptance tidak terdaftar',
   })
   status_acceptance_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Pending Type ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['PendingType', 'id'], {
     message: 'Pending Type tidak terdaftar',
   })
   pending_type_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Pending Approval PD tidak boleh kosong' })
+  @IsOptional()
   pending_approval_pd: string;
 
   @ApiProperty({ example: 1 })
@@ -183,18 +185,19 @@ export class CreatePurchaseOrderDTO {
   amount_pending_approval_pd: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'PD ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['PD', 'id'], {
     message: 'PD tidak terdaftar',
   })
   pd_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Actual Completion Date tidak boleh kosong' })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   actual_completion_date: Date;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Ready Invoice tidak boleh kosong' })
+  @IsOptional()
   ready_invoice: string;
 
   @ApiProperty({ example: 1 })
@@ -202,7 +205,7 @@ export class CreatePurchaseOrderDTO {
   amount_ready_invoice: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Remark Highlight tidak boleh kosong' })
+  @IsOptional()
   remark_highlight: string;
 
   @ApiProperty({ example: 70 })
@@ -221,6 +224,7 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   invoice_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
@@ -229,6 +233,7 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   payment_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
@@ -237,5 +242,6 @@ class Invoices {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   supplier_tax_date: Date;
 }

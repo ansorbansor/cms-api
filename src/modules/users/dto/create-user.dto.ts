@@ -185,5 +185,6 @@ export class CreateUserDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
   firstaid_validation_end_date: Date | null;
 }

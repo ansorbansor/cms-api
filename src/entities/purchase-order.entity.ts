@@ -102,13 +102,13 @@ export class PurchaseOrder extends EntityHelper {
   bidding_area_id: number;
 
   @Column()
-  publish_date: Date;
+  publish_date?: Date;
 
   @Column()
-  start_date: Date;
+  start_date?: Date;
 
   @Column()
-  end_date: Date;
+  end_date?: Date;
 
   @Column()
   priority_esar_approve: string;
@@ -135,7 +135,7 @@ export class PurchaseOrder extends EntityHelper {
   pd_id: number;
 
   @Column()
-  actual_completion_date: Date;
+  actual_completion_date?: Date;
 
   @Column()
   ready_invoice: string;

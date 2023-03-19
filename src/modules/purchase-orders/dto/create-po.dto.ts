@@ -40,7 +40,7 @@ export class CreatePurchaseOrderDTO {
   region_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Area ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['Area', 'id'], {
     message: 'Area tidak ditemukan',
   })
@@ -68,7 +68,7 @@ export class CreatePurchaseOrderDTO {
   project_id: number;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Site ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['Site', 'id'], {
     message: 'Site tidak terdaftar',
   })

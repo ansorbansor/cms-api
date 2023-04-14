@@ -198,29 +198,37 @@ class Invoices {
   id: number;
 
   @ApiProperty({ example: 'ABC123' })
-  @IsNotEmpty()
+  @IsOptional()
   invoice_number: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   invoice_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
-  @IsNotEmpty()
+  @IsOptional()
   invoice_status: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   payment_date: Date;
 
   @ApiProperty({ example: 'ABC123' })
-  @IsNotEmpty()
+  @IsOptional()
   supplier_tax_number: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   supplier_tax_date: Date;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  payment_amount: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  deduction_amount: number;
 }

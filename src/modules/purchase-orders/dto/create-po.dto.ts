@@ -244,4 +244,12 @@ class Invoices {
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   supplier_tax_date: Date;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  payment_amount: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  deduction_amount: number;
 }

@@ -178,6 +178,8 @@ export class PurchaseOrderService {
             payment_date: inv.payment_date,
             supplier_tax_number: inv.supplier_tax_number,
             supplier_tax_date: inv.supplier_tax_date,
+            payment_amount: inv.payment_amount,
+            deduction_amount: inv.deduction_amount,
             purchase_order_id: id,
             user_id: user.id,
           });

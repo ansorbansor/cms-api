@@ -28,6 +28,12 @@ export class PurchaseOrderInvoice extends EntityHelper {
   @Column()
   purchase_order_id?: string;
 
+  @Column()
+  payment_amount?: number;
+
+  @Column()
+  deduction_amount?: number;
+
   @ManyToOne(() => PurchaseOrder, {})
   @JoinColumn({ name: 'purchase_order_id' })
   po?: PurchaseOrder;

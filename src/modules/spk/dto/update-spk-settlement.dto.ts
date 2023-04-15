@@ -1,19 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsNumberString } from 'class-validator';
+import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
 
 export class UpdateSPKSettlementDTO {
   @ApiProperty({ example: '2022-01-01' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsDateString(null, { message: 'Format tanggal tidak valid' })
   closing_date: string;
 
   @ApiProperty({ example: 200000 })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumberString()
   operation_cost: number;
 
   @ApiProperty({ example: 'Remarks Lorerm Ipsum' })
-  @IsNotEmpty()
+  @IsOptional()
   remarks: string;
 
   @ApiProperty({ example: 3 })

@@ -523,6 +523,7 @@ export class SPKService {
     updateSPKSettlementDTO: UpdateSPKSettlementDTO,
     user_id: number,
     ip: string,
+    files: Array<Express.Multer.File>,
   ) {
     const exists = await this.findOneFull({ id: id });
 
@@ -545,7 +546,7 @@ export class SPKService {
       cashback = deltaOfSettlement;
     }
 
-    await this.spkRepository.update(id, {
+    const updateData = {
       closing_date: updateSPKSettlementDTO.closing_date,
       operation_cost: updateSPKSettlementDTO.operation_cost,
       remark_admin: updateSPKSettlementDTO.remarks,
@@ -555,7 +556,24 @@ export class SPKService {
       cashback: cashback,
       cashout: cashout,
       status: updateSPKSettlementDTO.status,
+    };
+
+    const transferProofFile = files.find((e) => {
+      return e.fieldname == 'transfer_proof_photo';
     });
+
+    if (transferProofFile) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        transferProofFile,
+        user_id,
+        FilePath.SPK_TRANSFER_PROOF,
+        'Transfer Proof',
+      );
+
+      updateData['transfer_proof_photo'] = uploadedPhoto.id;
+    }
+
+    await this.spkRepository.update(id, updateData);
   }
 
   async updateCostEvidence(

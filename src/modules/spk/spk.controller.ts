@@ -108,11 +108,14 @@ export class SPKController {
   @Post('settlement/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
   @Menus(MenuPermission.SPK_KASBON_SETTLEMENT)
+  @UseInterceptors(AnyFilesInterceptor())
   async updateSettlement(
     @Request() req,
     @Param() param: IDParamDto,
     @Body() updateSPKSettlementDTO: UpdateSPKSettlementDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return successResponse(
       await this.spkService.updateSettlement(
@@ -120,6 +123,7 @@ export class SPKController {
         updateSPKSettlementDTO,
         req.user,
         req.ip,
+        files,
       ),
       'success',
     );

@@ -78,6 +78,9 @@ export class SPK extends EntityHelper {
   check_out_photo?: number;
 
   @Column()
+  transfer_proof_photo?: number;
+
+  @Column()
   closing_date?: Date;
 
   @Column()
@@ -161,6 +164,10 @@ export class SPK extends EntityHelper {
   @OneToOne(() => FileEntity)
   @JoinColumn({ name: 'check_out_photo' })
   check_out_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'transfer_proof_photo' })
+  transfer_proof_file: FileEntity;
 
   @OneToMany(() => SPKCostEvidence, (costEvidence) => costEvidence.spk)
   @JoinColumn()

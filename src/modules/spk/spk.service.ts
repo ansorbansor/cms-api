@@ -393,6 +393,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')
       .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
       .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
+      .leftJoinAndSelect('spk.transfer_proof_file', 'transfer_proof_file')
       .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
       .leftJoinAndSelect(
         'cost_evidences.cost_evidence_photo_file',

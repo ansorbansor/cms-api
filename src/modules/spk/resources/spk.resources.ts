@@ -174,5 +174,8 @@ export const SPKResourceDetail = (spk: SPK): any => {
       : '-',
     paid_by: spk.paid_by_user ? spk.paid_by_user.name : '-',
     closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
+    transfer_proof_photo: spk.transfer_proof_file
+      ? minioConfig().fullUrl + spk.transfer_proof_file.path
+      : null,
   };
 };

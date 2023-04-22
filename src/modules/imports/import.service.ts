@@ -285,6 +285,7 @@ export class ImportService {
             return obj;
           }, {}),
         );
+
         console.log('done rowData');
 
         const updateDataPOList = [];
@@ -331,6 +332,8 @@ export class ImportService {
                       : null,
                   user_id: user.id,
                   cc: value['cc'],
+                  payment_amount: value[`ac${invNo} payment amount`],
+                  deduction_amount: value[`ac${invNo} deduction amount`],
                 });
               }
             }
@@ -493,21 +496,21 @@ export class ImportService {
         console.log('start check invoice');
         for (const inv of invoices) {
           //check exists or new PO
-          const indexDataExisting = poInvoiceData.findIndex(
+          const indexDataInvoiceExisting = poInvoiceData.findIndex(
             (item) =>
               item.invoice_number === inv.invoice_number && item.cc == inv.cc,
           );
 
-          if (indexDataExisting > -1) {
+          if (indexDataInvoiceExisting > -1) {
             const updateData = await this.validateInvoicePOData(
               inv,
-              poInvoiceData[indexDataExisting],
+              poInvoiceData[indexDataInvoiceExisting],
             );
 
             if (Object.keys(updateData).length > 0) {
               //add user to updated object and push to list
               updateData.user_id = user.id;
-              updateData.id = poInvoiceData[indexDataExisting].id;
+              updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
               updateDataPOInvoiceList.push(updateData);
             }
           } else {
@@ -607,6 +610,26 @@ export class ImportService {
         moment(excelData.supplier_tax_date).format('YYYY-MM-D')
     ) {
       updateData.supplier_tax_date = excelData.supplier_tax_date;
+    }
+
+    //check payment amount
+    if (
+      excelData.payment_amount != null &&
+      dbData.payment_amount != excelData.payment_amount
+    ) {
+      updateData.payment_amount = isNaN(Number(excelData.payment_amount))
+        ? 0
+        : excelData.payment_amount;
+    }
+
+    //check deduction amount
+    if (
+      excelData.deduction_amount != null &&
+      dbData.deduction_amount != excelData.deduction_amount
+    ) {
+      updateData.deduction_amount = isNaN(Number(excelData.deduction_amount))
+        ? 0
+        : excelData.deduction_amount;
     }
 
     return updateData;
@@ -902,7 +925,7 @@ export class ImportService {
 
     //check item unit price
     if (
-      excelData['unit price'] &&
+      excelData['unit price'] != null &&
       dbData.unit_price != excelData['unit price']
     ) {
       updateData.unit_price = isNaN(Number(excelData['unit price']))
@@ -912,7 +935,7 @@ export class ImportService {
 
     //check item unit price 1
     if (
-      excelData['unit price 1 (100/60/70/80)'] &&
+      excelData['unit price 1 (100/60/70/80)'] != null &&
       dbData.unit_price_1 != excelData['unit price 1 (100/60/70/80)']
     ) {
       updateData.unit_price_1 = isNaN(
@@ -924,7 +947,7 @@ export class ImportService {
 
     //check item unit price 2
     if (
-      excelData['unit price 2 (20/30/40)'] &&
+      excelData['unit price 2 (20/30/40)'] != null &&
       dbData.unit_price_2 != excelData['unit price 2 (20/30/40)']
     ) {
       updateData.unit_price_2 = isNaN(
@@ -936,7 +959,7 @@ export class ImportService {
 
     //check item requested qty
     if (
-      excelData['requested qty'] &&
+      excelData['requested qty'] != null &&
       dbData.requested_qty != excelData['requested qty']
     ) {
       updateData.requested_qty = isNaN(Number(excelData['requested qty']))
@@ -946,7 +969,7 @@ export class ImportService {
 
     //check item billed qty
     if (
-      excelData['billed qty'] &&
+      excelData['billed qty'] != null &&
       dbData.billed_qty != excelData['billed qty']
     ) {
       updateData.billed_qty = isNaN(Number(excelData['billed qty']))
@@ -955,7 +978,10 @@ export class ImportService {
     }
 
     //check item due qty
-    if (excelData['due qty'] && dbData.due_qty != excelData['due qty']) {
+    if (
+      excelData['due qty'] != null &&
+      dbData.due_qty != excelData['due qty']
+    ) {
       updateData.due_qty = isNaN(Number(excelData['due qty']))
         ? 0
         : excelData['due qty'];
@@ -963,7 +989,7 @@ export class ImportService {
 
     //check item line amount
     if (
-      excelData['line amount'] &&
+      excelData['line amount'] != null &&
       dbData.line_amount != excelData['line amount']
     ) {
       updateData.line_amount = isNaN(Number(excelData['line amount']))
@@ -973,7 +999,7 @@ export class ImportService {
 
     //check remaining from po
     if (
-      excelData['remaining from po'] &&
+      excelData['remaining from po'] != null &&
       dbData.remaining_from_po != excelData['remaining from po']
     ) {
       updateData.remaining_from_po = isNaN(
@@ -1092,7 +1118,7 @@ export class ImportService {
 
     //check amount pending approval pd
     if (
-      excelData['amount pending approval pd'] &&
+      excelData['amount pending approval pd'] != null &&
       dbData.amount_pending_approval_pd !=
         excelData['amount pending approval pd']
     ) {
@@ -1135,7 +1161,7 @@ export class ImportService {
 
     //check amount ready invoice
     if (
-      excelData['amount ready invoice'] &&
+      excelData['amount ready invoice'] != null &&
       dbData.amount_ready_invoice != excelData['amount ready invoice']
     ) {
       updateData.amount_ready_invoice = isNaN(
@@ -1155,10 +1181,14 @@ export class ImportService {
 
     //check budget percentage
     if (
-      excelData['budget percentage'] &&
+      excelData['budget percentage'] != null &&
       dbData.budget_percentage != excelData['budget percentage']
     ) {
-      updateData.budget_percentage = excelData['budget percentage'];
+      updateData.budget_percentage = isNaN(
+        Number(excelData['budget percentage']),
+      )
+        ? 0
+        : excelData['budget percentage'];
     }
 
     return updateData;

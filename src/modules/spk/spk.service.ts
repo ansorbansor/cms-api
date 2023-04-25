@@ -348,6 +348,15 @@ export class SPKService {
           status: SPKStatus.APPROVED,
         });
       }
+    } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
+      if (
+        !paginationOptions.status ||
+        paginationOptions.status < SPKStatus.APPROVED
+      ) {
+        data.andWhere('spk.status >= :status', {
+          status: SPKStatus.PAID,
+        });
+      }
     } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
     } else {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');

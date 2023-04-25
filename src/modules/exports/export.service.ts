@@ -111,6 +111,10 @@ export class ExportService {
         d[`invoice_number_suppliertax_${index + 1}`] = element.payment_date;
         d[`invoice_number_suppliertax_date_${index + 1}`] =
           element.payment_date;
+        d[`invoice_number_payment_amount_${index + 1}`] =
+          element.payment_amount;
+        d[`invoice_number_deduction_amount_${index + 1}`] =
+          element.deduction_amount;
       });
     });
 

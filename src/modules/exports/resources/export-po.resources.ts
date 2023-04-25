@@ -93,6 +93,8 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
             supplier_tax_date: e.supplier_tax_date
               ? moment(e.supplier_tax_date).format('YYYY-MM-DD hh:mm:ss')
               : null,
+            payment_amount: e.payment_amount ? e.payment_amount : 0,
+            deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
           };
         })
       : [],

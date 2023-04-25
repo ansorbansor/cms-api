@@ -19,6 +19,7 @@ export enum RoleEnum {
   SS = 'ss',
   RPM = 'rpm',
   ADMINPAYMENT = 'adminpayment',
+  VERIFICATOR = 'verificator',
 }
 
 export enum FileTypeEnum {

@@ -109,7 +109,10 @@ export class SPKController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @Menus(MenuPermission.SPK_KASBON_SETTLEMENT)
+  @Menus(
+    MenuPermission.SPK_KASBON_SETTLEMENT,
+    MenuPermission.SPK_KASBON_SETTLEMENT_CLOSE,
+  )
   @UseInterceptors(AnyFilesInterceptor())
   async updateSettlement(
     @Request() req,

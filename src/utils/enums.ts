@@ -41,6 +41,7 @@ export enum MenuPermission {
   SPK_KM_RANGE = 'spk_km_range',
   SPK_CI_CO = 'spk_ci_co',
   SPK_KASBON_SETTLEMENT = 'spk_kasbon_settlement',
+  SPK_KASBON_SETTLEMENT_CLOSE = 'spk_kasbon_settlement_close',
   SPK_COST_EVIDENCE = 'spk_cost_evidence',
   SPK_OVER_BUDGET = 'spk_over_budget',
   USER_CREATE = 'user_create',

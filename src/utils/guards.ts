@@ -10,6 +10,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { getManager } from 'typeorm';
 import { ErrorMessage } from './enums';
 import { failedResponse } from './responses';
+import { log } from 'console';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -45,8 +46,9 @@ export class RolesGuard implements CanActivate {
       if (!data || data.length == 0) {
         throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
       }
+
       const hasAccess = data.some(function (e) {
-        return menus == e.name;
+        return menus.includes(e.name);
       });
 
       if (!hasAccess) {

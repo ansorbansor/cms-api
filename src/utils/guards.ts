@@ -40,6 +40,10 @@ export class RolesGuard implements CanActivate {
       ON ra.menu_id = m.id
       WHERE
       ur.id = ${request.user.id}
+      AND r.deleted_at IS NULL
+      AND ra.deleted_at IS NULL
+      AND ur.deleted_at IS NULL
+      AND m.deleted_at IS NULL
     `);
 
     const canAccess = function (data) {

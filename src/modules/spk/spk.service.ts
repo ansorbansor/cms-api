@@ -9,7 +9,13 @@ import { SPK } from 'src/entities/spk.entity';
 import { CreateSPKDTO } from './dto/create.spk.dto';
 import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { FilesService } from '../files/files.service';
-import { FilePath, RoleEnum, SPKStatus } from 'src/utils/enums';
+import {
+  ErrorMessage,
+  FilePath,
+  MenuPermission,
+  RoleEnum,
+  SPKStatus,
+} from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
@@ -18,6 +24,7 @@ import * as fs from 'fs';
 import * as moment from 'moment';
 import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 import { UsersService } from '../users/users.service';
+import { log } from 'console';
 
 @Injectable()
 export class SPKService {
@@ -554,7 +561,7 @@ export class SPKService {
   async updateSettlement(
     id: number,
     updateSPKSettlementDTO: UpdateSPKSettlementDTO,
-    user_id: number,
+    user: User,
     ip: string,
     files: Array<Express.Multer.File>,
   ) {
@@ -564,6 +571,32 @@ export class SPKService {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK tidak ditemukan',
+      );
+    }
+
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+
+    if (
+      updateSPKSettlementDTO.status == SPKStatus.PAID &&
+      !currentUser.employeePosition?.roleAccess.some(function (e) {
+        return e.menu.name == MenuPermission.SPK_KASBON_SETTLEMENT;
+      }) &&
+      currentUser.employeePosition?.grant_all_access == false
+    ) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Role ini tidak dapat mengubah status menjadi Paid',
+      );
+    } else if (
+      updateSPKSettlementDTO.status == SPKStatus.CLOSED &&
+      !currentUser.employeePosition?.roleAccess.some(function (e) {
+        return e.menu.name == MenuPermission.SPK_KASBON_SETTLEMENT_CLOSE;
+      }) &&
+      currentUser.employeePosition?.grant_all_access == false
+    ) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Role ini tidak dapat mengubah status menjadi Closed',
       );
     }
 
@@ -583,13 +616,19 @@ export class SPKService {
       closing_date: updateSPKSettlementDTO.closing_date,
       operation_cost: updateSPKSettlementDTO.operation_cost,
       remark_admin: updateSPKSettlementDTO.remarks,
-      paid_by: user_id,
-      closed_by: user_id,
+      paid_by: exists.paid_by,
+      closed_by: exists.closed_by,
       delta_of_settlement: deltaOfSettlement,
       cashback: cashback,
       cashout: cashout,
       status: updateSPKSettlementDTO.status,
     };
+
+    if (updateSPKSettlementDTO.status == SPKStatus.PAID) {
+      updateData.paid_by = user.id;
+    } else if (updateSPKSettlementDTO.status == SPKStatus.CLOSED) {
+      updateData.closed_by = user.id;
+    }
 
     const transferProofFile = files.find((e) => {
       return e.fieldname == 'transfer_proof_photo';
@@ -598,7 +637,7 @@ export class SPKService {
     if (transferProofFile) {
       const uploadedPhoto = await this.fileService.uploadFile(
         transferProofFile,
-        user_id,
+        user.id,
         FilePath.SPK_TRANSFER_PROOF,
         'Transfer Proof',
       );

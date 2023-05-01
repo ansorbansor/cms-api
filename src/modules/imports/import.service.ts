@@ -235,6 +235,7 @@ export class ImportService {
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
       }
+      throw err;
     }
   }
 

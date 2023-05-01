@@ -372,6 +372,9 @@ export class SPKService {
         inHouseUserId: user.id,
       });
       data.orWhere('spk.created_by = :createdBy', { createdBy: user.id });
+      data.orWhere('spk.pay_to_user_id = :payToUserId', {
+        payToUserId: user.id,
+      });
     }
 
     if (paginationOptions.search) {

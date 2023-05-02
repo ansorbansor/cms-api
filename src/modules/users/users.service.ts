@@ -82,7 +82,8 @@ export class UsersService {
     const data = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .leftJoinAndSelect('user.employeePosition', 'employeePosition');
+      .leftJoinAndSelect('user.employeePosition', 'employeePosition')
+      .where('status = true');
 
     if (paginationOptions.search) {
       data.andWhere(

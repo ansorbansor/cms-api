@@ -40,7 +40,10 @@ export class AuthService {
     onlyAdmin: boolean,
     ip: string,
   ): Promise<{ token: string; user: User }> {
-    const user = await this.usersService.findOneFull({ email: loginDto.email });
+    const user = await this.usersService.findOneFull({
+      email: loginDto.email,
+      status: true,
+    });
 
     if (!user) {
       throw failedResponse(

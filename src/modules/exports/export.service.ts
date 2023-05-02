@@ -1,8 +1,7 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { failedResponse } from 'src/utils/responses';
-import { Brackets, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ExportUserResource } from './resources/export-user.resources';
 import * as tmp from 'tmp';
@@ -42,10 +41,9 @@ export class ExportService {
     });
 
     const XLSX = xlsx;
-    const fileName = 'Users.xlsx';
     const workSheet = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, workSheet, fileName);
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
     const f = await new Promise((resolve) => {
       tmp.file(
@@ -104,25 +102,22 @@ export class ExportService {
 
     rows.forEach((d) => {
       d.invoices.forEach((element, index) => {
-        d[`invoice_number_${index + 1}`] = element.invoice_number;
-        d[`invoice_number_date_${index + 1}`] = element.date;
-        d[`invoice_number_status_${index + 1}`] = element.status;
-        d[`invoice_number_payment_date_${index + 1}`] = element.payment_date;
-        d[`invoice_number_suppliertax_${index + 1}`] = element.payment_date;
-        d[`invoice_number_suppliertax_date_${index + 1}`] =
+        d[`AC${index + 1} Inv`] = element.invoice_number;
+        d[`AC${index + 1} Inv Date`] = element.date;
+        d[`AC${index + 1} Inv Status`] = element.status;
+        d[`Payment Date ${index + 1}`] = element.payment_date;
+        d[`AC${index + 1} (Supplier Tax Invoice No.)`] = element.payment_date;
+        d[`AC${index + 1} (Supplier Tax Invoice No.) Date`] =
           element.payment_date;
-        d[`invoice_number_payment_amount_${index + 1}`] =
-          element.payment_amount;
-        d[`invoice_number_deduction_amount_${index + 1}`] =
-          element.deduction_amount;
+        d[`AC${index + 1} Payment Amount`] = element.payment_amount;
+        d[`AC${index + 1} Deduction Amount`] = element.deduction_amount;
       });
     });
 
     const XLSX = xlsx;
-    const fileName = 'PurchaseOrders.xlsx';
     const workSheet = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, workSheet, fileName);
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
     const f = await new Promise((resolve) => {
       tmp.file(
@@ -198,10 +193,9 @@ export class ExportService {
     });
 
     const XLSX = xlsx;
-    const fileName = 'SPK.xlsx';
     const workSheet = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, workSheet, fileName);
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
     const f = await new Promise((resolve) => {
       tmp.file(

@@ -24,7 +24,6 @@ import * as fs from 'fs';
 import * as moment from 'moment';
 import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 import { UsersService } from '../users/users.service';
-import { log } from 'console';
 
 @Injectable()
 export class SPKService {
@@ -337,6 +336,7 @@ export class SPKService {
             .select('p.site_id')
             .addSelect('SUM(p.unit_price)', 'total_unit_price')
             .from(PurchaseOrder, 'p')
+            .where("p.status NOT ILIKE '%cancel%'")
             .groupBy('p.site_id');
         },
         'total_unit_price',
@@ -344,7 +344,7 @@ export class SPKService {
       );
 
       data.andWhere(
-        'total_cash_advance.total_cash_advance > total_unit_price.total_unit_price',
+        'total_cash_advance.total_cash_advance > COALESCE(total_unit_price.total_unit_price, 0)',
       );
     } else if (currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT) {
       if (

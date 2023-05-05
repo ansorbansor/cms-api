@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ExportUserResource } from './resources/export-user.resources';
 import * as tmp from 'tmp';
@@ -24,15 +24,22 @@ export class ExportService {
     private activityLogService: ActivityLogService,
   ) {}
 
-  async exportUser(user: User, ip: string) {
-    const data = await this.usersRepository
+  async exportUser(user: User, ip: string, search: string) {
+    const query = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
       .leftJoinAndSelect('employeePosition.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
-      .orderBy('user.name', 'ASC')
-      .getMany();
+      .orderBy('user.name', 'ASC');
+
+    if (search) {
+      query.andWhere('user.name ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    const data = await query.getMany();
 
     const rows = [];
 
@@ -66,13 +73,19 @@ export class ExportService {
     return f;
   }
 
-  async exportPO(user: User, ip: string, startDate: string, endDate: string) {
+  async exportPO(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+  ) {
     if (!startDate || !endDate) {
       startDate = moment().subtract(30, 'd').format('YYYY-MM-DD HH:mm:ss');
       endDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
 
-    const data = await this.purchaseOrdersRepository
+    const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.region', 'region')
       .leftJoinAndSelect('po.area', 'area')
@@ -85,14 +98,30 @@ export class ExportService {
       .leftJoinAndSelect('po.status_acceptance', 'status_acceptance')
       .leftJoinAndSelect('po.pending_type', 'pending_type')
       .leftJoinAndSelect('po.pd', 'pd')
-      .leftJoinAndSelect('po.po_invoice', 'po_invoice')
-      .where(`po.created_at >= :startDate`, {
+      .leftJoinAndSelect('po.po_invoice', 'po_invoice');
+
+    if (search) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where(`LOWER(po.cc) LIKE :search`, {
+            search: `%${search.toLowerCase()}%`,
+          }).orWhere(`LOWER(po.po_number) LIKE :search`, {
+            search: `%${search.toLowerCase()}%`,
+          });
+        }),
+      );
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(`po.created_at >= :startDate`, {
         startDate: startDate,
-      })
-      .andWhere(`po.created_at <= :endDate`, {
+      });
+      query.andWhere(`po.created_at <= :endDate`, {
         endDate: endDate,
-      })
-      .getMany();
+      });
+    }
+
+    const data = await query.getMany();
 
     const rows = [];
 
@@ -140,13 +169,19 @@ export class ExportService {
     return f;
   }
 
-  async exportSPK(user: User, ip: string, startDate: string, endDate: string) {
+  async exportSPK(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+  ) {
     if (!startDate || !endDate) {
       startDate = moment().subtract(30, 'd').format('YYYY-MM-DD HH:mm:ss');
       endDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
 
-    const data = await this.spkRepository
+    const query = this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.region', 'region')
       .leftJoinAndSelect('spk.transportation', 'transportation')
@@ -166,14 +201,24 @@ export class ExportService {
         'approved_over_budget_by_user',
       )
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
-      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user')
-      .where(`spk.created_at >= :startDate`, {
+      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
+
+    if (search) {
+      query.andWhere('spk.spk_number ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(`spk.created_at >= :startDate`, {
         startDate: startDate,
-      })
-      .andWhere(`spk.created_at <= :endDate`, {
+      });
+      query.andWhere(`spk.created_at <= :endDate`, {
         endDate: endDate,
-      })
-      .getMany();
+      });
+    }
+
+    const data = await query.getMany();
 
     const rows = [];
 

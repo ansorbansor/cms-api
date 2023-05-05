@@ -30,8 +30,16 @@ export class ExportController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Menus(MenuPermission.USER_CREATE)
   @HttpCode(HttpStatus.OK)
-  async findAll(@Res() res: Response, @Request() req) {
-    const response = await this.exportService.exportUser(req.user, req.ip);
+  async findAll(
+    @Res() res: Response,
+    @Request() req,
+    @Query('search') search: string,
+  ) {
+    const response = await this.exportService.exportUser(
+      req.user,
+      req.ip,
+      search,
+    );
 
     res.download(`${response}`);
   }
@@ -46,12 +54,14 @@ export class ExportController {
     @Request() req,
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
+    @Query('search') search: string,
   ) {
     const response = await this.exportService.exportPO(
       req.user,
       req.ip,
       startDate,
       endDate,
+      search,
     );
 
     res.download(`${response}`);
@@ -66,12 +76,14 @@ export class ExportController {
     @Request() req,
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
+    @Query('search') search: string,
   ) {
     const response = await this.exportService.exportSPK(
       req.user,
       req.ip,
       startDate,
       endDate,
+      search,
     );
 
     res.download(`${response}`);

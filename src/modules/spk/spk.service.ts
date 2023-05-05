@@ -334,7 +334,10 @@ export class SPKService {
         (qb) => {
           return qb
             .select('p.site_id')
-            .addSelect('SUM(p.unit_price)', 'total_unit_price')
+            .addSelect(
+              'SUM(p.unit_price * p.budget_percentage / 100)',
+              'total_unit_price',
+            )
             .from(PurchaseOrder, 'p')
             .where("p.status NOT ILIKE '%cancel%'")
             .groupBy('p.site_id');

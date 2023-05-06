@@ -55,6 +55,7 @@ export class ExportController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
     @Query('search') search: string,
+    @Query('status') status: string,
   ) {
     const response = await this.exportService.exportPO(
       req.user,
@@ -62,6 +63,7 @@ export class ExportController {
       startDate,
       endDate,
       search,
+      status,
     );
 
     res.download(`${response}`);
@@ -77,6 +79,7 @@ export class ExportController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
     @Query('search') search: string,
+    @Query('status') status: string,
   ) {
     const response = await this.exportService.exportSPK(
       req.user,
@@ -84,6 +87,7 @@ export class ExportController {
       startDate,
       endDate,
       search,
+      status,
     );
 
     res.download(`${response}`);

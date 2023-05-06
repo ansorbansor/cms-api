@@ -85,6 +85,12 @@ export class PurchaseOrderService {
       });
     }
 
+    if (paginationOptions.status_string) {
+      data.andWhere('LOWER(po.status) = :status', {
+        status: paginationOptions.status_string,
+      });
+    }
+
     data.orderBy('po.created_at', 'DESC');
 
     const total = await data.getCount();

@@ -79,12 +79,8 @@ export class ExportService {
     startDate: string,
     endDate: string,
     search: string,
+    status: string,
   ) {
-    if (!startDate || !endDate) {
-      startDate = moment().subtract(30, 'd').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().format('YYYY-MM-DD HH:mm:ss');
-    }
-
     const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.region', 'region')
@@ -110,6 +106,12 @@ export class ExportService {
           });
         }),
       );
+    }
+
+    if (status) {
+      query.andWhere('LOWER(po.status) = :status', {
+        status: status,
+      });
     }
 
     if (startDate && endDate) {
@@ -175,12 +177,8 @@ export class ExportService {
     startDate: string,
     endDate: string,
     search: string,
+    status: string,
   ) {
-    if (!startDate || !endDate) {
-      startDate = moment().subtract(30, 'd').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().format('YYYY-MM-DD HH:mm:ss');
-    }
-
     const query = this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.region', 'region')
@@ -206,6 +204,12 @@ export class ExportService {
     if (search) {
       query.andWhere('spk.spk_number ILIKE :search', {
         search: `%${search}%`,
+      });
+    }
+
+    if (status) {
+      query.andWhere('spk.status = :status', {
+        status: status,
       });
     }
 

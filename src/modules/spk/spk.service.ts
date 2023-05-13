@@ -129,11 +129,10 @@ export class SPKService {
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
       createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
     } else {
-      createSPKDTO.status = SPKStatus.APPROVED;
+      createSPKDTO.status = SPKStatus.CREATED;
     }
 
     createSPKDTO.created_by = user_id;
-    createSPKDTO.approved_by = user_id;
 
     const spk = await this.spkRepository.save(
       this.spkRepository.create(createSPKDTO),
@@ -243,7 +242,7 @@ export class SPKService {
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
       updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
     } else {
-      updateSPKDTO.status = SPKStatus.APPROVED;
+      updateSPKDTO.status = SPKStatus.CREATED;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -307,7 +306,7 @@ export class SPKService {
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
 
-    if (currentUser.employeePosition.code == RoleEnum.RPM) {
+    if (currentUser.employeePosition.code == RoleEnum.PM) {
       //add total spk cash advance
       data.addSelect(
         'total_cash_advance.total_cash_advance',
@@ -349,6 +348,19 @@ export class SPKService {
       data.andWhere(
         'total_cash_advance.total_cash_advance > COALESCE(total_unit_price.total_unit_price, 0)',
       );
+
+      data.andWhere('spk.status >= :status', {
+        status: SPKStatus.APPROVED,
+      });
+    } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+      if (
+        !paginationOptions.status ||
+        paginationOptions.status < SPKStatus.CREATED
+      ) {
+        data.andWhere('spk.status >= :status', {
+          status: SPKStatus.CREATED,
+        });
+      }
     } else if (currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT) {
       if (
         !paginationOptions.status ||
@@ -604,6 +616,47 @@ export class SPKService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         'Role ini tidak dapat mengubah status menjadi Closed',
       );
+    } else if (
+      updateSPKSettlementDTO.status == SPKStatus.PAID &&
+      exists.status >= SPKStatus.PAID
+    ) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK yang sudah dibayar tidak bisa dibayar kembali',
+      );
+    } else if (
+      updateSPKSettlementDTO.status == SPKStatus.CLOSED &&
+      exists.status >= SPKStatus.CLOSED
+    ) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK yang sudah closed tidak bisa diclose kembali',
+      );
+    }
+
+    let maxBudgetBySite = await getManager().query(
+      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      [exists.site_id],
+    );
+
+    maxBudgetBySite = maxBudgetBySite[0].sum
+      ? Math.round(Number(maxBudgetBySite[0].sum))
+      : 0;
+
+    let totalSPKAmount = await getManager().query(
+      'SELECT SUM(cash_advance) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [exists.site_id],
+    );
+    totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    if (
+      totalSPKAmount > maxBudgetBySite &&
+      exists.status < SPKStatus.APPROVED_OVER_BUDGET
+    ) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK over budget belum diapprove`,
+      );
     }
 
     const deltaOfSettlement =
@@ -621,9 +674,10 @@ export class SPKService {
     const updateData = {
       closing_date: updateSPKSettlementDTO.closing_date,
       operation_cost: updateSPKSettlementDTO.operation_cost,
-      remark_admin: updateSPKSettlementDTO.remarks,
       paid_by: exists.paid_by,
       closed_by: exists.closed_by,
+      remark_admin: exists.remark_admin,
+      remark_verificator: exists.remark_verificator,
       delta_of_settlement: deltaOfSettlement,
       cashback: cashback,
       cashout: cashout,
@@ -632,8 +686,10 @@ export class SPKService {
 
     if (updateSPKSettlementDTO.status == SPKStatus.PAID) {
       updateData.paid_by = user.id;
+      updateData.remark_admin = updateSPKSettlementDTO.remarks;
     } else if (updateSPKSettlementDTO.status == SPKStatus.CLOSED) {
       updateData.closed_by = user.id;
+      updateData.remark_verificator = updateSPKSettlementDTO.remarks;
     }
 
     const transferProofFile = files.find((e) => {
@@ -756,7 +812,11 @@ export class SPKService {
     return null;
   }
 
-  async approveOverBudget(id: number, user: User): Promise<void> {
+  async approveOverBudget(
+    id: number,
+    user: User,
+    remark: string,
+  ): Promise<void> {
     const existingSPK = await this.spkRepository.findOne(id);
     if (!existingSPK) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
@@ -789,6 +849,27 @@ export class SPKService {
     await this.spkRepository.update(id, {
       status: SPKStatus.APPROVED_OVER_BUDGET,
       approved_over_budget_by: user.id,
+      remark_pm: remark,
+    });
+
+    return null;
+  }
+
+  async approve(id: number, user: User, remark: string): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id);
+    if (!existingSPK) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
+    } else if (existingSPK.status >= SPKStatus.APPROVED) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK yang sudah dibayar diapprove tidak dapat diapprove kembali!`,
+      );
+    }
+
+    await this.spkRepository.update(id, {
+      status: SPKStatus.APPROVED,
+      approved_by: user.id,
+      remark_rpm: remark,
     });
 
     return null;

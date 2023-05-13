@@ -177,5 +177,8 @@ export const SPKResourceDetail = (spk: SPK): any => {
     transfer_proof_photo: spk.transfer_proof_file
       ? minioConfig().fullUrl + spk.transfer_proof_file.path
       : null,
+    remark_pm: spk.remark_pm ? spk.remark_pm : '-',
+    remark_rpm: spk.remark_rpm ? spk.remark_rpm : '-',
+    remark_verificator: spk.remark_verificator ? spk.remark_verificator : '-',
   };
 };

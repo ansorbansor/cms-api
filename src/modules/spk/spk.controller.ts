@@ -216,9 +216,28 @@ export class SPKController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @Menus(MenuPermission.SPK_OVER_BUDGET)
-  async approveOverBudget(@Param() param: IDParamDto, @Request() req) {
+  async approveOverBudget(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
     return successResponse(
-      await this.spkService.approveOverBudget(param.id, req.user),
+      await this.spkService.approveOverBudget(param.id, req.user, remark),
+      'success',
+    );
+  }
+
+  @Get('approve/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_APPROVE)
+  async approve(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.approve(param.id, req.user, remark),
       'success',
     );
   }

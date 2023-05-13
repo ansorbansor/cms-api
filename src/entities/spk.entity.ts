@@ -99,6 +99,9 @@ export class SPK extends EntityHelper {
   remark_admin?: string;
 
   @Column()
+  remark_verificator?: string;
+
+  @Column()
   created_by?: number;
 
   @Column()
@@ -112,6 +115,12 @@ export class SPK extends EntityHelper {
 
   @Column()
   closed_by?: number;
+
+  @Column()
+  remark_pm?: string;
+
+  @Column()
+  remark_rpm?: string;
 
   @OneToOne(() => Region)
   @JoinColumn({ name: 'region_id' })

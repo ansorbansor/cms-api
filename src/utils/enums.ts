@@ -47,6 +47,7 @@ export enum MenuPermission {
   SPK_OVER_BUDGET = 'spk_over_budget',
   USER_CREATE = 'user_create',
   PO_CREATE = 'po_create',
+  SPK_APPROVE = 'spk_approve',
 }
 
 export enum FilePath {

@@ -74,6 +74,13 @@ export class CreateSPKDTO {
   @IsOptional()
   total_range: number;
 
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty({ message: 'Kategori tidak boleh kosong' })
+  @Validate(IsExist, ['SPKCategory', 'id'], {
+    message: 'Kategori SPK tidak ditemukan',
+  })
+  category_id: number;
+
   distance_to_site_photo: number;
   km_range_start_photo: number;
   km_range_end_photo: number;

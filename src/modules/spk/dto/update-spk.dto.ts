@@ -74,6 +74,13 @@ export class UpdateSPKDTO {
   @IsOptional()
   total_range: number;
 
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Validate(IsExist, ['SPKCategory', 'id'], {
+    message: 'Kategori SPK tidak ditemukan',
+  })
+  category_id: number;
+
   distance_to_site_photo: number;
   km_range_start_photo: number;
   km_range_end_photo: number;

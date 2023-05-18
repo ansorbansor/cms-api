@@ -142,6 +142,7 @@ export class ExportService {
           element.payment_date;
         d[`AC${index + 1} Payment Amount`] = element.payment_amount;
         d[`AC${index + 1} Deduction Amount`] = element.deduction_amount;
+        d[`AC${index + 1} Unit Price`] = element.unit_price;
       });
     });
 

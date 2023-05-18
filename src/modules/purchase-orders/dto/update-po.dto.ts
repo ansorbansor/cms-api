@@ -231,4 +231,8 @@ class Invoices {
   @ApiProperty({ example: '123' })
   @IsOptional()
   deduction_amount: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  unit_price: number;
 }

@@ -143,8 +143,11 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
             supplier_tax_date: e.supplier_tax_date
               ? moment(e.supplier_tax_date).format('YYYY-MM-DD hh:mm:ss')
               : null,
-            payment_amount: e.payment_amount,
-            deduction_amount: e.deduction_amount,
+            payment_amount: e.payment_amount ? Number(e.payment_amount) : 0,
+            deduction_amount: e.deduction_amount
+              ? Number(e.deduction_amount)
+              : 0,
+            unit_price: e.unit_price ? Number(e.unit_price) : 0,
           };
         })
       : [],

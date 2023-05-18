@@ -180,5 +180,9 @@ export const SPKResourceDetail = (spk: SPK): any => {
     remark_pm: spk.remark_pm ? spk.remark_pm : '-',
     remark_rpm: spk.remark_rpm ? spk.remark_rpm : '-',
     remark_verificator: spk.remark_verificator ? spk.remark_verificator : '-',
+    category: {
+      id: spk.category && spk.category.id ? spk.category.id : null,
+      name: spk.category && spk.category.name ? spk.category.name : '-',
+    },
   };
 };

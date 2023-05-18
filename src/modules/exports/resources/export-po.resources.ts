@@ -66,7 +66,6 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       : 0,
     'Budget Percentage': Number(po.budget_percentage),
     'Remark Highlight': po.remark_highlight ? po.remark_highlight : '-',
-    'Aging PO': po.publish_date ? moment().diff(po.publish_date, 'day') : '-',
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {
@@ -84,6 +83,7 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
               : null,
             payment_amount: e.payment_amount ? e.payment_amount : 0,
             deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
+            unit_price: e.unit_price ? e.unit_price : 0,
           };
         })
       : [],

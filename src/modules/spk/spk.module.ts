@@ -7,10 +7,16 @@ import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { UsersModule } from '../users/users.module';
 import { SPKController } from './spk.controller';
 import { SPKService } from './spk.service';
+import { SPKCategory } from 'src/entities/spk-category.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SPK, SPKInhouseTeam, SPKCostEvidence]),
+    TypeOrmModule.forFeature([
+      SPK,
+      SPKInhouseTeam,
+      SPKCostEvidence,
+      SPKCategory,
+    ]),
     ActivityLogModule,
     UsersModule,
   ],

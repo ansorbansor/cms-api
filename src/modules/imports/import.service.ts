@@ -112,7 +112,7 @@ export class ImportService {
           ) {
             //check exists or new User
             const indexDataExisting = userData.findIndex(
-              (item) => item.nik === value['id number (ktp)'],
+              (item) => item.nik == value['id number (ktp)'],
             );
 
             if (indexDataExisting > -1) {
@@ -266,6 +266,9 @@ export class ImportService {
           poi.supplier_tax_number, 
           poi.supplier_tax_date, 
           poi.purchase_order_id,
+          poi.payment_amount,
+          poi.deduction_amount,
+          poi.unit_price,
           po.cc
         FROM 
           purchase_order_invoices poi, purchase_orders po
@@ -339,13 +342,16 @@ export class ImportService {
                   deduction_amount: value[`ac${invNo} deduction amount`]
                     ? value[`ac${invNo} deduction amount`]
                     : 0,
+                  unit_price: value[`ac${invNo} unit price`]
+                    ? value[`ac${invNo} unit price`]
+                    : 0,
                 });
               }
             }
 
             //check exists or new PO
             const indexDataExisting = poCCData.findIndex(
-              (item) => item === value['cc'],
+              (item) => item == value['cc'],
             );
 
             if (indexDataExisting > -1) {
@@ -526,7 +532,7 @@ export class ImportService {
           //check exists or new PO
           const indexDataInvoiceExisting = poInvoiceData.findIndex(
             (item) =>
-              item.invoice_number === inv.invoice_number && item.cc == inv.cc,
+              item.invoice_number == inv.invoice_number && item.cc == inv.cc,
           );
 
           if (indexDataInvoiceExisting > -1) {
@@ -543,7 +549,7 @@ export class ImportService {
             }
           } else {
             inv.purchase_order_id = poData.find((data) => {
-              return data.cc === inv.cc;
+              return data.cc == inv.cc;
             }).id;
             delete inv.cc;
             insertDataPOInvoiceList.push(inv);
@@ -658,6 +664,16 @@ export class ImportService {
       updateData.deduction_amount = isNaN(Number(excelData.deduction_amount))
         ? 0
         : Number(excelData.deduction_amount);
+    }
+
+    //check unit price
+    if (
+      excelData.unit_price != null &&
+      dbData.unit_price != excelData.unit_price
+    ) {
+      updateData.unit_price = isNaN(Number(excelData.unit_price))
+        ? 0
+        : Number(excelData.unit_price);
     }
 
     return updateData;

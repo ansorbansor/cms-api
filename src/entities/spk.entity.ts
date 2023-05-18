@@ -17,6 +17,7 @@ import { SPKInhouseTeam } from './spk-inhouse-team.entity';
 import { FileEntity } from './file.entity';
 import { SPKCostEvidence } from './spk-cost-evidence.entity';
 import * as moment from 'moment';
+import { SPKCategory } from './spk-category.entity';
 
 @Entity({ name: 'spk' })
 export class SPK extends EntityHelper {
@@ -122,6 +123,9 @@ export class SPK extends EntityHelper {
   @Column()
   remark_rpm?: string;
 
+  @Column()
+  category_id?: number;
+
   @OneToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;
@@ -201,6 +205,10 @@ export class SPK extends EntityHelper {
   @OneToOne(() => User)
   @JoinColumn({ name: 'closed_by' })
   closed_by_user: User;
+
+  @OneToOne(() => SPKCategory)
+  @JoinColumn({ name: 'category_id' })
+  category: SPKCategory;
 
   @Column({ select: false, insert: false, readonly: true })
   total_cash_advance: number;

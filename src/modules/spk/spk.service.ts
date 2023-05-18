@@ -24,6 +24,8 @@ import * as fs from 'fs';
 import * as moment from 'moment';
 import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 import { UsersService } from '../users/users.service';
+import { SPKCategory } from 'src/entities/spk-category.entity';
+import { SPKCategoryResource } from './resources/spk-category.resources';
 
 @Injectable()
 export class SPKService {
@@ -34,6 +36,8 @@ export class SPKService {
     private spkInhouseTeamRepository: Repository<SPKInhouseTeam>,
     @InjectRepository(SPKCostEvidence)
     private spkCostEvidenceRepository: Repository<SPKCostEvidence>,
+    @InjectRepository(SPKCategory)
+    private spkCategoryRepository: Repository<SPKCategory>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
     private userService: UsersService,
@@ -103,10 +107,10 @@ export class SPKService {
       );
 
       if (currentDate.diff(expiredDate, 'days') > 2) {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
-        );
+        // throw failedResponse(
+        //   HttpStatus.UNPROCESSABLE_ENTITY,
+        //   'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
+        // );
       }
     }
 
@@ -464,6 +468,7 @@ export class SPKService {
       )
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
       .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user')
+      .leftJoinAndSelect('spk.category', 'category')
       .where(fields)
       .getOne();
 
@@ -873,5 +878,33 @@ export class SPKService {
     });
 
     return null;
+  }
+
+  async getAllSPKCategory(paginationOptions: IPaginationOptions) {
+    const data = this.spkCategoryRepository.createQueryBuilder('spk_category');
+
+    if (paginationOptions.search) {
+      data.andWhere('spk_category.name ILIKE :search', {
+        search: `%${paginationOptions.search}%`,
+      });
+    }
+
+    data.orderBy('spk_category.name', 'ASC');
+
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
+    if (!paginationOptions.limit) {
+      paginationOptions.limit = total;
+    }
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    return infinityPagination(
+      await data.getMany(),
+      SPKCategoryResource,
+      paginationOptions,
+    );
   }
 }

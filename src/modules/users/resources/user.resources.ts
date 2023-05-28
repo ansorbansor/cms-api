@@ -44,5 +44,7 @@ export const UserResource = (user: User): any => {
       ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
       : null,
     status_description: user.status_description,
+    bank: user.bank,
+    bank_account_number: user.bank_account_number,
   };
 };

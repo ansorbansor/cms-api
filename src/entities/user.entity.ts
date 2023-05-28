@@ -7,7 +7,6 @@ import {
   BeforeUpdate,
   JoinColumn,
   OneToOne,
-  OneToMany,
   ManyToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -108,6 +107,12 @@ export class User extends EntityHelper {
 
   @Column({ nullable: true })
   status_description: string | null;
+
+  @Column({ nullable: true })
+  bank: string | null;
+
+  @Column({ nullable: true })
+  bank_account_number: string | null;
 
   @OneToOne(() => FileEntity, {
     eager: true,

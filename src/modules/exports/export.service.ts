@@ -10,7 +10,6 @@ import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
 import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
-import * as moment from 'moment';
 
 @Injectable()
 export class ExportService {

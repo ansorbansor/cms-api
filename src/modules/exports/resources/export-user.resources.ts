@@ -33,5 +33,7 @@ export const ExportUserResource = (user: User): any => {
     'First Aid Validation End Date': user.firstaid_validation_end_date
       ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
       : null,
+    'Nomor Rekening': user.bank_account_number,
+    'Nama Bank': user.bank,
   };
 };

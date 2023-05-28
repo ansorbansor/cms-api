@@ -186,6 +186,9 @@ export class ImportService {
               const salt = await bcrypt.genSalt();
               inserUser.password = await bcrypt.hash('Password123', salt);
 
+              inserUser.bank = value['nama bank'];
+              inserUser.bank_account_number = value['Nomor Rekening'];
+
               insertDataUserList.push(inserUser);
             }
           }
@@ -855,6 +858,19 @@ export class ImportService {
     ) {
       updateData.firstaid_validation_end_date =
         excelData['first aid validation end date'];
+    }
+
+    //check nomor rekening
+    if (
+      excelData['nomor rekening'] &&
+      dbData.bank_account_number != excelData['nomor rekening']
+    ) {
+      updateData.bank_account_number = excelData['nomor rekening'];
+    }
+
+    //check nama bank
+    if (excelData['nama bank'] && dbData.bank != excelData['nama bank']) {
+      updateData.bank = excelData['nama bank'];
     }
 
     return updateData;

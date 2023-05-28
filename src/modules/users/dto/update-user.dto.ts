@@ -184,4 +184,18 @@ export class UpdateUserDto {
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   firstaid_validation_end_date: Date | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  bank: string | null;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  bank_account_number: string | null;
 }

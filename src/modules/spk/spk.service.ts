@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { getManager, Repository } from 'typeorm';
+import { Brackets, getManager, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -9,13 +9,7 @@ import { SPK } from 'src/entities/spk.entity';
 import { CreateSPKDTO } from './dto/create.spk.dto';
 import { UpdateSPKDTO } from './dto/update-spk.dto';
 import { FilesService } from '../files/files.service';
-import {
-  ErrorMessage,
-  FilePath,
-  MenuPermission,
-  RoleEnum,
-  SPKStatus,
-} from 'src/utils/enums';
+import { FilePath, MenuPermission, RoleEnum, SPKStatus } from 'src/utils/enums';
 import { SPKInhouseTeam } from 'src/entities/spk-inhouse-team.entity';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
@@ -306,7 +300,8 @@ export class SPKService {
   ) {
     const data = this.spkRepository
       .createQueryBuilder('spk')
-      .leftJoinAndSelect('spk.po', 'po');
+      .leftJoinAndSelect('spk.po', 'po')
+      .leftJoinAndSelect('spk.region', 'region');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
 
@@ -387,13 +382,32 @@ export class SPKService {
     } else {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
 
-      data.where('inhouse_team.user_id = :inHouseUserId', {
-        inHouseUserId: user.id,
-      });
-      data.orWhere('spk.created_by = :createdBy', { createdBy: user.id });
-      data.orWhere('spk.pay_to_user_id = :payToUserId', {
-        payToUserId: user.id,
-      });
+      data.andWhere(
+        new Brackets((qb) => {
+          qb.where('inhouse_team.user_id = :inHouseUserId', {
+            inHouseUserId: user.id,
+          })
+            .orWhere('spk.created_by = :createdBy', { createdBy: user.id })
+            .orWhere('spk.pay_to_user_id = :payToUserId', {
+              payToUserId: user.id,
+            });
+        }),
+      );
+    }
+
+    if (currentUser.employeePosition.code != RoleEnum.SUPERADMIN) {
+      //filtering by user region if not user admin
+      if (currentUser.region) {
+        let reg = currentUser.region.split(',');
+
+        reg = reg.map((str) => {
+          return str.trim().toLowerCase();
+        });
+
+        data.andWhere('LOWER(region.name) IN (:...filterRegion)', {
+          filterRegion: reg,
+        });
+      }
     }
 
     if (paginationOptions.search) {

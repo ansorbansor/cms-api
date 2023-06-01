@@ -81,6 +81,12 @@ export const SPKResourceDetail = (spk: SPK): any => {
       id: spk.pay_to_user && spk.pay_to_user.id ? spk.pay_to_user.id : null,
       name:
         spk.pay_to_user && spk.pay_to_user.name ? spk.pay_to_user.name : '-',
+      bank:
+        spk.pay_to_user && spk.pay_to_user.bank ? spk.pay_to_user.bank : '-',
+      bank_account_number:
+        spk.pay_to_user && spk.pay_to_user.bank_account_number
+          ? spk.pay_to_user.bank_account_number
+          : '-',
     },
     site: {
       id: spk.site && spk.site.id ? spk.site.id : null,

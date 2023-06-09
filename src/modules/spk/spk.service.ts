@@ -397,8 +397,8 @@ export class SPKService {
 
     if (currentUser.employeePosition.code != RoleEnum.SUPERADMIN) {
       //filtering by user region if not user admin
-      if (currentUser.region) {
-        let reg = currentUser.region.split(',');
+      if (currentUser.gm_region) {
+        let reg = currentUser.gm_region.split(',');
 
         reg = reg.map((str) => {
           return str.trim().toLowerCase();

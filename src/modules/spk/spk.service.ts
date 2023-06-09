@@ -20,6 +20,7 @@ import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 import { UsersService } from '../users/users.service';
 import { SPKCategory } from 'src/entities/spk-category.entity';
 import { SPKCategoryResource } from './resources/spk-category.resources';
+import { log } from 'console';
 
 @Injectable()
 export class SPKService {
@@ -400,13 +401,21 @@ export class SPKService {
       if (currentUser.gm_region) {
         let reg = currentUser.gm_region.split(',');
 
+        let canAccessAll = false;
+
         reg = reg.map((str) => {
-          return str.trim().toLowerCase();
+          const trimmed = str.trim().toLowerCase();
+          if (trimmed == 'national') {
+            canAccessAll = true;
+          }
+          return trimmed;
         });
 
-        data.andWhere('LOWER(region.name) IN (:...filterRegion)', {
-          filterRegion: reg,
-        });
+        if (!canAccessAll) {
+          data.andWhere('LOWER(region.name) IN (:...filterRegion)', {
+            filterRegion: reg,
+          });
+        }
       }
     }
 

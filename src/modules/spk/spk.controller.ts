@@ -85,7 +85,6 @@ export class SPKController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @Menus(MenuPermission.SPK_CI_CO)
   @UseInterceptors(AnyFilesInterceptor())
   async updateCICOPhoto(
     @Request() req,
@@ -136,7 +135,6 @@ export class SPKController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiConsumes('multipart/form-data')
-  @Menus(MenuPermission.SPK_COST_EVIDENCE)
   @UseInterceptors(AnyFilesInterceptor())
   async updateCostEvidence(
     @Request() req,

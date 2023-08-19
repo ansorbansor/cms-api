@@ -37,7 +37,13 @@ export class SiteService {
   }
 
   async getPOBySite(siteId: number) {
-    const po = await this.poRepository.find({ where: { site_id: siteId } });
+    const po = await this.poRepository
+      .createQueryBuilder('po')
+      .leftJoinAndSelect('po.project', 'project')
+      .where('site_id = :siteId', {
+        siteId: siteId,
+      })
+      .getMany();
 
     let maxBudgetBySite = await getManager().query(
       "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",

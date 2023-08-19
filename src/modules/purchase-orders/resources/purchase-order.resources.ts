@@ -28,6 +28,7 @@ export const PurchaseOrderBySiteResource = (
         cc: e.cc,
         po_number: e.po_number,
         item_description: e.item_description,
+        project_name: e.project ? e.project.name : '-',
       };
     }),
   };

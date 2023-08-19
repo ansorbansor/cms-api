@@ -9,24 +9,20 @@ export const ExportSPKResource = (spk: SPK): any => {
     spk_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
     spk_status:
       spk.status != null && spk.status != undefined
-        ? {
-            status: spk.status,
-            name:
-              spk.status == SPKStatus.CREATED
-                ? 'Dibuat'
-                : spk.status == SPKStatus.CREATED_OVER_BUDGET
-                ? 'Dibuat Over Budget'
-                : spk.status == SPKStatus.APPROVED
-                ? 'Disetujui'
-                : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-                ? 'Disetujui Over Budget'
-                : spk.status == SPKStatus.PAID
-                ? 'Dibayar'
-                : spk.status == SPKStatus.CLOSED
-                ? 'Diselesaikan'
-                : '-',
-          }
-        : null,
+        ? spk.status == SPKStatus.CREATED
+          ? 'Dibuat'
+          : spk.status == SPKStatus.CREATED_OVER_BUDGET
+          ? 'Dibuat Over Budget'
+          : spk.status == SPKStatus.APPROVED
+          ? 'Disetujui'
+          : spk.status == SPKStatus.APPROVED_OVER_BUDGET
+          ? 'Disetujui Over Budget'
+          : spk.status == SPKStatus.PAID
+          ? 'Dibayar'
+          : spk.status == SPKStatus.CLOSED
+          ? 'Diselesaikan'
+          : '-'
+        : '-',
     region: spk.region && spk.region.name ? spk.region.name : '-',
     transportation:
       spk.transportation && spk.transportation.name
@@ -34,16 +30,20 @@ export const ExportSPKResource = (spk: SPK): any => {
         : '-',
     police_number: spk.police_number,
     cash_advance: spk.cash_advance,
-    total_cash_advance: spk.total_cash_advance
-      ? Number(spk.total_cash_advance)
-      : null,
     pay_to_user:
       spk.pay_to_user && spk.pay_to_user.name ? spk.pay_to_user.name : '-',
+    bank_account:
+      spk.pay_to_user &&
+      spk.pay_to_user.bank &&
+      spk.pay_to_user.bank_account_number
+        ? spk.pay_to_user.bank + ' - ' + spk.pay_to_user.bank_account_number
+        : '-',
     site: spk.site && spk.site.name ? spk.site.name : '-',
     area: spk.area && spk.area.name ? spk.area.name : '-',
     distance: spk.distance ? spk.distance : '-',
     work_type: spk.work_type ? spk.work_type : '-',
     po: spk.po && spk.po.item_description ? spk.po.item_description : '-',
+    category: spk.category ? spk.category.name : '-',
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
           return {
@@ -82,6 +82,9 @@ export const ExportSPKResource = (spk: SPK): any => {
     cashback: spk.cashback ? spk.cashback : null,
     cashout: spk.cashout ? spk.cashout : null,
     remark_admin: spk.remark_admin ? spk.remark_admin : null,
+    remark_pm: spk.remark_pm ? spk.remark_pm : null,
+    remark_rpm: spk.remark_rpm ? spk.remark_rpm : null,
+    remark_verificator: spk.remark_verificator ? spk.remark_verificator : null,
     cost_evidences: spk.cost_evidences
       ? spk.cost_evidences.map((costEvidence) => {
           return {

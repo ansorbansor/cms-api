@@ -239,6 +239,9 @@ export class ExportService {
         d[`cost_evidences_${index + 1}`] = element.name;
         d[`cost_evidences_cost_${index + 1}`] = element.cost;
       });
+
+      delete d.inhouse_team;
+      delete d.cost_evidences;
     });
 
     const XLSX = xlsx;

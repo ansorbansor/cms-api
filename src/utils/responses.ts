@@ -71,6 +71,19 @@ export const successResponseList = (datax: any, message: string) => {
   };
 };
 
+export const successResponseListWithoutPaginate = (
+  datax: [],
+  message: string,
+) => {
+  return {
+    meta: {
+      code: HttpStatus.OK,
+      message: message,
+    },
+    data: datax,
+  };
+};
+
 export const infinityPagination = <T>(
   datas: T[],
   resourcex: { (any, any1?, any2?): any },

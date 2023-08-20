@@ -38,6 +38,7 @@ import { TransportationModule } from './modules/transportation/transportation.mo
 import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
+import { GraphModule } from './modules/graph/graph.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
     ProjectModule,
     SPKModule,
     TransportationModule,
+    GraphModule,
   ],
   providers: [
     {

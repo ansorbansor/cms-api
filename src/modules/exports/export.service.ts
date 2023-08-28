@@ -199,7 +199,8 @@ export class ExportService {
         'approved_over_budget_by_user',
       )
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
-      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
+      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user')
+      .leftJoinAndSelect('spk.category', 'category');
 
     if (search) {
       query.andWhere('spk.spk_number ILIKE :search', {

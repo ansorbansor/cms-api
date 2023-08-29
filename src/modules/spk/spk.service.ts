@@ -306,6 +306,7 @@ export class SPKService {
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.po', 'po')
+      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
       .leftJoinAndSelect('spk.region', 'region');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });

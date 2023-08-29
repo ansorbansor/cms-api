@@ -26,7 +26,9 @@ export const SPKResource = (spk: SPK): any => {
                 : spk.status == SPKStatus.APPROVED_OVER_BUDGET
                 ? 'Waiting Transfer'
                 : spk.status == SPKStatus.PAID
-                ? 'Waiting Approval Verificator'
+                ? spk.cost_evidences && spk.cost_evidences.length > 0
+                  ? 'Waiting Approval Verificator'
+                  : 'Paid, need evidence'
                 : spk.status == SPKStatus.CLOSED
                 ? 'Closed'
                 : '-',
@@ -56,7 +58,9 @@ export const SPKResourceDetail = (spk: SPK): any => {
                 : spk.status == SPKStatus.APPROVED_OVER_BUDGET
                 ? 'Waiting Transfer'
                 : spk.status == SPKStatus.PAID
-                ? 'Waiting Approval Verificator'
+                ? spk.cost_evidences && spk.cost_evidences.length > 0
+                  ? 'Waiting Approval Verificator'
+                  : 'Paid, need evidence'
                 : spk.status == SPKStatus.CLOSED
                 ? 'Closed'
                 : '-',

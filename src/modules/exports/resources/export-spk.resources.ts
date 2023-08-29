@@ -10,17 +10,19 @@ export const ExportSPKResource = (spk: SPK): any => {
     spk_status:
       spk.status != null && spk.status != undefined
         ? spk.status == SPKStatus.CREATED
-          ? 'Dibuat'
+          ? 'Waiting Approval RPM'
           : spk.status == SPKStatus.CREATED_OVER_BUDGET
-          ? 'Dibuat Over Budget'
+          ? 'Waiting Approval RPM'
           : spk.status == SPKStatus.APPROVED
-          ? 'Disetujui'
+          ? spk.is_over_budget == true
+            ? 'Waiting Approval PM'
+            : 'Waiting Transfer'
           : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-          ? 'Disetujui Over Budget'
+          ? 'Waiting Transfer'
           : spk.status == SPKStatus.PAID
-          ? 'Dibayar'
+          ? 'Waiting Approval Verificator'
           : spk.status == SPKStatus.CLOSED
-          ? 'Diselesaikan'
+          ? 'Closed'
           : '-'
         : '-',
     region: spk.region && spk.region.name ? spk.region.name : '-',

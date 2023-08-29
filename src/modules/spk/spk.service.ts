@@ -127,8 +127,10 @@ export class SPKService {
 
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
       createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      createSPKDTO.is_over_budget = true;
     } else {
       createSPKDTO.status = SPKStatus.CREATED;
+      createSPKDTO.is_over_budget = false;
     }
 
     createSPKDTO.created_by = user_id;
@@ -240,8 +242,10 @@ export class SPKService {
 
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
       updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      updateSPKDTO.is_over_budget = true;
     } else {
       updateSPKDTO.status = SPKStatus.CREATED;
+      updateSPKDTO.is_over_budget = false;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

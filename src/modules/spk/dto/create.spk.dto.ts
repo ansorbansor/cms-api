@@ -87,4 +87,5 @@ export class CreateSPKDTO {
   status: number;
   created_by: number;
   approved_by: number;
+  is_over_budget: boolean;
 }

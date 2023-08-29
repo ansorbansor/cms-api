@@ -126,6 +126,9 @@ export class SPK extends EntityHelper {
   @Column()
   category_id?: number;
 
+  @Column()
+  is_over_budget?: boolean;
+
   @OneToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;

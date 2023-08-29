@@ -85,4 +85,5 @@ export class UpdateSPKDTO {
   km_range_start_photo: number;
   km_range_end_photo: number;
   status: number;
+  is_over_budget: boolean;
 }

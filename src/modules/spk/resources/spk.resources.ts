@@ -16,17 +16,19 @@ export const SPKResource = (spk: SPK): any => {
             status: spk.status,
             name:
               spk.status == SPKStatus.CREATED
-                ? 'Dibuat'
+                ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.CREATED_OVER_BUDGET
-                ? 'Dibuat Over Budget'
+                ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.APPROVED
-                ? 'Disetujui'
+                ? spk.is_over_budget == true
+                  ? 'Waiting Approval PM'
+                  : 'Waiting Transfer'
                 : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-                ? 'Disetujui Over Budget'
+                ? 'Waiting Transfer'
                 : spk.status == SPKStatus.PAID
-                ? 'Dibayar'
+                ? 'Waiting Approval Verificator'
                 : spk.status == SPKStatus.CLOSED
-                ? 'Diselesaikan'
+                ? 'Closed'
                 : '-',
           }
         : null,
@@ -44,17 +46,19 @@ export const SPKResourceDetail = (spk: SPK): any => {
             status: spk.status,
             name:
               spk.status == SPKStatus.CREATED
-                ? 'Dibuat'
+                ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.CREATED_OVER_BUDGET
-                ? 'Dibuat Over Budget'
+                ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.APPROVED
-                ? 'Disetujui'
+                ? spk.is_over_budget == true
+                  ? 'Waiting Approval PM'
+                  : 'Waiting Transfer'
                 : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-                ? 'Disetujui Over Budget'
+                ? 'Waiting Transfer'
                 : spk.status == SPKStatus.PAID
-                ? 'Dibayar'
+                ? 'Waiting Approval Verificator'
                 : spk.status == SPKStatus.CLOSED
-                ? 'Diselesaikan'
+                ? 'Closed'
                 : '-',
           }
         : null,

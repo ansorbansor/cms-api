@@ -11,5 +11,5 @@ export class Area extends EntityHelper {
 
   @OneToMany(() => PurchaseOrder, (po) => po.area)
   @JoinColumn()
-  po?: PurchaseOrder[];
+  areaPO?: PurchaseOrder[];
 }

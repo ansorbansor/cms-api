@@ -157,7 +157,7 @@ export class SPK extends EntityHelper {
   @JoinColumn()
   inhouse_team: SPKInhouseTeam[];
 
-  @OneToMany(() => Area, (area) => area.po)
+  @OneToMany(() => Area, (area) => area.areaPO)
   @JoinColumn()
   related_po: PurchaseOrder[];
 

@@ -1,13 +1,12 @@
 import { SPK } from 'src/entities/spk.entity';
 import * as moment from 'moment';
-import minioConfig from 'src/config/minio.config';
 import { SPKStatus } from 'src/utils/enums';
 
 export const ExportSPKResource = (spk: SPK): any => {
   return {
-    spk_number: spk.spk_number,
-    spk_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
-    spk_status:
+    bop_number: spk.spk_number,
+    bop_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
+    bop_status:
       spk.status != null && spk.status != undefined
         ? spk.status == SPKStatus.CREATED
           ? 'Waiting Approval RPM'
@@ -40,12 +39,24 @@ export const ExportSPKResource = (spk: SPK): any => {
       spk.pay_to_user.bank_account_number
         ? spk.pay_to_user.bank + ' - ' + spk.pay_to_user.bank_account_number
         : '-',
-    site: spk.site && spk.site.name ? spk.site.name : '-',
+    site_name: spk.site && spk.site.name ? spk.site.name : '-',
+    site_code: spk.site && spk.site.code ? spk.site.code : '-',
     area: spk.area && spk.area.name ? spk.area.name : '-',
     distance: spk.distance ? spk.distance : '-',
     work_type: spk.work_type ? spk.work_type : '-',
-    po: spk.po && spk.po.item_description ? spk.po.item_description : '-',
+    item_description:
+      spk.po && spk.po.item_description ? spk.po.item_description : '-',
     category: spk.category ? spk.category.name : '-',
+    sitePO: spk.site.sitePO
+      ? spk.site.sitePO.map((relatedPO) => {
+          return {
+            id: relatedPO && relatedPO.id ? relatedPO.id : null,
+            po_number:
+              relatedPO && relatedPO.po_number ? relatedPO.po_number : '-',
+            name: relatedPO && relatedPO.project ? relatedPO.project.name : '-',
+          };
+        })
+      : [],
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
           return {
@@ -69,10 +80,8 @@ export const ExportSPKResource = (spk: SPK): any => {
                 : '-',
           };
         })
-      : null,
-    remark_inhouse_team: spk.remark_inhouse_team
-      ? spk.remark_inhouse_team
-      : null,
+      : [],
+    remark_ss: spk.remark_inhouse_team ? spk.remark_inhouse_team : null,
     total_range: spk.total_range ? spk.total_range : 0,
     closing_date: spk.closing_date
       ? moment(spk.closing_date).format('YYYY-MM-DD hh:mm:ss')
@@ -95,7 +104,7 @@ export const ExportSPKResource = (spk: SPK): any => {
             cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
           };
         })
-      : null,
+      : [],
     created_by: spk.created_by_user ? spk.created_by_user.name : '-',
     approved_by: spk.approved_by_user ? spk.approved_by_user.name : '-',
     approved_over_budget_by: spk.approved_over_budget_by_user

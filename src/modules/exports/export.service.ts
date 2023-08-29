@@ -187,6 +187,8 @@ export class ExportService {
       .leftJoinAndSelect('spk.site', 'site')
       .leftJoinAndSelect('spk.area', 'area')
       .leftJoinAndSelect('spk.po', 'po')
+      .leftJoinAndSelect('site.sitePO', 'sitePO')
+      .leftJoinAndSelect('sitePO.project', 'project')
       .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
       .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
       .leftJoinAndSelect('userInhouse.employeePosition', 'employeePosition')
@@ -240,9 +242,14 @@ export class ExportService {
         d[`cost_evidences_${index + 1}`] = element.name;
         d[`cost_evidences_cost_${index + 1}`] = element.cost;
       });
+      d.sitePO.forEach((element, index) => {
+        d[`po_number_${index + 1}`] = element.po_number;
+        d[`project_name_${index + 1}`] = element.name;
+      });
 
       delete d.inhouse_team;
       delete d.cost_evidences;
+      delete d.sitePO;
     });
 
     const XLSX = xlsx;

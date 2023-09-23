@@ -87,13 +87,13 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       name: po.bidding_area ? po.bidding_area.name : '-',
     },
     publish_date: po.publish_date
-      ? moment(po.publish_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.publish_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     start_date: po.start_date
-      ? moment(po.start_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.start_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     end_date: po.end_date
-      ? moment(po.end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     remark_weekly: po.remark_weekly ? po.remark_weekly : '-',
     remark_project: {
@@ -122,7 +122,7 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       name: po.pd ? po.pd.name : '-',
     },
     actual_completion_date_vs_to_pd: po.actual_completion_date
-      ? moment(po.actual_completion_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.actual_completion_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     ready_invoice: po.ready_invoice ? po.ready_invoice : '-',
     amount_ready_invoice: po.amount_ready_invoice
@@ -134,15 +134,15 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
             id: e.id,
             invoice_number: e.invoice_number,
             date: e.invoice_date
-              ? moment(e.invoice_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.invoice_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             status: e.invoice_status,
             payment_date: e.payment_date
-              ? moment(e.payment_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.payment_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             supplier_tax_number: e.supplier_tax_number,
             supplier_tax_date: e.supplier_tax_date
-              ? moment(e.supplier_tax_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.supplier_tax_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             payment_amount: e.payment_amount ? Number(e.payment_amount) : 0,
             deduction_amount: e.deduction_amount

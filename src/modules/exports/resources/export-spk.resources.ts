@@ -5,7 +5,7 @@ import { SPKStatus } from 'src/utils/enums';
 export const ExportSPKResource = (spk: SPK): any => {
   return {
     bop_number: spk.spk_number,
-    bop_date: moment(spk.created_at).format('YYYY-MM-DD hh:mm:ss'),
+    bop_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     bop_status:
       spk.status != null && spk.status != undefined
         ? spk.status == SPKStatus.CREATED
@@ -86,7 +86,7 @@ export const ExportSPKResource = (spk: SPK): any => {
     remark_ss: spk.remark_inhouse_team ? spk.remark_inhouse_team : null,
     total_range: spk.total_range ? spk.total_range : 0,
     closing_date: spk.closing_date
-      ? moment(spk.closing_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(spk.closing_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     operation_cost: spk.operation_cost ? spk.operation_cost : null,
     delta_of_settlement: spk.delta_of_settlement

@@ -21,17 +21,17 @@ export const ExportUserResource = (user: User): any => {
     'Level in iResource': user.level_iresource,
     'WAH Certification Number': user.wah_certification_number,
     'WAH Validation End Date': user.wah_validation_end_date
-      ? moment(user.wah_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(user.wah_validation_end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     'Electrical Certification Number': user.electrical_certification_number,
     'Electrical Validation End Date': user.electrical_validation_end_date
       ? moment(user.electrical_validation_end_date).format(
-          'YYYY-MM-DD hh:mm:ss',
+          'YYYY-MM-DD HH:mm:ss',
         )
       : null,
     'First Aid Certification Number': user.firstaid_certification_number,
     'First Aid Validation End Date': user.firstaid_validation_end_date
-      ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     'Nomor Rekening': user.bank_account_number,
     'Nama Bank': user.bank,

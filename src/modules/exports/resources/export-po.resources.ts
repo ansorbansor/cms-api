@@ -36,13 +36,13 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
     'Payment Terms': po.payment_terms ? po.payment_terms : '-',
     'Bidding Area': po.bidding_area ? po.bidding_area.name : '-',
     'Publish Date': po.publish_date
-      ? moment(po.publish_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.publish_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     'Start Date': po.start_date
-      ? moment(po.start_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.start_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     'End Date': po.end_date
-      ? moment(po.end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(po.end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     'Priority ESAR Approve': po.priority_esar_approve
       ? po.priority_esar_approve
@@ -71,15 +71,15 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
           return {
             invoice_number: e.invoice_number,
             date: e.invoice_date
-              ? moment(e.invoice_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.invoice_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             status: e.invoice_status,
             payment_date: e.payment_date
-              ? moment(e.payment_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.payment_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             supplier_tax_number: e.supplier_tax_number,
             supplier_tax_date: e.supplier_tax_date
-              ? moment(e.supplier_tax_date).format('YYYY-MM-DD hh:mm:ss')
+              ? moment(e.supplier_tax_date).format('YYYY-MM-DD HH:mm:ss')
               : null,
             payment_amount: e.payment_amount ? e.payment_amount : 0,
             deduction_amount: e.deduction_amount ? e.deduction_amount : 0,

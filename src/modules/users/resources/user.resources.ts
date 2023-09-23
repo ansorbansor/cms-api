@@ -31,17 +31,17 @@ export const UserResource = (user: User): any => {
     level_iresource: user.level_iresource,
     wah_certification_number: user.wah_certification_number,
     wah_validation_end_date: user.wah_validation_end_date
-      ? moment(user.wah_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(user.wah_validation_end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     electrical_certification_number: user.electrical_certification_number,
     electrical_validation_end_date: user.electrical_validation_end_date
       ? moment(user.electrical_validation_end_date).format(
-          'YYYY-MM-DD hh:mm:ss',
+          'YYYY-MM-DD HH:mm:ss',
         )
       : null,
     firstaid_certification_number: user.firstaid_certification_number,
     firstaid_validation_end_date: user.firstaid_validation_end_date
-      ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD hh:mm:ss')
+      ? moment(user.firstaid_validation_end_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
     status_description: user.status_description,
     bank: user.bank,

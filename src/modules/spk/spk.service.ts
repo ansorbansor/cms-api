@@ -306,6 +306,8 @@ export class SPKService {
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.po', 'po')
+      .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
+      .leftJoinAndSelect('spk.site', 'site')
       .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
       .leftJoinAndSelect('spk.region', 'region');
 

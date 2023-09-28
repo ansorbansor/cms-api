@@ -34,6 +34,22 @@ export const SPKResource = (spk: SPK): any => {
                 : '-',
           }
         : null,
+    pay_to_user: {
+      id: spk.pay_to_user && spk.pay_to_user.id ? spk.pay_to_user.id : null,
+      name:
+        spk.pay_to_user && spk.pay_to_user.name ? spk.pay_to_user.name : '-',
+      bank:
+        spk.pay_to_user && spk.pay_to_user.bank ? spk.pay_to_user.bank : null,
+      bank_account_number:
+        spk.pay_to_user && spk.pay_to_user.bank_account_number
+          ? spk.pay_to_user.bank_account_number
+          : null,
+    },
+    site: {
+      id: spk.site && spk.site.id ? spk.site.id : null,
+      name: spk.site && spk.site.name ? spk.site.name : '-',
+      code: spk.site && spk.site.code ? spk.site.code : '-',
+    },
   };
 };
 
@@ -99,6 +115,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
     site: {
       id: spk.site && spk.site.id ? spk.site.id : null,
       name: spk.site && spk.site.name ? spk.site.name : '-',
+      code: spk.site && spk.site.code ? spk.site.code : '-',
     },
     area: {
       id: spk.area && spk.area.id ? spk.area.id : null,

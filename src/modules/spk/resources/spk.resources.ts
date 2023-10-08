@@ -121,7 +121,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
       id: spk.area && spk.area.id ? spk.area.id : null,
       name: spk.area && spk.area.name ? spk.area.name : '-',
     },
-    distance: spk.distance ? spk.distance : '-',
+    distance: spk.distance ? spk.distance : 0,
     work_type: spk.work_type ? spk.work_type : '-',
     po: {
       id: spk.po && spk.po.id ? spk.po.id : null,

@@ -427,9 +427,15 @@ export class SPKService {
     }
 
     if (paginationOptions.search) {
-      data.andWhere('spk.spk_number ILIKE :search', {
-        search: `%${paginationOptions.search}%`,
-      });
+      data.andWhere(
+        new Brackets((qb) => {
+          qb.where('spk.spk_number ILIKE :search', {
+            search: `%${paginationOptions.search}%`,
+          }).orWhere('site.code ILIKE :searchSite', {
+            searchSite: `%${paginationOptions.search}%`,
+          });
+        }),
+      );
     }
 
     if (paginationOptions.start_date) {

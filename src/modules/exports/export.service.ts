@@ -143,6 +143,8 @@ export class ExportService {
         d[`AC${index + 1} Deduction Amount`] = element.deduction_amount;
         d[`AC${index + 1} Unit Price`] = element.unit_price;
       });
+
+      delete d.invoices;
     });
 
     const XLSX = xlsx;

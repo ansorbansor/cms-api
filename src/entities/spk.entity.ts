@@ -70,6 +70,9 @@ export class SPK extends EntityHelper {
   km_range_end_photo?: number;
 
   @Column()
+  km_back_to_office_photo?: number;
+
+  @Column()
   total_range?: number;
 
   @Column()
@@ -172,6 +175,10 @@ export class SPK extends EntityHelper {
   @OneToOne(() => FileEntity)
   @JoinColumn({ name: 'km_range_end_photo' })
   km_range_end_file: FileEntity;
+
+  @OneToOne(() => FileEntity)
+  @JoinColumn({ name: 'km_back_to_office_photo' })
+  km_back_to_office_file: FileEntity;
 
   @OneToOne(() => FileEntity)
   @JoinColumn({ name: 'check_in_photo' })

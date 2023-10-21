@@ -84,6 +84,7 @@ export class CreateSPKDTO {
   distance_to_site_photo: number;
   km_range_start_photo: number;
   km_range_end_photo: number;
+  km_back_to_office_photo: number;
   status: number;
   created_by: number;
   approved_by: number;

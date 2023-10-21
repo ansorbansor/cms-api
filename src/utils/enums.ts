@@ -55,6 +55,7 @@ export enum FilePath {
   SPK_SITE_DISTANCE = 'spk/site-distance',
   SPK_KM_RANGE_START = 'spk/km-range-start',
   SPK_KM_RANGE_END = 'spk/km-range-end',
+  SPK_BACK_TO_OFFICE = 'spk/back-to-office',
   SPK_CHECK_IN = 'spk/check-in',
   SPK_CHECK_OUT = 'spk/check-out',
   SPK_COST_EVIDENCE = 'spk/cost-evidence',

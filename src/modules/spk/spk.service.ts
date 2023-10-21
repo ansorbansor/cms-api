@@ -53,6 +53,9 @@ export class SPKService {
     const kmRangeEndPhoto = files.find((e) => {
       return e.fieldname == 'km_range_end_photo';
     });
+    const kmBackToOfficePhoto = files.find((e) => {
+      return e.fieldname == 'km_back_to_office_photo';
+    });
 
     if (distanceToSitePhoto) {
       const uploadedPhoto = await this.fileService.uploadFile(
@@ -85,6 +88,17 @@ export class SPKService {
       );
 
       createSPKDTO.km_range_end_photo = uploadedPhoto.id;
+    }
+
+    if (kmBackToOfficePhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmBackToOfficePhoto,
+        user_id,
+        FilePath.SPK_BACK_TO_OFFICE,
+        'Back To Office',
+      );
+
+      createSPKDTO.km_back_to_office_photo = uploadedPhoto.id;
     }
 
     //create SPK rules
@@ -190,6 +204,9 @@ export class SPKService {
     const kmRangeEndPhoto = files.find((e) => {
       return e.fieldname == 'km_range_end_photo';
     });
+    const kmBackToOfficePhoto = files.find((e) => {
+      return e.fieldname == 'km_back_to_office_photo';
+    });
 
     if (distanceToSitePhoto) {
       const uploadedPhoto = await this.fileService.uploadFile(
@@ -222,6 +239,17 @@ export class SPKService {
       );
 
       updateSPKDTO.km_range_end_photo = uploadedPhoto.id;
+    }
+
+    if (kmBackToOfficePhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmBackToOfficePhoto,
+        user.id,
+        FilePath.SPK_BACK_TO_OFFICE,
+        'KM Back To Office',
+      );
+
+      updateSPKDTO.km_back_to_office_photo = uploadedPhoto.id;
     }
 
     let maxBudgetBySite = await getManager().query(
@@ -561,6 +589,9 @@ export class SPKService {
     const checkOutPhoto = files.find((e) => {
       return e.fieldname == 'check_out_photo';
     });
+    const kmBackToOfficePhoto = files.find((e) => {
+      return e.fieldname == 'km_back_to_office_photo';
+    });
 
     const updateData = {};
 
@@ -584,6 +615,17 @@ export class SPKService {
       );
 
       updateData['km_range_end_photo'] = uploadedPhoto.id;
+    }
+
+    if (kmBackToOfficePhoto) {
+      const uploadedPhoto = await this.fileService.uploadFile(
+        kmBackToOfficePhoto,
+        user.id,
+        FilePath.SPK_BACK_TO_OFFICE,
+        'Back To Office',
+      );
+
+      updateData['km_back_to_office_photo'] = uploadedPhoto.id;
     }
 
     if (checkInPhoto) {

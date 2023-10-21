@@ -168,6 +168,9 @@ export const SPKResourceDetail = (spk: SPK): any => {
     km_range_end_photo: spk.km_range_end_file
       ? minioConfig().fullUrl + spk.km_range_end_file.path
       : null,
+    km_back_to_office_photo: spk.km_back_to_office_file
+      ? minioConfig().fullUrl + spk.km_back_to_office_file.path
+      : null,
     check_in_photo: spk.check_in_file
       ? minioConfig().fullUrl + spk.check_in_file.path
       : null,

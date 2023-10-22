@@ -516,6 +516,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
       .leftJoinAndSelect('spk.km_range_start_file', 'km_range_start_file')
       .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')
+      .leftJoinAndSelect('spk.km_back_to_office_file', 'km_back_to_office_file')
       .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
       .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
       .leftJoinAndSelect('spk.transfer_proof_file', 'transfer_proof_file')

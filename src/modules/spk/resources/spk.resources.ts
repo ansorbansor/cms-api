@@ -10,6 +10,7 @@ export const SPKResource = (spk: SPK): any => {
     spk_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
     cash_advance: spk.cash_advance,
+    paid_date: spk.paidDateParseDate,
     spk_status:
       spk.status != null && spk.status != undefined
         ? {

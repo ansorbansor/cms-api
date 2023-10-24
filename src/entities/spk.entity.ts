@@ -1,4 +1,5 @@
 import {
+  AfterLoad,
   BeforeInsert,
   Column,
   Entity,
@@ -231,5 +232,17 @@ export class SPK extends EntityHelper {
     this.spk_number = `SPK-${moment(new Date()).format(
       'yyyyMMD',
     )}-${new Date().valueOf()}`;
+  }
+
+  @Column()
+  paid_date: Date;
+  paidDateParseDate: string;
+
+  @AfterLoad()
+  setEntityName() {
+    this.paidDateParseDate = this.paid_date
+      ? moment(this.paid_date).format('YYYY-MM-DD HH:mm:ss')
+      : null;
+    this.__entity = this.constructor.name;
   }
 }

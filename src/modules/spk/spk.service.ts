@@ -756,7 +756,6 @@ export class SPKService {
     }
 
     const updateData = {
-      closing_date: updateSPKSettlementDTO.closing_date,
       operation_cost: updateSPKSettlementDTO.operation_cost,
       paid_by: exists.paid_by,
       closed_by: exists.closed_by,
@@ -769,9 +768,11 @@ export class SPKService {
     };
 
     if (updateSPKSettlementDTO.status == SPKStatus.PAID) {
+      updateData['paid_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
       updateData.paid_by = user.id;
       updateData.remark_admin = updateSPKSettlementDTO.remarks;
     } else if (updateSPKSettlementDTO.status == SPKStatus.CLOSED) {
+      updateData['closing_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
       updateData.closed_by = user.id;
       updateData.remark_verificator = updateSPKSettlementDTO.remarks;
     }

@@ -83,4 +83,5 @@ export enum SPKStatus {
   APPROVED_OVER_BUDGET = 3,
   PAID = 4,
   CLOSED = 5,
+  REJECTED = 6,
 }

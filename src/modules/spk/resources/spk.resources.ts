@@ -31,6 +31,8 @@ export const SPKResource = (spk: SPK): any => {
                   : 'Paid, need evidence'
                 : spk.status == SPKStatus.CLOSED
                 ? 'Closed'
+                : spk.status == SPKStatus.REJECTED
+                ? 'Rejected'
                 : '-',
           }
         : null,
@@ -79,6 +81,8 @@ export const SPKResourceDetail = (spk: SPK): any => {
                   : 'Paid, need evidence'
                 : spk.status == SPKStatus.CLOSED
                 ? 'Closed'
+                : spk.status == SPKStatus.REJECTED
+                ? 'Rejected'
                 : '-',
           }
         : null,

@@ -24,6 +24,8 @@ export const ExportSPKResource = (spk: SPK): any => {
             : 'Paid, need evidence'
           : spk.status == SPKStatus.CLOSED
           ? 'Closed'
+          : spk.status == SPKStatus.REJECTED
+          ? 'Rejected'
           : '-'
         : '-',
     region: spk.region && spk.region.name ? spk.region.name : '-',

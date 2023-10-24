@@ -265,4 +265,19 @@ export class SPKController {
       'success',
     );
   }
+
+  @Get('reject/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_APPROVE)
+  async reject(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.reject(param.id, req.user, remark),
+      'success',
+    );
+  }
 }

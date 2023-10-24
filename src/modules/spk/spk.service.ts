@@ -191,7 +191,7 @@ export class SPKService {
     if (exists.status >= SPKStatus.PAID) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
-        'SPK yang sudah dibayar atau approve over budget tidak bisa diedit!',
+        'SPK tidak bisa diedit!',
       );
     }
 
@@ -879,10 +879,7 @@ export class SPKService {
     if (!existingSPK) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
     } else if (existingSPK.status >= SPKStatus.PAID) {
-      throw failedResponse(
-        HttpStatus.BAD_REQUEST,
-        `SPK yang sudah dibayar tidak bisa dihapus!`,
-      );
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak bisa dihapus!`);
     }
 
     await this.spkRepository.softDelete(id);
@@ -907,7 +904,7 @@ export class SPKService {
     } else if (existingSPK.status >= SPKStatus.PAID) {
       throw failedResponse(
         HttpStatus.BAD_REQUEST,
-        `SPK yang sudah dibayar diapprove kembali!`,
+        `SPK tidak dapat diapprove kembali!`,
       );
     }
 
@@ -946,7 +943,7 @@ export class SPKService {
     } else if (existingSPK.status >= SPKStatus.APPROVED) {
       throw failedResponse(
         HttpStatus.BAD_REQUEST,
-        `SPK yang sudah dibayar diapprove tidak dapat diapprove kembali!`,
+        `SPK tidak dapat diapprove kembali!`,
       );
     }
 
@@ -957,6 +954,26 @@ export class SPKService {
     });
 
     return null;
+  }
+
+  async reject(id: number, user: User, remark: string): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id);
+    if (!existingSPK) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
+    } else if (
+      existingSPK.status == SPKStatus.CREATED ||
+      existingSPK.status == SPKStatus.CREATED_OVER_BUDGET
+    ) {
+      await this.spkRepository.update(id, {
+        status: SPKStatus.REJECTED,
+        approved_by: user.id,
+        remark_rpm: remark,
+      });
+
+      return null;
+    }
+
+    throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
   }
 
   async getAllSPKCategory(paginationOptions: IPaginationOptions) {

@@ -59,16 +59,21 @@ export class PurchaseOrderService {
     const data = this.purchaseOrdersRepository
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.project', 'project')
-      .leftJoinAndSelect('po.region', 'region');
+      .leftJoinAndSelect('po.region', 'region')
+      .leftJoinAndSelect('po.site', 'site');
 
     if (paginationOptions.search) {
       data.andWhere(
         new Brackets((qb) => {
           qb.where(`LOWER(po.cc) LIKE :search`, {
             search: `%${paginationOptions.search.toLowerCase()}%`,
-          }).orWhere(`LOWER(po.po_number) LIKE :search`, {
-            search: `%${paginationOptions.search.toLowerCase()}%`,
-          });
+          })
+            .orWhere(`LOWER(po.po_number) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            })
+            .orWhere(`LOWER(site.code) LIKE :search`, {
+              search: `%${paginationOptions.search.toLowerCase()}%`,
+            });
         }),
       );
     }

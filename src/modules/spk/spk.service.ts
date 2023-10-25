@@ -548,8 +548,6 @@ export class SPKService {
 
     const returnedData = await data.getMany();
 
-    return returnedData;
-
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
 

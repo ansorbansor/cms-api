@@ -172,6 +172,18 @@ export class SPKController {
     @Query('end_date') endDate: string,
     @Query('status') status: number,
   ) {
+    return await this.spkService.findManyWithPagination(
+      {
+        page,
+        limit,
+        total: 0,
+        search: search,
+        start_date: startDate,
+        end_date: endDate,
+        status: status,
+      },
+      req.user,
+    );
     return successResponseList(
       await this.spkService.findManyWithPagination(
         {

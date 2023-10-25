@@ -60,6 +60,20 @@ export class SiteService {
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
+    let totalCashback = await getManager().query(
+      'SELECT SUM(cashback) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [siteId],
+    );
+    totalCashback = totalCashback[0].sum ? Number(totalCashback[0].sum) : 0;
+
+    let totalCashout = await getManager().query(
+      'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [siteId],
+    );
+    totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
+
+    totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
+
     return PurchaseOrderBySiteResource(po, totalSPKAmount, maxBudgetBySite);
   }
 

@@ -137,6 +137,20 @@ export class SPKService {
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
+    let totalCashback = await getManager().query(
+      'SELECT SUM(cashback) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [createSPKDTO.site_id],
+    );
+    totalCashback = totalCashback[0].sum ? Number(totalCashback[0].sum) : 0;
+
+    let totalCashout = await getManager().query(
+      'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [createSPKDTO.site_id],
+    );
+    totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
+
+    totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
+
     const cashAdvance = Number(createSPKDTO.cash_advance);
 
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
@@ -266,6 +280,20 @@ export class SPKService {
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
+    let totalCashback = await getManager().query(
+      'SELECT SUM(cashback) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [updateSPKDTO.site_id],
+    );
+    totalCashback = totalCashback[0].sum ? Number(totalCashback[0].sum) : 0;
+
+    let totalCashout = await getManager().query(
+      'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [updateSPKDTO.site_id],
+    );
+    totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
+
+    totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
+
     const cashAdvance = Number(updateSPKDTO.cash_advance);
 
     if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
@@ -358,6 +386,28 @@ export class SPKService {
         'total_cash_advance',
         '"total_cash_advance"."s_site_id" = spk.site_id',
       );
+      data.leftJoin(
+        (qb) => {
+          return qb
+            .select('s.site_id')
+            .addSelect('SUM(s.cashback)', 'total_cashback')
+            .from(SPK, 's')
+            .groupBy('s.site_id');
+        },
+        'total_cashback',
+        '"total_cashback"."s_site_id" = spk.site_id',
+      );
+      data.leftJoin(
+        (qb) => {
+          return qb
+            .select('s.site_id')
+            .addSelect('SUM(s.cashout)', 'total_cashout')
+            .from(SPK, 's')
+            .groupBy('s.site_id');
+        },
+        'total_cashout',
+        '"total_cashout"."s_site_id" = spk.site_id',
+      );
 
       //add total po budget / unit price
       data.addSelect(
@@ -381,7 +431,7 @@ export class SPKService {
       );
 
       data.andWhere(
-        'total_cash_advance.total_cash_advance > COALESCE(total_unit_price.total_unit_price, 0)',
+        '(total_cash_advance.total_cash_advance - total_cashback.total_cashback + total_cashout.total_cashout) > COALESCE(total_unit_price.total_unit_price, 0)',
       );
 
       data.andWhere('spk.status >= :status', {
@@ -497,6 +547,8 @@ export class SPKService {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
+
+    return returnedData;
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
@@ -733,6 +785,20 @@ export class SPKService {
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
 
+    let totalCashback = await getManager().query(
+      'SELECT SUM(cashback) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [exists.site_id],
+    );
+    totalCashback = totalCashback[0].sum ? Number(totalCashback[0].sum) : 0;
+
+    let totalCashout = await getManager().query(
+      'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [exists.site_id],
+    );
+    totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
+
+    totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
+
     if (
       totalSPKAmount > maxBudgetBySite &&
       exists.status < SPKStatus.APPROVED_OVER_BUDGET
@@ -923,6 +989,20 @@ export class SPKService {
       [existingSPK.site_id],
     );
     totalSPKAmount = totalSPKAmount[0].sum ? Number(totalSPKAmount[0].sum) : 0;
+
+    let totalCashback = await getManager().query(
+      'SELECT SUM(cashback) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [existingSPK.site_id],
+    );
+    totalCashback = totalCashback[0].sum ? Number(totalCashback[0].sum) : 0;
+
+    let totalCashout = await getManager().query(
+      'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
+      [existingSPK.site_id],
+    );
+    totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
+
+    totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
     if (totalSPKAmount <= maxBudgetBySite) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);

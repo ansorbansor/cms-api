@@ -188,7 +188,7 @@ export class SPKService {
       );
     }
 
-    if (exists.status >= SPKStatus.PAID) {
+    if (exists.status >= SPKStatus.APPROVED) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK tidak bisa diedit!',

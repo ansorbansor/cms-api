@@ -280,4 +280,19 @@ export class SPKController {
       'BOP Berhasil Direject',
     );
   }
+
+  @Get('reject-over-budget/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_OVER_BUDGET)
+  async rejectOverBudget(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.rejectOverBudget(param.id, req.user, remark),
+      'BOP Berhasil Direject',
+    );
+  }
 }

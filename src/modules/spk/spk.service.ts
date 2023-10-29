@@ -375,6 +375,8 @@ export class SPKService {
         'total_cash_advance.total_cash_advance',
         'spk_total_cash_advance',
       );
+      data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
+      data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
       data.leftJoin(
         (qb) => {
           return qb
@@ -547,6 +549,8 @@ export class SPKService {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
+
+    console.log(returnedData);
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
@@ -1043,6 +1047,27 @@ export class SPKService {
       existingSPK.status == SPKStatus.CREATED ||
       existingSPK.status == SPKStatus.CREATED_OVER_BUDGET
     ) {
+      await this.spkRepository.update(id, {
+        status: SPKStatus.REJECTED,
+        approved_by: user.id,
+        remark_rpm: remark,
+      });
+
+      return null;
+    }
+
+    throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
+  }
+
+  async rejectOverBudget(
+    id: number,
+    user: User,
+    remark: string,
+  ): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id);
+    if (!existingSPK) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
+    } else if (existingSPK.status == SPKStatus.APPROVED) {
       await this.spkRepository.update(id, {
         status: SPKStatus.REJECTED,
         approved_by: user.id,

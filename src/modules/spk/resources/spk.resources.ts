@@ -10,7 +10,6 @@ export const SPKResource = (spk: SPK): any => {
     spk_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
     cash_advance: spk.cash_advance,
-    paid_date: spk.paidDateParseDate,
     spk_status:
       spk.status != null && spk.status != undefined
         ? {
@@ -212,6 +211,7 @@ export const SPKResourceDetail = (spk: SPK): any => {
       ? spk.approved_over_budget_by_user.name
       : '-',
     paid_by: spk.paid_by_user ? spk.paid_by_user.name : '-',
+    paid_date: spk.paidDateParseDate,
     closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     transfer_proof_photo: spk.transfer_proof_file
       ? minioConfig().fullUrl + spk.transfer_proof_file.path

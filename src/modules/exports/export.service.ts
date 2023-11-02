@@ -8,6 +8,7 @@ import * as tmp from 'tmp';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
+import * as fs from 'fs';
 import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
 
@@ -47,9 +48,15 @@ export class ExportService {
     });
 
     const XLSX = xlsx;
-    const workSheet = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
+    // const workSheet = XLSX.utils.json_to_sheet(rows);
+    // const wb = XLSX.utils.book_new();
+    // XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
+
+    const wb = XLSX.readFile(process.argv[2]);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const ostream = fs.createWriteStream('SheetJSNodeJStream.csv');
+
+    XLSX.stream.to_csv(ws).pipe(ostream);
 
     const f = await new Promise((resolve) => {
       tmp.file(

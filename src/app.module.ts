@@ -39,6 +39,7 @@ import { UsersModule } from './modules/users/users.module';
 import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 import { GraphModule } from './modules/graph/graph.module';
+import { AbsenceModule } from './modules/absence/absence.module';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { GraphModule } from './modules/graph/graph.module';
     SPKModule,
     TransportationModule,
     GraphModule,
+    AbsenceModule,
   ],
   providers: [
     {

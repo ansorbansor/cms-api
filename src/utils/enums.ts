@@ -61,6 +61,8 @@ export enum FilePath {
   SPK_CHECK_OUT = 'spk/check-out',
   SPK_COST_EVIDENCE = 'spk/cost-evidence',
   SPK_TRANSFER_PROOF = 'spk/transfer-proof',
+  CLOCK_IN = 'spk/clock-in',
+  CLOCK_OUT = 'spk/clock-out',
   OTHER = 'others',
 }
 

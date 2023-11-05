@@ -40,12 +40,13 @@ export const AbsenceResourceDetail = (absence: Absence): any => {
   };
 };
 
-export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClockIn: boolean, mustClockOut: boolean): any => {
+export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClockIn: boolean, mustClockOut: boolean, afterOffice: boolean): any => {
   return {
     has_absence: hasAbsence,
     clock_in: absence ? absence.clockInParseDate : null,
     clock_out: absence ? absence.clockOutParseDate : null,
     must_clock_in: mustClockIn,
     must_clock_out: mustClockOut,
+    after_office: afterOffice,
   };
 };

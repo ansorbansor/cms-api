@@ -186,16 +186,18 @@ export class AbsenceService {
       .andWhere('clock_in >= now()::date')
       .getOne();
 
-    if (!data) {
-      return HasAbsenceToday(false, data, true, false);
-    }
-
     const currTime = moment().toDate().getHours();
-    if (currTime > 15) {
-      return HasAbsenceToday(true, data, false, true);
+    const afterOffice = currTime > 16;
+
+    if (!data) {
+      return HasAbsenceToday(false, data, true, false, afterOffice);
     }
 
-    return HasAbsenceToday(true, data, false, false);
+    if (afterOffice) {
+      return HasAbsenceToday(true, data, false, true, afterOffice);
+    }
+
+    return HasAbsenceToday(true, data, false, false, afterOffice);
   }
 
   async findOneFull(fields: EntityCondition<Absence>) {

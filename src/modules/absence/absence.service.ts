@@ -193,7 +193,7 @@ export class AbsenceService {
       return HasAbsenceToday(false, data, true, false, afterOffice);
     }
 
-    if (afterOffice) {
+    if (afterOffice && !data.clock_out) {
       return HasAbsenceToday(true, data, false, true, afterOffice);
     }
 

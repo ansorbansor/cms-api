@@ -187,7 +187,7 @@ export class AbsenceService {
       .getOne();
 
     const currTime = moment().toDate().getHours();
-    const afterOffice = currTime > 16;
+    const afterOffice = currTime >= 16;
 
     if (!data) {
       return HasAbsenceToday(false, data, true, false, afterOffice);

@@ -21,6 +21,7 @@ export const AbsenceResource = (absence: Absence): any => {
 export const AbsenceResourceDetail = (absence: Absence): any => {
   return {
     id: absence.id,
+    user_id: absence.user ? absence.user.id : null,
     nik: absence.user ? absence.user.nik : '-',
     name: absence.user ? absence.user.name : '-',
     region: absence.user ? absence.user.region : '-',

@@ -51,10 +51,10 @@ export class Absence extends EntityHelper {
   @AfterLoad()
   setEntityName() {
     this.clockInParseDate = this.clock_in
-      ? moment(this.clock_in).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(this.clock_in).format('dddd, DD MMMM YYYY HH:mm:ss')
       : null;
     this.clockOutParseDate = this.clock_out
-      ? moment(this.clock_out).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(this.clock_out).format('dddd, DD MMMM YYYY HH:mm:ss')
       : null;
     this.__entity = this.constructor.name;
   }

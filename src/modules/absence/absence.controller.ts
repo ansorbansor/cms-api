@@ -100,6 +100,16 @@ export class AbsenceController {
     );
   }
 
+  @Get('has-absence')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async hasAbsenceToday(@Request() req) {
+    return successResponse(
+      await this.absenceService.hasAbsenceToday(req.user.id),
+      'success',
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

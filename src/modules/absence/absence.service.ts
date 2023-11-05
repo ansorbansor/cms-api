@@ -10,6 +10,7 @@ import { CreateAbsenceDTO } from './dto/create-absence.dto';
 import {
   AbsenceResource,
   AbsenceResourceDetail,
+  HasAbsenceToday,
 } from './resources/absence.resources';
 import { ClockOutAbsenceDTO } from './dto/clock-out-absence.dto';
 import * as moment from 'moment';
@@ -174,6 +175,27 @@ export class AbsenceService {
     }
 
     return AbsenceResourceDetail(data);
+  }
+
+  async hasAbsenceToday(userId: number) {
+    const data = await this.absenceRepository
+      .createQueryBuilder('absence')
+      .where('user_id = :userId', {
+        userId: userId,
+      })
+      .andWhere('clock_in >= now()::date')
+      .getOne();
+
+    if (!data) {
+      return HasAbsenceToday(false, data, true, false);
+    }
+
+    const currTime = moment().toDate().getHours();
+    if (currTime > 15) {
+      return HasAbsenceToday(true, data, false, true);
+    }
+
+    return HasAbsenceToday(true, data, false, false);
   }
 
   async findOneFull(fields: EntityCondition<Absence>) {

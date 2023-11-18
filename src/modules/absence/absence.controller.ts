@@ -87,6 +87,8 @@ export class AbsenceController {
     @Query('limit') limit: number,
     @Query('search') search: string,
     @Query('user_id') userId: number,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
   ) {
     return successResponseList(
       await this.absenceService.findManyWithPagination({
@@ -95,6 +97,8 @@ export class AbsenceController {
         total: 0,
         search: search,
         user_id: userId,
+        start_date: startDate,
+        end_date: endDate,
       }),
       'success',
     );

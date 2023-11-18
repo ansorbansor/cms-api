@@ -135,6 +135,15 @@ export class AbsenceService {
       });
     }
 
+    if (paginationOptions.start_date && paginationOptions.end_date) {
+      data.andWhere(`absence.created_at >= :start_date`, {
+        start_date: `${paginationOptions.start_date}`,
+      });
+      data.andWhere(`absence.created_at <= :end_date`, {
+        end_date: `${paginationOptions.end_date}`,
+      });
+    }
+
     data.orderBy('absence.id', 'DESC');
 
     const total = await data.getCount();

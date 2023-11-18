@@ -47,7 +47,6 @@ export class ExportController {
   @Get('po')
   @Header('Content-Type', 'text/xlsx')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Menus(MenuPermission.PO_CREATE)
   @HttpCode(HttpStatus.OK)
   async exportPO(
     @Res() res: Response,

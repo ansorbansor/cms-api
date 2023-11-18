@@ -9,6 +9,7 @@ import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
 import * as fs from 'fs';
+import * as moment from 'moment';
 import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
 
@@ -120,6 +121,10 @@ export class ExportService {
       });
     }
 
+    let prefixDate = ` until ${moment(new Date()).format(
+      'YYYY-MM-DD HH:mm:ss',
+    )}`;
+
     if (startDate && endDate) {
       query.andWhere(`po.created_at >= :startDate`, {
         startDate: startDate,
@@ -127,6 +132,8 @@ export class ExportService {
       query.andWhere(`po.created_at <= :endDate`, {
         endDate: endDate,
       });
+
+      prefixDate = ` from ${startDate} to ${endDate}`;
     }
 
     const data = await query.getMany();
@@ -161,7 +168,7 @@ export class ExportService {
 
     const f = await new Promise((resolve) => {
       tmp.file(
-        { mode: 0o644, prefix: 'PO-', postfix: '.xlsx' },
+        { mode: 0o644, prefix: `PO${prefixDate}`, postfix: '.xlsx' },
         function _tempFileCreated(err, path) {
           if (err) throw err;
 

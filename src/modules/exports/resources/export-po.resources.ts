@@ -1,15 +1,10 @@
 import * as moment from 'moment';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
-import * as crypto from 'crypto';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const ExportPOResource = (po: PurchaseOrder): any => {
   return {
-    'Unique Code':
-      'Biosron-' +
-      crypto
-        .createHash('shake256', { outputLength: 5 })
-        .update(po.id.toString())
-        .digest('hex'),
+    'Unique ID': exportUniqueId(po.id, po.createdAtParseDate),
     CC: po.cc,
     'Line PO Status':
       po.line_po_status && po.line_po_status == 1 ? 'Active' : 'Non Active',

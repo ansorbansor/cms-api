@@ -23,6 +23,8 @@ import * as moment from 'moment';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import { exportUniqueId, importUniqueId } from 'src/utils/encryption-helper';
 
 @Injectable()
 export class ImportService {
@@ -212,7 +214,7 @@ export class ImportService {
         //insert data new User
         if (insertDataUserList.length > 0) {
           console.log(`insert ${insertDataUserList.length} data`);
-          const users = await this.userRepository.save(insertDataUserList, {
+          await this.userRepository.save(insertDataUserList, {
             chunk: 1000,
           });
 
@@ -250,17 +252,23 @@ export class ImportService {
     try {
       const workbook = xlsx.readFile(file.path);
       const worksheet = workbook.Sheets['Detail'];
+      let totalInsertPO = 0;
+      let totalUpdatePO = 0;
+      let totalInsertInvoice = 0;
+      let totalUpdateInvoice = 0;
+
       if (worksheet) {
         await this.getExistingMasterData();
 
-        let poData = await getManager().query(
+        const poData = await getManager().query(
           `SELECT * FROM purchase_orders WHERE deleted_at IS NULL`,
         );
 
         const poInvoiceData = await getManager().query(
           `SELECT 
           poi.id "poi_id",  
-          po.id "po_id", 
+          po.id "po_id",
+          po.created_at,
           poi.invoice_number, 
           poi.invoice_date, 
           poi.invoice_date, 
@@ -281,9 +289,6 @@ export class ImportService {
           poi.purchase_order_id = po.id`,
         );
 
-        const poCCData = poData.map((data) => {
-          return data.cc ? data.cc : null;
-        });
         const rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
           Object.keys(row).reduce((obj, key) => {
             obj[key.trim().toLowerCase()] = isString(row[key])
@@ -296,19 +301,171 @@ export class ImportService {
         console.log('done rowData');
 
         const updateDataPOList = [];
-        const insertDataPOList = [];
-        const invoices = [];
-        const updateDataPOInvoiceList = [];
-        const insertDataPOInvoiceList = [];
 
+        //check all data valid
         for (const [index, value] of rowData.entries()) {
-          //validate cc exists
-          if (value['cc'] && /^(?=.*[a-zA-Z])|(?=.*[0-9])/.test(value['cc'])) {
+          if (
+            value['unique id'] != null &&
+            value['unique id'] != undefined &&
+            value['unique id'] != ''
+          ) {
+            if (value['unique id'].split('-').length <= 1) {
+              throw failedResponse(
+                HttpStatus.BAD_REQUEST,
+                `Unique ID ${value['unique id']} pada row ${index} tidak ditemukan, kosongkan kolom untuk menambah data.`,
+              );
+            }
+          }
+        }
+
+        const updateDataPOExistingInvoiceList = [];
+        const insertedDataPOExistingInvoiceList = [];
+
+        for (const [_, value] of rowData.entries()) {
+          let uniqueId = '';
+
+          if (
+            value['unique id'] != null &&
+            value['unique id'] != undefined &&
+            value['unique id'] != ''
+          ) {
+            uniqueId = importUniqueId(value['unique id']);
+          }
+
+          //check if new PO
+          if (uniqueId == '' || uniqueId == null) {
+            const insertPO = new PurchaseOrder();
+            insertPO.user_id = user.id;
+            insertPO.cc = value['cc'];
+            insertPO.line_po_status =
+              value['line po status'] == 'Active' ? 1 : 0;
+            insertPO.line_po_number = value['po line no.'];
+            insertPO.po_number = value['po no.'];
+            insertPO.shipment_number = value['shipment no.'];
+            insertPO.region_id = value['region']
+              ? (await this.getRegionByName(value['region'])).id
+              : null;
+            insertPO.area_id = value['area']
+              ? (await this.getAreaByName(value['area'])).id
+              : null;
+            insertPO.operator_id = value['operator']
+              ? (await this.getOperatorByName(value['operator'])).id
+              : null;
+            insertPO.customer_id = value['customer']
+              ? (await this.getCustomerByName(value['customer'])).id
+              : null;
+            insertPO.project_id =
+              value['project name'] && value['project code']
+                ? (
+                    await this.getProjectByName(
+                      value['project name'],
+                      value['project code'],
+                    )
+                  ).id
+                : null;
+            insertPO.site_id =
+              value['site name'] && value['site code']
+                ? (
+                    await this.getSiteByName(
+                      value['site name'],
+                      value['site code'],
+                    )
+                  ).id
+                : null;
+            insertPO.status = value['po status'];
+            insertPO.item_code = value['item code'];
+            insertPO.item_description = value['item description'];
+            insertPO.unit_price = value['unit price'] ? value['unit price'] : 0;
+            insertPO.unit_price_1 = value['unit price 1 (100/60/70/80)']
+              ? value['unit price 1 (100/60/70/80)']
+              : 0;
+            insertPO.unit_price_2 = value['unit price 2 (20/30/40)']
+              ? value['unit price 2 (20/30/40)']
+              : 0;
+            insertPO.requested_qty = value['requested qty']
+              ? value['requested qty']
+              : 0;
+            insertPO.billed_qty = value['billed qty'] ? value['billed qty'] : 0;
+            insertPO.due_qty = value['due qty'] ? value['due qty'] : 0;
+            insertPO.line_amount = value['line amount']
+              ? value['line amount']
+              : 0;
+            insertPO.remaining_from_po = value['remaining from po']
+              ? value['remaining from po']
+              : 0;
+            insertPO.unit = value['unit'];
+            insertPO.payment_terms = value['payment terms'];
+            insertPO.bidding_area_id = value['bidding area']
+              ? (await this.getBiddingAreaByName(value['bidding area'])).id
+              : null;
+            insertPO.publish_date = moment(
+              value['publish date'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['publish date']
+              : null;
+            insertPO.start_date = moment(
+              value['start date'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['start date']
+              : null;
+            insertPO.end_date = moment(
+              value['end date'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['end date']
+              : null;
+            insertPO.priority_esar_approve = value['priority esar approve'];
+            insertPO.remark_weekly = value['remark weekly'];
+            insertPO.remark_project_id = value['remark project']
+              ? (await this.getRemarkProjectByName(value['remark project'])).id
+              : null;
+            insertPO.status_acceptance_id = value['status of acceptance']
+              ? (
+                  await this.getStatusAcceptanceByName(
+                    value['status of acceptance'],
+                  )
+                ).id
+              : null;
+            insertPO.pending_type_id = value['pending type']
+              ? (await this.getPendingTypeByName(value['pending type'])).id
+              : null;
+            insertPO.pending_approval_pd = value['pending approval pd'];
+            insertPO.amount_pending_approval_pd = value[
+              'amount pending approval pd'
+            ]
+              ? value['amount pending approval pd']
+              : 0;
+            insertPO.pd_id = value['pd name']
+              ? (await this.getPDByName(value['pd name'])).id
+              : null;
+            insertPO.actual_completion_date = moment(
+              value['actual completion date vs to pd'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['actual completion date vs to pd']
+              : null;
+            insertPO.ready_invoice = value['ready invoice'];
+            insertPO.amount_ready_invoice = value['amount ready invoice']
+              ? value['amount ready invoice']
+              : 0;
+            insertPO.remark_highlight = value['remark highlight'];
+            insertPO.budget_percentage = value['budget percentage']
+              ? value['budget percentage']
+              : 0;
+
+            //insert new PO to DB
+            const newPO = await this.poRepository.save(insertPO);
+            totalInsertPO++;
+
             //get list invoice
+            const insertedInvoice = [];
             for (const key of Object.keys(value)) {
               if (/^ac.*inv$/.test(key)) {
                 const invNo = key.replace('ac', '').replace(' inv', '');
-                invoices.push({
+                const inv = {
+                  purchase_order_id: newPO.id,
                   invoice_number: value[`ac${invNo} inv`],
                   invoice_date:
                     value[`ac${invNo} inv date`] &&
@@ -348,163 +505,112 @@ export class ImportService {
                   unit_price: value[`ac${invNo} unit price`]
                     ? value[`ac${invNo} unit price`]
                     : 0,
-                });
+                };
+
+                insertedInvoice.push(inv);
+                totalInsertInvoice++;
               }
             }
 
-            //check exists or new PO
-            const indexDataExisting = poCCData.findIndex(
-              (item) => item == value['cc'],
+            if (insertedInvoice.length > 0) {
+              await this.poiRepository.save(insertedInvoice, {
+                chunk: 1000,
+              });
+            }
+          } else {
+            const indexDataExisting = poData.findIndex(
+              (item) => item.id == uniqueId,
             );
 
-            if (indexDataExisting > -1) {
-              const updateData = await this.validatePOData(
-                value,
-                poData[indexDataExisting],
-              );
+            const updateDataPO = await this.validatePOData(
+              value,
+              poData[indexDataExisting],
+            );
 
-              if (Object.keys(updateData).length > 0) {
-                //add user to updated object and push to list
-                updateData.user_id = user.id;
-                updateData.id = poData[indexDataExisting].id;
-                updateDataPOList.push(updateData);
+            if (Object.keys(updateDataPO).length > 0) {
+              //add user to updated object and push to list
+              updateDataPO.user_id = user.id;
+              updateDataPO.id = uniqueId;
+              updateDataPOList.push(updateDataPO);
+              totalUpdatePO++;
+            }
+
+            //get list invoice
+            for (const key of Object.keys(value)) {
+              if (/^ac.*inv$/.test(key)) {
+                const invNo = key.replace('ac', '').replace(' inv', '');
+                const inv = {
+                  purchase_order_id: uniqueId,
+                  invoice_number: value[`ac${invNo} inv`],
+                  invoice_date:
+                    value[`ac${invNo} inv date`] &&
+                    moment(
+                      value[`ac${invNo} inv date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value[`ac${invNo} inv date`]
+                      : null,
+                  invoice_status: value[`ac${invNo} inv status`],
+                  payment_date:
+                    value[`payment date ${invNo}`] &&
+                    moment(
+                      value[`payment date ${invNo}`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value[`payment date ${invNo}`]
+                      : null,
+                  supplier_tax_number:
+                    value[`ac${invNo} (supplier tax invoice no.)`],
+                  supplier_tax_date:
+                    value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                    moment(
+                      value[`ac${invNo} (supplier tax invoice no.) date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value[`ac${invNo} (supplier tax invoice no.) date`]
+                      : null,
+                  user_id: user.id,
+                  cc: value['cc'],
+                  payment_amount: value[`ac${invNo} payment amount`]
+                    ? value[`ac${invNo} payment amount`]
+                    : 0,
+                  deduction_amount: value[`ac${invNo} deduction amount`]
+                    ? value[`ac${invNo} deduction amount`]
+                    : 0,
+                  unit_price: value[`ac${invNo} unit price`]
+                    ? value[`ac${invNo} unit price`]
+                    : 0,
+                };
+
+                const indexDataInvoiceExisting = poInvoiceData.findIndex(
+                  (item) =>
+                    item.invoice_number == inv.invoice_number &&
+                    item.po_id == inv.purchase_order_id,
+                );
+
+                if (indexDataInvoiceExisting > -1) {
+                  const updateData = await this.validateInvoicePOData(
+                    inv,
+                    poInvoiceData[indexDataInvoiceExisting],
+                  );
+
+                  if (Object.keys(updateData).length > 0) {
+                    //add user to updated object and push to list
+                    updateData.user_id = user.id;
+                    updateData.id =
+                      poInvoiceData[indexDataInvoiceExisting].poi_id;
+                    updateDataPOExistingInvoiceList.push(updateData);
+                    totalUpdateInvoice++;
+                  }
+                } else {
+                  totalInsertInvoice++;
+                  insertedDataPOExistingInvoiceList.push(inv);
+                }
               }
-            } else {
-              const insertPO = new PurchaseOrder();
-              insertPO.user_id = user.id;
-              insertPO.cc = value['cc'];
-              insertPO.line_po_status =
-                value['line po status'] == 'Active' ? 1 : 0;
-              insertPO.line_po_number = value['po line no.'];
-              insertPO.po_number = value['po no.'];
-              insertPO.shipment_number = value['shipment no.'];
-              insertPO.region_id = value['region']
-                ? (await this.getRegionByName(value['region'])).id
-                : null;
-              insertPO.area_id = value['area']
-                ? (await this.getAreaByName(value['area'])).id
-                : null;
-              insertPO.operator_id = value['operator']
-                ? (await this.getOperatorByName(value['operator'])).id
-                : null;
-              insertPO.customer_id = value['costomer']
-                ? (await this.getCustomerByName(value['costomer'])).id
-                : null;
-              insertPO.project_id =
-                value['project name'] && value['project code']
-                  ? (
-                      await this.getProjectByName(
-                        value['project name'],
-                        value['project code'],
-                      )
-                    ).id
-                  : null;
-              insertPO.site_id =
-                value['site name'] && value['site code']
-                  ? (
-                      await this.getSiteByName(
-                        value['site name'],
-                        value['site code'],
-                      )
-                    ).id
-                  : null;
-              insertPO.status = value['po status'];
-              insertPO.item_code = value['item code'];
-              insertPO.item_description = value['item description'];
-              insertPO.unit_price = value['unit price']
-                ? value['unit price']
-                : 0;
-              insertPO.unit_price_1 = value['unit price 1 (100/60/70/80)']
-                ? value['unit price 1 (100/60/70/80)']
-                : 0;
-              insertPO.unit_price_2 = value['unit price 2 (20/30/40)']
-                ? value['unit price 2 (20/30/40)']
-                : 0;
-              insertPO.requested_qty = value['requested qty']
-                ? value['requested qty']
-                : 0;
-              insertPO.billed_qty = value['billed qty']
-                ? value['billed qty']
-                : 0;
-              insertPO.due_qty = value['due qty'] ? value['due qty'] : 0;
-              insertPO.line_amount = value['line amount']
-                ? value['line amount']
-                : 0;
-              insertPO.remaining_from_po = value['remaining from po']
-                ? value['remaining from po']
-                : 0;
-              insertPO.unit = value['unit'];
-              insertPO.payment_terms = value['payment terms'];
-              insertPO.bidding_area_id = value['bidding area']
-                ? (await this.getBiddingAreaByName(value['bidding area'])).id
-                : null;
-              insertPO.publish_date = moment(
-                value['publish date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['publish date']
-                : null;
-              insertPO.start_date = moment(
-                value['start date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['start date']
-                : null;
-              insertPO.end_date = moment(
-                value['end date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['end date']
-                : null;
-              insertPO.priority_esar_approve = value['priority esar approve'];
-              insertPO.remark_weekly = value['remark weekly'];
-              insertPO.remark_project_id = value['remark project']
-                ? (await this.getRemarkProjectByName(value['remark project']))
-                    .id
-                : null;
-              insertPO.status_acceptance_id = value['status of acceptance']
-                ? (
-                    await this.getStatusAcceptanceByName(
-                      value['status of acceptance'],
-                    )
-                  ).id
-                : null;
-              insertPO.pending_type_id = value['pending type']
-                ? (await this.getPendingTypeByName(value['pending type'])).id
-                : null;
-              insertPO.pending_approval_pd = value['pending approval pd'];
-              insertPO.amount_pending_approval_pd = value[
-                'amount pending approval pd'
-              ]
-                ? value['amount pending approval pd']
-                : 0;
-              insertPO.pd_id = value['pd name']
-                ? (await this.getPDByName(value['pd name'])).id
-                : null;
-              insertPO.actual_completion_date = moment(
-                value['actual completion date vs to pd'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['actual completion date vs to pd']
-                : null;
-              insertPO.ready_invoice = value['ready invoice'];
-              insertPO.amount_ready_invoice = value['amount ready invoice']
-                ? value['amount ready invoice']
-                : 0;
-              insertPO.remark_highlight = value['remark highlight'];
-              insertPO.budget_percentage = value['budget percentage']
-                ? value['budget percentage']
-                : 0;
-
-              insertDataPOList.push(insertPO);
             }
           }
-
-          console.log(`done data ${index}`);
         }
         console.log('done loop');
-
-        let successMessage = 'Berhasil ';
 
         //update data PO
         if (updateDataPOList.length > 0) {
@@ -516,52 +622,11 @@ export class ImportService {
               element,
             );
           }
-          successMessage += `mengupdate ${updateDataPOList.length} data PO, `;
-        }
-
-        //insert data new PO
-        if (insertDataPOList.length > 0) {
-          console.log(`insert ${insertDataPOList.length} data`);
-          const newPO = await this.poRepository.save(insertDataPOList, {
-            chunk: 1000,
-          });
-          poData = [...poData, ...newPO];
-
-          successMessage += `menambah ${insertDataPOList.length} data PO, `;
-        }
-
-        console.log('start check invoice');
-        for (const inv of invoices) {
-          //check exists or new PO
-          const indexDataInvoiceExisting = poInvoiceData.findIndex(
-            (item) =>
-              item.invoice_number == inv.invoice_number && item.cc == inv.cc,
-          );
-
-          if (indexDataInvoiceExisting > -1) {
-            const updateData = await this.validateInvoicePOData(
-              inv,
-              poInvoiceData[indexDataInvoiceExisting],
-            );
-
-            if (Object.keys(updateData).length > 0) {
-              //add user to updated object and push to list
-              updateData.user_id = user.id;
-              updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
-              updateDataPOInvoiceList.push(updateData);
-            }
-          } else {
-            inv.purchase_order_id = poData.find((data) => {
-              return data.cc == inv.cc;
-            }).id;
-            delete inv.cc;
-            insertDataPOInvoiceList.push(inv);
-          }
         }
 
         //update data PO Invoice
-        if (updateDataPOInvoiceList.length > 0) {
-          for (const element of updateDataPOInvoiceList) {
+        if (updateDataPOExistingInvoiceList.length > 0) {
+          for (const element of updateDataPOExistingInvoiceList) {
             await this.poiRepository.update(
               {
                 id: element.id,
@@ -569,23 +634,25 @@ export class ImportService {
               element,
             );
           }
-          successMessage += `mengupdate ${updateDataPOInvoiceList.length} data Invoice PO, `;
         }
 
-        //insert data new PO Invoice
-        if (insertDataPOInvoiceList.length > 0) {
-          console.log(`insert ${insertDataPOInvoiceList.length} data`);
-          await this.poiRepository.save(insertDataPOInvoiceList, {
+        //insert new data PO Invoice
+        if (insertedDataPOExistingInvoiceList.length > 0) {
+          await this.poiRepository.save(insertedDataPOExistingInvoiceList, {
             chunk: 1000,
           });
-          successMessage += `menambah ${insertDataPOInvoiceList.length} data Invoice PO, `;
         }
+
+        console.log('start check invoice');
 
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);
         }
 
-        return successResponse(null, successMessage.slice(0, -2));
+        return successResponse(
+          null,
+          `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`,
+        );
       } else {
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);
@@ -880,12 +947,9 @@ export class ImportService {
     const updateData: any = {};
 
     //check line po status
-    const linePOStatus = dbData.line_po_status == 1 ? 'Active' : 'Inactive';
+    const linePOStatus = excelData['line po status'] == 'Active' ? 1 : 0;
 
-    if (
-      excelData['line po status'] &&
-      linePOStatus != excelData['line po status']
-    ) {
+    if (excelData['line po status'] && linePOStatus != dbData.line_po_status) {
       updateData.line_po_status =
         excelData['line po status'] == 'Active' ? 1 : 0;
     }
@@ -936,8 +1000,8 @@ export class ImportService {
     }
 
     //check customer
-    if (excelData['costomer']) {
-      const customer = await this.getCustomerByName(excelData['costomer']);
+    if (excelData['customer']) {
+      const customer = await this.getCustomerByName(excelData['customer']);
       if (dbData.customer_id != customer.id) {
         updateData.customer_id = customer.id;
       }

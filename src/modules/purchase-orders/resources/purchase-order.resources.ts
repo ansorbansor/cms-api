@@ -1,16 +1,12 @@
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as moment from 'moment';
 import * as crypto from 'crypto';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const PurchaseOrderResource = (po: PurchaseOrder): any => {
   return {
     id: po.id,
-    unique_id:
-      'Biosron-' +
-      crypto
-        .createHash('shake256', { outputLength: 5 })
-        .update(po.id.toString())
-        .digest('hex'),
+    unique_id: exportUniqueId(po.id, po.createdAtParseDate),
     cc: po.cc,
     po_number: po.po_number,
     line_po_status:
@@ -44,12 +40,7 @@ export const PurchaseOrderBySiteResource = (
 export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
   return {
     id: Number(po.id),
-    unique_id:
-      'Biosron-' +
-      crypto
-        .createHash('shake256', { outputLength: 5 })
-        .update(po.id.toString())
-        .digest('hex'),
+    unique_id: exportUniqueId(po.id, po.createdAtParseDate),
     cc: po.cc,
     line_po_number: po.line_po_number ? po.line_po_number : '-',
     po_number: po.po_number ? po.po_number : '-',

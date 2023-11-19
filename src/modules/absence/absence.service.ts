@@ -197,16 +197,24 @@ export class AbsenceService {
 
     const currTime = moment().toDate().getHours();
     const afterOffice = currTime >= 16;
+    const lateAbsence = currTime >= 9;
 
     if (!data) {
-      return HasAbsenceToday(false, data, true, false, afterOffice);
+      return HasAbsenceToday(
+        false,
+        data,
+        true,
+        false,
+        afterOffice,
+        lateAbsence,
+      );
     }
 
     if (afterOffice && !data.clock_out) {
-      return HasAbsenceToday(true, data, false, true, afterOffice);
+      return HasAbsenceToday(true, data, false, true, afterOffice, lateAbsence);
     }
 
-    return HasAbsenceToday(true, data, false, false, afterOffice);
+    return HasAbsenceToday(true, data, false, false, afterOffice, lateAbsence);
   }
 
   async findOneFull(fields: EntityCondition<Absence>) {

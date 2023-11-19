@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateAbsenceDTO {
   @ApiProperty({ example: 8.01233413 })
@@ -11,6 +11,7 @@ export class CreateAbsenceDTO {
   clock_in_longitude: number;
 
   @ApiProperty({ example: 'Lorem ipsum' })
+  @IsOptional()
   late_reason: string;
 
   clock_in_photo: number;

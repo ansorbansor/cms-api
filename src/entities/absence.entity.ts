@@ -41,6 +41,9 @@ export class Absence extends EntityHelper {
   @Column()
   clock_out_longitude?: number;
 
+  @Column()
+  late_reason?: string;
+
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;

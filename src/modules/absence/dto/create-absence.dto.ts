@@ -10,6 +10,9 @@ export class CreateAbsenceDTO {
   @IsNotEmpty({ message: 'clock_in_longitude tidak boleh kosong' })
   clock_in_longitude: number;
 
+  @ApiProperty({ example: 'Lorem ipsum' })
+  late_reason: string;
+
   clock_in_photo: number;
   user_id: number;
   clock_in: Date;

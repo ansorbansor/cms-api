@@ -207,14 +207,31 @@ export class AbsenceService {
         false,
         afterOffice,
         lateAbsence,
+        null,
       );
     }
 
     if (afterOffice && !data.clock_out) {
-      return HasAbsenceToday(true, data, false, true, afterOffice, lateAbsence);
+      return HasAbsenceToday(
+        true,
+        data,
+        false,
+        true,
+        afterOffice,
+        lateAbsence,
+        data.id,
+      );
     }
 
-    return HasAbsenceToday(true, data, false, false, afterOffice, lateAbsence);
+    return HasAbsenceToday(
+      true,
+      data,
+      false,
+      false,
+      afterOffice,
+      lateAbsence,
+      data.id,
+    );
   }
 
   async findOneFull(fields: EntityCondition<Absence>) {

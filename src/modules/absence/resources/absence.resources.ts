@@ -15,6 +15,7 @@ export const AbsenceResource = (absence: Absence): any => {
     clock_in_longitude: absence.clock_in_longitude ? absence.clock_in_longitude : '-',
     clock_out_latitude: absence.clock_out_latitude ? absence.clock_out_latitude : '-',
     clock_out_longitude: absence.clock_out_longitude ? absence.clock_out_longitude : '-',
+    late_reason: absence.late_reason ? absence.late_reason : '-',
   };
 };
 
@@ -37,10 +38,11 @@ export const AbsenceResourceDetail = (absence: Absence): any => {
     clock_in_longitude: absence.clock_in_longitude ? absence.clock_in_longitude : '-',
     clock_out_latitude: absence.clock_out_latitude ? absence.clock_out_latitude : '-',
     clock_out_longitude: absence.clock_out_longitude ? absence.clock_out_longitude : '-',
+    late_reason: absence.late_reason ? absence.late_reason : '-',
   };
 };
 
-export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClockIn: boolean, mustClockOut: boolean, afterOffice: boolean, lateAbsence: boolean): any => {
+export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClockIn: boolean, mustClockOut: boolean, afterOffice: boolean, lateAbsence: boolean, clockInId: number): any => {
   return {
     has_absence: hasAbsence,
     clock_in: absence ? absence.clockInParseDate : null,
@@ -48,6 +50,7 @@ export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClock
     must_clock_in: mustClockIn,
     must_clock_out: mustClockOut,
     after_office: afterOffice,
-    late_absence: lateAbsence
+    late_absence: lateAbsence,
+    clock_in_id: clockInId
   };
 };

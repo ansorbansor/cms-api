@@ -52,7 +52,7 @@ export class AbsenceController {
           files,
         ),
       ),
-      'success',
+      'Terimakasih telah melakukan absen masuk!',
     );
   }
 
@@ -75,7 +75,7 @@ export class AbsenceController {
         req.ip,
         files,
       ),
-      'success',
+      'Terimakasih telah melakukan absen keluar!',
     );
   }
 

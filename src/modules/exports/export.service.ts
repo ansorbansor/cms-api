@@ -49,15 +49,9 @@ export class ExportService {
     });
 
     const XLSX = xlsx;
-    // const workSheet = XLSX.utils.json_to_sheet(rows);
-    // const wb = XLSX.utils.book_new();
-    // XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
-
-    const wb = XLSX.readFile(process.argv[2]);
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const ostream = fs.createWriteStream('SheetJSNodeJStream.csv');
-
-    XLSX.stream.to_csv(ws).pipe(ostream);
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
     const f = await new Promise((resolve) => {
       tmp.file(

@@ -37,11 +37,11 @@ export const ExportSPKResource = (spk: SPK): any => {
     cash_advance: spk.cash_advance,
     pay_to_user:
       spk.pay_to_user && spk.pay_to_user.name ? spk.pay_to_user.name : '-',
-    bank_account:
-      spk.pay_to_user &&
-      spk.pay_to_user.bank &&
-      spk.pay_to_user.bank_account_number
-        ? spk.pay_to_user.bank + ' - ' + spk.pay_to_user.bank_account_number
+    bank_account_name:
+      spk.pay_to_user && spk.pay_to_user.bank ? spk.pay_to_user.bank : '-',
+    bank_account_number:
+      spk.pay_to_user && spk.pay_to_user.bank_account_number
+        ? spk.pay_to_user.bank_account_number
         : '-',
     site_name: spk.site && spk.site.name ? spk.site.name : '-',
     site_code: spk.site && spk.site.code ? spk.site.code : '-',

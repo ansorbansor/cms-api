@@ -10,7 +10,6 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { getManager } from 'typeorm';
 import { ErrorMessage } from './enums';
 import { failedResponse } from './responses';
-import { log } from 'console';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

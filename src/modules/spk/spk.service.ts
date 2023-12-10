@@ -116,10 +116,10 @@ export class SPKService {
       );
 
       if (currentDate.diff(expiredDate, 'days') > 2) {
-        // throw failedResponse(
-        //   HttpStatus.UNPROCESSABLE_ENTITY,
-        //   'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
-        // );
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
+        );
       }
     }
 
@@ -163,7 +163,7 @@ export class SPKService {
 
     createSPKDTO.created_by = user_id;
 
-    const spk = await this.spkRepository.save(
+    let spk = await this.spkRepository.save(
       this.spkRepository.create(createSPKDTO),
     );
 
@@ -177,13 +177,15 @@ export class SPKService {
 
     await this.spkInhouseTeamRepository.insert(inhouseTeam);
 
+    spk = await this.findOne({ id: spk.id });
+
     await this.activityLogService.create({
       user_id: user_id,
-      description: `Tambah SPK`,
+      description: `Melakukan Penambahan BOP dengan nomor ${spk.spk_number}`,
       ip: ip,
     });
 
-    return await this.findOne({ id: spk.id });
+    return spk;
   }
 
   async update(
@@ -304,6 +306,11 @@ export class SPKService {
       updateSPKDTO.is_over_budget = false;
     }
 
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+    if (currentUser.employeePosition?.grant_all_access === false) {
+      delete updateSPKDTO.remark_superadmin;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { inhouse_team_user_id, ...updatedDataSPK } = updateSPKDTO;
 
@@ -348,7 +355,7 @@ export class SPKService {
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Update Data SPK`,
+      description: `Mengupdate Data BOP dengan nomor ${exists.spk_number}`,
       ip: ip,
     });
 
@@ -439,6 +446,8 @@ export class SPKService {
       data.andWhere('spk.status >= :status', {
         status: SPKStatus.APPROVED,
       });
+
+      data.withDeleted();
     } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
       if (
         !paginationOptions.status ||
@@ -467,6 +476,7 @@ export class SPKService {
         });
       }
     } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+      data.withDeleted();
     } else {
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
 
@@ -555,7 +565,7 @@ export class SPKService {
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
 
-  async findOne(fields: EntityCondition<SPK>) {
+  async findOne(fields: EntityCondition<SPK>, user?: User) {
     const data = await this.spkRepository
       .createQueryBuilder('spk')
       .leftJoinAndSelect('spk.region', 'region')
@@ -596,6 +606,13 @@ export class SPKService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK tidak ditemukan',
       );
+    }
+
+    if (user) {
+      const currentUser = await this.userService.findOneFull({ id: user.id });
+      if (currentUser.employeePosition?.grant_all_access === true) {
+        return SPKResourceDetail(data, data.remark_superadmin);
+      }
     }
 
     return SPKResourceDetail(data);
@@ -861,6 +878,12 @@ export class SPKService {
     }
 
     await this.spkRepository.update(id, updateData);
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Mengupdate Data Settlement BOP dengan nomor ${exists.spk_number}`,
+      ip: ip,
+    });
   }
 
   async updateCostEvidence(
@@ -873,6 +896,15 @@ export class SPKService {
     files: Array<Express.Multer.File>,
     deleted_id: number[],
   ) {
+    const exists = await this.findOneFull({ id: spkId });
+
+    if (!exists) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'SPK tidak ditemukan',
+      );
+    }
+
     if (deleted_id) {
       await this.spkCostEvidenceRepository.softDelete(deleted_id);
     }
@@ -932,6 +964,12 @@ export class SPKService {
           await this.spkCostEvidenceRepository.update(data.id, data);
         }
       }
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Mengupdate Data Settlement dengan nomor ${exists.spk_number}`,
+        ip: ip,
+      });
     }
   }
 
@@ -955,7 +993,7 @@ export class SPKService {
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Hapus Data SPK`,
+      description: `Hapus Data BOP dengan nomor ${existingSPK.spk_number}`,
       ip: ip,
     });
 

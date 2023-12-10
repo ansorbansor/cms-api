@@ -221,6 +221,12 @@ export class ImportService {
           successMessage += `menambah ${insertDataUserList.length} data Karyawan, `;
         }
 
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: successMessage,
+          ip: ip,
+        });
+
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);
         }
@@ -739,10 +745,15 @@ export class ImportService {
           fs.unlinkSync(file.path);
         }
 
-        return successResponse(
-          null,
-          `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`,
-        );
+        const successMessage = `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`;
+
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: successMessage,
+          ip: ip,
+        });
+
+        return successResponse(null, successMessage);
       } else {
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);

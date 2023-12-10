@@ -218,11 +218,14 @@ export class SPKController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param() param: IDParamDto) {
+  async findOne(@Param() param: IDParamDto, @Request() req) {
     return successResponse(
-      await this.spkService.findOne({
-        id: +param.id,
-      }),
+      await this.spkService.findOne(
+        {
+          id: +param.id,
+        },
+        req.user,
+      ),
       'success',
     );
   }

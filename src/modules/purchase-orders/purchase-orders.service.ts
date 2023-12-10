@@ -14,6 +14,7 @@ import { User } from 'src/entities/user.entity';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import * as moment from 'moment';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -77,7 +78,10 @@ export class PurchaseOrderService {
 
     await this.activityLogService.create({
       user_id: user_id,
-      description: `Tambah PO`,
+      description: `Menambahkan data PO dengan nomor ${exportUniqueId(
+        po.id,
+        po.createdAtParseDate,
+      )}`,
       ip: ip,
     });
 
@@ -240,22 +244,34 @@ export class PurchaseOrderService {
       }
     }
 
+    const po = await this.findOne({ id: id });
+
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Update Data PO`,
+      description: `Mengupdate Data PO dengan nomor ${exportUniqueId(
+        po.id,
+        po.createdAtParseDate,
+      )}`,
       ip: ip,
     });
 
-    return await this.findOne({ id: id });
+    return po;
   }
 
   async softDelete(id: number, user: User, ip: string): Promise<void> {
-    await this.purchaseOrdersRepository.softDelete(id);
+    const po = await this.findOne({ id: id });
 
-    await this.activityLogService.create({
-      user_id: user.id,
-      description: `Hapus Data PO`,
-      ip: ip,
-    });
+    if (po) {
+      await this.purchaseOrdersRepository.softDelete(id);
+
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: `Menghapus Data PO dengan nomor ${exportUniqueId(
+          po.id,
+          po.createdAtParseDate,
+        )}`,
+        ip: ip,
+      });
+    }
   }
 }

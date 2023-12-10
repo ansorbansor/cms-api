@@ -133,6 +133,9 @@ export class SPK extends EntityHelper {
   @Column()
   is_over_budget?: boolean;
 
+  @Column()
+  remark_superadmin?: string;
+
   @OneToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;

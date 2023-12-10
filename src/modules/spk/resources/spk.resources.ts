@@ -52,10 +52,11 @@ export const SPKResource = (spk: SPK): any => {
       name: spk.site && spk.site.name ? spk.site.name : '-',
       code: spk.site && spk.site.code ? spk.site.code : '-',
     },
+    is_deleted: spk.deleted_at != null,
   };
 };
 
-export const SPKResourceDetail = (spk: SPK): any => {
+export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
   return {
     id: spk.id,
     spk_number: spk.spk_number,
@@ -223,5 +224,6 @@ export const SPKResourceDetail = (spk: SPK): any => {
       id: spk.category && spk.category.id ? spk.category.id : null,
       name: spk.category && spk.category.name ? spk.category.name : '-',
     },
+    remark_superadmin: remarkSuperadmin,
   };
 };

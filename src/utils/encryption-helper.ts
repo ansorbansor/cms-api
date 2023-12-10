@@ -35,13 +35,19 @@ export async function decryptText(text) {
 }
 
 export function exportUniqueId(id: number, createdAt: string) {
-  const dateOnly = createdAt.split(' ')[0];
-  const dateOnlySplit = dateOnly.split('-');
-  const year = dateOnlySplit[0];
-  const month = dateOnlySplit[1];
-  const day = dateOnlySplit[2];
-  // 2023BSN-ddmm-uniq
-  return `${year}BSN-${month}${day}-${id}`;
+  if (createdAt != null) {
+    const date = createdAt.split(' ');
+    if (date.length > 1) {
+      const dateOnly = createdAt.split(' ')[0];
+      const dateOnlySplit = dateOnly.split('-');
+      const year = dateOnlySplit[0];
+      const month = dateOnlySplit[1];
+      const day = dateOnlySplit[2];
+      // 2023BSN-ddmm-uniq
+      return `${year}BSN-${month}${day}-${id}`;
+    }
+  }
+  return '-';
 }
 
 export function importUniqueId(uniqueId: string) {

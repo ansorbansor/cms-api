@@ -149,6 +149,45 @@ export class PurchaseOrder extends EntityHelper {
   @Column()
   budget_percentage: number;
 
+  @Column()
+  total_acceptance: number;
+
+  @Column()
+  ny_invoice: number;
+
+  @Column()
+  ny_invoice_date?: Date;
+
+  @Column()
+  piutang: number;
+
+  @Column()
+  priority_site_list: string;
+
+  @Column()
+  amount_priority: number;
+
+  @Column()
+  achievement_priority: number;
+
+  @Column()
+  actual_work_date?: Date;
+
+  @Column()
+  actual_work_amount: number;
+
+  @Column()
+  actual_work_status: string;
+
+  @Column()
+  remark_highlight_recon: string;
+
+  @Column()
+  pic: number;
+
+  @Column()
+  plan_date: Date;
+
   @ManyToOne(() => User, {
     eager: true,
   })
@@ -202,4 +241,10 @@ export class PurchaseOrder extends EntityHelper {
   @OneToMany(() => PurchaseOrderInvoice, (po_invoice) => po_invoice.po)
   @JoinColumn()
   po_invoice?: PurchaseOrderInvoice[];
+
+  @ManyToOne(() => User, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'pic' })
+  pic_data?: User;
 }

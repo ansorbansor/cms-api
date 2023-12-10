@@ -459,6 +459,8 @@ export class ImportService {
             const newPO = await this.poRepository.save(insertPO);
             totalInsertPO++;
 
+            let totalAcceptance = 0;
+
             //get list invoice
             const insertedInvoice = [];
             for (const key of Object.keys(value)) {
@@ -505,10 +507,57 @@ export class ImportService {
                   unit_price: value[`ac${invNo} unit price`]
                     ? value[`ac${invNo} unit price`]
                     : 0,
+                  submit_date:
+                    value[`ac${invNo} submit date`] &&
+                    moment(
+                      value[`ac${invNo} submit date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value[`ac${invNo} submit date`]
+                      : null,
+                  submit_amount:
+                    value[`ac${invNo} submit date`] &&
+                    moment(
+                      value[`ac${invNo} submit date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? insertPO.unit_price_1
+                      : 0,
+                  approve_date:
+                    value[`ac${invNo} approve date`] &&
+                    moment(
+                      value[`ac${invNo} approve date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value[`ac${invNo} approve date`]
+                      : null,
+                  approve_amount:
+                    value[`ac${invNo} approve date`] &&
+                    moment(
+                      value[`ac${invNo} approve date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? insertPO.unit_price_1
+                      : 0,
                 };
+
+                if (inv.approve_date != null && inv.approve_date != '') {
+                  totalAcceptance += inv.approve_amount;
+                }
 
                 insertedInvoice.push(inv);
                 totalInsertInvoice++;
+              }
+
+              if (totalAcceptance != 0) {
+                await this.poRepository.update(
+                  {
+                    id: newPO.id,
+                  },
+                  {
+                    total_acceptance: totalAcceptance,
+                  },
+                );
               }
             }
 
@@ -536,6 +585,9 @@ export class ImportService {
             }
 
             //get list invoice
+
+            let totalAcceptance = 0;
+
             for (const key of Object.keys(value)) {
               if (/^ac.*inv$/.test(key)) {
                 const invNo = key.replace('ac', '').replace(' inv', '');
@@ -580,6 +632,28 @@ export class ImportService {
                   unit_price: value[`ac${invNo} unit price`]
                     ? value[`ac${invNo} unit price`]
                     : 0,
+                  submit_date: value[`ac${invNo} submit date`],
+                  submit_amount:
+                    value[`ac${invNo} submit date`] &&
+                    moment(
+                      value[`ac${invNo} submit date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value['unit price 1 (100/60/70/80)']
+                        ? value['unit price 1 (100/60/70/80)']
+                        : 0
+                      : 0,
+                  approve_date: value[`ac${invNo} approve date`],
+                  approve_amount:
+                    value[`ac${invNo} approve date`] &&
+                    moment(
+                      value[`ac${invNo} approve date`],
+                      moment.ISO_8601,
+                    ).isValid()
+                      ? value['unit price 1 (100/60/70/80)']
+                        ? value['unit price 1 (100/60/70/80)']
+                        : 0
+                      : 0,
                 };
 
                 const indexDataInvoiceExisting = poInvoiceData.findIndex(
@@ -592,6 +666,7 @@ export class ImportService {
                   const updateData = await this.validateInvoicePOData(
                     inv,
                     poInvoiceData[indexDataInvoiceExisting],
+                    poData[indexDataExisting],
                   );
 
                   if (Object.keys(updateData).length > 0) {
@@ -606,7 +681,22 @@ export class ImportService {
                   totalInsertInvoice++;
                   insertedDataPOExistingInvoiceList.push(inv);
                 }
+
+                if (inv.approve_date != null && inv.approve_date != '') {
+                  totalAcceptance += inv.approve_amount;
+                }
               }
+            }
+
+            if (totalAcceptance != 0) {
+              await this.poRepository.update(
+                {
+                  id: poData[indexDataExisting].id,
+                },
+                {
+                  total_acceptance: totalAcceptance,
+                },
+              );
             }
           }
         }
@@ -670,7 +760,7 @@ export class ImportService {
     }
   }
 
-  async validateInvoicePOData(excelData: any, dbData: any) {
+  async validateInvoicePOData(excelData: any, dbData: any, poData: any) {
     const updateData: any = {};
 
     //check invoice date
@@ -744,6 +834,48 @@ export class ImportService {
       updateData.unit_price = isNaN(Number(excelData.unit_price))
         ? 0
         : Number(excelData.unit_price);
+    }
+
+    //check submit date
+    if (
+      dbData.submit_date &&
+      moment(dbData.submit_date).format('YYYY-MM-D') !=
+        moment(excelData.submit_date).format('YYYY-MM-D')
+    ) {
+      updateData.submit_date = excelData.submit_date;
+    }
+
+    //check submit amount
+    if (
+      (dbData.submit_date &&
+        moment(dbData.submit_date).format('YYYY-MM-D') !=
+          moment(excelData.submit_date).format('YYYY-MM-D')) ||
+      (excelData.submit_date != null &&
+        excelData.submit_date != '' &&
+        excelData['unit price 1 (100/60/70/80)'] != dbData.submit_amount)
+    ) {
+      updateData.submit_amount = excelData.submit_amount;
+    }
+
+    //check approve date
+    if (
+      dbData.approve_date &&
+      moment(dbData.approve_date).format('YYYY-MM-D') !=
+        moment(excelData.approve_date).format('YYYY-MM-D')
+    ) {
+      updateData.approve_date = excelData.approve_date;
+    }
+
+    //check approve amount
+    if (
+      (dbData.approve_date &&
+        moment(dbData.approve_date).format('YYYY-MM-D') !=
+          moment(excelData.approve_date).format('YYYY-MM-D')) ||
+      (excelData.approve_date != null &&
+        excelData.approve_date != '' &&
+        excelData['unit price 1 (100/60/70/80)'] != dbData.approve_amount)
+    ) {
+      updateData.approve_amount = excelData.approve_amount;
     }
 
     return updateData;

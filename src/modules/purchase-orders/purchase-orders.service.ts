@@ -13,6 +13,7 @@ import {
 import { User } from 'src/entities/user.entity';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
+import * as moment from 'moment';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -29,6 +30,20 @@ export class PurchaseOrderService {
     user_id?: number,
     ip?: string,
   ) {
+    if (createPurchaseOrderDTO.invoices.length > 0) {
+      let totalAcceptance = 0;
+      createPurchaseOrderDTO.invoices.forEach((inv) => {
+        totalAcceptance +=
+          inv.submit_date != null &&
+          moment(new Date(inv.submit_date)).format('YYYY-MM-D') !=
+            'Invalid date'
+            ? Number(createPurchaseOrderDTO.unit_price_1)
+            : 0;
+      });
+
+      createPurchaseOrderDTO['total_acceptance'] = totalAcceptance;
+    }
+
     const po = await this.purchaseOrdersRepository.save(
       this.purchaseOrdersRepository.create({
         user_id: user_id,
@@ -41,6 +56,20 @@ export class PurchaseOrderService {
       for (const data of saveInvoice) {
         data['user_id'] = user_id;
         data['purchase_order_id'] = po.id;
+
+        data['submit_amount'] =
+          data.submit_date != null &&
+          moment(new Date(data.submit_date)).format('YYYY-MM-D') !=
+            'Invalid date'
+            ? po.unit_price_1
+            : 0;
+
+        data['approve_amount'] =
+          data.approve_date != null &&
+          moment(new Date(data.approve_date)).format('YYYY-MM-D') !=
+            'Invalid date'
+            ? po.unit_price_1
+            : 0;
       }
 
       await this.purchaseOrderInvoiceRepository.save(saveInvoice);

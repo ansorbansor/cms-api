@@ -212,6 +212,60 @@ export class CreatePurchaseOrderDTO {
   @IsNotEmpty({ message: 'Budget Percentage tidak boleh kosong' })
   budget_percentage: number;
 
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  ny_invoice: number;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  ny_invoice_date: Date;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  piutang: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  priority_site_list: string;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  amount_priority: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  achievement_priority: number;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  actual_work_date: Date;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  actual_work_amount: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  actual_work_status: string;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  remark_highlight_recon: string;
+
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty({ message: 'User ID tidak boleh kosong' })
+  @Validate(IsExist, ['User', 'id'], {
+    message: 'User tidak ditemukan',
+  })
+  pic: number;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  plan_date: Date;
+
   @ValidateNested({ each: true })
   @Type(() => Invoices)
   invoices: Invoices[];
@@ -256,4 +310,14 @@ class Invoices {
   @ApiProperty({ example: '123' })
   @IsOptional()
   unit_price: number;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  submit_date: Date;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  approve_date: Date;
 }

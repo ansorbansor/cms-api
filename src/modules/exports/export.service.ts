@@ -95,7 +95,10 @@ export class ExportService {
       .leftJoinAndSelect('po.status_acceptance', 'status_acceptance')
       .leftJoinAndSelect('po.pending_type', 'pending_type')
       .leftJoinAndSelect('po.pd', 'pd')
-      .leftJoinAndSelect('po.po_invoice', 'po_invoice');
+      .leftJoinAndSelect('po.po_invoice', 'po_invoice')
+      .leftJoinAndSelect('po.pic_data', 'pic_data')
+      .limit(10)
+      .orderBy('po.id', 'DESC');
 
     if (search) {
       query.andWhere(
@@ -150,6 +153,10 @@ export class ExportService {
         d[`AC${index + 1} Payment Amount`] = element.payment_amount;
         d[`AC${index + 1} Deduction Amount`] = element.deduction_amount;
         d[`AC${index + 1} Unit Price`] = element.unit_price;
+        d[`AC${index + 1} Submit Date`] = element.submit_date;
+        d[`AC${index + 1} Submit Amount`] = element.submit_amount;
+        d[`AC${index + 1} Approve Date`] = element.approve_date;
+        d[`AC${index + 1} Approve Amount`] = element.approve_amount;
       });
 
       delete d.invoices;

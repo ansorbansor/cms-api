@@ -68,6 +68,33 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       : 0,
     'Budget Percentage': Number(po.budget_percentage),
     'Remark Highlight': po.remark_highlight ? po.remark_highlight : '-',
+    'Total Acceptance': po.total_acceptance ? Number(po.total_acceptance) : 0,
+    'NY Invoice': po.ny_invoice ? Number(po.ny_invoice) : 0,
+    'NY Invoice Date': po.ny_invoice_date
+      ? moment(po.ny_invoice_date).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    Piutang: po.piutang ? Number(po.piutang) : 0,
+    'Priority Site List': po.priority_site_list ? po.priority_site_list : '-',
+    'Amount Priority': po.amount_priority ? Number(po.amount_priority) : 0,
+    'Achievement Priority': po.achievement_priority
+      ? Number(po.achievement_priority)
+      : 0,
+    'Actual Bulan Pengerjaan': po.actual_work_date
+      ? moment(po.actual_work_date).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    'Actual Nilai Pengerjaan': po.actual_work_amount
+      ? Number(po.actual_work_amount)
+      : 0,
+    'Status Actual Bulan Pengerjaan': po.actual_work_status
+      ? po.actual_work_status
+      : '-',
+    'Remark Highlight Rekon': po.remark_highlight_recon
+      ? po.remark_highlight_recon
+      : '-',
+    PIC: po.pic_data && po.pic_data.name ? po.pic_data.name : '-',
+    'Plan Date': po.plan_date
+      ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
+      : null,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {
@@ -86,6 +113,14 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
             payment_amount: e.payment_amount ? e.payment_amount : 0,
             deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
             unit_price: e.unit_price ? e.unit_price : 0,
+            submit_date: e.submit_date
+              ? moment(e.submit_date).format('YYYY-MM-DD HH:mm:ss')
+              : null,
+            submit_amount: e.submit_amount ? e.submit_amount : 0,
+            approve_date: e.approve_date
+              ? moment(e.approve_date).format('YYYY-MM-DD HH:mm:ss')
+              : null,
+            approve_amount: e.approve_amount ? e.approve_amount : 0,
           };
         })
       : [],

@@ -163,6 +163,7 @@ export class PurchaseOrderService {
       .leftJoinAndSelect('po.pending_type', 'pending_type')
       .leftJoinAndSelect('po.pd', 'pd')
       .leftJoinAndSelect('po.po_invoice', 'po_invoice')
+      .leftJoinAndSelect('po.pic_data', 'pic_data')
       .where(fields)
       .getOne();
 

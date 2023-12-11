@@ -132,6 +132,27 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     amount_ready_invoice: po.amount_ready_invoice
       ? Number(po.amount_ready_invoice)
       : 0,
+    total_acceptance: po.total_acceptance ? po.total_acceptance : 0,
+    ny_invoice: po.ny_invoice ? po.ny_invoice : 0,
+    ny_invoice_date: po.ny_invoice_date
+      ? moment(po.ny_invoice_date).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    piutang: po.piutang ? po.piutang : 0,
+    priority_site_list: po.priority_site_list ? po.priority_site_list : '-',
+    amount_priority: po.amount_priority ? po.amount_priority : 0,
+    achievement_priority: po.achievement_priority ? po.achievement_priority : 0,
+    actual_work_date: po.actual_work_date
+      ? moment(po.actual_work_date).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    actual_work_amount: po.actual_work_amount ? po.actual_work_amount : 0,
+    actual_work_status: po.actual_work_status ? po.actual_work_status : '-',
+    remark_highlight_recon: po.remark_highlight_recon
+      ? po.remark_highlight_recon
+      : '-',
+    pic: po.pic_data ? po.pic_data.name : '-',
+    plan_date: po.plan_date
+      ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
+      : '-',
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {

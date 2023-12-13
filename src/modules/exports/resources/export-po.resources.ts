@@ -124,5 +124,6 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
           };
         })
       : [],
+    'Delete Data': '',
   };
 };

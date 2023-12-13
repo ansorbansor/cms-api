@@ -23,8 +23,7 @@ import * as moment from 'moment';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';
-import * as crypto from 'crypto';
-import { exportUniqueId, importUniqueId } from 'src/utils/encryption-helper';
+import { importUniqueId } from 'src/utils/encryption-helper';
 
 @Injectable()
 export class ImportService {
@@ -307,21 +306,55 @@ export class ImportService {
         console.log('done rowData');
 
         const updateDataPOList = [];
+        const deletedId = [];
+        const deletedIndex = [];
 
-        //check all data valid
+        //check all rows
         for (const [index, value] of rowData.entries()) {
           if (
             value['unique id'] != null &&
             value['unique id'] != undefined &&
             value['unique id'] != ''
           ) {
+            //check all data valid
             if (value['unique id'].split('-').length <= 1) {
               throw failedResponse(
                 HttpStatus.BAD_REQUEST,
                 `Unique ID ${value['unique id']} pada row ${index} tidak ditemukan, kosongkan kolom untuk menambah data.`,
               );
             }
+
+            //check there is delete data
+            if (
+              value['delete data'] != null &&
+              value['delete data'] != undefined &&
+              (value['delete data'] === true ||
+                value['delete data'].toLowerCase() == 'true')
+            ) {
+              let id = value['unique id'];
+              id = id.split('-');
+              if (id.length == 3) {
+                deletedId.push(Number(id[2]));
+                deletedIndex.push(index);
+              }
+            }
           }
+        }
+
+        deletedIndex.forEach((element) => {
+          rowData.splice(element, 1);
+        });
+
+        console.log(deletedId);
+
+        if (deletedId.length > 0) {
+          const placeholders = deletedId
+            .map((_, index) => `$${index + 1}`)
+            .join(', ');
+          await getManager().query(
+            `UPDATE purchase_orders SET deleted_at = NOW() WHERE id IN (${placeholders})`,
+            deletedId,
+          );
         }
 
         const updateDataPOExistingInvoiceList = [];
@@ -1088,6 +1121,11 @@ export class ImportService {
 
   async validatePOData(excelData: any, dbData: any) {
     const updateData: any = {};
+
+    //check cc
+    if (excelData['cc'] && dbData.cc != excelData['cc']) {
+      updateData.cc = excelData['cc'];
+    }
 
     //check line po status
     const linePOStatus = excelData['line po status'] == 'Active' ? 1 : 0;

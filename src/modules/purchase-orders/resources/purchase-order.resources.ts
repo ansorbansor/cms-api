@@ -149,7 +149,12 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     remark_highlight_recon: po.remark_highlight_recon
       ? po.remark_highlight_recon
       : '-',
-    pic: po.pic_data ? po.pic_data.name : '-',
+    pic: po.pic_data
+      ? {
+          id: po.pic_data.id,
+          name: po.pic_data.name,
+        }
+      : null,
     plan_date: po.plan_date
       ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
       : '-',

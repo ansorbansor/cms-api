@@ -6,10 +6,11 @@ import { User } from 'src/entities/user.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { ExportController } from './export.controller';
 import { ExportService } from './export.service';
+import { Absence } from 'src/entities/absence.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PurchaseOrder, SPK]),
+    TypeOrmModule.forFeature([User, PurchaseOrder, SPK, Absence]),
     ActivityLogModule,
   ],
   controllers: [ExportController],

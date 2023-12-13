@@ -1,6 +1,5 @@
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as moment from 'moment';
-import * as crypto from 'crypto';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const PurchaseOrderResource = (po: PurchaseOrder): any => {

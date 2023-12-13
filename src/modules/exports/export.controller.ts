@@ -91,4 +91,26 @@ export class ExportController {
 
     res.download(`${response}`);
   }
+
+  @Get('absence')
+  @Header('Content-Type', 'text/xlsx')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportAbsence(
+    @Res() res: Response,
+    @Request() req,
+    @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+  ) {
+    const response = await this.exportService.exportAbsence(
+      req.user,
+      req.ip,
+      search,
+      startDate,
+      endDate,
+    );
+
+    res.download(`${response}`);
+  }
 }

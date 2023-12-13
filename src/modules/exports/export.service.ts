@@ -8,10 +8,11 @@ import * as tmp from 'tmp';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
-import * as fs from 'fs';
 import * as moment from 'moment';
 import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
+import { Absence } from 'src/entities/absence.entity';
+import { ExportAbsenceResource } from './resources/export-absence.resources';
 
 @Injectable()
 export class ExportService {
@@ -22,6 +23,8 @@ export class ExportService {
     private purchaseOrdersRepository: Repository<PurchaseOrder>,
     @InjectRepository(SPK)
     private spkRepository: Repository<SPK>,
+    @InjectRepository(Absence)
+    private absenceRepository: Repository<Absence>,
     private activityLogService: ActivityLogService,
   ) {}
 
@@ -289,6 +292,69 @@ export class ExportService {
     await this.activityLogService.create({
       user_id: user.id,
       description: `Export Data Pengguna`,
+      ip: ip,
+    });
+
+    return f;
+  }
+
+  async exportAbsence(
+    user: User,
+    ip: string,
+    search: string,
+    startDate: string,
+    endDate: string,
+  ) {
+    const query = this.absenceRepository
+      .createQueryBuilder('absence')
+      .leftJoinAndSelect('absence.user', 'user')
+      .leftJoinAndSelect('absence.clock_in_photo_file', 'clock_in_photo_file')
+      .leftJoinAndSelect('absence.clock_out_photo_file', 'clock_out_photo_file')
+      .orderBy('absence.created_at', 'DESC');
+
+    if (search) {
+      query.andWhere('user.name ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(`absence.created_at >= :startDate`, {
+        startDate: startDate,
+      });
+      query.andWhere(`absence.created_at <= :endDate`, {
+        endDate: endDate,
+      });
+    }
+
+    const data = await query.getMany();
+
+    const rows = [];
+
+    data.forEach((d) => {
+      rows.push(ExportAbsenceResource(d));
+    });
+
+    const XLSX = xlsx;
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
+
+    const f = await new Promise((resolve) => {
+      tmp.file(
+        { mode: 0o644, prefix: 'Absence-', postfix: '.xlsx' },
+        function _tempFileCreated(err, path) {
+          if (err) throw err;
+
+          XLSX.writeFile(wb, path, { compression: true });
+          resolve(path);
+        },
+      );
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Data Absence`,
       ip: ip,
     });
 

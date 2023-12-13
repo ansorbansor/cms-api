@@ -174,6 +174,14 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
               ? Number(e.deduction_amount)
               : 0,
             unit_price: e.unit_price ? Number(e.unit_price) : 0,
+            submit_date: e.submit_date
+              ? moment(e.submit_date).format('YYYY-MM-DD HH:mm:ss')
+              : null,
+            submit_amount: e.submit_amount ? e.submit_amount : 0,
+            approve_date: e.approve_date
+              ? moment(e.approve_date).format('YYYY-MM-DD HH:mm:ss')
+              : null,
+            approve_amount: e.approve_amount ? e.approve_amount : 0,
           };
         })
       : [],

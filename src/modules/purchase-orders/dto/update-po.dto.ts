@@ -289,4 +289,14 @@ class Invoices {
   @ApiProperty({ example: '123' })
   @IsOptional()
   unit_price: number;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  submit_date: Date;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  approve_date: Date;
 }

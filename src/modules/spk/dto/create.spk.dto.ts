@@ -81,6 +81,10 @@ export class CreateSPKDTO {
   })
   category_id: number;
 
+  @ApiProperty({ example: '-' })
+  @IsOptional()
+  remark_superadmin: string;
+
   distance_to_site_photo: number;
   km_range_start_photo: number;
   km_range_end_photo: number;

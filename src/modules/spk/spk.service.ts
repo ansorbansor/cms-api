@@ -458,7 +458,10 @@ export class SPKService {
           status: SPKStatus.CREATED,
         });
       }
-    } else if (currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT) {
+    } else if (
+      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
+      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
+    ) {
       if (
         !paginationOptions.status ||
         paginationOptions.status < SPKStatus.APPROVED

@@ -375,6 +375,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.region', 'region');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
+    let filterRegion = true;
 
     if (currentUser.employeePosition.code == RoleEnum.PM) {
       //add total spk cash advance
@@ -478,6 +479,9 @@ export class SPKService {
     } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
       data.withDeleted();
     } else {
+      console.log('aaaaaaa');
+      filterRegion = false;
+
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
 
       data.andWhere(
@@ -493,7 +497,10 @@ export class SPKService {
       );
     }
 
-    if (currentUser.employeePosition.code != RoleEnum.SUPERADMIN) {
+    if (
+      currentUser.employeePosition.code != RoleEnum.SUPERADMIN &&
+      filterRegion === true
+    ) {
       //filtering by user region if not user admin
       if (currentUser.gm_region) {
         let reg = currentUser.gm_region.split(',');

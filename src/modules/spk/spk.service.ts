@@ -441,7 +441,7 @@ export class SPKService {
       );
 
       data.andWhere(
-        '(total_cash_advance.total_cash_advance - total_cashback.total_cashback + total_cashout.total_cashout) > COALESCE(total_unit_price.total_unit_price, 0)',
+        '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
       );
 
       data.andWhere('spk.status >= :status', {
@@ -482,7 +482,6 @@ export class SPKService {
     } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
       data.withDeleted();
     } else {
-      console.log('aaaaaaa');
       filterRegion = false;
 
       data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
@@ -569,8 +568,6 @@ export class SPKService {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
-
-    console.log(returnedData);
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }

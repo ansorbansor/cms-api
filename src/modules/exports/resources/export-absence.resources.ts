@@ -1,5 +1,6 @@
 import minioConfig from 'src/config/minio.config';
 import { Absence } from 'src/entities/absence.entity';
+import * as moment from 'moment';
 
 export const ExportAbsenceResource = (absence: Absence): any => {
   return {
@@ -20,5 +21,10 @@ export const ExportAbsenceResource = (absence: Absence): any => {
     'Clock Out Photo': absence.clock_out_photo_file
       ? minioConfig().fullUrl + absence.clock_out_photo_file.path
       : null,
+    Status:
+      moment(absence.clock_in).toDate().getHours() >= 9
+        ? 'Terlambat'
+        : 'Tepat Waktu',
+    'Alasan Keterlambatan': absence.late_reason ? absence.late_reason : '-',
   };
 };

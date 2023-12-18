@@ -5,6 +5,7 @@ import * as moment from 'moment';
 export const ExportAbsenceResource = (absence: Absence): any => {
   return {
     Nama: absence.user ? absence.user.name : '-',
+    Region: absence.user && absence.user.region ? absence.user.region : '-',
     'Clock In': absence.clockInParseDate ? absence.clockInParseDate : '-',
     'Clock In Location':
       absence.clock_in_latitude && absence.clock_in_longitude

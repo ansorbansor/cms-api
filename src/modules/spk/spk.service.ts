@@ -582,6 +582,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.area', 'area')
       .leftJoinAndSelect('spk.po', 'po')
       .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
+      .leftJoinAndSelect('spk.customer', 'customer')
       .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
       .leftJoinAndSelect('userInhouse.employeePosition', 'employeePosition')
       .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')

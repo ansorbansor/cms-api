@@ -225,5 +225,9 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
       name: spk.category && spk.category.name ? spk.category.name : '-',
     },
     remark_superadmin: remarkSuperadmin,
+    customer: {
+      id: spk.customer && spk.customer.id ? spk.customer.id : null,
+      name: spk.customer && spk.customer.name ? spk.customer.name : '-',
+    },
   };
 };

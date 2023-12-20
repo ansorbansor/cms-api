@@ -81,6 +81,13 @@ export class UpdateSPKDTO {
   })
   category_id: number;
 
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Validate(IsExist, ['Customer', 'id'], {
+    message: 'Customer tidak ditemukan',
+  })
+  customer_id: number;
+
   @ApiProperty({ example: '-' })
   @IsOptional()
   remark_superadmin: string;

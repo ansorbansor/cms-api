@@ -1,12 +1,5 @@
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 
-export const GraphResource = (data: any): any => {
-  return {
-    id: 'asd',
-    name: 'asd',
-  };
-};
-
 export const GraphOrderListResource = (data: PurchaseOrder): any => {
   return {
     project_name: data.project ? data.project.name : '-',
@@ -40,8 +33,8 @@ export const GraphOrderListResource = (data: PurchaseOrder): any => {
 
 export const ActualWorkAmountPerMonthResource = (data: any): any => {
   return {
-    month: data.mon,
+    name: data.mon.trim(),
     status: data.status,
-    amount: data.sum,
+    value: Number(data.sum),
   };
 };

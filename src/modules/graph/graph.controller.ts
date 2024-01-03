@@ -26,6 +26,7 @@ import { GraphService } from './graph.service';
 export class GraphController {
   constructor(private readonly graphService: GraphService) {}
 
+  // #3
   @Get('po/count')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -50,6 +51,7 @@ export class GraphController {
     );
   }
 
+  // #4
   @Get('po/line-amount/sum')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -74,6 +76,7 @@ export class GraphController {
     );
   }
 
+  // #6
   @Get('po/count-per-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -98,6 +101,7 @@ export class GraphController {
     );
   }
 
+  // #1
   @Get('po/actual-work-amount/sum')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -122,6 +126,7 @@ export class GraphController {
     );
   }
 
+  // #8
   @Get('po/contract-asset/sum')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -146,6 +151,7 @@ export class GraphController {
     );
   }
 
+  // #5
   @Get('po/actual-work-amount/per-month')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -170,6 +176,7 @@ export class GraphController {
     );
   }
 
+  // #7
   @Get('po/list')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -190,6 +197,82 @@ export class GraphController {
           limit,
           total: 0,
         },
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+      ),
+      'success',
+    );
+  }
+
+  // dashboard management
+  // #1
+  @Get('management/actual-work-amount/per-month')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getManagementActualWorkAmountPerMonth(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: number,
+  ) {
+    return successResponse(
+      await this.graphService.getManagementActualWorkAmountPerMonth(
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+      ),
+      'success',
+    );
+  }
+
+  // #2
+  @Get('management/invoice-performance')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getManagementInvoicePerformance(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: number,
+  ) {
+    return successResponse(
+      await this.graphService.getManagementInvoicePerformance(
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+      ),
+      'success',
+    );
+  }
+
+  // #3
+  @Get('management/current-asset')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getManagementCurrentAsset(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: number,
+  ) {
+    return successResponse(
+      await this.graphService.getManagementCurrentAsset(
         status,
         regionId,
         month,

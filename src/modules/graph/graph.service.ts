@@ -6,7 +6,6 @@ import { infinityPagination } from 'src/utils/responses';
 import {
   ActualWorkAmountPerMonthResource,
   GraphOrderListResource,
-  GraphResource,
 } from './resources/graph.resources';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 
@@ -17,6 +16,7 @@ export class GraphService {
     private poRepository: Repository<PurchaseOrder>,
   ) {}
 
+  // #3
   async getPOCount(
     status: string,
     regionId: number,
@@ -89,6 +89,7 @@ export class GraphService {
     };
   }
 
+  // #4
   async getPOLineAmount(
     status: string,
     regionId: number,
@@ -161,6 +162,7 @@ export class GraphService {
     };
   }
 
+  // #6
   async getPOCountPerStatus(
     status: string,
     regionId: number,
@@ -225,6 +227,7 @@ export class GraphService {
     return poCount;
   }
 
+  // #1
   async getActualWorkAmountSum(
     status: string,
     regionId: number,
@@ -297,6 +300,7 @@ export class GraphService {
     };
   }
 
+  // #5
   async getActualWorkAmountPerMonth(
     status: string,
     regionId: number,
@@ -354,19 +358,21 @@ export class GraphService {
     }
 
     const actualWorkAmountPerMonth = await getManager().query(
-      `SELECT
-        to_char( actual_work_date, 'Mon' ) AS mon,
+      `WITH months AS (SELECT * FROM generate_series(1, 12) AS t(n))
+      SELECT
+        to_char(to_timestamp (m.n::text, 'MM'), 'Mon') AS mon,
         SUM ( actual_work_amount ),
         status
       FROM
-        purchase_orders 
+      months m LEFT JOIN
+        purchase_orders
+        ON EXTRACT(MONTH from purchase_orders.actual_work_date) = m.n 
       WHERE
         deleted_at IS NULL 
-        AND actual_work_date IS NOT NULL 
         ${whereQuery}
       GROUP BY
-        mon, status
-      ORDER BY mon DESC`,
+        mon, status, m.n
+      ORDER BY m.n ASC`,
       whereParam,
     );
 
@@ -377,6 +383,7 @@ export class GraphService {
     return returnedData;
   }
 
+  // #8
   async getContractAssetSum(
     status: string,
     regionId: number,
@@ -449,6 +456,7 @@ export class GraphService {
     };
   }
 
+  // #7
   async getOrderLog(
     paginationOptions: IPaginationOptions,
     status: string,
@@ -519,31 +527,265 @@ export class GraphService {
     );
   }
 
-  async findManyWithPagination(paginationOptions: IPaginationOptions) {
-    const data = this.poRepository.createQueryBuilder('customer');
+  // dashboard management
+  // #1
+  async getManagementActualWorkAmountPerMonth(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
 
-    if (paginationOptions.search) {
-      data.andWhere('customer.name ILIKE :search', {
-        search: `%${paginationOptions.search}%`,
-      });
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
     }
 
-    data.orderBy('customer.name', 'ASC');
-
-    const total = await data.getCount();
-    paginationOptions.total = total;
-
-    if (!paginationOptions.limit) {
-      paginationOptions.limit = total;
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
     }
 
-    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
-    data.take(paginationOptions.limit);
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
 
-    return infinityPagination(
-      await data.getMany(),
-      GraphResource,
-      paginationOptions,
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.line_po_status = $' +
+        (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.customer_id = $' +
+        (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.status = $' +
+        (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    const actualWorkAmountPerMonth = await getManager().query(
+      `
+      WITH months AS (SELECT * FROM generate_series(1, 12) AS t(n))
+      SELECT
+        to_char(to_timestamp (m.n::text, 'MM'), 'Mon') AS mon,
+        COALESCE(SUM ( purchase_orders.actual_work_amount ), 0) AS sum
+      FROM
+        months m LEFT JOIN
+        purchase_orders
+        ON EXTRACT(MONTH from purchase_orders.actual_work_date) = m.n
+      WHERE
+        purchase_orders.deleted_at IS NULL
+        ${whereQuery}
+      GROUP BY
+        mon, m.n
+      ORDER BY m.n ASC`,
+      whereParam,
     );
+
+    const returnedData = actualWorkAmountPerMonth.map((data) => {
+      return ActualWorkAmountPerMonthResource(data);
+    });
+
+    return returnedData;
+  }
+
+  // #2
+  async getManagementInvoicePerformance(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND po.region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM poi.invoice_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM poi.invoice_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery + ' AND po.line_po_status = $' + (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery + ' AND po.customer_id = $' + (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery = whereQuery + ' AND po.status = $' + (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    const actualWorkAmountPerMonth = await getManager().query(
+      `WITH months AS (SELECT * FROM generate_series(1, 12) AS t(n))
+
+      SELECT
+        to_char(to_timestamp (m.n::text, 'MM'), 'Mon') AS mon,
+        COALESCE(SUM ( poi.approve_amount ), 0) AS sum
+      FROM
+        months m LEFT JOIN
+        purchase_order_invoices poi
+        ON EXTRACT(MONTH from poi.invoice_date) = m.n
+        LEFT JOIN
+        purchase_orders po
+        ON poi.purchase_order_id = po.id
+      WHERE
+        poi.deleted_at IS NULL 
+        AND po.deleted_at IS NULL
+        ${whereQuery}
+      GROUP BY
+        mon, m.n
+      ORDER BY
+        m.n ASC`,
+      whereParam,
+    );
+
+    const returnedData = actualWorkAmountPerMonth.map((data) => {
+      return ActualWorkAmountPerMonthResource(data);
+    });
+
+    return returnedData;
+  }
+
+  // #3
+  async getManagementCurrentAsset(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.line_po_status = $' +
+        (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.customer_id = $' +
+        (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.status = $' +
+        (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    const sumResult = await getManager().query(
+      `SELECT 
+        SUM(ny_invoice) AS sum_ny_invoice,
+        SUM(piutang) AS sum_piutang
+      FROM
+        purchase_orders
+      WHERE
+        deleted_at IS NULL ${whereQuery}`,
+      whereParam,
+    );
+
+    let sumNYInvoice = 0;
+    let sumPiutang = 0;
+
+    if (sumResult.length > 0 && sumResult[0].sum_ny_invoice != null) {
+      sumNYInvoice = sumResult[0].sum_ny_invoice;
+    } else {
+      sumNYInvoice = 0;
+    }
+
+    if (sumResult.length > 0 && sumResult[0].sum_piutang != null) {
+      sumPiutang = sumResult[0].sum_piutang;
+    } else {
+      sumPiutang = 0;
+    }
+
+    const allSum = Number(sumPiutang) + Number(sumNYInvoice);
+
+    return [
+      {
+        name: 'NY invoice',
+        value: Math.round((sumNYInvoice / allSum) * 100),
+      },
+      {
+        name: 'Piutang',
+        value: Math.round((sumPiutang / allSum) * 100),
+      },
+    ];
   }
 }

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsArray, IsOptional, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 
@@ -83,6 +84,9 @@ export class UpdateSPKDTO {
 
   @ApiProperty({ example: 1 })
   @IsOptional()
+  @Transform(({ value }) =>
+    value == null || value == undefined || value == '' ? 0 : value,
+  )
   @Validate(IsExist, ['Customer', 'id'], {
     message: 'Customer tidak ditemukan',
   })

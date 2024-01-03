@@ -4,6 +4,7 @@ import { IPaginationOptions } from 'src/utils/types';
 import { Repository, getManager } from 'typeorm';
 import { infinityPagination } from 'src/utils/responses';
 import {
+  ActualWorkAmountPerMonthResource,
   GraphOrderListResource,
   GraphResource,
 } from './resources/graph.resources';
@@ -222,6 +223,230 @@ export class GraphService {
     );
 
     return poCount;
+  }
+
+  async getActualWorkAmountSum(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.line_po_status = $' +
+        (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.customer_id = $' +
+        (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.status = $' +
+        (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    let actualWorkAmount = await getManager().query(
+      `SELECT SUM(actual_work_amount) FROM purchase_orders WHERE deleted_at IS NULL ${whereQuery}`,
+      whereParam,
+    );
+
+    if (actualWorkAmount.length > 0 && actualWorkAmount[0].sum != null) {
+      actualWorkAmount = actualWorkAmount[0].sum;
+    } else {
+      actualWorkAmount = 0;
+    }
+
+    return {
+      actual_work_amount: actualWorkAmount,
+    };
+  }
+
+  async getActualWorkAmountPerMonth(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.line_po_status = $' +
+        (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.customer_id = $' +
+        (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.status = $' +
+        (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    const actualWorkAmountPerMonth = await getManager().query(
+      `SELECT
+        to_char( actual_work_date, 'Mon' ) AS mon,
+        SUM ( actual_work_amount ),
+        status
+      FROM
+        purchase_orders 
+      WHERE
+        deleted_at IS NULL 
+        AND actual_work_date IS NOT NULL 
+        ${whereQuery}
+      GROUP BY
+        mon, status
+      ORDER BY mon DESC`,
+      whereParam,
+    );
+
+    const returnedData = actualWorkAmountPerMonth.map((data) => {
+      return ActualWorkAmountPerMonthResource(data);
+    });
+
+    return returnedData;
+  }
+
+  async getContractAssetSum(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: number,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.line_po_status = $' +
+        (whereParam.length + 1);
+      whereParam.push(linePOStatus);
+    }
+
+    if (customerId != undefined && customerId != null && customerId != 0) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.customer_id = $' +
+        (whereParam.length + 1);
+      whereParam.push(customerId);
+    }
+
+    if (status != '' && status != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.status = $' +
+        (whereParam.length + 1);
+      whereParam.push(status);
+    }
+
+    let contractAsset = await getManager().query(
+      `SELECT SUM(piutang) FROM purchase_orders WHERE deleted_at IS NULL ${whereQuery}`,
+      whereParam,
+    );
+
+    if (contractAsset.length > 0 && contractAsset[0].sum != null) {
+      contractAsset = contractAsset[0].sum;
+    } else {
+      contractAsset = 0;
+    }
+
+    return {
+      contract_asset: contractAsset,
+    };
   }
 
   async getOrderLog(

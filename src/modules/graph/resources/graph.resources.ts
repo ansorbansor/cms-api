@@ -37,3 +37,11 @@ export const GraphOrderListResource = (data: PurchaseOrder): any => {
     remark_weekly: data.remark_weekly,
   };
 };
+
+export const ActualWorkAmountPerMonthResource = (data: any): any => {
+  return {
+    month: data.mon,
+    status: data.status,
+    amount: data.sum,
+  };
+};

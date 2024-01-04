@@ -204,7 +204,12 @@ export class SPKService {
       );
     }
 
-    if (exists.status >= SPKStatus.APPROVED) {
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+
+    if (
+      exists.status >= SPKStatus.APPROVED &&
+      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+    ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'SPK tidak bisa diedit!',
@@ -292,6 +297,7 @@ export class SPKService {
       'SELECT SUM(cashout) FROM spk WHERE site_id = $1 AND deleted_at IS NULL',
       [updateSPKDTO.site_id],
     );
+
     totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
 
     totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
@@ -306,7 +312,6 @@ export class SPKService {
       updateSPKDTO.is_over_budget = false;
     }
 
-    const currentUser = await this.userService.findOneFull({ id: user.id });
     if (currentUser.employeePosition?.grant_all_access === false) {
       delete updateSPKDTO.remark_superadmin;
     }

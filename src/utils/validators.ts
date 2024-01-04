@@ -28,11 +28,16 @@ export class IsExist implements ValidatorConstraintInterface {
       });
       return Boolean(entity.length == value.length);
     } else {
-      const entity = await getRepository(repository).findOne({
-        [pathToProperty ? pathToProperty : validationArguments.property]:
-          value?.[pathToProperty] ? value?.[pathToProperty] : value,
-      });
-      return Boolean(entity);
+      console.log('tototot', value);
+      if (value != null && value != undefined && value != 'null') {
+        const entity = await getRepository(repository).findOne({
+          [pathToProperty ? pathToProperty : validationArguments.property]:
+            value?.[pathToProperty] ? value?.[pathToProperty] : value,
+        });
+        return Boolean(entity);
+      }
+
+      return true;
     }
   }
 }

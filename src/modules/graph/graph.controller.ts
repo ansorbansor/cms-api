@@ -283,4 +283,36 @@ export class GraphController {
       'success',
     );
   }
+
+  // #4
+  @Get('management/nett-income')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getNettIncome(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+  ) {
+    return successResponse(
+      await this.graphService.getNettIncome(status, regionId, month, year),
+      'success',
+    );
+  }
+
+  // #5
+  @Get('management/liability')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getLiability(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+  ) {
+    return successResponse(
+      await this.graphService.getLiability(status, regionId, month, year),
+      'success',
+    );
+  }
 }

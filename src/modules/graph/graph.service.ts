@@ -8,6 +8,7 @@ import {
   GraphOrderListResource,
 } from './resources/graph.resources';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
+import { SPKStatus } from 'src/utils/enums';
 
 @Injectable()
 export class GraphService {
@@ -787,5 +788,123 @@ export class GraphService {
         value: Math.round((sumPiutang / allSum) * 100),
       },
     ];
+  }
+
+  // #4
+  async getNettIncome(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND spk.region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM spk.created_at) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM spk.created_at) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    const actualWorkAmountPerMonth = await getManager().query(
+      `WITH months AS (SELECT * FROM generate_series(1, 12) AS t(n))
+
+      SELECT
+        to_char(to_timestamp (m.n::text, 'MM'), 'Mon') AS mon,
+        COALESCE(SUM ( spk.cash_advance ), 0) AS sum
+      FROM
+        months m LEFT JOIN
+        spk
+        ON EXTRACT(MONTH from spk.created_at) = m.n
+      WHERE
+        spk.deleted_at IS NULL
+        AND spk.status != ${SPKStatus.REJECTED}
+        ${whereQuery}
+      GROUP BY
+        mon, m.n
+      ORDER BY
+        m.n ASC`,
+      whereParam,
+    );
+
+    const returnedData = actualWorkAmountPerMonth.map((data) => {
+      return ActualWorkAmountPerMonthResource(data);
+    });
+
+    return returnedData;
+  }
+
+  // #5
+  async getLiability(
+    status: string,
+    regionId: number,
+    month: string,
+    year: string,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId != 0) {
+      whereQuery = ' AND spk.region_id = $' + (whereParam.length + 1);
+      whereParam.push(regionId);
+    }
+
+    if (month != '' && month != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(MONTH FROM spk.created_at) = $' +
+        (whereParam.length + 1);
+      whereParam.push(month);
+    }
+
+    if (year != '' && year != null) {
+      whereQuery =
+        whereQuery +
+        ' AND EXTRACT(YEAR FROM spk.created_at) = $' +
+        (whereParam.length + 1);
+      whereParam.push(year);
+    }
+
+    let liability = await getManager().query(
+      ` SELECT
+          COALESCE(SUM ( spk.cash_advance ), 0) AS sum
+        FROM
+          spk
+        WHERE
+          spk.deleted_at IS NULL
+          AND (
+            spk.status = 0
+            OR spk.status = 1
+            OR spk.status = 2
+            OR spk.status = 3
+          ) ${whereQuery}`,
+      whereParam,
+    );
+
+    if (liability.length > 0 && liability[0].sum != null) {
+      liability = liability[0].sum;
+    } else {
+      liability = 0;
+    }
+
+    return {
+      name: 'Liability',
+      value: Number(liability),
+    };
   }
 }

@@ -902,9 +902,11 @@ export class GraphService {
       liability = 0;
     }
 
-    return {
-      name: 'Liability',
-      value: Number(liability),
-    };
+    return [
+      {
+        name: 'Liability',
+        value: Number(liability),
+      },
+    ];
   }
 }

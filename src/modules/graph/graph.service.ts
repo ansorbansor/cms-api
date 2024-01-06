@@ -778,6 +778,10 @@ export class GraphService {
 
     const allSum = Number(sumPiutang) + Number(sumNYInvoice);
 
+    if (allSum == 0) {
+      return [];
+    }
+
     return [
       {
         name: 'NY invoice',
@@ -900,6 +904,10 @@ export class GraphService {
       liability = liability[0].sum;
     } else {
       liability = 0;
+    }
+
+    if (liability == 0) {
+      return [];
     }
 
     return [

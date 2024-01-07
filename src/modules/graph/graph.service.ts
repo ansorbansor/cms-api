@@ -388,7 +388,6 @@ export class GraphService {
         deleted_at IS NULL
       GROUP BY
         status`,
-      whereParam,
     );
 
     const filtered = [];

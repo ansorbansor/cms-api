@@ -4,11 +4,13 @@ import { IPaginationOptions } from 'src/utils/types';
 import { Repository, getManager } from 'typeorm';
 import { infinityPagination } from 'src/utils/responses';
 import {
-  ActualWorkAmountPerMonthResource,
+  GraphGlobalResource,
   GraphOrderListResource,
+  ActualWorkAmountPerMonthResource,
 } from './resources/graph.resources';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { SPKStatus } from 'src/utils/enums';
+import { find } from 'rxjs';
 
 @Injectable()
 export class GraphService {
@@ -377,8 +379,35 @@ export class GraphService {
       whereParam,
     );
 
-    const returnedData = actualWorkAmountPerMonth.map((data) => {
-      return ActualWorkAmountPerMonthResource(data);
+    const allStatus = await getManager().query(
+      `SELECT
+        status
+      FROM
+        purchase_orders
+      WHERE
+        deleted_at IS NULL
+      GROUP BY
+        status`,
+      whereParam,
+    );
+
+    const filtered = [];
+    actualWorkAmountPerMonth.map((data) => {
+      const findData = filtered.find((f) => {
+        return f.mon === data.mon;
+      });
+
+      if (!findData) {
+        filtered.push(data);
+      }
+    });
+
+    const returnedData = filtered.map((data) => {
+      return ActualWorkAmountPerMonthResource(
+        data,
+        allStatus,
+        actualWorkAmountPerMonth,
+      );
     });
 
     return returnedData;
@@ -606,7 +635,7 @@ export class GraphService {
     );
 
     const returnedData = actualWorkAmountPerMonth.map((data) => {
-      return ActualWorkAmountPerMonthResource(data);
+      return GraphGlobalResource(data);
     });
 
     return returnedData;
@@ -687,7 +716,7 @@ export class GraphService {
     );
 
     const returnedData = actualWorkAmountPerMonth.map((data) => {
-      return ActualWorkAmountPerMonthResource(data);
+      return GraphGlobalResource(data);
     });
 
     return returnedData;
@@ -847,7 +876,7 @@ export class GraphService {
     );
 
     const returnedData = actualWorkAmountPerMonth.map((data) => {
-      return ActualWorkAmountPerMonthResource(data);
+      return GraphGlobalResource(data);
     });
 
     return returnedData;

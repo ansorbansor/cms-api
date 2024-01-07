@@ -31,7 +31,32 @@ export const GraphOrderListResource = (data: PurchaseOrder): any => {
   };
 };
 
-export const ActualWorkAmountPerMonthResource = (data: any): any => {
+export const ActualWorkAmountPerMonthResource = (
+  data: any,
+  allStatus: any,
+  allData: any,
+): any => {
+  const returnedData = {};
+
+  returnedData['month'] = data.mon.trim();
+
+  allStatus.forEach((status) => {
+    let statusValue = 0;
+    const findStatusValue = allData.find((f) => {
+      return f.mon === data.mon && f.status === status.status;
+    });
+
+    if (findStatusValue != null && findStatusValue.sum != null) {
+      statusValue = findStatusValue.sum;
+    }
+
+    returnedData[status.status] = Number(statusValue);
+  });
+
+  return returnedData;
+};
+
+export const GraphGlobalResource = (data: any): any => {
   return {
     name: data.mon.trim(),
     status: data.status,

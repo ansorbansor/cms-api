@@ -39,6 +39,7 @@ export const ActualWorkAmountPerMonthResource = (
   const returnedData = {};
 
   returnedData['month'] = data.mon.trim();
+  returnedData['status'] = [];
 
   allStatus.forEach((status) => {
     let statusValue = 0;
@@ -50,7 +51,10 @@ export const ActualWorkAmountPerMonthResource = (
       statusValue = findStatusValue.sum;
     }
 
-    returnedData[status.status] = Number(statusValue);
+    returnedData['status'].push({
+      name: status.status,
+      value: Number(statusValue),
+    });
   });
 
   return returnedData;

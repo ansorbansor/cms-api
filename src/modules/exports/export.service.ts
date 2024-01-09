@@ -100,7 +100,6 @@ export class ExportService {
       .leftJoinAndSelect('po.pd', 'pd')
       .leftJoinAndSelect('po.po_invoice', 'po_invoice')
       .leftJoinAndSelect('po.pic_data', 'pic_data')
-      .limit(10)
       .orderBy('po.id', 'DESC');
 
     if (search) {

@@ -103,25 +103,25 @@ export class SPKService {
 
     //create SPK rules
     //1. SPK yang dibuat, diberikan waktu 2 hari untuk close, jika melebihi 2 hari, maka SPK tidak dapat dibuat untuk user "Pay To" tersebut kembali.
-    const activeSPKCount = await getManager().query(
-      'SELECT created_at FROM spk WHERE pay_to_user_id = $1 AND status < 5 ORDER BY id ASC',
-      [createSPKDTO.pay_to_user_id],
-    );
+    // const activeSPKCount = await getManager().query(
+    //   'SELECT created_at FROM spk WHERE pay_to_user_id = $1 AND status < 5 ORDER BY id ASC',
+    //   [createSPKDTO.pay_to_user_id],
+    // );
 
-    if (activeSPKCount && activeSPKCount.length > 0) {
-      const currentDate = moment();
-      const expiredDate = moment(
-        activeSPKCount[0].created_at,
-        'YYYY-MM-DD HH:mm:ss',
-      );
+    // if (activeSPKCount && activeSPKCount.length > 0) {
+    //   const currentDate = moment();
+    //   const expiredDate = moment(
+    //     activeSPKCount[0].created_at,
+    //     'YYYY-MM-DD HH:mm:ss',
+    //   );
 
-      if (currentDate.diff(expiredDate, 'days') > 2) {
-        throw failedResponse(
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
-        );
-      }
-    }
+    //   if (currentDate.diff(expiredDate, 'days') > 2) {
+    //     throw failedResponse(
+    //       HttpStatus.UNPROCESSABLE_ENTITY,
+    //       'Terdapat SPK aktif melebihi 2 hari, segera selesaikan SPK tersebut',
+    //     );
+    //   }
+    // }
 
     let maxBudgetBySite = await getManager().query(
       "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",

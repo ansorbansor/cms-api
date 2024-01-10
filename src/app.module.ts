@@ -40,6 +40,9 @@ import { CustomThrottlerGuard } from './utils/guards';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 import { GraphModule } from './modules/graph/graph.module';
 import { AbsenceModule } from './modules/absence/absence.module';
+import { SPKOperationalModule } from './modules/spk-operational/spk-operational.module';
+import { SPKOperationalCategoryModule } from './modules/spk-operational-category/spk-operational-category.module';
+import { SPKOperationalRequestTypeModule } from './modules/spk-operational-request-type/spk-operational-request-type.module';
 
 @Module({
   imports: [
@@ -97,6 +100,9 @@ import { AbsenceModule } from './modules/absence/absence.module';
     TransportationModule,
     GraphModule,
     AbsenceModule,
+    SPKOperationalModule,
+    SPKOperationalCategoryModule,
+    SPKOperationalRequestTypeModule,
   ],
   providers: [
     {

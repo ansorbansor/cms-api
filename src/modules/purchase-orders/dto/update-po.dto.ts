@@ -299,4 +299,7 @@ class Invoices {
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   approve_date: Date;
+
+  approve_amount: number;
+  submit_amount: number;
 }

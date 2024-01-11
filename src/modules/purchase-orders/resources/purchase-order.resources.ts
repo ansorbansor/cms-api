@@ -156,7 +156,7 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       : null,
     plan_date: po.plan_date
       ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
-      : '-',
+      : null,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {

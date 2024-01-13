@@ -38,14 +38,12 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
     'Payment Terms': po.payment_terms ? po.payment_terms : '-',
     'Bidding Area': po.bidding_area ? po.bidding_area.name : '-',
     'Publish Date': po.publish_date
-      ? moment(po.publish_date).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(po.publish_date).format('YYYY-MM-DD')
       : null,
     'Start Date': po.start_date
-      ? moment(po.start_date).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(po.start_date).format('YYYY-MM-DD')
       : null,
-    'End Date': po.end_date
-      ? moment(po.end_date).format('YYYY-MM-DD HH:mm:ss')
-      : null,
+    'End Date': po.end_date ? moment(po.end_date).format('YYYY-MM-DD') : null,
     'Priority ESAR Approve': po.priority_esar_approve
       ? po.priority_esar_approve
       : '-',
@@ -71,7 +69,7 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
     'Total Acceptance': po.total_acceptance ? Number(po.total_acceptance) : 0,
     'NY Invoice': po.ny_invoice ? Number(po.ny_invoice) : 0,
     'NY Invoice Date': po.ny_invoice_date
-      ? moment(po.ny_invoice_date).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(po.ny_invoice_date).format('YYYY-MM-DD')
       : null,
     Piutang: po.piutang ? Number(po.piutang) : 0,
     'Priority Site List': po.priority_site_list ? po.priority_site_list : '-',
@@ -80,7 +78,7 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       ? Number(po.achievement_priority)
       : 0,
     'Actual Bulan Pengerjaan': po.actual_work_date
-      ? moment(po.actual_work_date).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(po.actual_work_date).format('YYYY-MM-DD')
       : null,
     'Actual Nilai Pengerjaan': po.actual_work_amount
       ? Number(po.actual_work_amount)
@@ -93,32 +91,32 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       : '-',
     PIC: po.pic_data && po.pic_data.name ? po.pic_data.name : '-',
     'Plan Date': po.plan_date
-      ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
+      ? moment(po.plan_date).format('YYYY-MM-DD')
       : null,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
           return {
             invoice_number: e.invoice_number,
             date: e.invoice_date
-              ? moment(e.invoice_date).format('YYYY-MM-DD HH:mm:ss')
+              ? moment(e.invoice_date).format('YYYY-MM-DD')
               : null,
             status: e.invoice_status,
             payment_date: e.payment_date
-              ? moment(e.payment_date).format('YYYY-MM-DD HH:mm:ss')
+              ? moment(e.payment_date).format('YYYY-MM-DD')
               : null,
             supplier_tax_number: e.supplier_tax_number,
             supplier_tax_date: e.supplier_tax_date
-              ? moment(e.supplier_tax_date).format('YYYY-MM-DD HH:mm:ss')
+              ? moment(e.supplier_tax_date).format('YYYY-MM-DD')
               : null,
             payment_amount: e.payment_amount ? e.payment_amount : 0,
             deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
             unit_price: e.unit_price ? e.unit_price : 0,
             submit_date: e.submit_date
-              ? moment(e.submit_date).format('YYYY-MM-DD HH:mm:ss')
+              ? moment(e.submit_date).format('YYYY-MM-DD')
               : null,
             submit_amount: e.submit_amount ? e.submit_amount : 0,
             approve_date: e.approve_date
-              ? moment(e.approve_date).format('YYYY-MM-DD HH:mm:ss')
+              ? moment(e.approve_date).format('YYYY-MM-DD')
               : null,
             approve_amount: e.approve_amount ? e.approve_amount : 0,
           };

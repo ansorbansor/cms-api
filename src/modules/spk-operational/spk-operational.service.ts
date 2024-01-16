@@ -421,8 +421,6 @@ export class SPKOperationalService {
         new Brackets((qb) => {
           qb.where('spk-operational.spk_number ILIKE :search', {
             search: `%${paginationOptions.search}%`,
-          }).orWhere('site.code ILIKE :searchSite', {
-            searchSite: `%${paginationOptions.search}%`,
           });
         }),
       );

@@ -320,4 +320,12 @@ class Invoices {
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
   approve_date: Date;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  submit_amount: number;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
+  approve_amount: number;
 }

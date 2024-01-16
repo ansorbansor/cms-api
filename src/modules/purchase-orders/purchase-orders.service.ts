@@ -57,20 +57,6 @@ export class PurchaseOrderService {
       for (const data of saveInvoice) {
         data['user_id'] = user_id;
         data['purchase_order_id'] = po.id;
-
-        data['submit_amount'] =
-          data.submit_date != null &&
-          moment(new Date(data.submit_date)).format('YYYY-MM-D') !=
-            'Invalid date'
-            ? po.unit_price_1
-            : 0;
-
-        data['approve_amount'] =
-          data.approve_date != null &&
-          moment(new Date(data.approve_date)).format('YYYY-MM-D') !=
-            'Invalid date'
-            ? po.unit_price_1
-            : 0;
       }
 
       await this.purchaseOrderInvoiceRepository.save(saveInvoice);
@@ -214,49 +200,8 @@ export class PurchaseOrderService {
     if (updatePurchaseOrderDto.invoices) {
       for (const inv of updatePurchaseOrderDto.invoices) {
         if (inv.id) {
-          let submitAmount = 0;
-          let approveAmount = 0;
-
-          if (
-            inv.submit_date != null &&
-            moment(new Date(inv.submit_date)).format('YYYY-MM-D') !=
-              'Invalid date'
-          ) {
-            submitAmount = updatedDataPO.unit_price_1;
-          }
-
-          if (
-            inv.approve_date != null &&
-            moment(new Date(inv.approve_date)).format('YYYY-MM-D') !=
-              'Invalid date'
-          ) {
-            approveAmount = updatedDataPO.unit_price_1;
-          }
-
-          inv.approve_amount = approveAmount;
-          inv.submit_amount = submitAmount;
-
           await this.purchaseOrderInvoiceRepository.update(inv.id, inv);
         } else {
-          let submitAmount = 0;
-          let approveAmount = 0;
-
-          if (
-            inv.submit_date != null &&
-            moment(new Date(inv.submit_date)).format('YYYY-MM-D') !=
-              'Invalid date'
-          ) {
-            submitAmount = updatedDataPO.unit_price_1;
-          }
-
-          if (
-            inv.approve_date != null &&
-            moment(new Date(inv.approve_date)).format('YYYY-MM-D') !=
-              'Invalid date'
-          ) {
-            approveAmount = updatedDataPO.unit_price_1;
-          }
-
           insertedInvoice.push({
             invoice_number: inv.invoice_number,
             invoice_date: inv.invoice_date,
@@ -270,8 +215,8 @@ export class PurchaseOrderService {
             user_id: user.id,
             submit_date: inv.submit_date,
             approve_date: inv.approve_date,
-            submit_amount: submitAmount,
-            approve_amount: approveAmount,
+            submit_amount: inv.submit_amount,
+            approve_amount: inv.approve_amount,
           });
         }
       }

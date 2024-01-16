@@ -200,19 +200,44 @@ export class ExportService {
   ) {
     const query = this.spkRepository
       .createQueryBuilder('spk')
-      .leftJoinAndSelect('spk.region', 'region')
-      .leftJoinAndSelect('spk.transportation', 'transportation')
+      .withDeleted()
+      .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL')
+      .leftJoinAndSelect(
+        'spk.transportation',
+        'transportation',
+        'transportation.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
-      .leftJoinAndSelect('spk.site', 'site')
-      .leftJoinAndSelect('spk.area', 'area')
-      .leftJoinAndSelect('spk.po', 'po')
-      .leftJoinAndSelect('site.sitePO', 'sitePO')
-      .leftJoinAndSelect('sitePO.project', 'project')
-      .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
+      .leftJoinAndSelect('spk.site', 'site', 'site.deleted_at IS NULL')
+      .leftJoinAndSelect('spk.area', 'area', 'area.deleted_at IS NULL')
+      .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
+      .leftJoinAndSelect('site.sitePO', 'sitePO', 'sitePO.deleted_at IS NULL')
+      .leftJoinAndSelect(
+        'sitePO.project',
+        'project',
+        'project.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk.inhouse_team',
+        'inhouse_team',
+        'inhouse_team.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
-      .leftJoinAndSelect('userInhouse.employeePosition', 'employeePosition')
-      .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
-      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
+      .leftJoinAndSelect(
+        'userInhouse.employeePosition',
+        'employeePosition',
+        'employeePosition.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk.distance_to_site_file',
+        'distance_to_site_file',
+        'distance_to_site_file.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk.cost_evidences',
+        'cost_evidences',
+        'cost_evidences.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('spk.created_by_user', 'created_by_user')
       .leftJoinAndSelect('spk.approved_by_user', 'approved_by_user')
       .leftJoinAndSelect(
@@ -221,7 +246,13 @@ export class ExportService {
       )
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
       .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user')
-      .leftJoinAndSelect('spk.category', 'category');
+      .leftJoinAndSelect(
+        'spk.category',
+        'category',
+        'category.deleted_at IS NULL',
+      );
+
+    query.where('spk.deleted_at IS NULL');
 
     if (search) {
       query.andWhere('spk.spk_number ILIKE :search', {
@@ -290,7 +321,7 @@ export class ExportService {
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Export Data Pengguna`,
+      description: `Export Data SPK`,
       ip: ip,
     });
 

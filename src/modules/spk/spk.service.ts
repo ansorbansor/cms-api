@@ -373,13 +373,26 @@ export class SPKService {
   ) {
     const data = this.spkRepository
       .createQueryBuilder('spk')
-      .leftJoinAndSelect('spk.po', 'po')
+      .withDeleted()
+      .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
       .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
-      .leftJoinAndSelect('spk.site', 'site')
-      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
-      .leftJoinAndSelect('spk.region', 'region');
+      .leftJoinAndSelect('spk.site', 'site', 'site.deleted_at IS NULL')
+      .leftJoinAndSelect(
+        'spk.cost_evidences',
+        'cost_evidences',
+        'cost_evidences.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
+
+    if (
+      currentUser.employeePosition.code != RoleEnum.PM &&
+      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+    ) {
+      data.where('spk.deleted_at IS NULL');
+    }
+
     let filterRegion = true;
 
     if (currentUser.employeePosition.code == RoleEnum.PM) {
@@ -489,7 +502,11 @@ export class SPKService {
     } else {
       filterRegion = false;
 
-      data.leftJoinAndSelect('spk.inhouse_team', 'inhouse_team');
+      data.leftJoinAndSelect(
+        'spk.inhouse_team',
+        'inhouse_team',
+        'inhouse_team.deleted_at IS NULL',
+      );
 
       data.andWhere(
         new Brackets((qb) => {
@@ -580,16 +597,33 @@ export class SPKService {
   async findOne(fields: EntityCondition<SPK>, user?: User) {
     const data = await this.spkRepository
       .createQueryBuilder('spk')
-      .leftJoinAndSelect('spk.region', 'region')
-      .leftJoinAndSelect('spk.transportation', 'transportation')
+      .withDeleted()
+      .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL')
+      .leftJoinAndSelect(
+        'spk.transportation',
+        'transportation',
+        'transportation.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
-      .leftJoinAndSelect('spk.site', 'site')
-      .leftJoinAndSelect('spk.area', 'area')
-      .leftJoinAndSelect('spk.po', 'po')
-      .leftJoinAndSelect('spk.inhouse_team', 'inhouse_team')
-      .leftJoinAndSelect('spk.customer', 'customer')
+      .leftJoinAndSelect('spk.site', 'site', 'site.deleted_at IS NULL')
+      .leftJoinAndSelect('spk.area', 'area', 'area.deleted_at IS NULL')
+      .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
+      .leftJoinAndSelect(
+        'spk.inhouse_team',
+        'inhouse_team',
+        'inhouse_team.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk.customer',
+        'customer',
+        'customer.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
-      .leftJoinAndSelect('userInhouse.employeePosition', 'employeePosition')
+      .leftJoinAndSelect(
+        'userInhouse.employeePosition',
+        'employeePosition',
+        'employeePosition.deleted_at IS NULL',
+      )
       .leftJoinAndSelect('spk.distance_to_site_file', 'distance_to_site_file')
       .leftJoinAndSelect('spk.km_range_start_file', 'km_range_start_file')
       .leftJoinAndSelect('spk.km_range_end_file', 'km_range_end_file')
@@ -597,7 +631,11 @@ export class SPKService {
       .leftJoinAndSelect('spk.check_in_file', 'check_in_file')
       .leftJoinAndSelect('spk.check_out_file', 'check_out_file')
       .leftJoinAndSelect('spk.transfer_proof_file', 'transfer_proof_file')
-      .leftJoinAndSelect('spk.cost_evidences', 'cost_evidences')
+      .leftJoinAndSelect(
+        'spk.cost_evidences',
+        'cost_evidences',
+        'cost_evidences.deleted_at IS NULL',
+      )
       .leftJoinAndSelect(
         'cost_evidences.cost_evidence_photo_file',
         'cost_evidence_photo_file',
@@ -610,7 +648,11 @@ export class SPKService {
       )
       .leftJoinAndSelect('spk.paid_by_user', 'paid_by_user')
       .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user')
-      .leftJoinAndSelect('spk.category', 'category')
+      .leftJoinAndSelect(
+        'spk.category',
+        'category',
+        'category.deleted_at IS NULL',
+      )
       .where(fields)
       .getOne();
 

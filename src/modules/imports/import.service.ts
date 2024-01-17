@@ -132,15 +132,15 @@ export class ImportService {
               inserUser.region = value['region 1'];
               inserUser.gm_region = value['gm region'];
               inserUser.company = value['subcont company'];
-              inserUser.category = value['category'];
+              inserUser.category = value['position'];
               inserUser.name = value['resource name'];
               inserUser.nik = value['id number (ktp)'];
               inserUser.email = value['email'];
               inserUser.phone = value['phone number']
                 ? value['phone number'].replace(/[^0-9]/g, '')
                 : null;
-              inserUser.employee_position_id = value['position']
-                ? (await this.getEmployeePositionByName(value['position'])).id
+              inserUser.employee_position_id = value['hak access']
+                ? (await this.getEmployeePositionByName(value['hak access'])).id
                 : null;
               inserUser.team_number = value['team number'];
               inserUser.uniportal_account = value['uniportal account'];
@@ -946,8 +946,8 @@ export class ImportService {
     }
 
     //check category
-    if (excelData['category'] && dbData.category != excelData['category']) {
-      updateData.category = excelData['category'];
+    if (excelData['position'] && dbData.category != excelData['position']) {
+      updateData.category = excelData['position'];
     }
 
     //check name
@@ -972,9 +972,9 @@ export class ImportService {
     }
 
     //check position
-    if (excelData['position']) {
+    if (excelData['hak access']) {
       const position = await this.getEmployeePositionByName(
-        excelData['position'],
+        excelData['hak access'],
       );
       if (dbData.employee_position_id != position.id) {
         updateData.employee_position_id = position.id;

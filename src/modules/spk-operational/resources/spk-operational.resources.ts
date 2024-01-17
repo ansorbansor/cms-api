@@ -57,6 +57,8 @@ export const SPKOperationalResourceDetail = (
   return {
     id: spk.id,
     spk_number: spk.spk_number,
+    spk_name: spk.name ? spk.name : '-',
+    spk_description: spk.description ? spk.description : '-',
     spk_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     spk_status:
       spk.status != null && spk.status != undefined

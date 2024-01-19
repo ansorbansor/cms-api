@@ -63,6 +63,13 @@ export class UpdateSPKOperationalDTO {
   @IsOptional()
   remark_superadmin: string;
 
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Validate(IsExist, ['Customer', 'id'], {
+    message: 'Customer tidak ditemukan',
+  })
+  customer_id: number;
+
   status: number;
   is_over_budget: boolean;
 }

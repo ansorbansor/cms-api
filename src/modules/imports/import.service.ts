@@ -294,7 +294,7 @@ export class ImportService {
           poi.purchase_order_id = po.id`,
         );
 
-        const rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
+        let rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
           Object.keys(row).reduce((obj, key) => {
             obj[key.trim().toLowerCase()] = isString(row[key])
               ? row[key].trim()
@@ -303,7 +303,23 @@ export class ImportService {
           }, {}),
         );
 
-        console.log('done rowData');
+        console.log(`done rowData, total : ${rowData.length}`);
+
+        //filter not empty data
+        rowData = rowData.filter((value) => {
+          return (
+            value['area'] != '' &&
+            value['area'] != null &&
+            value['site code'] != '' &&
+            value['site code'] != null &&
+            value['region'] != '' &&
+            value['region'] != null &&
+            value['customer'] != '' &&
+            value['customer'] != null
+          );
+        });
+
+        console.log(`size rowData after filter : ${rowData.length}`);
 
         const updateDataPOList = [];
         const deletedId = [];
@@ -311,6 +327,7 @@ export class ImportService {
 
         //check all rows
         for (const [index, value] of rowData.entries()) {
+          console.log(`checking unique id row ${index} of ${rowData.length}`);
           if (
             value['unique id'] != null &&
             value['unique id'] != undefined &&
@@ -345,7 +362,7 @@ export class ImportService {
           rowData.splice(element, 1);
         });
 
-        console.log(deletedId);
+        console.log(`deleted id : ${deletedId}`);
 
         if (deletedId.length > 0) {
           const placeholders = deletedId
@@ -360,7 +377,7 @@ export class ImportService {
         const updateDataPOExistingInvoiceList = [];
         const insertedDataPOExistingInvoiceList = [];
 
-        for (const [_, value] of rowData.entries()) {
+        for (const [index, value] of rowData.entries()) {
           let uniqueId = '';
 
           if (
@@ -373,6 +390,8 @@ export class ImportService {
 
           //check if new PO
           if (uniqueId == '' || uniqueId == null) {
+            console.log(`checking new PO row ${index} of ${rowData.length}`);
+
             const insertPO = new PurchaseOrder();
             insertPO.user_id = user.id;
             insertPO.cc = value['cc'];
@@ -601,11 +620,15 @@ export class ImportService {
             }
 
             if (insertedInvoice.length > 0) {
+              console.log(`start insert po total ${insertedInvoice.length}`);
               await this.poiRepository.save(insertedInvoice, {
                 chunk: 1000,
               });
             }
           } else {
+            console.log(
+              `checking existing PO row ${index} of ${rowData.length}`,
+            );
             const indexDataExisting = poData.findIndex(
               (item) => item.id == uniqueId,
             );
@@ -743,7 +766,11 @@ export class ImportService {
 
         //update data PO
         if (updateDataPOList.length > 0) {
+          let ipo = 0;
           for (const element of updateDataPOList) {
+            ipo++;
+            console.log(`update PO ${ipo} of ${updateDataPOList.length}`);
+
             await this.poRepository.update(
               {
                 id: element.id,
@@ -755,7 +782,12 @@ export class ImportService {
 
         //update data PO Invoice
         if (updateDataPOExistingInvoiceList.length > 0) {
+          let ipo = 0;
           for (const element of updateDataPOExistingInvoiceList) {
+            ipo++;
+            console.log(
+              `update Invoice PO ${ipo} of ${updateDataPOExistingInvoiceList.length}`,
+            );
             await this.poiRepository.update(
               {
                 id: element.id,
@@ -767,6 +799,9 @@ export class ImportService {
 
         //insert new data PO Invoice
         if (insertedDataPOExistingInvoiceList.length > 0) {
+          console.log(
+            `insert PO invoice total ${insertedDataPOExistingInvoiceList.length}`,
+          );
           await this.poiRepository.save(insertedDataPOExistingInvoiceList, {
             chunk: 1000,
           });

@@ -73,6 +73,7 @@ export class ImportService {
   pendingTypeData = null;
   pdData = null;
   employeePositionData = null;
+  userData = null;
 
   async importUser(file, user: User, ip: string) {
     if (!file) {
@@ -285,7 +286,10 @@ export class ImportService {
           poi.payment_amount,
           poi.deduction_amount,
           poi.unit_price,
-          po.cc
+          po.cc,
+          poi.submit_amount,
+          poi.approve_amount,
+          poi.position
         FROM 
           purchase_order_invoices poi, purchase_orders po
         WHERE 
@@ -294,14 +298,19 @@ export class ImportService {
           poi.purchase_order_id = po.id`,
         );
 
-        let rowData = xlsx.utils.sheet_to_json(worksheet).map((row) =>
-          Object.keys(row).reduce((obj, key) => {
-            obj[key.trim().toLowerCase()] = isString(row[key])
-              ? row[key].trim()
-              : row[key];
-            return obj;
-          }, {}),
-        );
+        let rowData = xlsx.utils
+          .sheet_to_json(worksheet, {
+            raw: false,
+            dateNF: 'yyyy-mm-dd',
+          })
+          .map((row) =>
+            Object.keys(row).reduce((obj, key) => {
+              obj[key.trim().toLowerCase()] = isString(row[key])
+                ? row[key].trim()
+                : row[key];
+              return obj;
+            }, {}),
+          );
 
         console.log(`done rowData, total : ${rowData.length}`);
 
@@ -512,6 +521,53 @@ export class ImportService {
             insertPO.budget_percentage = value['budget percentage']
               ? value['budget percentage']
               : 0;
+            insertPO.ny_invoice = value['ny invoice'] ? value['ny invoice'] : 0;
+            insertPO.ny_invoice_date = moment(
+              value['ny invoice date'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['ny invoice date']
+              : null;
+            insertPO.piutang = value['piutang'] ? value['piutang'] : 0;
+            insertPO.priority_site_list = value['priority site list']
+              ? value['priority site list']
+              : null;
+            insertPO.amount_priority = value['amount priority']
+              ? value['amount priority']
+              : 0;
+            insertPO.achievement_priority = value['achievement priority']
+              ? value['achievement priority']
+              : 0;
+            insertPO.actual_work_date = moment(
+              value['actual bulan pengerjaan'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['actual bulan pengerjaan']
+              : null;
+            insertPO.actual_work_amount = value['actual nilai pengerjaan']
+              ? value['actual nilai pengerjaan']
+              : 0;
+            insertPO.actual_work_status = value[
+              'status actual bulan pengerjaan'
+            ]
+              ? value['status actual bulan pengerjaan']
+              : null;
+            insertPO.remark_highlight_recon = value['remark highlight rekon']
+              ? value['remark highlight rekon']
+              : null;
+
+            const pic = await this.getUserByName(value['pic']);
+
+            if (pic != null && pic != undefined) {
+              insertPO.pic = pic.id;
+            }
+
+            insertPO.plan_date = moment(
+              value['plan date'],
+              moment.ISO_8601,
+            ).isValid()
+              ? value['plan date']
+              : null;
 
             //insert new PO to DB
             const newPO = await this.poRepository.save(insertPO);
@@ -573,14 +629,9 @@ export class ImportService {
                     ).isValid()
                       ? value[`ac${invNo} submit date`]
                       : null,
-                  submit_amount:
-                    value[`ac${invNo} submit date`] &&
-                    moment(
-                      value[`ac${invNo} submit date`],
-                      moment.ISO_8601,
-                    ).isValid()
-                      ? insertPO.unit_price_1
-                      : 0,
+                  submit_amount: value[`ac${invNo} submit amount`]
+                    ? value[`ac${invNo} submit amount`]
+                    : 0,
                   approve_date:
                     value[`ac${invNo} approve date`] &&
                     moment(
@@ -589,18 +640,14 @@ export class ImportService {
                     ).isValid()
                       ? value[`ac${invNo} approve date`]
                       : null,
-                  approve_amount:
-                    value[`ac${invNo} approve date`] &&
-                    moment(
-                      value[`ac${invNo} approve date`],
-                      moment.ISO_8601,
-                    ).isValid()
-                      ? insertPO.unit_price_1
-                      : 0,
+                  approve_amount: value[`ac${invNo} approve amount`]
+                    ? value[`ac${invNo} approve amount`]
+                    : 0,
+                  position: invNo,
                 };
 
                 if (inv.approve_date != null && inv.approve_date != '') {
-                  totalAcceptance += inv.approve_amount;
+                  totalAcceptance += Number(inv.approve_amount);
                 }
 
                 insertedInvoice.push(inv);
@@ -695,33 +742,21 @@ export class ImportService {
                     ? value[`ac${invNo} unit price`]
                     : 0,
                   submit_date: value[`ac${invNo} submit date`],
-                  submit_amount:
-                    value[`ac${invNo} submit date`] &&
-                    moment(
-                      value[`ac${invNo} submit date`],
-                      moment.ISO_8601,
-                    ).isValid()
-                      ? value['unit price 1 (100/60/70/80)']
-                        ? value['unit price 1 (100/60/70/80)']
-                        : 0
-                      : 0,
+                  submit_amount: value[`ac${invNo} submit amount`]
+                    ? value[`ac${invNo} submit amount`]
+                    : 0,
                   approve_date: value[`ac${invNo} approve date`],
-                  approve_amount:
-                    value[`ac${invNo} approve date`] &&
-                    moment(
-                      value[`ac${invNo} approve date`],
-                      moment.ISO_8601,
-                    ).isValid()
-                      ? value['unit price 1 (100/60/70/80)']
-                        ? value['unit price 1 (100/60/70/80)']
-                        : 0
-                      : 0,
+                  approve_amount: value[`ac${invNo} approve amount`]
+                    ? value[`ac${invNo} approve amount`]
+                    : 0,
+                  position: invNo,
                 };
 
                 const indexDataInvoiceExisting = poInvoiceData.findIndex(
                   (item) =>
                     item.invoice_number == inv.invoice_number &&
-                    item.po_id == inv.purchase_order_id,
+                    item.po_id == inv.purchase_order_id &&
+                    (item.position == inv.position || item.position == null),
                 );
 
                 if (indexDataInvoiceExisting > -1) {
@@ -745,7 +780,7 @@ export class ImportService {
                 }
 
                 if (inv.approve_date != null && inv.approve_date != '') {
-                  totalAcceptance += inv.approve_amount;
+                  totalAcceptance += Number(inv.approve_amount);
                 }
               }
             }
@@ -926,14 +961,12 @@ export class ImportService {
 
     //check submit amount
     if (
-      (dbData.submit_date &&
-        moment(dbData.submit_date).format('YYYY-MM-D') !=
-          moment(excelData.submit_date).format('YYYY-MM-D')) ||
-      (excelData.submit_date != null &&
-        excelData.submit_date != '' &&
-        excelData['unit price 1 (100/60/70/80)'] != dbData.submit_amount)
+      excelData.submit_amount != null &&
+      dbData.submit_amount != excelData.submit_amount
     ) {
-      updateData.submit_amount = excelData.submit_amount;
+      updateData.submit_amount = isNaN(Number(excelData.submit_amount))
+        ? 0
+        : Number(excelData.submit_amount);
     }
 
     //check approve date
@@ -947,14 +980,19 @@ export class ImportService {
 
     //check approve amount
     if (
-      (dbData.approve_date &&
-        moment(dbData.approve_date).format('YYYY-MM-D') !=
-          moment(excelData.approve_date).format('YYYY-MM-D')) ||
-      (excelData.approve_date != null &&
-        excelData.approve_date != '' &&
-        excelData['unit price 1 (100/60/70/80)'] != dbData.approve_amount)
+      excelData.approve_amount != null &&
+      dbData.approve_amount != excelData.approve_amount
     ) {
-      updateData.approve_amount = excelData.approve_amount;
+      updateData.approve_amount = isNaN(Number(excelData.approve_amount))
+        ? 0
+        : Number(excelData.approve_amount);
+    }
+
+    //check position
+    if (excelData.position != null && dbData.position != excelData.position) {
+      updateData.position = isNaN(Number(excelData.position))
+        ? 0
+        : Number(excelData.position);
     }
 
     return updateData;
@@ -1563,6 +1601,142 @@ export class ImportService {
       }
     }
 
+    //check ny invoice
+    if (
+      excelData['ny invoice'] != null &&
+      dbData.ny_invoice != excelData['ny invoice']
+    ) {
+      const intVal = isNaN(Number(excelData['ny invoice']))
+        ? 0
+        : Number(excelData['ny invoice']);
+
+      if (dbData.ny_invoice != intVal) {
+        updateData.ny_invoice = intVal;
+      }
+    }
+
+    //check ny invoice date
+    if (
+      excelData['ny invoice date'] &&
+      moment(excelData['ny invoice date'], moment.ISO_8601).isValid() &&
+      moment(dbData.ny_invoice_date).format('YYYY-MM-D') !=
+        moment(excelData['ny invoice date']).format('YYYY-MM-D')
+    ) {
+      updateData.ny_invoice_date = excelData['ny invoice date'];
+    }
+
+    //check piutang
+    if (
+      excelData['piutang'] != null &&
+      dbData.piutang != excelData['piutang']
+    ) {
+      const intVal = isNaN(Number(excelData['piutang']))
+        ? 0
+        : Number(excelData['piutang']);
+
+      if (dbData.piutang != intVal) {
+        updateData.piutang = intVal;
+      }
+    }
+
+    //check priority site list
+    if (
+      excelData['priority site list'] &&
+      dbData.priority_site_list != excelData['priority site list']
+    ) {
+      updateData.priority_site_list = excelData['priority site list'];
+    }
+
+    //check amount priority
+    if (
+      excelData['amount priority'] != null &&
+      dbData.amount_priority != excelData['amount priority']
+    ) {
+      const intVal = isNaN(Number(excelData['amount priority']))
+        ? 0
+        : Number(excelData['amount priority']);
+
+      if (dbData.amount_priority != intVal) {
+        updateData.amount_priority = intVal;
+      }
+    }
+
+    //check achievement priority
+    if (
+      excelData['achievement priority'] != null &&
+      dbData.achievement_priority != excelData['achievement priority']
+    ) {
+      const intVal = isNaN(Number(excelData['achievement priority']))
+        ? 0
+        : Number(excelData['achievement priority']);
+
+      if (dbData.achievement_priority != intVal) {
+        updateData.achievement_priority = intVal;
+      }
+    }
+
+    //check actual bulan pengerjaan
+    if (
+      excelData['actual bulan pengerjaan'] &&
+      moment(excelData['actual bulan pengerjaan'], moment.ISO_8601).isValid() &&
+      moment(dbData.actual_work_date).format('YYYY-MM-D') !=
+        moment(excelData['actual bulan pengerjaan']).format('YYYY-MM-D')
+    ) {
+      // updateData.actual_work_date = excelData['actual bulan pengerjaan'];
+      updateData.actual_work_date = moment(
+        excelData['actual bulan pengerjaan'],
+      ).format('YYYY-MM-D');
+    }
+
+    //check actual nilai pengerjaan
+    if (
+      excelData['actual nilai pengerjaan'] != null &&
+      dbData.actual_work_amount != excelData['actual nilai pengerjaan']
+    ) {
+      const intVal = isNaN(Number(excelData['actual nilai pengerjaan']))
+        ? 0
+        : Number(excelData['actual nilai pengerjaan']);
+
+      if (dbData.actual_work_amount != intVal) {
+        updateData.actual_work_amount = intVal;
+      }
+    }
+
+    //check status actual bulan pengerjaan
+    if (
+      excelData['status actual bulan pengerjaan'] &&
+      dbData.actual_work_status != excelData['status actual bulan pengerjaan']
+    ) {
+      updateData.actual_work_status =
+        excelData['status actual bulan pengerjaan'];
+    }
+
+    //check remark highlight rekon
+    if (
+      excelData['remark highlight rekon'] &&
+      dbData.remark_highlight_recon != excelData['remark highlight rekon']
+    ) {
+      updateData.remark_highlight_recon = excelData['remark highlight rekon'];
+    }
+
+    //check pic
+    if (excelData['pic']) {
+      const pic = await this.getUserByName(excelData['pic']);
+      if (pic != null && pic != undefined && dbData.pic != pic.id) {
+        updateData.pic = pic.id;
+      }
+    }
+
+    //check plan date
+    if (
+      excelData['plan date'] &&
+      moment(excelData['plan date'], moment.ISO_8601).isValid() &&
+      moment(dbData.plan_date).format('YYYY-MM-D') !=
+        moment(excelData['plan date']).format('YYYY-MM-D')
+    ) {
+      updateData.plan_date = excelData['plan date'];
+    }
+
     return updateData;
   }
 
@@ -1754,6 +1928,14 @@ export class ImportService {
     return site;
   }
 
+  async getUserByName(name: string) {
+    const user = this.userData.find((data) => {
+      return data.name.toLowerCase() == name.toLowerCase();
+    });
+
+    return user;
+  }
+
   async getExistingMasterData() {
     this.regionData = await getManager().query(
       `SELECT * FROM regions WHERE deleted_at IS NULL`,
@@ -1797,6 +1979,10 @@ export class ImportService {
 
     this.pdData = await getManager().query(
       `SELECT * FROM pd WHERE deleted_at IS NULL`,
+    );
+
+    this.userData = await getManager().query(
+      `SELECT * FROM users WHERE deleted_at IS NULL`,
     );
   }
 }

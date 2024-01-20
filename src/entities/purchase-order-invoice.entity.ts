@@ -49,6 +49,9 @@ export class PurchaseOrderInvoice extends EntityHelper {
   @Column()
   approve_amount?: number;
 
+  @Column()
+  position?: number;
+
   @ManyToOne(() => PurchaseOrder, {})
   @JoinColumn({ name: 'purchase_order_id' })
   po?: PurchaseOrder;

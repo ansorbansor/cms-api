@@ -261,7 +261,9 @@ export class SPKOperationalService {
       .createQueryBuilder('spk-operational')
       .leftJoinAndSelect('spk-operational.pay_to_user', 'pay_to_user')
       .leftJoinAndSelect('spk-operational.cost_evidences', 'cost_evidences')
-      .leftJoinAndSelect('spk-operational.region', 'region');
+      .leftJoinAndSelect('spk-operational.region', 'region')
+      .leftJoinAndSelect('spk-operational.category', 'category')
+      .leftJoinAndSelect('spk-operational.request_type', 'request_type');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
     let filterRegion = true;

@@ -47,6 +47,14 @@ export const SPKOperationalResource = (spk: SPKOperational): any => {
           : null,
     },
     is_deleted: spk.deleted_at != null,
+    category: {
+      id: spk.category ? spk.category.id : null,
+      name: spk.category ? spk.category.name : null,
+    },
+    request_type: {
+      id: spk.request_type ? spk.request_type.id : null,
+      name: spk.request_type ? spk.request_type.name : null,
+    },
   };
 };
 

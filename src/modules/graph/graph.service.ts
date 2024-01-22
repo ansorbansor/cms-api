@@ -580,8 +580,8 @@ export class GraphService {
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
-      data.andWhere('po.actual_work_status ILIKE %:actualWorkStatus%', {
-        actualWorkStatus: actualWorkStatus,
+      data.andWhere('po.actual_work_status ILIKE :actualWorkStatus', {
+        actualWorkStatus: `%${actualWorkStatus}%`,
       });
     }
 

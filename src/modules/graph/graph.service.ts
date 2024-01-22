@@ -10,7 +10,6 @@ import {
 } from './resources/graph.resources';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { SPKStatus } from 'src/utils/enums';
-import { find } from 'rxjs';
 
 @Injectable()
 export class GraphService {
@@ -27,6 +26,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -58,6 +58,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -100,6 +108,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -131,6 +140,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -173,6 +190,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -204,6 +222,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -238,6 +264,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -269,6 +296,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -311,6 +346,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -342,6 +378,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -420,6 +464,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
@@ -451,6 +496,14 @@ export class GraphService {
         ' AND purchase_orders.line_po_status = $' +
         (whereParam.length + 1);
       whereParam.push(linePOStatus);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND purchase_orders.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
     }
 
     if (customerId != undefined && customerId != null && customerId != 0) {
@@ -494,6 +547,7 @@ export class GraphService {
     year: string,
     linePOStatus: string,
     customerId: number,
+    actualWorkStatus: string,
   ) {
     const data = this.poRepository
       .createQueryBuilder('po')
@@ -522,6 +576,12 @@ export class GraphService {
     if (linePOStatus != '' && linePOStatus != null) {
       data.andWhere('po.line_po_status = :linePOStatus', {
         linePOStatus: linePOStatus,
+      });
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      data.andWhere('po.actual_work_status ILIKE %:actualWorkStatus%', {
+        actualWorkStatus: actualWorkStatus,
       });
     }
 
@@ -944,5 +1004,20 @@ export class GraphService {
         value: Number(liability),
       },
     ];
+  }
+
+  // Utils
+  async getActualWorkStatus() {
+    const actualWorkAmountPerMonth = await getManager().query(
+      `SELECT LOWER(actual_work_status) laws FROM purchase_orders WHERE deleted_at IS NULL GROUP BY laws`,
+    );
+
+    const returnedData = actualWorkAmountPerMonth.map((value) => {
+      return {
+        name: value.laws,
+      };
+    });
+
+    return returnedData;
   }
 }

@@ -37,6 +37,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
       await this.graphService.getPOCount(
@@ -46,6 +47,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -62,6 +64,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
       await this.graphService.getPOLineAmount(
@@ -71,6 +74,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -87,6 +91,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponseListWithoutPaginate(
       await this.graphService.getPOCountPerStatus(
@@ -96,6 +101,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -112,6 +118,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
       await this.graphService.getActualWorkAmountSum(
@@ -121,6 +128,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -137,6 +145,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
       await this.graphService.getContractAssetSum(
@@ -146,6 +155,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -162,6 +172,7 @@ export class GraphController {
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
       await this.graphService.getActualWorkAmountPerMonth(
@@ -171,6 +182,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -189,6 +201,7 @@ export class GraphController {
     @Query('customer_id') customerId: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponseList(
       await this.graphService.getOrderLog(
@@ -203,6 +216,7 @@ export class GraphController {
         year,
         linePOStatus,
         customerId,
+        actualWorkStatus,
       ),
       'success',
     );
@@ -312,6 +326,17 @@ export class GraphController {
   ) {
     return successResponse(
       await this.graphService.getLiability(status, regionId, month, year),
+      'success',
+    );
+  }
+
+  // Utils
+  @Get('utils/actual-work-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getActualWorkStatus() {
+    return successResponse(
+      await this.graphService.getActualWorkStatus(),
       'success',
     );
   }

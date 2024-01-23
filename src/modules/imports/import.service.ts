@@ -316,16 +316,7 @@ export class ImportService {
 
         //filter not empty data
         rowData = rowData.filter((value) => {
-          return (
-            value['area'] != '' &&
-            value['area'] != null &&
-            value['site code'] != '' &&
-            value['site code'] != null &&
-            value['region'] != '' &&
-            value['region'] != null &&
-            value['customer'] != '' &&
-            value['customer'] != null
-          );
+          return value['cc'] != '' && value['cc'] != null;
         });
 
         console.log(`size rowData after filter : ${rowData.length}`);

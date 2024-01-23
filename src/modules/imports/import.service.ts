@@ -1920,6 +1920,10 @@ export class ImportService {
   }
 
   async getUserByName(name: string) {
+    if (name == undefined || name == null) {
+      return null;
+    }
+
     const user = this.userData.find((data) => {
       return data.name.toLowerCase() == name.toLowerCase();
     });

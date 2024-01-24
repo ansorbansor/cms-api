@@ -38,6 +38,7 @@ export class CustomerService {
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data = this.customerRepository.createQueryBuilder('customer');
+    data.innerJoin('customer.customerPO', 'customerPO');
 
     if (paginationOptions.search) {
       data.andWhere('customer.name ILIKE :search', {

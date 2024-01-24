@@ -34,6 +34,7 @@ export class AreaService {
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data = this.areaRepository.createQueryBuilder('area');
+    data.innerJoin('area.areaPO', 'areaPO');
 
     if (paginationOptions.search) {
       data.andWhere('area.name ILIKE :search', {

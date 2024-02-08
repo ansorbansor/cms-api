@@ -186,7 +186,7 @@ export class ImportService {
                   : null;
 
               const salt = await bcrypt.genSalt();
-              inserUser.password = await bcrypt.hash('Password123', salt);
+              inserUser.password = await bcrypt.hash('Biosron123', salt);
 
               inserUser.bank = value['nama bank'];
               inserUser.bank_account_number = value['Nomor Rekening'];

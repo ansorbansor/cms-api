@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsArray, IsOptional, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 
@@ -12,9 +13,9 @@ export class UpdateSPKOperationalDTO {
 
   @ApiProperty({ example: 'Test' })
   @IsOptional()
-  @Validate(IsExist, ['SPKOperationalRequestType', 'id'], {
-    message: 'spk_operational_request_type_id tidak ditemukan',
-  })
+  @Transform(({ value }) =>
+    value == '' || value == 'null' || value == null ? 0 : value,
+  )
   spk_operational_request_type_id?: number;
 
   @ApiProperty({ example: 'Test' })

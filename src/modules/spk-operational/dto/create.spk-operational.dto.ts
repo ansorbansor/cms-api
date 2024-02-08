@@ -15,11 +15,10 @@ export class CreateSPKOperationalDTO {
   region_id?: number;
 
   @ApiProperty({ example: 'Test' })
-  @IsNotEmpty({ message: 'spk_operational_request_type_id tidak boleh kosong' })
-  @Validate(IsExist, ['SPKOperationalRequestType', 'id'], {
-    message: 'spk_operational_request_type_id tidak ditemukan',
-  })
-  @Transform(({ value }) => (value == '' || value == null ? 0 : value))
+  @IsOptional()
+  @Transform(({ value }) =>
+    value == '' || value == 'null' || value == null ? 0 : value,
+  )
   spk_operational_request_type_id?: number;
 
   @ApiProperty({ example: 'Test' })

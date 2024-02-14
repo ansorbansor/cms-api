@@ -130,7 +130,7 @@ export class ImportService {
               }
             } else {
               const inserUser = new User();
-              inserUser.region = value['region 1'];
+              inserUser.region = value['region office'];
               inserUser.gm_region = value['gm region'];
               inserUser.company = value['subcont company'];
               inserUser.category = value['position'];
@@ -143,9 +143,9 @@ export class ImportService {
               inserUser.employee_position_id = value['hak access']
                 ? (await this.getEmployeePositionByName(value['hak access'])).id
                 : null;
-              inserUser.team_number = value['team number'];
+              inserUser.team_number = value['employee id'];
               inserUser.uniportal_account = value['uniportal account'];
-              inserUser.project = value['project'];
+              inserUser.project = value['join date'];
               inserUser.status =
                 value['employee status'] == 'On Board' ? true : false;
               inserUser.status_description = value['employee status'];
@@ -992,8 +992,11 @@ export class ImportService {
   async validateUserData(excelData: any, dbData: any) {
     const updateData: any = {};
     //check region
-    if (excelData['region 1'] && dbData.region != excelData['region 1']) {
-      updateData.region = excelData['region 1'];
+    if (
+      excelData['region office'] &&
+      dbData.region != excelData['region office']
+    ) {
+      updateData.region = excelData['region office'];
     }
 
     //check gm region
@@ -1047,10 +1050,10 @@ export class ImportService {
 
     //check team number
     if (
-      excelData['team number'] &&
-      dbData.team_number != excelData['team number']
+      excelData['employee id'] &&
+      dbData.team_number != excelData['employee id']
     ) {
-      updateData.team_number = excelData['team number'];
+      updateData.team_number = excelData['employee id'];
     }
 
     //check uniportal account
@@ -1062,8 +1065,8 @@ export class ImportService {
     }
 
     //check project
-    if (excelData['project'] && dbData.project != excelData['project']) {
-      updateData.project = excelData['project'];
+    if (excelData['join date'] && dbData.project != excelData['join date']) {
+      updateData.project = excelData['join date'];
     }
 
     //check employee status

@@ -3,7 +3,7 @@ import * as moment from 'moment';
 
 export const ExportUserResource = (user: User): any => {
   return {
-    'Region 1': user.region,
+    'Region Office': user.region,
     'GM Region': user.gm_region,
     'Subcont Company': user.company,
     Position: user.category,
@@ -12,9 +12,9 @@ export const ExportUserResource = (user: User): any => {
     Email: user.email,
     'Phone Number': user.phone,
     'Hak Access': user.employeePosition ? user.employeePosition.name : null,
-    'Team Number': user.team_number ? user.team_number : 0,
+    'Employee ID': user.team_number ? user.team_number : 0,
     'Uniportal Account': user.uniportal_account,
-    Project: user.project,
+    'Join Date': user.project,
     'Employee Status': user.status_description,
     'PASS ID Number': user.pass_id_number,
     'Cyber Security Status': user.cyber_security_status,

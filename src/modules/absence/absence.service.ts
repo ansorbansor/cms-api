@@ -136,10 +136,10 @@ export class AbsenceService {
     }
 
     if (paginationOptions.start_date && paginationOptions.end_date) {
-      data.andWhere(`absence.created_at >= :start_date`, {
+      data.andWhere(`absence.clock_in >= :start_date`, {
         start_date: `${paginationOptions.start_date}`,
       });
-      data.andWhere(`absence.created_at <= :end_date`, {
+      data.andWhere(`absence.clock_in <= :end_date`, {
         end_date: `${paginationOptions.end_date}`,
       });
     }

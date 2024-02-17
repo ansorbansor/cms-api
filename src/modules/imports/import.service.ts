@@ -147,11 +147,11 @@ export class ImportService {
               inserUser.uniportal_account = value['uniportal account'];
               inserUser.project = value['join date'];
               inserUser.status =
-                value['employee status'] == 'On Board' ? true : false;
-              inserUser.status_description = value['employee status'];
+                value['remark employee status'] == 'On Board' ? true : false;
+              inserUser.status_description = value['remark employee status'];
               inserUser.pass_id_number = value['pass id number'];
               inserUser.cyber_security_status = value['cyber security status'];
-              inserUser.level_iresource = value['level in iresource'];
+              inserUser.level_iresource = value['status karyawan'];
               inserUser.wah_certification_number =
                 value['wah certification number'];
 
@@ -1069,14 +1069,14 @@ export class ImportService {
       updateData.project = excelData['join date'];
     }
 
-    //check employee status
+    //check remark employee status
     if (
-      excelData['employee status'] &&
-      dbData.status_description != excelData['employee status']
+      excelData['remark employee status'] &&
+      dbData.status_description != excelData['remark employee status']
     ) {
       updateData.status =
-        excelData['employee status'] == 'On Board' ? true : false;
-      updateData.status_description = excelData['employee status'];
+        excelData['remark employee status'] == 'On Board' ? true : false;
+      updateData.status_description = excelData['remark employee status'];
     }
 
     //check pass id number
@@ -1095,12 +1095,12 @@ export class ImportService {
       updateData.cyber_security_status = excelData['cyber security status'];
     }
 
-    //check level in iresource
+    //check status karyawan
     if (
-      excelData['level in iresource'] &&
-      dbData.level_iresource != excelData['level in iresource']
+      excelData['status karyawan'] &&
+      dbData.level_iresource != excelData['status karyawan']
     ) {
-      updateData.level_iresource = excelData['level in iresource'];
+      updateData.level_iresource = excelData['status karyawan'];
     }
 
     //check wah certification number

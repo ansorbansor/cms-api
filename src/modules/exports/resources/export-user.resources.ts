@@ -15,10 +15,10 @@ export const ExportUserResource = (user: User): any => {
     'Employee ID': user.team_number ? user.team_number : 0,
     'Uniportal Account': user.uniportal_account,
     'Join Date': user.project,
-    'Employee Status': user.status_description,
+    'Remark Employee Status': user.status_description,
     'PASS ID Number': user.pass_id_number,
     'Cyber Security Status': user.cyber_security_status,
-    'Level in iResource': user.level_iresource,
+    'Status Karyawan': user.level_iresource,
     'WAH Certification Number': user.wah_certification_number,
     'WAH Validation End Date': user.wah_validation_end_date
       ? moment(user.wah_validation_end_date).format('YYYY-MM-DD HH:mm:ss')

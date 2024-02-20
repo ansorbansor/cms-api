@@ -13,6 +13,8 @@ import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
 import { Absence } from 'src/entities/absence.entity';
 import { ExportAbsenceResource } from './resources/export-absence.resources';
+import { UsersService } from '../users/users.service';
+import { RoleEnum } from 'src/utils/enums';
 
 @Injectable()
 export class ExportService {
@@ -26,6 +28,7 @@ export class ExportService {
     @InjectRepository(Absence)
     private absenceRepository: Repository<Absence>,
     private activityLogService: ActivityLogService,
+    private userService: UsersService,
   ) {}
 
   async exportUser(user: User, ip: string, search: string) {
@@ -252,7 +255,13 @@ export class ExportService {
         'category.deleted_at IS NULL',
       );
 
-    query.where('spk.deleted_at IS NULL');
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+    if (
+      currentUser.employeePosition.code != RoleEnum.PM &&
+      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+    ) {
+      query.where('spk.deleted_at IS NULL');
+    }
 
     if (search) {
       query.andWhere('spk.spk_number ILIKE :search', {

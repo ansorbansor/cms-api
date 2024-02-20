@@ -7,7 +7,9 @@ export const ExportSPKResource = (spk: SPK): any => {
     bop_number: spk.spk_number,
     bop_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     bop_status:
-      spk.status != null && spk.status != undefined
+      spk.deleted_at != null
+        ? 'Deleted'
+        : spk.status != null && spk.status != undefined
         ? spk.status == SPKStatus.CREATED
           ? 'Waiting Approval RPM'
           : spk.status == SPKStatus.CREATED_OVER_BUDGET

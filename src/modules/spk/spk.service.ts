@@ -45,29 +45,29 @@ export class SPKService {
     files: Array<Express.Multer.File>,
   ) {
     //Create SPK rules, max spk need evidence <= 3
-    const activeSPKCount = await getManager().query(
-      `SELECT
-        spk.ID
-      FROM
-        spk
-        LEFT JOIN spk_cost_evidences ON spk.ID = spk_cost_evidences.spk_id 
-        AND spk.deleted_at IS NULL 
-        AND spk_cost_evidences.deleted_at IS NULL
-      WHERE
-        spk.status = 4 
-        AND spk.pay_to_user_id = $1 
-      GROUP BY
-        spk.ID
-      HAVING COUNT ( spk_cost_evidences.ID ) = 0`,
-      [createSPKDTO.pay_to_user_id],
-    );
+    // const activeSPKCount = await getManager().query(
+    //   `SELECT
+    //     spk.ID
+    //   FROM
+    //     spk
+    //     LEFT JOIN spk_cost_evidences ON spk.ID = spk_cost_evidences.spk_id
+    //     AND spk.deleted_at IS NULL
+    //     AND spk_cost_evidences.deleted_at IS NULL
+    //   WHERE
+    //     spk.status = 4
+    //     AND spk.pay_to_user_id = $1
+    //   GROUP BY
+    //     spk.ID
+    //   HAVING COUNT ( spk_cost_evidences.ID ) = 0`,
+    //   [createSPKDTO.pay_to_user_id],
+    // );
 
-    if (activeSPKCount && activeSPKCount.length >= 3) {
-      throw failedResponse(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'Terdapat lebih dari 2 BOP aktif, segera selesaikan BOP tersebut',
-      );
-    }
+    // if (activeSPKCount && activeSPKCount.length >= 3) {
+    //   throw failedResponse(
+    //     HttpStatus.UNPROCESSABLE_ENTITY,
+    //     'Terdapat lebih dari 2 BOP aktif, segera selesaikan BOP tersebut',
+    //   );
+    // }
 
     const distanceToSitePhoto = files.find((e) => {
       return e.fieldname == 'distance_to_site_photo';

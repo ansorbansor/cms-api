@@ -50,20 +50,15 @@ export class SPKService {
         spk.ID
       FROM
         spk
-        LEFT JOIN spk_cost_evidences ON spk.ID = spk_cost_evidences.spk_id
-        AND spk.deleted_at IS NULL
-        AND spk_cost_evidences.deleted_at IS NULL
       WHERE
         spk.status = 4
         AND spk.pay_to_user_id = $1
-				AND spk.created_at >= '2024-03-01 00:00:00'
-      GROUP BY
-        spk.ID
-      HAVING COUNT ( spk_cost_evidences.ID ) = 0`,
+        AND spk.deleted_at IS NULL
+				AND spk.created_at >= '2024-03-01 00:00:00'`,
       [createSPKDTO.pay_to_user_id],
     );
 
-    if (activeSPKCount && activeSPKCount.length >= 3) {
+    if (activeSPKCount && activeSPKCount.length >= 2) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
         'Terdapat lebih dari 2 BOP aktif, segera selesaikan BOP tersebut',

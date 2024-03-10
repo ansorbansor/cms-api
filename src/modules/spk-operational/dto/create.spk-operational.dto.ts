@@ -76,4 +76,6 @@ export class CreateSPKOperationalDTO {
 
   @ApiProperty({ example: 'Test' })
   created_by?: number;
+
+  is_over_budget: boolean;
 }

@@ -113,4 +113,27 @@ export class ExportController {
 
     res.download(`${response}`);
   }
+  @Get('spk-operational')
+  @Header('Content-Type', 'text/xlsx')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportSPKOperational(
+    @Res() res: Response,
+    @Request() req,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('search') search: string,
+    @Query('status') status: string,
+  ) {
+    const response = await this.exportService.exportSPKOperational(
+      req.user,
+      req.ip,
+      startDate,
+      endDate,
+      search,
+      status,
+    );
+
+    res.download(`${response}`);
+  }
 }

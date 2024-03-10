@@ -8,10 +8,17 @@ import { ExportController } from './export.controller';
 import { ExportService } from './export.service';
 import { Absence } from 'src/entities/absence.entity';
 import { UsersModule } from '../users/users.module';
+import { SPKOperational } from 'src/entities/spk-operationals.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PurchaseOrder, SPK, Absence]),
+    TypeOrmModule.forFeature([
+      User,
+      PurchaseOrder,
+      SPK,
+      Absence,
+      SPKOperational,
+    ]),
     ActivityLogModule,
     UsersModule,
   ],

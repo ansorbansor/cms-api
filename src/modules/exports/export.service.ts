@@ -15,6 +15,8 @@ import { Absence } from 'src/entities/absence.entity';
 import { ExportAbsenceResource } from './resources/export-absence.resources';
 import { UsersService } from '../users/users.service';
 import { RoleEnum } from 'src/utils/enums';
+import { ExportSPKOperationalResource } from './resources/export-spk-operational.resources';
+import { SPKOperational } from 'src/entities/spk-operationals.entity';
 
 @Injectable()
 export class ExportService {
@@ -27,6 +29,8 @@ export class ExportService {
     private spkRepository: Repository<SPK>,
     @InjectRepository(Absence)
     private absenceRepository: Repository<Absence>,
+    @InjectRepository(SPKOperational)
+    private spkOperationalRepository: Repository<SPKOperational>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
   ) {}
@@ -394,6 +398,135 @@ export class ExportService {
     await this.activityLogService.create({
       user_id: user.id,
       description: `Export Data Absence`,
+      ip: ip,
+    });
+
+    return f;
+  }
+
+  async exportSPKOperational(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+    status: string,
+  ) {
+    const query = this.spkOperationalRepository
+      .createQueryBuilder('spk-operational')
+      .withDeleted()
+      .leftJoinAndSelect(
+        'spk-operational.region',
+        'region',
+        'region.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect('spk-operational.pay_to_user', 'pay_to_user')
+      .leftJoinAndSelect(
+        'spk-operational.area',
+        'area',
+        'area.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk-operational.inhouse_team',
+        'inhouse_team',
+        'inhouse_team.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect('inhouse_team.userInhouse', 'userInhouse')
+      .leftJoinAndSelect(
+        'userInhouse.employeePosition',
+        'employeePosition',
+        'employeePosition.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk-operational.cost_evidences',
+        'cost_evidences',
+        'cost_evidences.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect('spk-operational.created_by_user', 'created_by_user')
+      .leftJoinAndSelect('spk-operational.approved_by_user', 'approved_by_user')
+      .leftJoinAndSelect(
+        'spk-operational.approved_over_budget_by_user',
+        'approved_over_budget_by_user',
+      )
+      .leftJoinAndSelect('spk-operational.paid_by_user', 'paid_by_user')
+      .leftJoinAndSelect('spk-operational.closed_by_user', 'closed_by_user')
+      .leftJoinAndSelect(
+        'spk-operational.category',
+        'category',
+        'category.deleted_at IS NULL',
+      );
+
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+    if (
+      currentUser.employeePosition.code != RoleEnum.PM &&
+      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+    ) {
+      query.where('spk-operational.deleted_at IS NULL');
+    }
+
+    if (search) {
+      query.andWhere('spk-operational.spk_number ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    if (status) {
+      query.andWhere('spk-operational.status = :status', {
+        status: status,
+      });
+    }
+
+    if (startDate && endDate) {
+      query.andWhere(`spk-operational.created_at >= :startDate`, {
+        startDate: startDate,
+      });
+      query.andWhere(`spk-operational.created_at <= :endDate`, {
+        endDate: endDate,
+      });
+    }
+
+    const data = await query.getMany();
+
+    const rows = [];
+
+    data.forEach((d) => {
+      rows.push(ExportSPKOperationalResource(d));
+    });
+
+    rows.forEach((d) => {
+      d.inhouse_team.forEach((element, index) => {
+        d[`inhouse_team_${index + 1}`] = element.name;
+        d[`inhouse_team_position_${index + 1}`] = element.position;
+      });
+      d.cost_evidences.forEach((element, index) => {
+        d[`cost_evidences_${index + 1}`] = element.name;
+        d[`cost_evidences_cost_${index + 1}`] = element.cost;
+      });
+
+      delete d.inhouse_team;
+      delete d.cost_evidences;
+    });
+
+    const XLSX = xlsx;
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
+
+    const f = await new Promise((resolve) => {
+      tmp.file(
+        { mode: 0o644, prefix: 'SPK-Operational-', postfix: '.xlsx' },
+        function _tempFileCreated(err, path) {
+          if (err) throw err;
+
+          XLSX.writeFile(wb, path, { compression: true });
+          resolve(path);
+        },
+      );
+    });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Data SPK`,
       ip: ip,
     });
 

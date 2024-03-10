@@ -21,6 +21,7 @@ import { UsersService } from '../users/users.service';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { SPKOperationalInhouseTeam } from 'src/entities/spk-operational-inhouse-team.entity';
 import { SPKOperationalCostEvidence } from 'src/entities/spk-operationals.cost-evidence.entity';
+import appConfig from 'src/config/app.config';
 
 @Injectable()
 export class SPKOperationalService {
@@ -92,15 +93,15 @@ export class SPKOperationalService {
 
     // totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    // const cashAdvance = Number(createSPKDTO.cash_advance);
+    const cashAdvance = Number(createSPKDTO.cash_advance);
 
-    // if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
-    //   createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
-    //   createSPKDTO.is_over_budget = true;
-    // } else {
-    createSPKDTO.status = SPKStatus.CREATED;
-    //  createSPKDTO.is_over_budget = false;
-    // }
+    if (appConfig().spkOperationMaxBudget > cashAdvance) {
+      createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      createSPKDTO.is_over_budget = true;
+    } else {
+      createSPKDTO.status = SPKStatus.CREATED;
+      createSPKDTO.is_over_budget = false;
+    }
 
     createSPKDTO.created_by = user_id;
 
@@ -186,15 +187,15 @@ export class SPKOperationalService {
 
     // totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    // const cashAdvance = Number(updateSPKDTO.cash_advance);
+    const cashAdvance = Number(updateSPKDTO.cash_advance);
 
-    // if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
-    //   updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
-    //   updateSPKDTO.is_over_budget = true;
-    // } else {
-    //   updateSPKDTO.status = SPKStatus.CREATED;
-    //   updateSPKDTO.is_over_budget = false;
-    // }
+    if (appConfig().spkOperationMaxBudget > cashAdvance) {
+      updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      updateSPKDTO.is_over_budget = true;
+    } else {
+      updateSPKDTO.status = SPKStatus.CREATED;
+      updateSPKDTO.is_over_budget = false;
+    }
 
     if (currentUser.employeePosition?.grant_all_access === false) {
       delete updateSPKDTO.remark_superadmin;
@@ -269,71 +270,30 @@ export class SPKOperationalService {
     let filterRegion = true;
 
     if (currentUser.employeePosition.code == RoleEnum.PM) {
-      //add total spk cash advance
-      data.addSelect(
-        'total_cash_advance.total_cash_advance',
-        'spk_total_cash_advance',
-      );
-      data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
-      data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
-            .from(SPKOperational, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cash_advance',
-        '"total_cash_advance"."s_site_id" = spk.site_id',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cashback)', 'total_cashback')
-            .from(SPKOperational, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cashback',
-        '"total_cashback"."s_site_id" = spk.site_id',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cashout)', 'total_cashout')
-            .from(SPKOperational, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cashout',
-        '"total_cashout"."s_site_id" = spk.site_id',
-      );
-
       //add total po budget / unit price
-      data.addSelect(
-        'total_unit_price.total_unit_price',
-        'spk_total_po_unit_price',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('p.site_id')
-            .addSelect(
-              'SUM(p.unit_price * p.budget_percentage / 100)',
-              'total_unit_price',
-            )
-            .from(PurchaseOrder, 'p')
-            .where("p.status NOT ILIKE '%cancel%'")
-            .groupBy('p.site_id');
-        },
-        'total_unit_price',
-        '"total_unit_price"."p_site_id" = spk.site_id',
-      );
+      // data.addSelect(
+      //   'total_unit_price.total_unit_price',
+      //   'spk_total_po_unit_price',
+      // );
+      // data.leftJoin(
+      //   (qb) => {
+      //     return qb
+      //       .select('p.site_id')
+      //       .addSelect(
+      //         'SUM(p.unit_price * p.budget_percentage / 100)',
+      //         'total_unit_price',
+      //       )
+      //       .from(PurchaseOrder, 'p')
+      //       .where("p.status NOT ILIKE '%cancel%'")
+      //       .groupBy('p.site_id');
+      //   },
+      //   'total_unit_price',
+      //   '"total_unit_price"."p_site_id" = spk.site_id',
+      // );
 
-      data.andWhere(
-        '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
-      );
+      data.andWhere('spk-operational.cash_advance > :maxBudget', {
+        maxBudget: appConfig().spkOperationMaxBudget,
+      });
 
       data.andWhere('spk-operational.status >= :status', {
         status: SPKStatus.APPROVED,
@@ -441,9 +401,43 @@ export class SPKOperationalService {
     }
 
     if (paginationOptions.status) {
-      data.andWhere('spk-operational.status = :status', {
-        status: paginationOptions.status,
-      });
+      const stat = paginationOptions.status;
+      if (stat == SPKStatus.APPROVED) {
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((qb2) => {
+                qb2
+                  .where('spk-operational.status = :status', {
+                    status: SPKStatus.APPROVED,
+                  })
+                  .andWhere('spk-operational.is_over_budget = false');
+              }),
+            ).orWhere('spk-operational.status = :status3', {
+              status3: SPKStatus.APPROVED_OVER_BUDGET,
+            });
+          }),
+        );
+      } else if (stat == SPKStatus.WAITING_APPROVAL_PM) {
+        data.andWhere('spk-operational.status = :status', {
+          status: SPKStatus.APPROVED,
+        });
+        data.andWhere('spk-operational.is_over_budget = true');
+      } else if (stat == SPKStatus.PAID) {
+        data.andWhere('spk-operational.status = :status', {
+          status: SPKStatus.PAID,
+        });
+        data.andWhere('cost_evidences.id IS NOT NULL');
+      } else if (stat == SPKStatus.PAID_NEED_EVIDENCE) {
+        data.andWhere('spk-operational.status = :status', {
+          status: SPKStatus.PAID,
+        });
+        data.andWhere('cost_evidences.id IS NULL');
+      } else {
+        data.andWhere('spk-operational.status = :status', {
+          status: stat,
+        });
+      }
     }
 
     data.orderBy('spk-operational.created_at', 'DESC');
@@ -615,15 +609,15 @@ export class SPKOperationalService {
 
     // totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    // if (
-    //   totalSPKAmount > maxBudgetBySite &&
-    //   exists.status < SPKStatus.APPROVED_OVER_BUDGET
-    // ) {
-    //   throw failedResponse(
-    //     HttpStatus.BAD_REQUEST,
-    //     `SPK over budget belum diapprove`,
-    //   );
-    // }
+    if (
+      exists.cash_advance > appConfig().spkOperationMaxBudget &&
+      exists.status < SPKStatus.APPROVED_OVER_BUDGET
+    ) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK over budget belum diapprove`,
+      );
+    }
 
     const deltaOfSettlement =
       exists.cash_advance - updateSPKSettlementDTO.operation_cost;
@@ -842,9 +836,9 @@ export class SPKOperationalService {
 
     // totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    // if (totalSPKAmount <= maxBudgetBySite) {
-    //   throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);
-    // }
+    if (existingSPK.cash_advance <= appConfig().spkOperationMaxBudget) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);
+    }
 
     await this.spkOperationalRepository.update(id, {
       status: SPKStatus.APPROVED_OVER_BUDGET,

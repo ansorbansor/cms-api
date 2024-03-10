@@ -625,6 +625,19 @@ export class SPKService {
           status: SPKStatus.PAID,
         });
         data.andWhere('cost_evidences.id IS NULL');
+      } else if (
+        stat == SPKStatus.CREATED ||
+        stat == SPKStatus.CREATED_OVER_BUDGET
+      ) {
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where('spk.status = :status', {
+              status: SPKStatus.CREATED,
+            }).orWhere('spk.status = :status3', {
+              status3: SPKStatus.CREATED_OVER_BUDGET,
+            });
+          }),
+        );
       } else {
         data.andWhere('spk.status = :status', {
           status: stat,

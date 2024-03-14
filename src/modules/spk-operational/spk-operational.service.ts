@@ -96,11 +96,11 @@ export class SPKOperationalService {
     const cashAdvance = Number(createSPKDTO.cash_advance);
 
     if (appConfig().spkOperationMaxBudget > cashAdvance) {
-      createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
-      createSPKDTO.is_over_budget = true;
-    } else {
       createSPKDTO.status = SPKStatus.CREATED;
       createSPKDTO.is_over_budget = false;
+    } else {
+      createSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      createSPKDTO.is_over_budget = true;
     }
 
     createSPKDTO.created_by = user_id;

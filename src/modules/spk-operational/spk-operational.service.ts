@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Repository, getManager } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -92,6 +92,27 @@ export class SPKOperationalService {
     // totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
 
     // totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
+
+    //Create SPK rules, max spk need evidence <= 3
+    const activeSPKCount = await getManager().query(
+      `SELECT
+        spk_operationals.ID
+      FROM
+        spk_operationals
+      WHERE
+        spk_operationals.status = 4
+        AND spk_operationals.pay_to_user_id = $1
+        AND spk_operationals.deleted_at IS NULL
+				AND spk_operationals.created_at >= '2024-03-01 00:00:00'`,
+      [createSPKDTO.pay_to_user_id],
+    );
+
+    if (activeSPKCount && activeSPKCount.length >= 2) {
+      throw failedResponse(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        'Terdapat lebih dari 2 Pengeluaran Kantor aktif, segera selesaikan Pengeluaran Kantor tersebut',
+      );
+    }
 
     const cashAdvance = Number(createSPKDTO.cash_advance);
 
@@ -477,6 +498,7 @@ export class SPKOperationalService {
   async findOne(fields: EntityCondition<SPKOperational>, user?: User) {
     const data = await this.spkOperationalRepository
       .createQueryBuilder('spk-operational')
+      .withDeleted()
       .leftJoinAndSelect('spk-operational.region', 'region')
       .leftJoinAndSelect('spk-operational.pay_to_user', 'pay_to_user')
       .leftJoinAndSelect('spk-operational.area', 'area')

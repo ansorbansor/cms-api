@@ -211,11 +211,11 @@ export class SPKOperationalService {
     const cashAdvance = Number(updateSPKDTO.cash_advance);
 
     if (appConfig().spkOperationMaxBudget > cashAdvance) {
-      updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
-      updateSPKDTO.is_over_budget = true;
-    } else {
       updateSPKDTO.status = SPKStatus.CREATED;
       updateSPKDTO.is_over_budget = false;
+    } else {
+      updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+      updateSPKDTO.is_over_budget = true;
     }
 
     if (currentUser.employeePosition?.grant_all_access === false) {

@@ -27,7 +27,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       meta: {
         code: status,
-        message: ErrorMessage.GENERAL,
+        // message: ErrorMessage.GENERAL,
+        message: `${exception.message}`,
       },
       data: null,
     });

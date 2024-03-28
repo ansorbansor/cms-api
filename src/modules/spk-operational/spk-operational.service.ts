@@ -498,6 +498,7 @@ export class SPKOperationalService {
   async findOne(fields: EntityCondition<SPKOperational>, user?: User) {
     const data = await this.spkOperationalRepository
       .createQueryBuilder('spk-operational')
+      .leftJoinAndSelect('spk-operational.cost_evidences', 'cost_evidences')
       .withDeleted()
       .leftJoinAndSelect('spk-operational.region', 'region')
       .leftJoinAndSelect('spk-operational.pay_to_user', 'pay_to_user')
@@ -510,7 +511,6 @@ export class SPKOperationalService {
         'spk-operational.transfer_proof_file',
         'transfer_proof_file',
       )
-      .leftJoinAndSelect('spk-operational.cost_evidences', 'cost_evidences')
       .leftJoinAndSelect(
         'cost_evidences.cost_evidence_photo_file',
         'cost_evidence_photo_file',

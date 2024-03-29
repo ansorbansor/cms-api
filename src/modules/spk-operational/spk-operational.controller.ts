@@ -150,6 +150,7 @@ export class SPKOperationalController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
     @Query('status') status: number,
+    @Query('mobile') mobile: boolean,
   ) {
     return successResponseList(
       await this.spkOperationalService.findManyWithPagination(
@@ -163,6 +164,7 @@ export class SPKOperationalController {
           status: status,
         },
         req.user,
+        mobile,
       ),
       'success',
     );

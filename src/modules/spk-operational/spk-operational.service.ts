@@ -278,6 +278,7 @@ export class SPKOperationalService {
   async findManyWithPagination(
     paginationOptions: IPaginationOptions,
     user: User,
+    mobile: boolean,
   ) {
     const data = this.spkOperationalRepository
       .createQueryBuilder('spk-operational')
@@ -290,70 +291,7 @@ export class SPKOperationalService {
     const currentUser = await this.userService.findOneFull({ id: user.id });
     let filterRegion = true;
 
-    if (currentUser.employeePosition.code == RoleEnum.PM) {
-      //add total po budget / unit price
-      // data.addSelect(
-      //   'total_unit_price.total_unit_price',
-      //   'spk_total_po_unit_price',
-      // );
-      // data.leftJoin(
-      //   (qb) => {
-      //     return qb
-      //       .select('p.site_id')
-      //       .addSelect(
-      //         'SUM(p.unit_price * p.budget_percentage / 100)',
-      //         'total_unit_price',
-      //       )
-      //       .from(PurchaseOrder, 'p')
-      //       .where("p.status NOT ILIKE '%cancel%'")
-      //       .groupBy('p.site_id');
-      //   },
-      //   'total_unit_price',
-      //   '"total_unit_price"."p_site_id" = spk.site_id',
-      // );
-
-      data.andWhere('spk-operational.cash_advance > :maxBudget', {
-        maxBudget: appConfig().spkOperationMaxBudget,
-      });
-
-      data.andWhere('spk-operational.status >= :status', {
-        status: SPKStatus.APPROVED,
-      });
-
-      data.withDeleted();
-    } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.CREATED
-      ) {
-        data.andWhere('spk-operational.status >= :status', {
-          status: SPKStatus.CREATED,
-        });
-      }
-    } else if (
-      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
-      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
-    ) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.APPROVED
-      ) {
-        data.andWhere('spk-operational.status >= :status', {
-          status: SPKStatus.APPROVED,
-        });
-      }
-    } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.APPROVED
-      ) {
-        data.andWhere('spk-operational.status >= :status', {
-          status: SPKStatus.PAID,
-        });
-      }
-    } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
-      data.withDeleted();
-    } else {
+    if (mobile === true) {
       filterRegion = false;
 
       data.leftJoinAndSelect('spk-operational.inhouse_team', 'inhouse_team');
@@ -371,6 +309,89 @@ export class SPKOperationalService {
             });
         }),
       );
+    } else {
+      if (currentUser.employeePosition.code == RoleEnum.PM) {
+        //add total po budget / unit price
+        // data.addSelect(
+        //   'total_unit_price.total_unit_price',
+        //   'spk_total_po_unit_price',
+        // );
+        // data.leftJoin(
+        //   (qb) => {
+        //     return qb
+        //       .select('p.site_id')
+        //       .addSelect(
+        //         'SUM(p.unit_price * p.budget_percentage / 100)',
+        //         'total_unit_price',
+        //       )
+        //       .from(PurchaseOrder, 'p')
+        //       .where("p.status NOT ILIKE '%cancel%'")
+        //       .groupBy('p.site_id');
+        //   },
+        //   'total_unit_price',
+        //   '"total_unit_price"."p_site_id" = spk.site_id',
+        // );
+
+        data.andWhere('spk-operational.cash_advance > :maxBudget', {
+          maxBudget: appConfig().spkOperationMaxBudget,
+        });
+
+        data.andWhere('spk-operational.status >= :status', {
+          status: SPKStatus.APPROVED,
+        });
+
+        data.withDeleted();
+      } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.CREATED
+        ) {
+          data.andWhere('spk-operational.status >= :status', {
+            status: SPKStatus.CREATED,
+          });
+        }
+      } else if (
+        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
+        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
+      ) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.APPROVED
+        ) {
+          data.andWhere('spk-operational.status >= :status', {
+            status: SPKStatus.APPROVED,
+          });
+        }
+      } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.APPROVED
+        ) {
+          data.andWhere('spk-operational.status >= :status', {
+            status: SPKStatus.PAID,
+          });
+        }
+      } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+        data.withDeleted();
+      } else {
+        filterRegion = false;
+
+        data.leftJoinAndSelect('spk-operational.inhouse_team', 'inhouse_team');
+
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where('inhouse_team.user_id = :inHouseUserId', {
+              inHouseUserId: user.id,
+            })
+              .orWhere('spk-operational.created_by = :createdBy', {
+                createdBy: user.id,
+              })
+              .orWhere('spk-operational.pay_to_user_id = :payToUserId', {
+                payToUserId: user.id,
+              });
+          }),
+        );
+      }
     }
 
     if (

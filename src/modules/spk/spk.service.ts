@@ -391,6 +391,7 @@ export class SPKService {
   async findManyWithPagination(
     paginationOptions: IPaginationOptions,
     user: User,
+    mobile: boolean,
   ) {
     const data = this.spkRepository
       .createQueryBuilder('spk')
@@ -407,120 +408,9 @@ export class SPKService {
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
 
-    if (
-      currentUser.employeePosition.code != RoleEnum.PM &&
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
-    ) {
-      data.where('spk.deleted_at IS NULL');
-    }
-
     let filterRegion = true;
 
-    if (currentUser.employeePosition.code == RoleEnum.PM) {
-      //add total spk cash advance
-      data.addSelect(
-        'total_cash_advance.total_cash_advance',
-        'spk_total_cash_advance',
-      );
-      data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
-      data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
-            .from(SPK, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cash_advance',
-        '"total_cash_advance"."s_site_id" = spk.site_id',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cashback)', 'total_cashback')
-            .from(SPK, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cashback',
-        '"total_cashback"."s_site_id" = spk.site_id',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('s.site_id')
-            .addSelect('SUM(s.cashout)', 'total_cashout')
-            .from(SPK, 's')
-            .groupBy('s.site_id');
-        },
-        'total_cashout',
-        '"total_cashout"."s_site_id" = spk.site_id',
-      );
-
-      //add total po budget / unit price
-      data.addSelect(
-        'total_unit_price.total_unit_price',
-        'spk_total_po_unit_price',
-      );
-      data.leftJoin(
-        (qb) => {
-          return qb
-            .select('p.site_id')
-            .addSelect(
-              'SUM(p.unit_price * p.budget_percentage / 100)',
-              'total_unit_price',
-            )
-            .from(PurchaseOrder, 'p')
-            .where("p.status NOT ILIKE '%cancel%'")
-            .groupBy('p.site_id');
-        },
-        'total_unit_price',
-        '"total_unit_price"."p_site_id" = spk.site_id',
-      );
-
-      data.andWhere(
-        '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
-      );
-
-      data.andWhere('spk.status >= :status', {
-        status: SPKStatus.APPROVED,
-      });
-
-      data.withDeleted();
-    } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.CREATED
-      ) {
-        data.andWhere('spk.status >= :status', {
-          status: SPKStatus.CREATED,
-        });
-      }
-    } else if (
-      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
-      currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
-    ) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.APPROVED
-      ) {
-        data.andWhere('spk.status >= :status', {
-          status: SPKStatus.APPROVED,
-        });
-      }
-    } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
-      if (
-        !paginationOptions.status ||
-        paginationOptions.status < SPKStatus.APPROVED
-      ) {
-        data.andWhere('spk.status >= :status', {
-          status: SPKStatus.PAID,
-        });
-      }
-    } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
-      data.withDeleted();
-    } else {
+    if (mobile === true) {
       filterRegion = false;
 
       data.leftJoinAndSelect(
@@ -540,6 +430,139 @@ export class SPKService {
             });
         }),
       );
+    } else {
+      if (
+        currentUser.employeePosition.code != RoleEnum.PM &&
+        currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+      ) {
+        data.where('spk.deleted_at IS NULL');
+      }
+
+      if (currentUser.employeePosition.code == RoleEnum.PM) {
+        //add total spk cash advance
+        data.addSelect(
+          'total_cash_advance.total_cash_advance',
+          'spk_total_cash_advance',
+        );
+        data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
+        data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
+        data.leftJoin(
+          (qb) => {
+            return qb
+              .select('s.site_id')
+              .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+              .from(SPK, 's')
+              .groupBy('s.site_id');
+          },
+          'total_cash_advance',
+          '"total_cash_advance"."s_site_id" = spk.site_id',
+        );
+        data.leftJoin(
+          (qb) => {
+            return qb
+              .select('s.site_id')
+              .addSelect('SUM(s.cashback)', 'total_cashback')
+              .from(SPK, 's')
+              .groupBy('s.site_id');
+          },
+          'total_cashback',
+          '"total_cashback"."s_site_id" = spk.site_id',
+        );
+        data.leftJoin(
+          (qb) => {
+            return qb
+              .select('s.site_id')
+              .addSelect('SUM(s.cashout)', 'total_cashout')
+              .from(SPK, 's')
+              .groupBy('s.site_id');
+          },
+          'total_cashout',
+          '"total_cashout"."s_site_id" = spk.site_id',
+        );
+
+        //add total po budget / unit price
+        data.addSelect(
+          'total_unit_price.total_unit_price',
+          'spk_total_po_unit_price',
+        );
+        data.leftJoin(
+          (qb) => {
+            return qb
+              .select('p.site_id')
+              .addSelect(
+                'SUM(p.unit_price * p.budget_percentage / 100)',
+                'total_unit_price',
+              )
+              .from(PurchaseOrder, 'p')
+              .where("p.status NOT ILIKE '%cancel%'")
+              .groupBy('p.site_id');
+          },
+          'total_unit_price',
+          '"total_unit_price"."p_site_id" = spk.site_id',
+        );
+
+        data.andWhere(
+          '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
+        );
+
+        data.andWhere('spk.status >= :status', {
+          status: SPKStatus.APPROVED,
+        });
+
+        data.withDeleted();
+      } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.CREATED
+        ) {
+          data.andWhere('spk.status >= :status', {
+            status: SPKStatus.CREATED,
+          });
+        }
+      } else if (
+        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
+        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
+      ) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.APPROVED
+        ) {
+          data.andWhere('spk.status >= :status', {
+            status: SPKStatus.APPROVED,
+          });
+        }
+      } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
+        if (
+          !paginationOptions.status ||
+          paginationOptions.status < SPKStatus.APPROVED
+        ) {
+          data.andWhere('spk.status >= :status', {
+            status: SPKStatus.PAID,
+          });
+        }
+      } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+        data.withDeleted();
+      } else {
+        filterRegion = false;
+
+        data.leftJoinAndSelect(
+          'spk.inhouse_team',
+          'inhouse_team',
+          'inhouse_team.deleted_at IS NULL',
+        );
+
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where('inhouse_team.user_id = :inHouseUserId', {
+              inHouseUserId: user.id,
+            })
+              .orWhere('spk.created_by = :createdBy', { createdBy: user.id })
+              .orWhere('spk.pay_to_user_id = :payToUserId', {
+                payToUserId: user.id,
+              });
+          }),
+        );
+      }
     }
 
     if (

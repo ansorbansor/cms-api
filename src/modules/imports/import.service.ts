@@ -147,7 +147,10 @@ export class ImportService {
               inserUser.uniportal_account = value['uniportal account'];
               inserUser.project = value['join date'];
               inserUser.status =
-                value['remark employee status'] == 'On Board' ? true : false;
+                value['remark employee status'].trim().toLowerCase() ==
+                'on board'
+                  ? true
+                  : false;
               inserUser.status_description = value['remark employee status'];
               inserUser.pass_id_number = value['pass id number'];
               inserUser.cyber_security_status = value['cyber security status'];

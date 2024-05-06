@@ -36,7 +36,7 @@ import { SPKResourceDetail } from './resources/spk.resources';
   version: '1',
 })
 export class SPKController {
-  constructor(private readonly spkService: SPKService) {}
+  constructor(private readonly spkService: SPKService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

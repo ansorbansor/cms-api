@@ -648,7 +648,10 @@ export class ImportService {
                 totalInsertInvoice++;
               }
 
-              if (totalAcceptance != 0) {
+              if (
+                totalAcceptance != 0 &&
+                newPO.total_acceptance != totalAcceptance
+              ) {
                 await this.poRepository.update(
                   {
                     id: newPO.id,
@@ -779,7 +782,10 @@ export class ImportService {
               }
             }
 
-            if (totalAcceptance != 0) {
+            if (
+              totalAcceptance != 0 &&
+              poData[indexDataExisting].total_acceptance != totalAcceptance
+            ) {
               await this.poRepository.update(
                 {
                   id: poData[indexDataExisting].id,

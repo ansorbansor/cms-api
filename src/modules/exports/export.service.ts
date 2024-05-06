@@ -33,7 +33,7 @@ export class ExportService {
     private spkOperationalRepository: Repository<SPKOperational>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
-  ) {}
+  ) { }
 
   async exportUser(user: User, ip: string, search: string) {
     const query = this.usersRepository
@@ -114,9 +114,13 @@ export class ExportService {
         new Brackets((qb) => {
           qb.where(`LOWER(po.cc) LIKE :search`, {
             search: `%${search.toLowerCase()}%`,
-          }).orWhere(`LOWER(po.po_number) LIKE :search`, {
-            search: `%${search.toLowerCase()}%`,
-          });
+          })
+            .orWhere(`LOWER(po.po_number) LIKE :search`, {
+              search: `%${search.toLowerCase()}%`,
+            })
+            .orWhere(`LOWER(site.code) LIKE :search`, {
+              search: `%${search.toLowerCase()}%`,
+            });
         }),
       );
     }

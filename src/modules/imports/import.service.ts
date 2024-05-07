@@ -59,7 +59,7 @@ export class ImportService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   regionData = null;
   areaData = null;
@@ -148,10 +148,12 @@ export class ImportService {
               inserUser.project = value['join date'];
               inserUser.status =
                 value['remark employee status'].trim().toLowerCase() ==
-                'on board'
+                  'on board'
                   ? true
                   : false;
-              inserUser.status_description = value['remark employee status'];
+              inserUser.status_description = value['remark employee status']
+                .trim()
+                .toLowerCase();
               inserUser.pass_id_number = value['pass id number'];
               inserUser.cyber_security_status = value['cyber security status'];
               inserUser.level_iresource = value['status karyawan'];
@@ -418,20 +420,20 @@ export class ImportService {
             insertPO.project_id =
               value['project name'] && value['project code']
                 ? (
-                    await this.getProjectByName(
-                      value['project name'],
-                      value['project code'],
-                    )
-                  ).id
+                  await this.getProjectByName(
+                    value['project name'],
+                    value['project code'],
+                  )
+                ).id
                 : null;
             insertPO.site_id =
               value['site name'] && value['site code']
                 ? (
-                    await this.getSiteByName(
-                      value['site name'],
-                      value['site code'],
-                    )
-                  ).id
+                  await this.getSiteByName(
+                    value['site name'],
+                    value['site code'],
+                  )
+                ).id
                 : null;
             insertPO.status = value['po status'];
             insertPO.item_code = value['item code'];
@@ -484,10 +486,10 @@ export class ImportService {
               : null;
             insertPO.status_acceptance_id = value['status of acceptance']
               ? (
-                  await this.getStatusAcceptanceByName(
-                    value['status of acceptance'],
-                  )
-                ).id
+                await this.getStatusAcceptanceByName(
+                  value['status of acceptance'],
+                )
+              ).id
               : null;
             insertPO.pending_type_id = value['pending type']
               ? (await this.getPendingTypeByName(value['pending type'])).id
@@ -579,29 +581,29 @@ export class ImportService {
                   invoice_number: value[`ac${invNo} inv`],
                   invoice_date:
                     value[`ac${invNo} inv date`] &&
-                    moment(
-                      value[`ac${invNo} inv date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} inv date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} inv date`]
                       : null,
                   invoice_status: value[`ac${invNo} inv status`],
                   payment_date:
                     value[`payment date ${invNo}`] &&
-                    moment(
-                      value[`payment date ${invNo}`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`payment date ${invNo}`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`payment date ${invNo}`]
                       : null,
                   supplier_tax_number:
                     value[`ac${invNo} (supplier tax invoice no.)`],
                   supplier_tax_date:
                     value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                    moment(
-                      value[`ac${invNo} (supplier tax invoice no.) date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} (supplier tax invoice no.) date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} (supplier tax invoice no.) date`]
                       : null,
                   user_id: user.id,
@@ -617,10 +619,10 @@ export class ImportService {
                     : 0,
                   submit_date:
                     value[`ac${invNo} submit date`] &&
-                    moment(
-                      value[`ac${invNo} submit date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} submit date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} submit date`]
                       : null,
                   submit_amount: value[`ac${invNo} submit amount`]
@@ -628,10 +630,10 @@ export class ImportService {
                     : 0,
                   approve_date:
                     value[`ac${invNo} approve date`] &&
-                    moment(
-                      value[`ac${invNo} approve date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} approve date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} approve date`]
                       : null,
                   approve_amount: value[`ac${invNo} approve amount`]
@@ -702,29 +704,29 @@ export class ImportService {
                   invoice_number: value[`ac${invNo} inv`],
                   invoice_date:
                     value[`ac${invNo} inv date`] &&
-                    moment(
-                      value[`ac${invNo} inv date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} inv date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} inv date`]
                       : null,
                   invoice_status: value[`ac${invNo} inv status`],
                   payment_date:
                     value[`payment date ${invNo}`] &&
-                    moment(
-                      value[`payment date ${invNo}`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`payment date ${invNo}`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`payment date ${invNo}`]
                       : null,
                   supplier_tax_number:
                     value[`ac${invNo} (supplier tax invoice no.)`],
                   supplier_tax_date:
                     value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                    moment(
-                      value[`ac${invNo} (supplier tax invoice no.) date`],
-                      moment.ISO_8601,
-                    ).isValid()
+                      moment(
+                        value[`ac${invNo} (supplier tax invoice no.) date`],
+                        moment.ISO_8601,
+                      ).isValid()
                       ? value[`ac${invNo} (supplier tax invoice no.) date`]
                       : null,
                   user_id: user.id,
@@ -881,7 +883,7 @@ export class ImportService {
     if (
       dbData.invoice_date &&
       moment(dbData.invoice_date).format('YYYY-MM-D') !=
-        moment(excelData.invoice_date).format('YYYY-MM-D')
+      moment(excelData.invoice_date).format('YYYY-MM-D')
     ) {
       updateData.invoice_date = excelData.invoice_date;
     }
@@ -898,7 +900,7 @@ export class ImportService {
     if (
       dbData.payment_date &&
       moment(dbData.payment_date).format('YYYY-MM-D') !=
-        moment(excelData.payment_date).format('YYYY-MM-D')
+      moment(excelData.payment_date).format('YYYY-MM-D')
     ) {
       updateData.payment_date = excelData.payment_date;
     }
@@ -915,7 +917,7 @@ export class ImportService {
     if (
       dbData.supplier_tax_date &&
       moment(dbData.supplier_tax_date).format('YYYY-MM-D') !=
-        moment(excelData.supplier_tax_date).format('YYYY-MM-D')
+      moment(excelData.supplier_tax_date).format('YYYY-MM-D')
     ) {
       updateData.supplier_tax_date = excelData.supplier_tax_date;
     }
@@ -954,7 +956,7 @@ export class ImportService {
     if (
       dbData.submit_date &&
       moment(dbData.submit_date).format('YYYY-MM-D') !=
-        moment(excelData.submit_date).format('YYYY-MM-D')
+      moment(excelData.submit_date).format('YYYY-MM-D')
     ) {
       updateData.submit_date = excelData.submit_date;
     }
@@ -973,7 +975,7 @@ export class ImportService {
     if (
       dbData.approve_date &&
       moment(dbData.approve_date).format('YYYY-MM-D') !=
-        moment(excelData.approve_date).format('YYYY-MM-D')
+      moment(excelData.approve_date).format('YYYY-MM-D')
     ) {
       updateData.approve_date = excelData.approve_date;
     }
@@ -1081,11 +1083,16 @@ export class ImportService {
     //check remark employee status
     if (
       excelData['remark employee status'] &&
-      dbData.status_description != excelData['remark employee status']
+      dbData.status_description.trim().toLowerCase() !=
+      excelData['remark employee status'].trim().toLowerCase()
     ) {
       updateData.status =
-        excelData['remark employee status'] == 'On Board' ? true : false;
-      updateData.status_description = excelData['remark employee status'];
+        excelData['remark employee status'].trim().toLowerCase() == 'on board'
+          ? true
+          : false;
+      updateData.status_description = excelData['remark employee status']
+        .trim()
+        .toLowerCase();
     }
 
     //check pass id number
@@ -1126,7 +1133,7 @@ export class ImportService {
       dbData.wah_validation_end_date &&
       moment(excelData['wah validation end date'], moment.ISO_8601).isValid() &&
       moment(dbData.wah_validation_end_date).format('YYYY-MM-D') !=
-        moment(excelData['wah validation end date']).format('YYYY-MM-D')
+      moment(excelData['wah validation end date']).format('YYYY-MM-D')
     ) {
       updateData.wah_validation_end_date = excelData['wah validation end date'];
     }
@@ -1135,7 +1142,7 @@ export class ImportService {
     if (
       excelData['electrical certification number'] &&
       dbData.electrical_certification_number !=
-        excelData['electrical certification number']
+      excelData['electrical certification number']
     ) {
       updateData.electrical_certification_number =
         excelData['electrical certification number'];
@@ -1149,7 +1156,7 @@ export class ImportService {
         moment.ISO_8601,
       ).isValid() &&
       moment(dbData.electrical_validation_end_date).format('YYYY-MM-D') !=
-        moment(excelData['electrical validation end date']).format('YYYY-MM-D')
+      moment(excelData['electrical validation end date']).format('YYYY-MM-D')
     ) {
       updateData.electrical_validation_end_date =
         excelData['electrical validation end date'];
@@ -1159,7 +1166,7 @@ export class ImportService {
     if (
       excelData['first aid certification number'] &&
       dbData.firstaid_certification_number !=
-        excelData['first aid certification number']
+      excelData['first aid certification number']
     ) {
       updateData.firstaid_certification_number =
         excelData['first aid certification number'];
@@ -1173,7 +1180,7 @@ export class ImportService {
         moment.ISO_8601,
       ).isValid() &&
       moment(dbData.firstaid_validation_end_date).format('YYYY-MM-D') !=
-        moment(excelData['first aid validation end date']).format('YYYY-MM-D')
+      moment(excelData['first aid validation end date']).format('YYYY-MM-D')
     ) {
       updateData.firstaid_validation_end_date =
         excelData['first aid validation end date'];
@@ -1444,7 +1451,7 @@ export class ImportService {
       dbData.publish_date &&
       moment(excelData['publish date'], moment.ISO_8601).isValid() &&
       moment(dbData.publish_date).format('YYYY-MM-D') !=
-        moment(excelData['publish date']).format('YYYY-MM-D')
+      moment(excelData['publish date']).format('YYYY-MM-D')
     ) {
       updateData.publish_date = excelData['publish date'];
     }
@@ -1454,7 +1461,7 @@ export class ImportService {
       dbData.start_date &&
       moment(excelData['start date'], moment.ISO_8601).isValid() &&
       moment(dbData.start_date).format('YYYY-MM-D') !=
-        moment(excelData['start date']).format('YYYY-MM-D')
+      moment(excelData['start date']).format('YYYY-MM-D')
     ) {
       updateData.start_date = excelData['start date'];
     }
@@ -1464,7 +1471,7 @@ export class ImportService {
       dbData.end_date &&
       moment(excelData['end date'], moment.ISO_8601).isValid() &&
       moment(dbData.end_date).format('YYYY-MM-D') !=
-        moment(excelData['end date']).format('YYYY-MM-D')
+      moment(excelData['end date']).format('YYYY-MM-D')
     ) {
       updateData.end_date = excelData['end date'];
     }
@@ -1527,7 +1534,7 @@ export class ImportService {
     if (
       excelData['amount pending approval pd'] != null &&
       dbData.amount_pending_approval_pd !=
-        excelData['amount pending approval pd']
+      excelData['amount pending approval pd']
     ) {
       const intVal = isNaN(Number(excelData['amount pending approval pd']))
         ? 0
@@ -1554,7 +1561,7 @@ export class ImportService {
         moment.ISO_8601,
       ).isValid() &&
       moment(dbData.actual_completion_date).format('YYYY-MM-D') !=
-        moment(excelData['actual completion date vs to pd']).format('YYYY-MM-D')
+      moment(excelData['actual completion date vs to pd']).format('YYYY-MM-D')
     ) {
       updateData.actual_completion_date =
         excelData['actual completion date vs to pd'];
@@ -1623,7 +1630,7 @@ export class ImportService {
       excelData['ny invoice date'] &&
       moment(excelData['ny invoice date'], moment.ISO_8601).isValid() &&
       moment(dbData.ny_invoice_date).format('YYYY-MM-D') !=
-        moment(excelData['ny invoice date']).format('YYYY-MM-D')
+      moment(excelData['ny invoice date']).format('YYYY-MM-D')
     ) {
       updateData.ny_invoice_date = excelData['ny invoice date'];
     }
@@ -1683,7 +1690,7 @@ export class ImportService {
       excelData['actual bulan pengerjaan'] &&
       moment(excelData['actual bulan pengerjaan'], moment.ISO_8601).isValid() &&
       moment(dbData.actual_work_date).format('YYYY-MM-D') !=
-        moment(excelData['actual bulan pengerjaan']).format('YYYY-MM-D')
+      moment(excelData['actual bulan pengerjaan']).format('YYYY-MM-D')
     ) {
       // updateData.actual_work_date = excelData['actual bulan pengerjaan'];
       updateData.actual_work_date = moment(
@@ -1735,7 +1742,7 @@ export class ImportService {
       excelData['plan date'] &&
       moment(excelData['plan date'], moment.ISO_8601).isValid() &&
       moment(dbData.plan_date).format('YYYY-MM-D') !=
-        moment(excelData['plan date']).format('YYYY-MM-D')
+      moment(excelData['plan date']).format('YYYY-MM-D')
     ) {
       updateData.plan_date = excelData['plan date'];
     }

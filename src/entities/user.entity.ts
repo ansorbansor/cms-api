@@ -14,7 +14,6 @@ import { EntityHelper } from 'src/utils/entity-helper';
 import { AuthProvidersEnum } from 'src/utils/enums';
 import { FileEntity } from './file.entity';
 import { EmployeePosition } from './employee-position.entity';
-import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 
 @Entity({ name: 'users' })
 export class User extends EntityHelper {
@@ -143,7 +142,7 @@ export class User extends EntityHelper {
       this.password = await bcrypt.hash(this.password, salt);
     } else if (this.generatePassword) {
       const salt = await bcrypt.genSalt();
-      this.password = await bcrypt.hash(randomStringGenerator(), salt);
+      this.password = await bcrypt.hash('Biosron123', salt);
     }
   }
 }

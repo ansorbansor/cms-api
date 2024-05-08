@@ -190,8 +190,7 @@ export class ImportService {
                   ? new Date(firstaidValidationEndDate + ' 23:59:59')
                   : null;
 
-              const salt = await bcrypt.genSalt();
-              inserUser.password = await bcrypt.hash('Biosron123', salt);
+              inserUser.password = 'Biosron123';
 
               inserUser.bank = value['nama bank'];
               inserUser.bank_account_number = value['Nomor Rekening'];

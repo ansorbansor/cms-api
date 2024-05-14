@@ -1,6 +1,6 @@
 import appConfig from 'src/config/app.config';
 import { User } from 'src/entities/user.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export const UserResource = (user: User): any => {
   return {
@@ -36,8 +36,8 @@ export const UserResource = (user: User): any => {
     electrical_certification_number: user.electrical_certification_number,
     electrical_validation_end_date: user.electrical_validation_end_date
       ? moment(user.electrical_validation_end_date).format(
-          'YYYY-MM-DD HH:mm:ss',
-        )
+        'YYYY-MM-DD HH:mm:ss',
+      )
       : null,
     firstaid_certification_number: user.firstaid_certification_number,
     firstaid_validation_end_date: user.firstaid_validation_end_date

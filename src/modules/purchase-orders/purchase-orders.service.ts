@@ -13,7 +13,7 @@ import {
 import { User } from 'src/entities/user.entity';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class PurchaseOrderService {
     @InjectRepository(PurchaseOrderInvoice)
     private purchaseOrderInvoiceRepository: Repository<PurchaseOrderInvoice>,
     private activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   async create(
     createPurchaseOrderDTO: CreatePurchaseOrderDTO,
@@ -36,7 +36,7 @@ export class PurchaseOrderService {
       createPurchaseOrderDTO.invoices.forEach((inv) => {
         totalAcceptance +=
           inv.submit_date != null &&
-          moment(new Date(inv.submit_date)).format('YYYY-MM-D') !=
+            moment(new Date(inv.submit_date)).format('YYYY-MM-D') !=
             'Invalid date'
             ? Number(createPurchaseOrderDTO.unit_price_1)
             : 0;

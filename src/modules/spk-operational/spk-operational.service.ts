@@ -12,7 +12,7 @@ import { FilePath, MenuPermission, RoleEnum, SPKStatus } from 'src/utils/enums';
 import { UpdateSPKOperationalSettlementDTO } from './dto/update-spk-operational-settlement.dto';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as fs from 'fs';
-import * as moment from 'moment';
+import moment from 'moment';
 import {
   SPKOperationalResource,
   SPKOperationalResourceDetail,
@@ -35,7 +35,7 @@ export class SPKOperationalService {
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
     private userService: UsersService,
-  ) {}
+  ) { }
 
   async create(
     createSPKDTO: CreateSPKOperationalDTO,

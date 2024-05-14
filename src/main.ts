@@ -6,13 +6,17 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 import { SerializerInterceptor } from './utils/serializer.interceptor';
 import validationOptions from './utils/validation-options';
-import * as moment from 'moment';
+import moment from 'moment';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 import * as newrelic from 'newrelic';
 require('newrelic');
+import * as os from 'os';
+import cluster from 'cluster';
+const numCPUs = os.cpus().length;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
+
   const configService = app.get(ConfigService);
 
   moment.locale('id');
@@ -39,7 +43,20 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options.build());
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(configService.get('app.port'));
+  if (cluster.isPrimary) {
+    console.log(`Master ${process.pid} is running`);
+    for (let i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', (worker) => {
+      console.log(`worker ${worker.process.pid} died`);
+    });
+  } else {
+    // await app.listen(process.env.PORT || 3000);
+    await app.listen(configService.get('app.port'));
+    console.log(`Worker ${process.pid} started`);
+  }
 }
 
 databaseInfo();

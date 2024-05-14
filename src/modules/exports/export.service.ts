@@ -8,7 +8,7 @@ import * as tmp from 'tmp';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
-import * as moment from 'moment';
+import moment from 'moment';
 import { SPK } from 'src/entities/spk.entity';
 import { ExportSPKResource } from './resources/export-spk.resources';
 import { Absence } from 'src/entities/absence.entity';

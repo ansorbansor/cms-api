@@ -13,7 +13,7 @@ import {
   HasAbsenceToday,
 } from './resources/absence.resources';
 import { ClockOutAbsenceDTO } from './dto/clock-out-absence.dto';
-import * as moment from 'moment';
+import moment from 'moment';
 import { FilesService } from '../files/files.service';
 import { FilePath } from 'src/utils/enums';
 
@@ -24,7 +24,7 @@ export class AbsenceService {
     private absenceRepository: Repository<Absence>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
-  ) {}
+  ) { }
 
   async create(
     createAbsenceDTO: CreateAbsenceDTO,

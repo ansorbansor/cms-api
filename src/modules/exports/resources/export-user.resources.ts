@@ -1,5 +1,5 @@
 import { User } from 'src/entities/user.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export const ExportUserResource = (user: User): any => {
   return {
@@ -26,8 +26,8 @@ export const ExportUserResource = (user: User): any => {
     'Electrical Certification Number': user.electrical_certification_number,
     'Electrical Validation End Date': user.electrical_validation_end_date
       ? moment(user.electrical_validation_end_date).format(
-          'YYYY-MM-DD HH:mm:ss',
-        )
+        'YYYY-MM-DD HH:mm:ss',
+      )
       : null,
     'First Aid Certification Number': user.firstaid_certification_number,
     'First Aid Validation End Date': user.firstaid_validation_end_date

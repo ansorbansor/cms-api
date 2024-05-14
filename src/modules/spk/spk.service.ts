@@ -15,7 +15,7 @@ import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKCostEvidence } from 'src/entities/spk-cost-evidence.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import * as fs from 'fs';
-import * as moment from 'moment';
+import moment from 'moment';
 import { SPKResource, SPKResourceDetail } from './resources/spk.resources';
 import { UsersService } from '../users/users.service';
 import { SPKCategory } from 'src/entities/spk-category.entity';
@@ -36,7 +36,7 @@ export class SPKService {
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
     private userService: UsersService,
-  ) {}
+  ) { }
 
   async create(
     createSPKDTO: CreateSPKDTO,

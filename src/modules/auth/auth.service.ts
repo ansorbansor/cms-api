@@ -20,7 +20,7 @@ import { AuthUpdatePasswordDto } from './dtos/auth-update-password.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { encryptText } from 'src/utils/encryption-helper';
-import * as moment from 'moment';
+import moment from 'moment';
 import { AuthUpdateDto } from './dtos/auth-update.dto';
 @Injectable()
 export class AuthService {
@@ -33,7 +33,7 @@ export class AuthService {
     private activityLogService: ActivityLogService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async validateLogin(
     loginDto: AuthEmailLoginDto,

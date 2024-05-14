@@ -19,7 +19,7 @@ import { RemarkProject } from 'src/entities/remark-project.entity';
 import { StatusAcceptance } from 'src/entities/status-acceptance.entity';
 import { PendingType } from 'src/entities/pending-type.entity';
 import { PD } from 'src/entities/pd.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';

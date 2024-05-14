@@ -1,7 +1,7 @@
 import { AfterLoad, Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { FileEntity } from './file.entity';
 
 @Entity({ name: 'absence' })

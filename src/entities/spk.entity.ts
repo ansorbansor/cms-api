@@ -17,7 +17,7 @@ import { PurchaseOrder } from './purchase-order.entity';
 import { SPKInhouseTeam } from './spk-inhouse-team.entity';
 import { FileEntity } from './file.entity';
 import { SPKCostEvidence } from './spk-cost-evidence.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { SPKCategory } from './spk-category.entity';
 import { Customer } from './customer.entity';
 

@@ -1,4 +1,4 @@
-import * as moment from 'moment';
+import moment from 'moment';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
@@ -95,32 +95,32 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       : null,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
-          return {
-            invoice_number: e.invoice_number,
-            date: e.invoice_date
-              ? moment(e.invoice_date).format('YYYY-MM-DD')
-              : null,
-            status: e.invoice_status,
-            payment_date: e.payment_date
-              ? moment(e.payment_date).format('YYYY-MM-DD')
-              : null,
-            supplier_tax_number: e.supplier_tax_number,
-            supplier_tax_date: e.supplier_tax_date
-              ? moment(e.supplier_tax_date).format('YYYY-MM-DD')
-              : null,
-            payment_amount: e.payment_amount ? e.payment_amount : 0,
-            deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
-            unit_price: e.unit_price ? e.unit_price : 0,
-            submit_date: e.submit_date
-              ? moment(e.submit_date).format('YYYY-MM-DD')
-              : null,
-            submit_amount: e.submit_amount ? e.submit_amount : 0,
-            approve_date: e.approve_date
-              ? moment(e.approve_date).format('YYYY-MM-DD')
-              : null,
-            approve_amount: e.approve_amount ? e.approve_amount : 0,
-          };
-        })
+        return {
+          invoice_number: e.invoice_number,
+          date: e.invoice_date
+            ? moment(e.invoice_date).format('YYYY-MM-DD')
+            : null,
+          status: e.invoice_status,
+          payment_date: e.payment_date
+            ? moment(e.payment_date).format('YYYY-MM-DD')
+            : null,
+          supplier_tax_number: e.supplier_tax_number,
+          supplier_tax_date: e.supplier_tax_date
+            ? moment(e.supplier_tax_date).format('YYYY-MM-DD')
+            : null,
+          payment_amount: e.payment_amount ? e.payment_amount : 0,
+          deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
+          unit_price: e.unit_price ? e.unit_price : 0,
+          submit_date: e.submit_date
+            ? moment(e.submit_date).format('YYYY-MM-DD')
+            : null,
+          submit_amount: e.submit_amount ? e.submit_amount : 0,
+          approve_date: e.approve_date
+            ? moment(e.approve_date).format('YYYY-MM-DD')
+            : null,
+          approve_amount: e.approve_amount ? e.approve_amount : 0,
+        };
+      })
       : [],
     'Delete Data': '',
   };

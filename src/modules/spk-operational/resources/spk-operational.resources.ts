@@ -1,4 +1,4 @@
-import * as moment from 'moment';
+import moment from 'moment';
 import minioConfig from 'src/config/minio.config';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { SPKStatus } from 'src/utils/enums';
@@ -12,28 +12,28 @@ export const SPKOperationalResource = (spk: SPKOperational): any => {
     spk_status:
       spk.status != null && spk.status != undefined
         ? {
-            status: spk.status,
-            name:
-              spk.status == SPKStatus.CREATED
-                ? 'Waiting Approval RPM'
-                : spk.status == SPKStatus.CREATED_OVER_BUDGET
+          status: spk.status,
+          name:
+            spk.status == SPKStatus.CREATED
+              ? 'Waiting Approval RPM'
+              : spk.status == SPKStatus.CREATED_OVER_BUDGET
                 ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.APPROVED
-                ? spk.is_over_budget == true
-                  ? 'Waiting Approval PM'
-                  : 'Waiting Transfer'
-                : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-                ? 'Waiting Transfer'
-                : spk.status == SPKStatus.PAID
-                ? spk.cost_evidences && spk.cost_evidences.length > 0
-                  ? 'Waiting Approval Verificator'
-                  : 'Paid, need evidence'
-                : spk.status == SPKStatus.CLOSED
-                ? 'Closed'
-                : spk.status == SPKStatus.REJECTED
-                ? 'Rejected'
-                : '-',
-          }
+                  ? spk.is_over_budget == true
+                    ? 'Waiting Approval PM'
+                    : 'Waiting Transfer'
+                  : spk.status == SPKStatus.APPROVED_OVER_BUDGET
+                    ? 'Waiting Transfer'
+                    : spk.status == SPKStatus.PAID
+                      ? spk.cost_evidences && spk.cost_evidences.length > 0
+                        ? 'Waiting Approval Verificator'
+                        : 'Paid, need evidence'
+                      : spk.status == SPKStatus.CLOSED
+                        ? 'Closed'
+                        : spk.status == SPKStatus.REJECTED
+                          ? 'Rejected'
+                          : '-',
+        }
         : null,
     pay_to_user: {
       id: spk.pay_to_user && spk.pay_to_user.id ? spk.pay_to_user.id : null,
@@ -71,28 +71,28 @@ export const SPKOperationalResourceDetail = (
     spk_status:
       spk.status != null && spk.status != undefined
         ? {
-            status: spk.status,
-            name:
-              spk.status == SPKStatus.CREATED
-                ? 'Waiting Approval RPM'
-                : spk.status == SPKStatus.CREATED_OVER_BUDGET
+          status: spk.status,
+          name:
+            spk.status == SPKStatus.CREATED
+              ? 'Waiting Approval RPM'
+              : spk.status == SPKStatus.CREATED_OVER_BUDGET
                 ? 'Waiting Approval RPM'
                 : spk.status == SPKStatus.APPROVED
-                ? spk.is_over_budget == true
-                  ? 'Waiting Approval PM'
-                  : 'Waiting Transfer'
-                : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-                ? 'Waiting Transfer'
-                : spk.status == SPKStatus.PAID
-                ? spk.cost_evidences && spk.cost_evidences.length > 0
-                  ? 'Waiting Approval Verificator'
-                  : 'Paid, need evidence'
-                : spk.status == SPKStatus.CLOSED
-                ? 'Closed'
-                : spk.status == SPKStatus.REJECTED
-                ? 'Rejected'
-                : '-',
-          }
+                  ? spk.is_over_budget == true
+                    ? 'Waiting Approval PM'
+                    : 'Waiting Transfer'
+                  : spk.status == SPKStatus.APPROVED_OVER_BUDGET
+                    ? 'Waiting Transfer'
+                    : spk.status == SPKStatus.PAID
+                      ? spk.cost_evidences && spk.cost_evidences.length > 0
+                        ? 'Waiting Approval Verificator'
+                        : 'Paid, need evidence'
+                      : spk.status == SPKStatus.CLOSED
+                        ? 'Closed'
+                        : spk.status == SPKStatus.REJECTED
+                          ? 'Rejected'
+                          : '-',
+        }
         : null,
     region: {
       id: spk.region && spk.region.id ? spk.region.id : null,
@@ -116,27 +116,27 @@ export const SPKOperationalResourceDetail = (
     },
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
-          return {
-            id:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.id
-                : null,
-            name:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.name
-                : '-',
-            nik:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.nik
-                : '-',
-            position:
-              inhouseTeam &&
+        return {
+          id:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.id
+              : null,
+          name:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.name
+              : '-',
+          nik:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.nik
+              : '-',
+          position:
+            inhouseTeam &&
               inhouseTeam.userInhouse &&
               inhouseTeam.userInhouse.employeePosition
-                ? inhouseTeam.userInhouse.employeePosition.name
-                : '-',
-          };
-        })
+              ? inhouseTeam.userInhouse.employeePosition.name
+              : '-',
+        };
+      })
       : null,
     remark_inhouse_team: spk.remark_inhouse_team
       ? spk.remark_inhouse_team
@@ -153,17 +153,17 @@ export const SPKOperationalResourceDetail = (
     remark_admin: spk.remark_admin ? spk.remark_admin : null,
     cost_evidences: spk.cost_evidences
       ? spk.cost_evidences.map((costEvidence) => {
-          return {
-            id: costEvidence && costEvidence.id ? costEvidence.id : null,
-            name: costEvidence && costEvidence.name ? costEvidence.name : '-',
-            cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
-            photo:
-              costEvidence && costEvidence.cost_evidence_photo_file
-                ? minioConfig().fullUrl +
-                  costEvidence.cost_evidence_photo_file.path
-                : null,
-          };
-        })
+        return {
+          id: costEvidence && costEvidence.id ? costEvidence.id : null,
+          name: costEvidence && costEvidence.name ? costEvidence.name : '-',
+          cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
+          photo:
+            costEvidence && costEvidence.cost_evidence_photo_file
+              ? minioConfig().fullUrl +
+              costEvidence.cost_evidence_photo_file.path
+              : null,
+        };
+      })
       : null,
     created_by: spk.created_by_user ? spk.created_by_user.name : '-',
     approved_by: spk.approved_by_user ? spk.approved_by_user.name : '-',

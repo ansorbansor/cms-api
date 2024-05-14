@@ -13,7 +13,7 @@ import { Region } from './region.entity';
 import { User } from './user.entity';
 import { Area } from './area.entity';
 import { FileEntity } from './file.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { SPKOperationalInhouseTeam } from './spk-operational-inhouse-team.entity';
 import { SPKOperationalCostEvidence } from './spk-operationals.cost-evidence.entity';
 import { SPKOperationalCategory } from './spk-operational-category.entity';

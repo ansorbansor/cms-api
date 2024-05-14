@@ -1,5 +1,5 @@
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { SPKStatus } from 'src/utils/enums';
 
 export const ExportSPKOperationalResource = (spk: SPKOperational): any => {
@@ -10,26 +10,26 @@ export const ExportSPKOperationalResource = (spk: SPKOperational): any => {
       spk.deleted_at != null
         ? 'Deleted'
         : spk.status != null && spk.status != undefined
-        ? spk.status == SPKStatus.CREATED
-          ? 'Waiting Approval RPM'
-          : spk.status == SPKStatus.CREATED_OVER_BUDGET
-          ? 'Waiting Approval RPM'
-          : spk.status == SPKStatus.APPROVED
-          ? spk.is_over_budget == true
-            ? 'Waiting Approval PM'
-            : 'Waiting Transfer'
-          : spk.status == SPKStatus.APPROVED_OVER_BUDGET
-          ? 'Waiting Transfer'
-          : spk.status == SPKStatus.PAID
-          ? spk.cost_evidences && spk.cost_evidences.length > 0
-            ? 'Waiting Approval Verificator'
-            : 'Paid, need evidence'
-          : spk.status == SPKStatus.CLOSED
-          ? 'Closed'
-          : spk.status == SPKStatus.REJECTED
-          ? 'Rejected'
-          : '-'
-        : '-',
+          ? spk.status == SPKStatus.CREATED
+            ? 'Waiting Approval RPM'
+            : spk.status == SPKStatus.CREATED_OVER_BUDGET
+              ? 'Waiting Approval RPM'
+              : spk.status == SPKStatus.APPROVED
+                ? spk.is_over_budget == true
+                  ? 'Waiting Approval PM'
+                  : 'Waiting Transfer'
+                : spk.status == SPKStatus.APPROVED_OVER_BUDGET
+                  ? 'Waiting Transfer'
+                  : spk.status == SPKStatus.PAID
+                    ? spk.cost_evidences && spk.cost_evidences.length > 0
+                      ? 'Waiting Approval Verificator'
+                      : 'Paid, need evidence'
+                    : spk.status == SPKStatus.CLOSED
+                      ? 'Closed'
+                      : spk.status == SPKStatus.REJECTED
+                        ? 'Rejected'
+                        : '-'
+          : '-',
     region: spk.region && spk.region.name ? spk.region.name : '-',
     cash_advance: spk.cash_advance,
     pay_to_user:
@@ -44,27 +44,27 @@ export const ExportSPKOperationalResource = (spk: SPKOperational): any => {
     category: spk.category ? spk.category.name : '-',
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
-          return {
-            id:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.id
-                : null,
-            name:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.name
-                : '-',
-            nik:
-              inhouseTeam && inhouseTeam.userInhouse
-                ? inhouseTeam.userInhouse.nik
-                : '-',
-            position:
-              inhouseTeam &&
+        return {
+          id:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.id
+              : null,
+          name:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.name
+              : '-',
+          nik:
+            inhouseTeam && inhouseTeam.userInhouse
+              ? inhouseTeam.userInhouse.nik
+              : '-',
+          position:
+            inhouseTeam &&
               inhouseTeam.userInhouse &&
               inhouseTeam.userInhouse.employeePosition
-                ? inhouseTeam.userInhouse.employeePosition.name
-                : '-',
-          };
-        })
+              ? inhouseTeam.userInhouse.employeePosition.name
+              : '-',
+        };
+      })
       : [],
     remark_ss: spk.remark_inhouse_team ? spk.remark_inhouse_team : null,
     closing_date: spk.closing_date
@@ -82,12 +82,12 @@ export const ExportSPKOperationalResource = (spk: SPKOperational): any => {
     remark_verificator: spk.remark_verificator ? spk.remark_verificator : null,
     cost_evidences: spk.cost_evidences
       ? spk.cost_evidences.map((costEvidence) => {
-          return {
-            id: costEvidence && costEvidence.id ? costEvidence.id : null,
-            name: costEvidence && costEvidence.name ? costEvidence.name : '-',
-            cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
-          };
-        })
+        return {
+          id: costEvidence && costEvidence.id ? costEvidence.id : null,
+          name: costEvidence && costEvidence.name ? costEvidence.name : '-',
+          cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
+        };
+      })
       : [],
     created_by: spk.created_by_user ? spk.created_by_user.name : '-',
     approved_by: spk.approved_by_user ? spk.approved_by_user.name : '-',

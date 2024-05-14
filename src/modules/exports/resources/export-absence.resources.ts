@@ -1,6 +1,6 @@
 import minioConfig from 'src/config/minio.config';
 import { Absence } from 'src/entities/absence.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export const ExportAbsenceResource = (absence: Absence): any => {
   return {

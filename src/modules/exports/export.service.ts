@@ -151,7 +151,7 @@ export class ExportService {
     const count = await query.getCount();
 
     const perLoop = 1000;
-    const loopCount = Math.ceil(count[0].count / perLoop);
+    const loopCount = Math.ceil(count / perLoop);
 
     query.limit(perLoop);
 

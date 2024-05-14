@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Repository, getManager } from 'typeorm';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ExportUserResource } from './resources/export-user.resources';
 import * as tmp from 'tmp';
@@ -92,6 +92,8 @@ export class ExportService {
     search: string,
     status: string,
   ) {
+    const rows = [];
+
     const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.region', 'region')
@@ -146,13 +148,22 @@ export class ExportService {
       prefixDate = ` from ${startDate} to ${endDate}`;
     }
 
-    const data = await query.getMany();
+    const count = await query.getCount();
 
-    const rows = [];
+    const perLoop = 1000;
+    const loopCount = Math.ceil(count[0].count / perLoop);
 
-    data.forEach((d) => {
-      rows.push(ExportPOResource(d));
-    });
+    query.limit(perLoop);
+
+    for (let idx = 0; idx < loopCount; idx++) {
+      query.offset(idx * perLoop);
+
+      const data = await query.getMany();
+
+      data.forEach((d) => {
+        rows.push(ExportPOResource(d));
+      });
+    }
 
     rows.forEach((d) => {
       d.invoices.forEach((element, index) => {

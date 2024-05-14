@@ -43,19 +43,21 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options.build());
   SwaggerModule.setup('docs', app, document);
 
-  if (cluster.isPrimary) {
-    console.log(`Master ${process.pid} is running`);
-    for (let i = 0; i < numCPUs; i++) {
-      cluster.fork();
-    }
-
-    cluster.on('exit', (worker) => {
-      console.log(`worker ${worker.process.pid} died`);
-    });
-  } else {
-    // await app.listen(process.env.PORT || 3000);
+  if (process.env.NODE_ENV == 'local') {
     await app.listen(configService.get('app.port'));
-    console.log(`Worker ${process.pid} started`);
+  } else {
+    if (cluster.isPrimary) {
+      console.log(`Master ${process.pid} is running`);
+      for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+      }
+      cluster.on('exit', (worker) => {
+        console.log(`worker ${worker.process.pid} died`);
+      });
+    } else {
+      await app.listen(configService.get('app.port'));
+      console.log(`Worker ${process.pid} started`);
+    }
   }
 }
 

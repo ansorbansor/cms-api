@@ -7,11 +7,11 @@ import { ValidationArguments } from 'class-validator/types/validation/Validation
 
 type ValidationNotExistsEntity =
   | {
-      id?: number | string;
-      name?: string;
-      code?: string;
-      cc?: string;
-    }
+    id?: number | string;
+    name?: string;
+    code?: string;
+    cc?: string;
+  }
   | undefined;
 
 @ValidatorConstraint({ name: 'IsExist', async: true })
@@ -28,7 +28,6 @@ export class IsExist implements ValidatorConstraintInterface {
       });
       return Boolean(entity.length == value.length);
     } else {
-      console.log('tototot', value);
       if (value != null && value != undefined && value != 'null') {
         const entity = await getRepository(repository).findOne({
           [pathToProperty ? pathToProperty : validationArguments.property]:

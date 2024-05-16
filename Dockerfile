@@ -1,7 +1,7 @@
 FROM node:16.15.1
 
 ENV TZ="Asia/Jakarta"
-ENV NODE_OPTIONS=--max_old_space_size=8192
+ENV NODE_OPTIONS=--max_old_space_size=10240
 
 RUN npm i -g @nestjs/cli typescript ts-node
 

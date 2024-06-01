@@ -175,10 +175,6 @@ export class ExportService {
           data.forEach((d) => {
             rows.push(ExportPOResource(d));
           });
-
-          if (value == loopCount < 1) {
-            callback();
-          }
         },
         (err) => {
           if (err) console.error(err.message);
@@ -189,7 +185,7 @@ export class ExportService {
       );
     });
 
-    console.log('[ExportPO] Start Loop Invoice');
+    console.log('[ExportPO] Start Loop Invoice ' + rows.length);
     let iid = 0;
 
     rows.forEach((d) => {

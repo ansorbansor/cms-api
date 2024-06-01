@@ -148,7 +148,10 @@ export class ExportService {
       prefixDate = ` from ${startDate} to ${endDate}`;
     }
 
+    console.log('[ExportPO] Start Get Count');
     const count = await query.getCount();
+
+    console.log('[ExportPO] Done Get Count : ' + count);
 
     const perLoop = 1000;
     const loopCount = Math.ceil(count / perLoop);
@@ -156,6 +159,7 @@ export class ExportService {
     query.limit(perLoop);
 
     for (let idx = 0; idx < loopCount; idx++) {
+      console.log('[ExportPO] Start Get Data : ' + idx + ' of ' + loopCount);
       query.offset(idx * perLoop);
 
       const data = await query.getMany();
@@ -165,7 +169,14 @@ export class ExportService {
       });
     }
 
+    console.log('[ExportPO] Start Loop Invoice');
+    let iid = 0;
+
     rows.forEach((d) => {
+      iid++;
+
+      console.log('[ExportPO] Loop Invoice ' + iid + ' of ' + rows.length);
+
       d.invoices.forEach((element, index) => {
         d[`AC${index + 1} Inv`] = element.invoice_number;
         d[`AC${index + 1} Inv Date`] = element.date;
@@ -186,11 +197,14 @@ export class ExportService {
       delete d.invoices;
     });
 
+    console.log('[ExportPO] Done Loop Invoice');
+
     const XLSX = xlsx;
     const workSheet = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
+    console.log('[ExportPO] Start Create File');
     const f = await new Promise((resolve) => {
       tmp.file(
         { mode: 0o644, prefix: `PO${prefixDate}`, postfix: '.xlsx' },
@@ -202,6 +216,8 @@ export class ExportService {
         },
       );
     });
+
+    console.log('[ExportPO] Done Create File');
 
     await this.activityLogService.create({
       user_id: user.id,

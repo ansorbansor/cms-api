@@ -17,6 +17,7 @@ import { UsersService } from '../users/users.service';
 import { RoleEnum } from 'src/utils/enums';
 import { ExportSPKOperationalResource } from './resources/export-spk-operational.resources';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
+import * as async from 'async';
 
 @Injectable()
 export class ExportService {
@@ -158,16 +159,35 @@ export class ExportService {
 
     query.limit(perLoop);
 
-    for (let idx = 0; idx < loopCount; idx++) {
-      console.log('[ExportPO] Start Get Data : ' + idx + ' of ' + loopCount);
-      query.offset(idx * perLoop);
+    const arr = Array.from(new Array(loopCount), (x, i) => i);
 
-      const data = await query.getMany();
+    await new Promise((resolve, reject) => {
+      async.forEachOf(
+        arr,
+        async (value, key, callback) => {
+          console.log(
+            '[ExportPO] Start Get Data : ' + value + ' of ' + loopCount,
+          );
+          query.offset(value * perLoop);
 
-      data.forEach((d) => {
-        rows.push(ExportPOResource(d));
-      });
-    }
+          const data = await query.getMany();
+
+          data.forEach((d) => {
+            rows.push(ExportPOResource(d));
+          });
+
+          if (value == loopCount < 1) {
+            callback();
+          }
+        },
+        (err) => {
+          if (err) console.error(err.message);
+          // configs is now a map of JSON data
+          rows.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+          resolve(1);
+        },
+      );
+    });
 
     console.log('[ExportPO] Start Loop Invoice');
     let iid = 0;
@@ -200,7 +220,11 @@ export class ExportService {
     console.log('[ExportPO] Done Loop Invoice');
 
     const XLSX = xlsx;
-    const workSheet = XLSX.utils.json_to_sheet(rows);
+
+    const outputData = rows.map(Object.values);
+    outputData.unshift(Object.keys(rows[0]));
+
+    const workSheet = XLSX.utils.aoa_to_sheet(outputData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 

@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:14.2
     container_name: postgres
+    command: -c 'max_connections=300'
     restart: always
     ports:
       - ${DATABASE_PORT}:5432
@@ -25,7 +26,6 @@ services:
     environment:
       TZ: Asia/Jakarta'
       PGTZ: Asia/Jakarta
-
   # api:
   #   build:
   #     context: .

@@ -5,7 +5,7 @@ services:
     image: postgres:14.2
     container_name: postgres
     command: -c 'max_connections=300'
-    shm_size: 1g
+    shm_size: 5g
     restart: always
     ports:
       - ${DATABASE_PORT}:5432

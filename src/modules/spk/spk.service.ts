@@ -502,7 +502,11 @@ export class SPKService {
         );
 
         data.andWhere(
-          '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
+          new Brackets((qb) => {
+            qb.where(
+              '(COALESCE(total_cash_advance.total_cash_advance, 0) - COALESCE(total_cashback.total_cashback, 0) + COALESCE(total_cashout.total_cashout, 0)) > COALESCE(total_unit_price.total_unit_price, 0)',
+            ).orWhere('spk.is_over_budget = true');
+          }),
         );
 
         data.andWhere('spk.status >= :status', {

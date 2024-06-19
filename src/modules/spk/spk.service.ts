@@ -1194,7 +1194,10 @@ export class SPKService {
 
     totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    if (totalSPKAmount <= maxBudgetBySite) {
+    if (
+      totalSPKAmount <= maxBudgetBySite &&
+      existingSPK.is_over_budget === false
+    ) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);
     }
 

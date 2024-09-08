@@ -62,6 +62,14 @@ export const SPKOperationalResourceDetail = (
   spk: SPKOperational,
   remarkSuperadmin?: string,
 ): any => {
+  if (spk.cost_evidences != null) {
+    spk.cost_evidences.sort((a, b) => (a.id < b.id ? -1 : 1));
+  }
+
+  if (spk.inhouse_team != null) {
+    spk.inhouse_team.sort((a, b) => (a.id < b.id ? -1 : 1));
+  }
+
   return {
     id: spk.id,
     spk_number: spk.spk_number,

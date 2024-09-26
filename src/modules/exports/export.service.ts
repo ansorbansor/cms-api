@@ -211,7 +211,7 @@ export class ExportService {
       });
 
       if (d.invoices.length > longestColumn) {
-        longestColumn = iid;
+        longestColumn = d.invoices.length;
         longestColumnId = iid - 1;
       }
 

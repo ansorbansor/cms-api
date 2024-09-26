@@ -187,11 +187,11 @@ export class ExportService {
 
     console.log('[ExportPO] Start Loop Invoice ' + rows.length);
     let iid = 0;
+    let longestColumn = 0;
+    let longestColumnId = 0;
 
     rows.forEach((d) => {
       iid++;
-
-      console.log('[ExportPO] Loop Invoice ' + iid + ' of ' + rows.length);
 
       d.invoices.forEach((element, index) => {
         d[`AC${index + 1} Inv`] = element.invoice_number;
@@ -209,6 +209,11 @@ export class ExportService {
         d[`AC${index + 1} Approve Date`] = element.approve_date;
         d[`AC${index + 1} Approve Amount`] = element.approve_amount;
       });
+
+      if (d.invoices.length > longestColumn) {
+        longestColumn = iid;
+        longestColumnId = iid - 1;
+      }
 
       delete d.invoices;
     });

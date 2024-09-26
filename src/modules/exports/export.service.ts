@@ -223,7 +223,7 @@ export class ExportService {
     const XLSX = xlsx;
 
     const outputData = rows.map(Object.values);
-    outputData.unshift(Object.keys(rows[0]));
+    outputData.unshift(Object.keys(rows[longestColumnId]));
 
     const workSheet = XLSX.utils.aoa_to_sheet(outputData);
     const wb = XLSX.utils.book_new();

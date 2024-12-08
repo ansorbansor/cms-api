@@ -19,6 +19,7 @@ import { SPKOperationalCostEvidence } from './spk-operationals.cost-evidence.ent
 import { SPKOperationalCategory } from './spk-operational-category.entity';
 import { Customer } from './customer.entity';
 import { SPKOperationalRequestType } from './spk-operational-request-type.entity';
+import { SPKOperationalSubCategory } from './spk-operational-subcategory.entity';
 
 @Entity({ name: 'spk_operationals' })
 export class SPKOperational extends EntityHelper {
@@ -41,6 +42,10 @@ export class SPKOperational extends EntityHelper {
   @ApiProperty({ example: 'Test' })
   @Column()
   spk_operational_category_id?: number;
+
+  @ApiProperty({ example: 'Test' })
+  @Column()
+  spk_operational_subcategory_id?: number;
 
   @ApiProperty({ example: 'Test' })
   @Column()
@@ -191,6 +196,10 @@ export class SPKOperational extends EntityHelper {
   @OneToOne(() => SPKOperationalCategory)
   @JoinColumn({ name: 'spk_operational_category_id' })
   category: SPKOperationalCategory;
+
+  @OneToOne(() => SPKOperationalSubCategory)
+  @JoinColumn({ name: 'spk_operational_subcategory_id' })
+  subcategory: SPKOperationalSubCategory;
 
   @OneToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })

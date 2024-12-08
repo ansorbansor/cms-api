@@ -217,6 +217,32 @@ export class SPKController {
     );
   }
 
+  @Get('subcategory')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getAllSPKSubCategory(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('status') status: number,
+  ) {
+    return successResponseList(
+      await this.spkService.getAllSPKSubCategory({
+        page,
+        limit,
+        total: 0,
+        search: search,
+        start_date: startDate,
+        end_date: endDate,
+        status: status,
+      }),
+      'success',
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

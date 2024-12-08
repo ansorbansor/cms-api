@@ -20,7 +20,7 @@ import { SPKOperationalCategoryService } from './spk-operational-category.servic
 export class SPKOperationalCategoryController {
   constructor(
     private readonly spkOperationalRequestTypeService: SPKOperationalCategoryService,
-  ) {}
+  ) { }
   @Get('spk-operation-category')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -30,6 +30,23 @@ export class SPKOperationalCategoryController {
   ) {
     return successResponseList(
       await this.spkOperationalRequestTypeService.findManyWithPagination({
+        page,
+        limit,
+        total: 0,
+      }),
+      'success',
+    );
+  }
+
+  @Get('spk-operation-subcategory')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findAllSub(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit') limit: number,
+  ) {
+    return successResponseList(
+      await this.spkOperationalRequestTypeService.findManySubWithPagination({
         page,
         limit,
         total: 0,

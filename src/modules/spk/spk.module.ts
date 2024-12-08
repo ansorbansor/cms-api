@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { SPKController } from './spk.controller';
 import { SPKService } from './spk.service';
 import { SPKCategory } from 'src/entities/spk-category.entity';
+import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SPKCategory } from 'src/entities/spk-category.entity';
       SPKInhouseTeam,
       SPKCostEvidence,
       SPKCategory,
+      SPKSubCategory,
     ]),
     ActivityLogModule,
     UsersModule,
@@ -24,4 +26,4 @@ import { SPKCategory } from 'src/entities/spk-category.entity';
   providers: [SPKService],
   exports: [SPKService],
 })
-export class SPKModule {}
+export class SPKModule { }

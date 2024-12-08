@@ -30,6 +30,14 @@ export class CreateSPKOperationalDTO {
   spk_operational_category_id?: number;
 
   @ApiProperty({ example: 'Test' })
+  @IsNotEmpty({ message: 'spk_operational_subcategory_id tidak boleh kosong' })
+  @Validate(IsExist, ['SPKOperationalSubCategory', 'id'], {
+    message: 'spk_operational_subcategory_id tidak ditemukan',
+  })
+  @Transform(({ value }) => (value == '' || value == null ? 0 : value))
+  spk_operational_subcategory_id?: number;
+
+  @ApiProperty({ example: 'Test' })
   @IsNotEmpty({ message: 'Cash advance tidak boleh kosong' })
   cash_advance?: number;
 

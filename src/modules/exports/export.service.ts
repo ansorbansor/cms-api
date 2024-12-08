@@ -97,6 +97,10 @@ export class ExportService {
 
     const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
+      .addSelect(
+        'COALESCE(total_cash_advance.total_cash_advance, 0)',
+        'po_total_cash_advance',
+      )
       .leftJoinAndSelect('po.region', 'region')
       .leftJoinAndSelect('po.area', 'area')
       .leftJoinAndSelect('po.customer', 'customer')
@@ -110,6 +114,17 @@ export class ExportService {
       .leftJoinAndSelect('po.pd', 'pd')
       .leftJoinAndSelect('po.po_invoice', 'po_invoice')
       .leftJoinAndSelect('po.pic_data', 'pic_data')
+      .leftJoin(
+        (qb) => {
+          return qb
+            .select('s.po_id')
+            .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+            .from(SPK, 's')
+            .groupBy('s.po_id');
+        },
+        'total_cash_advance',
+        '"total_cash_advance"."s_po_id" = po.id',
+      )
       .orderBy('po.id', 'DESC');
 
     if (search) {

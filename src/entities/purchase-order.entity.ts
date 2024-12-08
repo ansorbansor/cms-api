@@ -247,4 +247,7 @@ export class PurchaseOrder extends EntityHelper {
   })
   @JoinColumn({ name: 'pic' })
   pic_data?: User;
+
+  @Column({ select: false, insert: false, readonly: true })
+  total_cash_advance: number;
 }

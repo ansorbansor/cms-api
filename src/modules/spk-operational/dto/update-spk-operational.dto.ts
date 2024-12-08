@@ -25,6 +25,13 @@ export class UpdateSPKOperationalDTO {
   })
   spk_operational_category_id?: number;
 
+  @ApiProperty({ example: 'Test' })
+  @IsOptional()
+  @Validate(IsExist, ['SPKOperationalSubCategory', 'id'], {
+    message: 'spk_operational_subcategory_id tidak ditemukan',
+  })
+  spk_operational_subcategory_id?: number;
+
   @ApiProperty({ example: 200000 })
   @IsOptional()
   cash_advance: number;

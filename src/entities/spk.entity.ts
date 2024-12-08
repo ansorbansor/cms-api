@@ -20,6 +20,7 @@ import { SPKCostEvidence } from './spk-cost-evidence.entity';
 import moment from 'moment';
 import { SPKCategory } from './spk-category.entity';
 import { Customer } from './customer.entity';
+import { SPKSubCategory } from './spk-subcategory.entity';
 
 @Entity({ name: 'spk' })
 export class SPK extends EntityHelper {
@@ -132,6 +133,9 @@ export class SPK extends EntityHelper {
   category_id?: number;
 
   @Column()
+  subcategory_id?: number;
+
+  @Column()
   is_over_budget?: boolean;
 
   @Column()
@@ -227,6 +231,10 @@ export class SPK extends EntityHelper {
   @OneToOne(() => SPKCategory)
   @JoinColumn({ name: 'category_id' })
   category: SPKCategory;
+
+  @OneToOne(() => SPKCategory)
+  @JoinColumn({ name: 'subcategory_id' })
+  subcategory: SPKSubCategory;
 
   @OneToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })

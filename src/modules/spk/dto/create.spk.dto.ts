@@ -82,6 +82,13 @@ export class CreateSPKDTO {
   category_id: number;
 
   @ApiProperty({ example: 1 })
+  @IsNotEmpty({ message: 'Sub Kategori tidak boleh kosong' })
+  @Validate(IsExist, ['SPKSubCategory', 'id'], {
+    message: 'Sub Kategori SPK tidak ditemukan',
+  })
+  subcategory_id: number;
+
+  @ApiProperty({ example: 1 })
   @IsOptional()
   @Validate(IsExist, ['Customer', 'id'], {
     message: 'Customer tidak ditemukan',

@@ -93,6 +93,7 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
     'Plan Date': po.plan_date
       ? moment(po.plan_date).format('YYYY-MM-DD')
       : null,
+    'Actual Cost': po.total_cash_advance ? Number(po.total_cash_advance) : 0,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
         return {

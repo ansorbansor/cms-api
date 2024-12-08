@@ -286,6 +286,7 @@ export class SPKOperationalService {
       .leftJoinAndSelect('spk-operational.cost_evidences', 'cost_evidences')
       .leftJoinAndSelect('spk-operational.region', 'region')
       .leftJoinAndSelect('spk-operational.category', 'category')
+      .leftJoinAndSelect('spk-operational.subcategory', 'subcategory')
       .leftJoinAndSelect('spk-operational.request_type', 'request_type');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
@@ -545,6 +546,7 @@ export class SPKOperationalService {
       .leftJoinAndSelect('spk-operational.paid_by_user', 'paid_by_user')
       .leftJoinAndSelect('spk-operational.closed_by_user', 'closed_by_user')
       .leftJoinAndSelect('spk-operational.category', 'category')
+      .leftJoinAndSelect('spk-operational.subcategory', 'subcategory')
       .leftJoinAndSelect('spk-operational.request_type', 'request_type')
       .where(fields)
       .getOne();

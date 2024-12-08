@@ -27,6 +27,7 @@ export const PurchaseOrderBySiteResource = (
     purchase_order: po.map((e) => {
       return {
         id: e.id,
+        unique_id: exportUniqueId(e.id, e.createdAtParseDate),
         cc: e.cc,
         po_number: e.po_number,
         item_description: e.item_description,

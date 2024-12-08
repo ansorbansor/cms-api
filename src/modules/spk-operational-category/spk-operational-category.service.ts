@@ -5,13 +5,17 @@ import { Repository } from 'typeorm';
 import { infinityPagination } from 'src/utils/responses';
 import { SPKOperationalCategoryResource } from './resources/spk-operational-category.resources';
 import { SPKOperationalCategory } from 'src/entities/spk-operational-category.entity';
+import { SPKOperationalSubCategory } from 'src/entities/spk-operational-subcategory.entity';
+import { SPKOperationalSubCategoryResource } from './resources/spk-operational-subcategory.resources';
 
 @Injectable()
 export class SPKOperationalCategoryService {
   constructor(
     @InjectRepository(SPKOperationalCategory)
     private spkOperationalCategoryRepository: Repository<SPKOperationalCategory>,
-  ) {}
+    @InjectRepository(SPKOperationalSubCategory)
+    private spkOperationalSubCategoryRepository: Repository<SPKOperationalSubCategory>,
+  ) { }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const total = await this.spkOperationalCategoryRepository.count();
@@ -28,6 +32,25 @@ export class SPKOperationalCategoryService {
     return infinityPagination(
       getData,
       SPKOperationalCategoryResource,
+      paginationOptions,
+    );
+  }
+
+  async findManySubWithPagination(paginationOptions: IPaginationOptions) {
+    const total = await this.spkOperationalSubCategoryRepository.count();
+    paginationOptions.total = total;
+
+    const getData = await this.spkOperationalSubCategoryRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      order: {
+        name: 'ASC',
+      },
+    });
+
+    return infinityPagination(
+      getData,
+      SPKOperationalSubCategoryResource,
       paginationOptions,
     );
   }

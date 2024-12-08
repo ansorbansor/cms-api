@@ -21,6 +21,8 @@ import { UsersService } from '../users/users.service';
 import { SPKCategory } from 'src/entities/spk-category.entity';
 import { SPKCategoryResource } from './resources/spk-category.resources';
 import { log } from 'console';
+import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
+import { SPKSubCategoryResource } from './resources/spk-subcategory.resources';
 
 @Injectable()
 export class SPKService {
@@ -33,6 +35,8 @@ export class SPKService {
     private spkCostEvidenceRepository: Repository<SPKCostEvidence>,
     @InjectRepository(SPKCategory)
     private spkCategoryRepository: Repository<SPKCategory>,
+    @InjectRepository(SPKSubCategory)
+    private spkSubCategoryRepository: Repository<SPKSubCategory>,
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
     private userService: UsersService,
@@ -748,6 +752,11 @@ export class SPKService {
         'category',
         'category.deleted_at IS NULL',
       )
+      .leftJoinAndSelect(
+        'spk.subcategory',
+        'subcategory',
+        'subcategory.deleted_at IS NULL',
+      )
       .where(fields)
       .getOne();
 
@@ -1295,6 +1304,34 @@ export class SPKService {
     return infinityPagination(
       await data.getMany(),
       SPKCategoryResource,
+      paginationOptions,
+    );
+  }
+
+  async getAllSPKSubCategory(paginationOptions: IPaginationOptions) {
+    const data = this.spkSubCategoryRepository.createQueryBuilder('spk_subcategory');
+
+    if (paginationOptions.search) {
+      data.andWhere('spk_subcategory.name ILIKE :search', {
+        search: `%${paginationOptions.search}%`,
+      });
+    }
+
+    data.orderBy('spk_subcategory.name', 'ASC');
+
+    const total = await data.getCount();
+    paginationOptions.total = total;
+
+    if (!paginationOptions.limit) {
+      paginationOptions.limit = total;
+    }
+
+    data.skip((paginationOptions.page - 1) * paginationOptions.limit);
+    data.take(paginationOptions.limit);
+
+    return infinityPagination(
+      await data.getMany(),
+      SPKSubCategoryResource,
       paginationOptions,
     );
   }

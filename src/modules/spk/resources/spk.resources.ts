@@ -232,6 +232,10 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
       id: spk.category && spk.category.id ? spk.category.id : null,
       name: spk.category && spk.category.name ? spk.category.name : '-',
     },
+    subcategory: {
+      id: spk.subcategory && spk.subcategory.id ? spk.subcategory.id : null,
+      name: spk.subcategory && spk.subcategory.name ? spk.subcategory.name : '-',
+    },
     remark_superadmin: remarkSuperadmin,
     customer: {
       id: spk.customer && spk.customer.id ? spk.customer.id : null,

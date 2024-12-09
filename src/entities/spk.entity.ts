@@ -232,7 +232,7 @@ export class SPK extends EntityHelper {
   @JoinColumn({ name: 'category_id' })
   category: SPKCategory;
 
-  @OneToOne(() => SPKCategory)
+  @OneToOne(() => SPKSubCategory)
   @JoinColumn({ name: 'subcategory_id' })
   subcategory: SPKSubCategory;
 

@@ -2,6 +2,7 @@ import { SPK } from 'src/entities/spk.entity';
 import moment from 'moment';
 import minioConfig from 'src/config/minio.config';
 import { SPKStatus } from 'src/utils/enums';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const SPKResource = (spk: SPK): any => {
   return {
@@ -143,6 +144,9 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
       total_unit_price: spk.total_po_unit_price
         ? Number(spk.total_po_unit_price)
         : null,
+      unique_id: spk.po
+        ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate)
+        : null,
     },
     distance_to_site_photo: spk.distance_to_site_file
       ? minioConfig().fullUrl + spk.distance_to_site_file.path
@@ -234,7 +238,8 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
     },
     subcategory: {
       id: spk.subcategory && spk.subcategory.id ? spk.subcategory.id : null,
-      name: spk.subcategory && spk.subcategory.name ? spk.subcategory.name : '-',
+      name:
+        spk.subcategory && spk.subcategory.name ? spk.subcategory.name : '-',
     },
     remark_superadmin: remarkSuperadmin,
     customer: {

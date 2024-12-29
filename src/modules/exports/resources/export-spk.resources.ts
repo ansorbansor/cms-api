@@ -1,6 +1,7 @@
 import { SPK } from 'src/entities/spk.entity';
 import moment from 'moment';
 import { SPKStatus } from 'src/utils/enums';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const ExportSPKResource = (spk: SPK): any => {
   return {
@@ -52,6 +53,9 @@ export const ExportSPKResource = (spk: SPK): any => {
     work_type: spk.work_type ? spk.work_type : '-',
     item_description:
       spk.po && spk.po.item_description ? spk.po.item_description : '-',
+    unique_id: spk.po
+      ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate)
+      : '-',
     category: spk.category ? spk.category.name : '-',
     sitePO: spk.site.sitePO
       ? spk.site.sitePO.map((relatedPO) => {

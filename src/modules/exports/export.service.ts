@@ -328,6 +328,11 @@ export class ExportService {
         'spk.category',
         'category',
         'category.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk.subcategory',
+        'subcategory',
+        'subcategory.deleted_at IS NULL',
       );
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
@@ -525,6 +530,11 @@ export class ExportService {
         'spk-operational.category',
         'category',
         'category.deleted_at IS NULL',
+      )
+      .leftJoinAndSelect(
+        'spk-operational.subcategory',
+        'subcategory',
+        'subcategory.deleted_at IS NULL',
       );
 
     const currentUser = await this.userService.findOneFull({ id: user.id });

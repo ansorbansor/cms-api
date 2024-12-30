@@ -57,6 +57,7 @@ export const ExportSPKResource = (spk: SPK): any => {
       ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate)
       : '-',
     category: spk.category ? spk.category.name : '-',
+    subcategory: spk.subcategory ? spk.subcategory.name : '-',
     sitePO: spk.site.sitePO
       ? spk.site.sitePO.map((relatedPO) => {
         return {

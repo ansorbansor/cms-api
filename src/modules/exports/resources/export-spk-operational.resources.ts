@@ -42,6 +42,7 @@ export const ExportSPKOperationalResource = (spk: SPKOperational): any => {
         : '-',
     area: spk.area && spk.area.name ? spk.area.name : '-',
     category: spk.category ? spk.category.name : '-',
+    subcategory: spk.subcategory ? spk.subcategory.name : '-',
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
         return {

@@ -14,7 +14,7 @@ import { ExportSPKResource } from './resources/export-spk.resources';
 import { Absence } from 'src/entities/absence.entity';
 import { ExportAbsenceResource } from './resources/export-absence.resources';
 import { UsersService } from '../users/users.service';
-import { RoleEnum } from 'src/utils/enums';
+import { RoleEnum, SPKStatus } from 'src/utils/enums';
 import { ExportSPKOperationalResource } from './resources/export-spk-operational.resources';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import * as async from 'async';
@@ -120,6 +120,15 @@ export class ExportService {
             .select('s.po_id')
             .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
             .from(SPK, 's')
+            .where('s.status = :status1', {
+              status1: SPKStatus.PAID,
+            })
+            .orWhere('s.status = :status2', {
+              status2: SPKStatus.PAID_NEED_EVIDENCE,
+            })
+            .orWhere('s.status = :status3', {
+              status3: SPKStatus.CLOSED,
+            })
             .groupBy('s.po_id');
         },
         'total_cash_advance',

@@ -79,7 +79,8 @@ export class PurchaseOrderService {
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.project', 'project')
       .leftJoinAndSelect('po.region', 'region')
-      .leftJoinAndSelect('po.site', 'site');
+      .leftJoinAndSelect('po.site', 'site')
+      .leftJoinAndSelect('po.area', 'area');
 
     if (paginationOptions.search) {
       data.andWhere(

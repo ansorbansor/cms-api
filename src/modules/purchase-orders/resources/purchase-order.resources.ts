@@ -13,6 +13,16 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
     region_name: po.region ? po.region.name : '-',
     project_name: po.project ? po.project.name : '-',
     status: po.status,
+    area: {
+      id: po.area ? po.area.id : null,
+      name: po.area ? po.area.name : '-',
+    },
+    site: {
+      id: po.site ? po.site.id : null,
+      name: po.site ? po.site.name : '-',
+      code: po.site ? po.site.code : '-',
+    },
+    item_description: po.item_description ? po.item_description : '-',
   };
 };
 

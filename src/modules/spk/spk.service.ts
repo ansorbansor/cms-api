@@ -149,7 +149,7 @@ export class SPKService {
     // }
 
     let maxBudgetBySite = await getManager().query(
-      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      "SELECT SUM(line_amount * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
       [createSPKDTO.site_id],
     );
     maxBudgetBySite = maxBudgetBySite[0].sum
@@ -299,7 +299,7 @@ export class SPKService {
     }
 
     let maxBudgetBySite = await getManager().query(
-      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      "SELECT SUM(line_amount * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
       [updateSPKDTO.site_id],
     );
     maxBudgetBySite = maxBudgetBySite[0].sum
@@ -949,7 +949,7 @@ export class SPKService {
     }
 
     let maxBudgetBySite = await getManager().query(
-      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      "SELECT SUM(line_amount * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
       [exists.site_id],
     );
 
@@ -1175,7 +1175,7 @@ export class SPKService {
     }
 
     let maxBudgetBySite = await getManager().query(
-      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      "SELECT SUM(line_amount * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
       [existingSPK.site_id],
     );
 

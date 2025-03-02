@@ -44,6 +44,13 @@ export class Absence extends EntityHelper {
   @Column()
   late_reason?: string;
 
+@Column({ type: 'text', nullable: true })
+activity_plan?: string;
+
+@Column({ type: 'text', nullable: true })
+activity_result?: string;
+
+
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;

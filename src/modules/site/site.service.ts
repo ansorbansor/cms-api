@@ -46,7 +46,7 @@ export class SiteService {
       .getMany();
 
     let maxBudgetBySite = await getManager().query(
-      "SELECT SUM(unit_price * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+      "SELECT SUM(line_amount * budget_percentage / 100) FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
       [siteId],
     );
 

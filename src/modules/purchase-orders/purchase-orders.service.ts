@@ -83,19 +83,34 @@ export class PurchaseOrderService {
       .leftJoinAndSelect('po.area', 'area');
 
     if (paginationOptions.search) {
-      data.andWhere(
-        new Brackets((qb) => {
-          qb.where(`LOWER(po.cc) LIKE :search`, {
-            search: `%${paginationOptions.search.toLowerCase()}%`,
-          })
-            .orWhere(`LOWER(po.po_number) LIKE :search`, {
+      if (paginationOptions.search.split('-').length == 3) {
+        const uniqueId = paginationOptions.search.split('-')[2];
+        const search = paginationOptions.search;
+        const poDate = `${search.substring(0, 4)}-${search.substring(8, 10)}-${search.substring(10, 12)}`;
+        if (!isNaN(Number(uniqueId))) {
+          data
+            .andWhere(`po.id = :search`, {
+              search: uniqueId,
+            })
+            .andWhere(`DATE_TRUNC('day', "po"."created_at") = :date`, {
+              date: poDate,
+            });
+        }
+      } else {
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where(`LOWER(po.cc) LIKE :search`, {
               search: `%${paginationOptions.search.toLowerCase()}%`,
             })
-            .orWhere(`LOWER(site.code) LIKE :search`, {
-              search: `%${paginationOptions.search.toLowerCase()}%`,
-            });
-        }),
-      );
+              .orWhere(`LOWER(po.po_number) LIKE :search`, {
+                search: `%${paginationOptions.search.toLowerCase()}%`,
+              })
+              .orWhere(`LOWER(site.code) LIKE :search`, {
+                search: `%${paginationOptions.search.toLowerCase()}%`,
+              });
+          }),
+        );
+      }
     }
 
     if (paginationOptions.start_date) {

@@ -22,6 +22,10 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
       name: po.site ? po.site.name : '-',
       code: po.site ? po.site.code : '-',
     },
+    customer: po.customer ? {
+      id: po.customer.id,
+      name: po.customer.name,
+    } : null,
     item_description: po.item_description ? po.item_description : '-',
   };
 };

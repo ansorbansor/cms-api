@@ -80,7 +80,8 @@ export class PurchaseOrderService {
       .leftJoinAndSelect('po.project', 'project')
       .leftJoinAndSelect('po.region', 'region')
       .leftJoinAndSelect('po.site', 'site')
-      .leftJoinAndSelect('po.area', 'area');
+      .leftJoinAndSelect('po.area', 'area')
+      .leftJoinAndSelect('po.customer', 'customer');
 
     if (paginationOptions.search) {
       if (paginationOptions.search.split('-').length == 3) {

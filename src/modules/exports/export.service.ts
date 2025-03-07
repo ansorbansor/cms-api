@@ -133,8 +133,7 @@ export class ExportService {
         },
         'total_cash_advance',
         '"total_cash_advance"."s_po_id" = po.id',
-      )
-      .orderBy('po.id', 'DESC');
+      );
 
     if (search) {
       query.andWhere(
@@ -174,9 +173,18 @@ export class ExportService {
     }
 
     console.log('[ExportPO] Start Get Count');
-    const count = await query.getCount();
+
+    const queryCount = query.getQueryAndParameters();
+    const queryCountStr = queryCount[0].replace(
+      /SELECT\s+([\s\S]*?)\s+FROM/,
+      'SELECT COUNT(1) FROM',
+    );
+    let count = await getManager().query(queryCountStr, queryCount[1]);
+    count = count[0].count;
 
     console.log('[ExportPO] Done Get Count : ' + count);
+
+    query.orderBy('po.id', 'DESC');
 
     const perLoop = 1000;
     const loopCount = Math.ceil(count / perLoop);

@@ -360,11 +360,29 @@ export class ExportService {
       query.where('spk.deleted_at IS NULL');
     }
 
-    if (search) {
-      query.andWhere('spk.spk_number ILIKE :search', {
-        search: `%${search}%`,
-      });
-    }
+// This is the new, updated search logic
+if (search) {
+  // Regular expression to match the Unique ID format (e.g., "2025BSN-0707-123")
+  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+  const match = search.match(uniqueIdRegex);
+
+  if (match) {
+    // If the search term IS a Unique ID, search by the real ID
+    const extractedId = match[1];
+    query.andWhere('spk.id = :id', { id: extractedId });
+  } else {
+    // If it's NOT a Unique ID, perform the original search on both fields
+    query.andWhere(
+      new Brackets((qb) => {
+        qb.where('spk.spk_number ILIKE :search', {
+          search: `%${search}%`,
+        }).orWhere('site.code ILIKE :searchSite', {
+          searchSite: `%${search}%`,
+        });
+      }),
+    );
+  }
+}
 
     if (status) {
       query.andWhere('spk.status = :status', {

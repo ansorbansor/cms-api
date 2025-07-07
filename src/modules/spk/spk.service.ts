@@ -599,17 +599,29 @@ export class SPKService {
       }
     }
 
-    if (paginationOptions.search) {
-      data.andWhere(
-        new Brackets((qb) => {
-          qb.where('spk.spk_number ILIKE :search', {
-            search: `%${paginationOptions.search}%`,
-          }).orWhere('site.code ILIKE :searchSite', {
-            searchSite: `%${paginationOptions.search}%`,
-          });
-        }),
-      );
-    }
+// This is the new, updated code
+if (paginationOptions.search) {
+  // Regular expression to match the Unique ID format (e.g., "2025BSN-0707-123")
+  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+  const match = paginationOptions.search.match(uniqueIdRegex);
+
+  if (match) {
+    // If the search term IS a Unique ID, search by the real ID
+    const extractedId = match[1]; // Extracts the original ID (e.g., "123")
+    data.andWhere('spk.id = :id', { id: extractedId });
+  } else {
+    // If it's NOT a Unique ID, perform the original search
+    data.andWhere(
+      new Brackets((qb) => {
+        qb.where('spk.spk_number ILIKE :search', {
+          search: `%${paginationOptions.search}%`,
+        }).orWhere('site.code ILIKE :searchSite', {
+          searchSite: `%${paginationOptions.search}%`,
+        });
+      }),
+    );
+  }
+}
 
     if (paginationOptions.start_date) {
       data.andWhere('spk.created_at >= :start_date', {

@@ -360,18 +360,31 @@ export class ExportService {
       query.where('spk.deleted_at IS NULL');
     }
 
-// This is the new, updated search logic
 if (search) {
-  // Regular expression to match the Unique ID format (e.g., "2025BSN-0707-123")
+  // --- Logic to handle Unique IDs ---
+  const potentialUniqueIds = search.split(',').map(item => item.trim());
+  const extractedIds = [];
   const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
-  const match = search.match(uniqueIdRegex);
 
-  if (match) {
-    // If the search term IS a Unique ID, search by the real ID
-    const extractedId = match[1];
-    query.andWhere('spk.id = :id', { id: extractedId });
+  for (const pId of potentialUniqueIds) {
+    const match = pId.match(uniqueIdRegex);
+    if (match) {
+      extractedIds.push(match[1]);
+    }
+  }
+  // --- End of Unique ID Logic ---
+
+  if (extractedIds.length > 0) {
+    // Priority 1: Search by one or more Unique IDs
+    query.andWhere('spk.id IN (:...ids)', { ids: extractedIds });
+
+  } else if (search.includes(',')) {
+    // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
+    const spkNumbers = search.split(',').map(item => item.trim());
+    query.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
+
   } else {
-    // If it's NOT a Unique ID, perform the original search on both fields
+    // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
     query.andWhere(
       new Brackets((qb) => {
         qb.where('spk.spk_number ILIKE :search', {

@@ -326,4 +326,22 @@ export class SPKController {
       'BOP Berhasil Direject',
     );
   }
+
+// Add this entire function inside the SPKController class
+
+@Post('approve-many')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_APPROVE) // Make sure this permission is correct for the approving roles
+async approveMany(@Request() req, @Body() body: { ids: number[] }) {
+  return successResponse(
+    await this.spkService.approveMany(body.ids, req.user, req.ip),
+    'success',
+  );
 }
+
+
+
+}
+
+

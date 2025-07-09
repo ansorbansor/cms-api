@@ -27,6 +27,7 @@ export interface IPaginationOptions {
   status?: number;
   status_bool?: boolean;
   status_string?: string;
+biosron_id?: string;
   is_admin?: boolean;
   employeePosition?: number;
   type?: number;

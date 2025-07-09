@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Brackets, getManager, Repository } from 'typeorm';
+import { Brackets, getManager, In, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -599,29 +599,59 @@ export class SPKService {
       }
     }
 
-// This is the new, updated code
-if (paginationOptions.search) {
-  // Regular expression to match the Unique ID format (e.g., "2025BSN-0707-123")
-  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
-  const match = paginationOptions.search.match(uniqueIdRegex);
 
-  if (match) {
-    // If the search term IS a Unique ID, search by the real ID
-    const extractedId = match[1]; // Extracts the original ID (e.g., "123")
-    data.andWhere('spk.id = :id', { id: extractedId });
+if (paginationOptions.search) {
+  const search = paginationOptions.search;
+
+  // --- Logic to handle Unique IDs ---
+  const potentialUniqueIds = search.split(',').map(item => item.trim());
+  const extractedIds = [];
+  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+
+  for (const pId of potentialUniqueIds) {
+    const match = pId.match(uniqueIdRegex);
+    if (match) {
+      extractedIds.push(match[1]);
+    }
+  }
+  // --- End of Unique ID Logic ---
+
+  if (extractedIds.length > 0) {
+    // Priority 1: Search by one or more Unique IDs
+    data.andWhere('po.id IN (:...ids)', { ids: extractedIds });
+
+  } else if (search.includes(',')) {
+    // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
+    const spkNumbers = search.split(',').map(item => item.trim());
+    data.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
+
   } else {
-    // If it's NOT a Unique ID, perform the original search
+    // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
     data.andWhere(
       new Brackets((qb) => {
         qb.where('spk.spk_number ILIKE :search', {
-          search: `%${paginationOptions.search}%`,
+          search: `%${search}%`,
         }).orWhere('site.code ILIKE :searchSite', {
-          searchSite: `%${paginationOptions.search}%`,
+          searchSite: `%${search}%`,
         });
       }),
     );
   }
 }
+
+
+  if (paginationOptions.biosron_id) {
+    // This regex extracts the numeric ID from the formatted Biosron ID string 
+    // (e.g., gets "123" from "2024BSN-0708-123")
+    const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+    const match = String(paginationOptions.biosron_id).match(uniqueIdRegex);
+
+    if (match) {
+      const purchaseOrderId = match[1];
+      // Since the query already joins the 'po' table, we can filter by its ID.
+      data.andWhere('po.id = :purchaseOrderId', { purchaseOrderId });
+    }
+  }
 
     if (paginationOptions.start_date) {
       data.andWhere('spk.created_at >= :start_date', {
@@ -1292,6 +1322,47 @@ if (paginationOptions.search) {
     throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
   }
 
+// Add this entire function inside the SPKService class
+
+async approveMany(ids: number[], user: User, ip: string): Promise<any> {
+  if (!ids || ids.length === 0) {
+    throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
+  }
+
+  // Find which of the selected items are actually in a state that can be approved
+  const itemsToApprove = await this.spkRepository.find({
+    where: {
+      id: In(ids),
+      // You can add multiple valid statuses here
+      status: In([SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET])
+    }
+  });
+
+  const validIds = itemsToApprove.map(item => item.id);
+
+  if (validIds.length === 0) {
+    throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
+  }
+
+  // Update only the valid items to the 'Approved' status
+  await this.spkRepository.update(validIds, {
+    status: SPKStatus.APPROVED,
+    approved_by: user.id,
+    // Optional: you can set the approval date here
+    // approved_at: moment().format('YYYY-MM-DD HH:mm:ss'), 
+  });
+
+  // Create a single log entry for the bulk action
+  await this.activityLogService.create({
+    user_id: user.id,
+    description: `Melakukan approve massal untuk BOP dengan ID: ${validIds.join(', ')}`,
+    ip: ip,
+  });
+
+  return { approved_count: validIds.length, total_selected: ids.length };
+}
+
+
   async getAllSPKCategory(paginationOptions: IPaginationOptions) {
     const data = this.spkCategoryRepository.createQueryBuilder('spk_category');
 
@@ -1348,3 +1419,4 @@ if (paginationOptions.search) {
     );
   }
 }
+

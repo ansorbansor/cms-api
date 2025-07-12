@@ -160,36 +160,41 @@ export class SPKController {
     );
   }
 
-  @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Request() req,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit') limit: number,
-    @Query('search') search: string,
-    @Query('start_date') startDate: string,
-    @Query('end_date') endDate: string,
-    @Query('status') status: number,
-    @Query('mobile') mobile: boolean,
-  ) {
-    return successResponseList(
-      await this.spkService.findManyWithPagination(
-        {
-          page,
-          limit,
-          total: 0,
-          search: search,
-          start_date: startDate,
-          end_date: endDate,
-          status: status,
-        },
-        req.user,
-        mobile,
-      ),
-      'success',
-    );
-  }
+// In spk.controller.ts
+
+@Get()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+async findAll(
+  @Request() req,
+  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  @Query('limit') limit: number,
+  @Query('search') search: string,
+  @Query('start_date') startDate: string,
+  @Query('end_date') endDate: string,
+  @Query('status') status: number,
+  @Query('mobile') mobile: boolean,
+  @Query('projects') projects: string, // <-- ADD THIS LINE
+) {
+  return successResponseList(
+    await this.spkService.findManyWithPagination(
+      {
+        page,
+        limit,
+        total: 0,
+        search: search,
+        start_date: startDate,
+        end_date: endDate,
+        status: status,
+        projects: projects, // <-- AND ADD THIS LINE
+      },
+      req.user,
+      mobile,
+    ),
+    'success',
+  );
+} 
+
 
   @Get('category')
   @UseGuards(JwtAuthGuard, RolesGuard)

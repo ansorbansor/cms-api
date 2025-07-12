@@ -148,6 +148,7 @@ export class UsersService {
       .leftJoinAndSelect('employeePosition.roleAccess', 'roleAccess')
       .leftJoinAndSelect('roleAccess.menu', 'menu')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
+      .addSelect('user.project')
       .where(fields)
       .getOne();
 

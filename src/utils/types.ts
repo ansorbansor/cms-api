@@ -32,4 +32,5 @@ biosron_id?: string;
   employeePosition?: number;
   type?: number;
   source?: string;
+projects?: string;
 }

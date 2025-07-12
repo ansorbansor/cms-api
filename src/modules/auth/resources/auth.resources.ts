@@ -32,6 +32,7 @@ export const AuthResource = (token: string, user: User): any => {
           : null,
       provider: user.provider,
       status: user.status,
+      project: user.project, // <-- ADD THIS LINE
       notification_token: user.notification_token,
       access: mapAccess,
     },

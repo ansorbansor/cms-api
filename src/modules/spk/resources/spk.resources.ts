@@ -5,12 +5,16 @@ import { SPKStatus } from 'src/utils/enums';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const SPKResource = (spk: SPK): any => {
+  console.log('--- DEBUGGING SPK OBJECT ---');
+  console.log(JSON.stringify(spk, null, 2));
+  console.log('----------------------------');
   return {
     id: spk.id,
     unique_id: spk.po ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate) : '-',
     spk_number: spk.spk_number,
     spk_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
+    project_name: spk.po?.project?.name || '-',
     cash_advance: spk.cash_advance,
     spk_status:
       spk.status != null && spk.status != undefined

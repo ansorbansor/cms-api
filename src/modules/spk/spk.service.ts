@@ -397,10 +397,12 @@ export class SPKService {
     user: User,
     mobile: boolean,
   ) {
+console.log('--- 3. BACKEND RECEIVED OPTIONS ---:', paginationOptions);
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .withDeleted()
       .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
+      .leftJoinAndSelect('po.project', 'project', 'project.deleted_at IS NULL')
       .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
       .leftJoinAndSelect('spk.site', 'site', 'site.deleted_at IS NULL')
       .leftJoinAndSelect(
@@ -411,6 +413,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
+console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
 
     let filterRegion = true;
 
@@ -599,6 +602,13 @@ export class SPKService {
       }
     }
 
+if (paginationOptions.projects) {
+  // Split the incoming string by commas and trim whitespace from each project name
+  const projectNames = paginationOptions.projects.split(',').map(name => name.trim());
+
+  // Use the IN operator to check if the project.name is in the array of names
+  data.andWhere('project.name IN (:...projectNames)', { projectNames });
+}
 
 if (paginationOptions.search) {
   const search = paginationOptions.search;
@@ -731,6 +741,7 @@ if (paginationOptions.search) {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
+console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }

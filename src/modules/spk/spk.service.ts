@@ -610,6 +610,16 @@ if (paginationOptions.projects) {
   data.andWhere('project.name IN (:...projectNames)', { projectNames });
 }
 
+if (
+  currentUser.employeePosition.code == RoleEnum.PM &&
+  !paginationOptions.status
+) {
+  // Default filter for PM: show items that are 'APPROVED' and 'OVER BUDGET'
+  data.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
+  data.andWhere('spk.is_over_budget = true');
+}
+
+
 if (paginationOptions.search) {
   const search = paginationOptions.search;
 
@@ -1335,35 +1345,56 @@ console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
 
 // Add this entire function inside the SPKService class
 
+// In spk.service.ts
+// Replace your existing approveMany function with this one
+
 async approveMany(ids: number[], user: User, ip: string): Promise<any> {
   if (!ids || ids.length === 0) {
     throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
   }
 
-  // Find which of the selected items are actually in a state that can be approved
-  const itemsToApprove = await this.spkRepository.find({
-    where: {
-      id: In(ids),
-      // You can add multiple valid statuses here
-      status: In([SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET])
-    }
-  });
+  const currentUser = await this.userService.findOneFull({ id: user.id });
+  const roleCode = currentUser.employeePosition.code;
 
+  const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids);
+
+  let updatePayload = {};
+  
+  // Apply filtering and define the update action based on the user's role
+  if (roleCode === RoleEnum.RPM) {
+    // An RPM approves items that are newly created
+    queryBuilder.andWhere('spk.status IN (:...statuses)', { 
+      statuses: [SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET] 
+    });
+    updatePayload = {
+      status: SPKStatus.APPROVED,
+      approved_by: user.id
+    };
+  } else if (roleCode === RoleEnum.PM) {
+    // A PM approves items that are already approved by an RPM but are over budget
+    queryBuilder.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
+    queryBuilder.andWhere('spk.is_over_budget = true');
+    updatePayload = {
+      status: SPKStatus.APPROVED_OVER_BUDGET,
+      approved_over_budget_by: user.id
+    };
+  } else {
+    // Block any other roles from using this endpoint
+    throw failedResponse(HttpStatus.FORBIDDEN, 'Your role cannot perform this action.');
+  }
+
+  // Find which of the selected items are valid for this user to approve
+  const itemsToApprove = await queryBuilder.getMany();
   const validIds = itemsToApprove.map(item => item.id);
 
   if (validIds.length === 0) {
     throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
   }
 
-  // Update only the valid items to the 'Approved' status
-  await this.spkRepository.update(validIds, {
-    status: SPKStatus.APPROVED,
-    approved_by: user.id,
-    // Optional: you can set the approval date here
-    // approved_at: moment().format('YYYY-MM-DD HH:mm:ss'), 
-  });
+  // Update only the valid items
+  await this.spkRepository.update(validIds, updatePayload);
 
-  // Create a single log entry for the bulk action
+  // Create a log entry
   await this.activityLogService.create({
     user_id: user.id,
     description: `Melakukan approve massal untuk BOP dengan ID: ${validIds.join(', ')}`,
@@ -1372,7 +1403,6 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
 
   return { approved_count: validIds.length, total_selected: ids.length };
 }
-
 
   async getAllSPKCategory(paginationOptions: IPaginationOptions) {
     const data = this.spkCategoryRepository.createQueryBuilder('spk_category');

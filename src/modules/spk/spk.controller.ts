@@ -337,14 +337,16 @@ async findAll(
 @Post('approve-many')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_APPROVE) // Make sure this permission is correct for the approving roles
+@Menus(
+  MenuPermission.SPK_APPROVE,
+  MenuPermission.SPK_OVER_BUDGET
+) // <-- Correct: The closing parenthesis comes after all permissions
 async approveMany(@Request() req, @Body() body: { ids: number[] }) {
   return successResponse(
     await this.spkService.approveMany(body.ids, req.user, req.ip),
     'success',
   );
 }
-
 
 
 }

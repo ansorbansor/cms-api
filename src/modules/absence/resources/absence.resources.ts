@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 
-import minioConfig from "src/config/minio.config";
-import { Absence } from "src/entities/absence.entity";
+import minioConfig from 'src/config/minio.config';
+import { Absence } from 'src/entities/absence.entity';
 
 export const AbsenceResource = (absence: Absence): any => {
   return {
@@ -46,7 +46,6 @@ export const AbsenceResourceDetail = (absence: Absence): any => {
   };
 };
 
-
 export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClockIn: boolean, mustClockOut: boolean, afterOffice: boolean, lateAbsence: boolean, clockInId: number): any => {
   return {
     has_absence: hasAbsence,
@@ -56,6 +55,9 @@ export const HasAbsenceToday = (hasAbsence: boolean, absence: Absence, mustClock
     must_clock_out: mustClockOut,
     after_office: afterOffice,
     late_absence: lateAbsence,
-    clock_in_id: clockInId
+    clock_in_id: clockInId,
+    // === MODIFIED HERE: Added activity fields ===
+    activity_plan: absence ? absence.activity_plan : null,
+    activity_result: absence ? absence.activity_result : null,
   };
 };

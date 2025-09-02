@@ -22,6 +22,9 @@ export const ExportAbsenceResource = (absence: Absence): any => {
     'Clock Out Photo': absence.clock_out_photo_file
       ? minioConfig().fullUrl + absence.clock_out_photo_file.path
       : null,
+    // Added the new fields for the export
+    'Activity Plan': absence.activity_plan ? absence.activity_plan : '-',
+    'Activity Result': absence.activity_result ? absence.activity_result : '-',
     Status:
       moment(absence.clock_in).toDate().getHours() >= 9
         ? 'Terlambat'

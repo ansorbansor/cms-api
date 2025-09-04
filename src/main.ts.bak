@@ -1,0 +1,74 @@
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
+import { SerializerInterceptor } from './utils/serializer.interceptor';
+import validationOptions from './utils/validation-options';
+import moment from 'moment';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+import * as newrelic from 'newrelic';
+require('newrelic');
+import * as os from 'os';
+import cluster from 'cluster';
+const numCPUs = os.cpus().length;
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { cors: true });
+
+  const configService = app.get(ConfigService);
+
+  moment.locale('id');
+
+  app.enableShutdownHooks();
+  app.setGlobalPrefix(configService.get('app.apiPrefix'), {
+    exclude: ['/'],
+  });
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
+  app.useGlobalInterceptors(new SerializerInterceptor());
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  const options = new DocumentBuilder()
+    .setTitle('API')
+    .setDescription('API docs')
+    .setVersion('1.0')
+    .addBearerAuth();
+
+  options.setExternalDoc('Postman Collection', '/docs-json');
+
+  const document = SwaggerModule.createDocument(app, options.build());
+  SwaggerModule.setup('docs', app, document);
+
+  if (process.env.NODE_ENV == 'local') {
+    await app.listen(configService.get('app.port'));
+  } else {
+    if (cluster.isPrimary) {
+      console.log(`Master ${process.pid} is running`);
+      for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+      }
+      cluster.on('exit', (worker) => {
+        console.log(`worker ${worker.process.pid} died`);
+      });
+    } else {
+      await app.listen(configService.get('app.port'));
+      console.log(`Worker ${process.pid} started`);
+    }
+  }
+}
+
+databaseInfo();
+bootstrap();
+
+function databaseInfo() {
+  console.log('========================');
+  console.log('========DATABASE========');
+  console.log(`type: ${process.env.DATABASE_TYPE}`);
+  console.log(`host: ${process.env.DATABASE_HOST}`);
+  console.log(`port: ${process.env.DATABASE_PORT}`);
+  console.log(`database: ${process.env.DATABASE_NAME}`);
+}

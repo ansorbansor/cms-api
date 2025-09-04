@@ -9,11 +9,15 @@ import { SPKController } from './spk.controller';
 import { SPKService } from './spk.service';
 import { SPKCategory } from 'src/entities/spk-category.entity';
 import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
+//new line
+import { Site } from 'src/entities/site.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       SPK,
+//site is new line
+      Site,
       SPKInhouseTeam,
       SPKCostEvidence,
       SPKCategory,

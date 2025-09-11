@@ -364,7 +364,19 @@ async approveMany(@Request() req, @Body() body: { ids: number[] }) {
     );
   }
 
+// In spk.controller.ts
 
+// The route now correctly reflects that we are searching by site code
+@Get('details-by-site-code/:siteCode')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+async findDetailsBySiteCode(@Param('siteCode') siteCode: string, @Request() req) {
+  return successResponse(
+    // We will create this new service method next
+    await this.spkService.findDetailsBySiteCode(siteCode, req.user),
+    'success',
+  );
+}
 }
 
 

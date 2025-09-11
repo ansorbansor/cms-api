@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Brackets, getManager, In, Repository } from 'typeorm';
@@ -1465,7 +1465,8 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
       return [];
     }
 
-    // Query ini dirancang untuk menggabungkan data dari beberapa tabel
+
+ // Query ini dirancang untuk menggabungkan data dari beberapa tabel
     // dan melakukan kalkulasi yang kompleks langsung di database untuk efisiensi.
     const query = `
       SELECT
@@ -1484,9 +1485,9 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
       FROM
         sites s
       LEFT JOIN (
-          -- Mengambil region dari salah satu SPK terkait site ini
-          SELECT DISTINCT ON (site_id) site_id, region_id
-          FROM spk WHERE deleted_at IS NULL
+        -- Mengambil region dari salah satu SPK terkait site ini
+        SELECT DISTINCT ON (site_id) site_id, region_id
+        FROM spk WHERE deleted_at IS NULL
       ) AS spk_unique ON spk_unique.site_id = s.id
       LEFT JOIN regions r ON spk_unique.region_id = r.id AND r.deleted_at IS NULL
       LEFT JOIN purchase_orders po ON po.site_id = s.id AND po.deleted_at IS NULL
@@ -1499,7 +1500,13 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
               COUNT(*) AS total_count,
               COUNT(CASE WHEN status = 'closed' THEN 1 END) AS closed_count
           FROM purchase_orders
-          WHERE deleted_at IS NULL
+          WHERE
+              -- This line correctly excludes soft-deleted orders
+              deleted_at IS NULL
+              -- ================================================================= --
+              -- ===== THIS LINE IS NOW CASE-INSENSITIVE ========================= --
+              AND LOWER(status) <> 'cancelled'
+              -- ================================================================= --
           GROUP BY site_id
       ) AS po_summary ON po_summary.site_id = s.id
       LEFT JOIN (
@@ -1516,11 +1523,43 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
       GROUP BY
           s.code, r.name, po_summary.total_amount, spk_summary.total_cash_advance, po_summary.total_count, po_summary.closed_count;
     `;
-    
+
     // Menjalankan raw query menggunakan getManager
     const result = await getManager().query(query, [siteCodes]);
     return result;
   }
-  
+
+
+
+
+// In spk.service.ts
+public async findDetailsBySiteCode(siteCode: string, user: any): Promise<any> {
+  // Use 'find' to get all SPKs for the given site code
+  const spkDetails = await this.spkRepository.find({
+    // This 'where' clause searches on the related Site entity
+    where: {
+      site: {
+        code: siteCode,
+      },
+    },
+    relations: [
+      'pay_to_user',
+      'approved_by_user',
+      'po',
+      'po.customer',
+      'site', // Include the site details in the response
+      'region',
+    ],
+  });
+
+  if (!spkDetails || spkDetails.length === 0) {
+    throw new NotFoundException(`No SPK details found for Site Code ${siteCode}`);
+  }
+
+  // Since this returns an array, we can use the same detail resource on each item
+  // Or create a new list resource if needed. For now, let's return the array.
+  return spkDetails.map(spk => SPKResourceDetail(spk));
+}
+
 }
 

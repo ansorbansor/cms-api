@@ -62,7 +62,7 @@ export class FilesService {
       );
     }
 
-    const savedFile = await this.fileRepository.save(
+    return await this.fileRepository.save(
       this.fileRepository.create({
         name: file.filename,
         path: file.path,
@@ -72,9 +72,5 @@ export class FilesService {
         user_id: userId,
       }),
     );
-
-    console.log('Saved file entity:', savedFile);  // <-- Added logging here
-
-    return savedFile;
   }
 }

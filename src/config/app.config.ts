@@ -15,3 +15,4 @@ export default registerAs('app', () => ({
   spkOperationMaxBudget:
     parseInt(process.env.SPK_OPERATIONAL_MAX_BUDGET) || 100000000,
 }));
+

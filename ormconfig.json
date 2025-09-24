@@ -1,31 +1,33 @@
 {
   "type": "postgres",
-  "host": "localhost",
+  "host": "postgres",
   "port": 5432,
   "username": "postgres",
-  "password": "postgres@123!",
+  "password": "postgres@123!qaz",
   "database": "biosron-simpro",
   "synchronize": false,
   "dropSchema": false,
   "keepConnectionAlive": true,
-  "logging": true,
+  "logging": false,
   "entities": [
-    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/../**/*.entity{.ts,.js}"
+    "/var/www/api/src/database/../**/*.entity{.ts,.js}"
   ],
   "migrations": [
-    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/migrations/**/*{.ts,.js}"
+    "/var/www/api/src/database/migrations/**/*{.ts,.js}"
   ],
   "seeds": [
-    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/seeds/**/*{.ts,.js}"
+    "/var/www/api/src/database/seeds/**/*{.ts,.js}"
   ],
   "factories": [
-    "/Users/bayu/Documents/Project/Side/biosron-simpro-api/src/database/factories/**/*{.ts,.js}"
+    "/var/www/api/src/database/factories/**/*{.ts,.js}"
   ],
   "cli": {
     "entitiesDir": "src",
     "migrationsDir": "src/database/migrations",
     "subscribersDir": "subscriber"
   },
+  "idleTimeoutMillis": 0,
+  "connectionTimeoutMillis": 0,
   "extra": {
     "max": 100
   }

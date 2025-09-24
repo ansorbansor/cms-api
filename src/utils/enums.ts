@@ -64,8 +64,10 @@ export enum FilePath {
   SPK_TRANSFER_PROOF = 'spk/transfer-proof',
   CLOCK_IN = 'spk/clock-in',
   CLOCK_OUT = 'spk/clock-out',
+  INVENTORY = 'inventory', // ✅ Add this line
   OTHER = 'others',
 }
+
 
 export enum ErrorMessage {
   EMAIL_NOT_EXISTS = 'User tidak ditemukan. Silahkan coba pilih kembali Akun yang telah tervalidasi.',

@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn, // ✅ Added DeleteDateColumn
 } from 'typeorm';
 import { User } from './user.entity';
 import { FileEntity } from './file.entity';
@@ -20,6 +21,9 @@ export class Inventory {
 
   @Column({ name: 'tool_condition', nullable: true, type: 'varchar' })
   toolCondition?: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  remark?: string | null; // ✅ CHANGED: Matched type to nullable setting
 
   @Column({ nullable: true, type: 'double precision' })
   latitude?: number | null;
@@ -49,13 +53,14 @@ export class Inventory {
   @JoinColumn({ name: 'user_id' })
   user?: User | null;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  createdAt?: Date | null;
+  // ✅ CHANGED: Timestamps are no longer nullable and use a more robust type
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
+  createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
-  updatedAt?: Date | null;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
+  updatedAt: Date;
 
-  // Optional soft delete column if you want to implement soft deletes
-  @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  // ✅ CHANGED: Switched to the correct decorator for soft deletes
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp with time zone', nullable: true })
   deletedAt?: Date | null;
 }

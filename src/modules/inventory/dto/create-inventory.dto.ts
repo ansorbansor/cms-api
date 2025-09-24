@@ -13,6 +13,12 @@ export class CreateInventoryDto {
   @IsString()
   toolCondition?: string | null;
 
+  // ✅ Add the remark property here
+  @ApiPropertyOptional({ description: 'Additional remarks about the tool', type: String, nullable: true })
+  @IsOptional()
+  @IsString()
+  remark?: string | null;
+
   @ApiPropertyOptional({ description: 'Latitude coordinate', type: Number, nullable: true })
   @IsOptional()
   @IsNumber()

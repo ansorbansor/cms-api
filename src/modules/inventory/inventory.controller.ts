@@ -72,6 +72,7 @@ export class InventoryController {
         {
           toolName: req.body.toolName ?? null,
           toolCondition: req.body.toolCondition ?? null,
+	  remark: req.body.remark ?? null, // ✅ Get remark from the body
           latitude: req.body.latitude !== undefined ? Number(req.body.latitude) : null,
           longitude: req.body.longitude !== undefined ? Number(req.body.longitude) : null,
         },
@@ -119,6 +120,7 @@ export class InventoryController {
         {
           toolName: req.body.toolName ?? null,
           toolCondition: req.body.toolCondition ?? null,
+	  remark: req.body.remark ?? null, // ✅ Get remark from the body
           latitude: req.body.latitude !== undefined ? Number(req.body.latitude) : null,
           longitude: req.body.longitude !== undefined ? Number(req.body.longitude) : null,
         },

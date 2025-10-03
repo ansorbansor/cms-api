@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Inventory } from 'src/entities/inventory.entity';
 import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { FilesService } from '../files/files.service';
 import { FilePath } from 'src/utils/enums';
@@ -23,10 +23,67 @@ export class InventoryService {
     private readonly fileService: FilesService,
   ) {}
 
+  async getSummary(options: { search?: string; page: number; limit: number }) {
+    this.logger.log(`Fetching inventory summary with options: ${JSON.stringify(options)}`);
+
+    // ✅ FIXED: Updated query to correctly join the employee_position table for the user's position.
+    const queryBuilder = this.inventoryRepository
+      .createQueryBuilder('inventory')
+      .leftJoin('inventory.user', 'user')
+      .leftJoin('user.employeePosition', 'position') // Join the employee_position table
+      .select([
+        'user.id AS "userId"',
+        'user.name AS "userName"',
+        'position.name AS "position"', // Get the name from the position table
+        `COUNT(CASE WHEN inventory.toolCondition = 'Good' THEN 1 END) AS "good_qty"`,
+        `COUNT(CASE WHEN inventory.toolCondition = 'Broken' THEN 1 END) AS "broken_qty"`,
+        `COUNT(CASE WHEN inventory.toolCondition = 'Needs Maintenance' THEN 1 END) AS "maintenance_qty"`,
+        'COUNT(inventory.id) AS "total_qty"',
+      ])
+      .where('inventory.deletedAt IS NULL')
+      .groupBy('user.id')
+      .addGroupBy('user.name')
+      .addGroupBy('position.name'); // Group by the position name
+
+    if (options.search) {
+      this.logger.log(`Applying search filter: ${options.search}`);
+      queryBuilder.andWhere('user.name ILIKE :search', {
+        search: `%${options.search}%`,
+      });
+    }
+
+    const totalItems = (await queryBuilder.getRawMany()).length;
+    this.logger.log(`Found ${totalItems} total summary records`);
+
+    const results = await queryBuilder
+      .offset((options.page - 1) * options.limit)
+      .limit(options.limit)
+      .getRawMany();
+
+    const formattedData = results.map((item) => ({
+      user: {
+        id: item.userId,
+        name: item.userName,
+        position: item.position,
+      },
+      good_qty: parseInt(item.good_qty, 10) || 0,
+      broken_qty: parseInt(item.broken_qty, 10) || 0,
+      maintenance_qty: parseInt(item.maintenance_qty, 10) || 0,
+      total_qty: parseInt(item.total_qty, 10) || 0,
+    }));
+
+    return {
+      data: formattedData,
+      total: totalItems,
+      page: options.page,
+      limit: options.limit,
+    };
+  }
+
   async findAll(user: User) {
     this.logger.log(`Fetching inventories for userId=${user.id}`);
     const inventories = await this.inventoryRepository.find({
-      where: { userId: user.id, deletedAt: null },
+      where: { userId: user.id, deletedAt: IsNull() },
       relations: ['tool_photo_file', 'serial_number_photo_file'],
     });
     const data = inventories.map((inventory) => new InventoryResponseDto(inventory));
@@ -80,7 +137,6 @@ export class InventoryService {
     const saved = await this.inventoryRepository.save(newInventory);
     this.logger.log(`Inventory saved with id=${saved.id}`);
 
-    // Fetch saved inventory with relations to get file entities
     const savedWithRelations = await this.inventoryRepository.findOne({
       where: { id: saved.id },
       relations: ['tool_photo_file', 'serial_number_photo_file'],
@@ -107,7 +163,7 @@ export class InventoryService {
     this.logger.log(`Updating inventory id=${id} for userId=${user.id}`);
 
     const inventoryItem = await this.inventoryRepository.findOne({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: IsNull() },
     });
 
     if (!inventoryItem) {
@@ -115,7 +171,7 @@ export class InventoryService {
       throw new NotFoundException('Inventory item not found.');
     }
     if (inventoryItem.userId !== user.id) {
-      this.logger.warn(`User  id=${user.id} forbidden to update inventory id=${id}`);
+      this.logger.warn(`User id=${user.id} forbidden to update inventory id=${id}`);
       throw new ForbiddenException('You do not have permission to edit this item.');
     }
 
@@ -146,7 +202,7 @@ export class InventoryService {
         'Inventory Serial Number Photo',
       );
       updatePayload.serial_number_photo_id = uploadedFile.id;
-      this.logger.log(`Serial number photo updated with id=${uploadedFile.id}`);
+      this.logger.log(`Serial number photo uploaded with id=${uploadedFile.id}`);
     }
 
     await this.inventoryRepository.update(id, updatePayload);
@@ -166,3 +222,4 @@ export class InventoryService {
     return { data: new InventoryResponseDto(updatedItem) };
   }
 }
+

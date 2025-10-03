@@ -15,9 +15,19 @@ import cluster from 'cluster';
 const numCPUs = os.cpus().length;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  // ✅ TEST: Add a log to confirm this new code is running.
+  console.log('--- BOOTSTRAP STARTED WITH LATEST CORS FIX ---');
+
+  const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+
+  app.enableCors({
+    origin: 'https://smarteye.ptbiosron.my.id',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
 
   moment.locale('id');
 
@@ -72,3 +82,4 @@ function databaseInfo() {
   console.log(`port: ${process.env.DATABASE_PORT}`);
   console.log(`database: ${process.env.DATABASE_NAME}`);
 }
+

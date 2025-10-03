@@ -20,21 +20,22 @@ export class InventoryService {
   constructor(
     @InjectRepository(Inventory)
     private inventoryRepository: Repository<Inventory>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private readonly fileService: FilesService,
   ) {}
 
   async getSummary(options: { search?: string; page: number; limit: number }) {
     this.logger.log(`Fetching inventory summary with options: ${JSON.stringify(options)}`);
 
-    // ✅ FIXED: Updated query to correctly join the employee_position table for the user's position.
     const queryBuilder = this.inventoryRepository
       .createQueryBuilder('inventory')
       .leftJoin('inventory.user', 'user')
-      .leftJoin('user.employeePosition', 'position') // Join the employee_position table
+      .leftJoin('user.employeePosition', 'position')
       .select([
         'user.id AS "userId"',
         'user.name AS "userName"',
-        'position.name AS "position"', // Get the name from the position table
+        'position.name AS "position"',
         `COUNT(CASE WHEN inventory.toolCondition = 'Good' THEN 1 END) AS "good_qty"`,
         `COUNT(CASE WHEN inventory.toolCondition = 'Broken' THEN 1 END) AS "broken_qty"`,
         `COUNT(CASE WHEN inventory.toolCondition = 'Needs Maintenance' THEN 1 END) AS "maintenance_qty"`,
@@ -43,7 +44,7 @@ export class InventoryService {
       .where('inventory.deletedAt IS NULL')
       .groupBy('user.id')
       .addGroupBy('user.name')
-      .addGroupBy('position.name'); // Group by the position name
+      .addGroupBy('position.name');
 
     if (options.search) {
       this.logger.log(`Applying search filter: ${options.search}`);
@@ -77,6 +78,43 @@ export class InventoryService {
       total: totalItems,
       page: options.page,
       limit: options.limit,
+    };
+  }
+
+  async findUserInventory(userId: number) {
+    this.logger.log(`Fetching inventory details for userId=${userId}`);
+
+    // Find the user by their ID, including their position details
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['employeePosition'],
+    });
+
+    // If no user is found, throw a 404 error
+    if (!user) {
+      this.logger.warn(`User with id=${userId} not found.`);
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+
+    // Find all inventory items for the specified user
+    const inventories = await this.inventoryRepository.find({
+      where: { userId: userId, deletedAt: IsNull() },
+      relations: ['tool_photo_file', 'serial_number_photo_file'],
+      order: { updatedAt: 'DESC' }, // Optional: sort by most recently updated
+    });
+    this.logger.log(`Found ${inventories.length} inventories for userId=${userId}`);
+
+    // Format the response to match what the frontend expects
+    const formattedInventories = inventories.map((inv) => new InventoryResponseDto(inv));
+    const userData = {
+      id: user.id,
+      name: user.name,
+      position: user.employeePosition ? user.employeePosition.name : 'N/A',
+    };
+
+    return {
+      user: userData,
+      inventories: formattedInventories,
     };
   }
 

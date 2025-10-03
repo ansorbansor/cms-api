@@ -12,6 +12,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InventoryService } from './inventory.service';
@@ -19,7 +20,7 @@ import { User } from 'src/entities/user.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { JwtAuthGuard } from 'src/utils/guards';
 import { ApiBearerAuth, ApiTags, ApiConsumes } from '@nestjs/swagger';
-import { successResponse } from 'src/utils/responses';
+import { successResponse, successResponseList } from 'src/utils/responses';
 
 @ApiBearerAuth()
 @ApiTags('Inventory')
@@ -34,13 +35,37 @@ export class InventoryController {
   @HttpCode(HttpStatus.OK)
   async findAll(@Req() req: { user: User }) {
     if (!req.user) {
-      throw new UnauthorizedException('User   not authenticated');
+      throw new UnauthorizedException('User not authenticated');
     }
 
     const inventories = await this.inventoryService.findAll(req.user);
-    const safeData = inventories.data;
+    // Assuming findAll does not use the paginated response structure
+    return successResponse(inventories.data, 'Inventories retrieved successfully');
+  }
 
-    return successResponse(safeData, 'Inventories retrieved successfully');
+  // ===== GET /inventory/summary =====
+  @Version('1')
+  @UseGuards(JwtAuthGuard)
+  @Get('summary')
+  @HttpCode(HttpStatus.OK)
+  async getSummary(
+    @Req() req: { user: User },
+    @Query('search') search?: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    if (!req.user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    const summaryData = await this.inventoryService.getSummary({
+      search,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    });
+
+    // Use the correct response function for paginated lists
+    return successResponseList(summaryData, 'Inventory summaries retrieved successfully');
   }
 
   // ===== POST /inventory =====
@@ -53,34 +78,29 @@ export class InventoryController {
     FileFieldsInterceptor([
       { name: 'toolPhoto', maxCount: 1 },
       { name: 'serialNumberPhoto', maxCount: 1 },
-    ])
+    ]),
   )
   async create(
-    @UploadedFiles() files: { toolPhoto?: Express.Multer.File[]; serialNumberPhoto?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { toolPhoto?: Express.Multer.File[]; serialNumberPhoto?: Express.Multer.File[] },
     @Req() req: { user: User; body: CreateInventoryDto },
   ) {
     if (!req.user) {
-      throw new UnauthorizedException('User   not authenticated');
+      throw new UnauthorizedException('User not authenticated');
     }
-
-    console.log('Inventory create called');
-    console.log('Received files:', files);
-    console.log('Request body:', req.body);
 
     try {
       const inventory = await this.inventoryService.create(
         {
           toolName: req.body.toolName ?? null,
           toolCondition: req.body.toolCondition ?? null,
-	  remark: req.body.remark ?? null, // ✅ Get remark from the body
+          remark: req.body.remark ?? null,
           latitude: req.body.latitude !== undefined ? Number(req.body.latitude) : null,
           longitude: req.body.longitude !== undefined ? Number(req.body.longitude) : null,
         },
         files,
         req.user,
       );
-
-      console.log('Inventory created:', inventory);
 
       return successResponse(inventory.data, 'Inventory created successfully');
     } catch (error) {
@@ -99,20 +119,17 @@ export class InventoryController {
     FileFieldsInterceptor([
       { name: 'toolPhoto', maxCount: 1 },
       { name: 'serialNumberPhoto', maxCount: 1 },
-    ])
+    ]),
   )
   async update(
     @Param('id') id: string,
-    @UploadedFiles() files: { toolPhoto?: Express.Multer.File[]; serialNumberPhoto?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: { toolPhoto?: Express.Multer.File[]; serialNumberPhoto?: Express.Multer.File[] },
     @Req() req: { user: User; body: CreateInventoryDto },
   ) {
     if (!req.user) {
-      throw new UnauthorizedException('User   not authenticated');
+      throw new UnauthorizedException('User not authenticated');
     }
-
-    console.log(`Inventory update called for id ${id}`);
-    console.log('Received files:', files);
-    console.log('Request body:', req.body);
 
     try {
       const inventory = await this.inventoryService.update(
@@ -120,15 +137,13 @@ export class InventoryController {
         {
           toolName: req.body.toolName ?? null,
           toolCondition: req.body.toolCondition ?? null,
-	  remark: req.body.remark ?? null, // ✅ Get remark from the body
+          remark: req.body.remark ?? null,
           latitude: req.body.latitude !== undefined ? Number(req.body.latitude) : null,
           longitude: req.body.longitude !== undefined ? Number(req.body.longitude) : null,
         },
         files,
         req.user,
       );
-
-      console.log('Inventory updated:', inventory);
 
       return successResponse(inventory.data, 'Inventory updated successfully');
     } catch (error) {
@@ -137,3 +152,4 @@ export class InventoryController {
     }
   }
 }
+

@@ -13,6 +13,7 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InventoryService } from './inventory.service';
@@ -39,7 +40,6 @@ export class InventoryController {
     }
 
     const inventories = await this.inventoryService.findAll(req.user);
-    // Assuming findAll does not use the paginated response structure
     return successResponse(inventories.data, 'Inventories retrieved successfully');
   }
 
@@ -64,8 +64,17 @@ export class InventoryController {
       limit: parseInt(limit, 10),
     });
 
-    // Use the correct response function for paginated lists
     return successResponseList(summaryData, 'Inventory summaries retrieved successfully');
+  }
+
+  // ===== NEW ENDPOINT: GET /inventory/user/:id =====
+  @Version('1')
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:id') // This route now matches the frontend request
+  @HttpCode(HttpStatus.OK)
+  async findUserInventory(@Param('id', ParseIntPipe) id: number) {
+    const data = await this.inventoryService.findUserInventory(id);
+    return successResponse(data, 'User inventory retrieved successfully');
   }
 
   // ===== POST /inventory =====
@@ -152,4 +161,3 @@ export class InventoryController {
     }
   }
 }
-

@@ -397,7 +397,7 @@ export class SPKService {
     user: User,
     mobile: boolean,
   ) {
-console.log('--- 3. BACKEND RECEIVED OPTIONS ---:', paginationOptions);
+    console.log('--- 3. BACKEND RECEIVED OPTIONS ---:', paginationOptions);
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .withDeleted()
@@ -413,7 +413,7 @@ console.log('--- 3. BACKEND RECEIVED OPTIONS ---:', paginationOptions);
       .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
-console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
+    console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
 
     let filterRegion = true;
 
@@ -536,10 +536,10 @@ console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
       ) {
         if (
           !paginationOptions.status ||
-          paginationOptions.status < SPKStatus.APPROVED
+          paginationOptions.status < SPKStatus.CREATED
         ) {
           data.andWhere('spk.status >= :status', {
-            status: SPKStatus.APPROVED,
+            status: SPKStatus.CREATED,
           });
         }
       } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
@@ -602,76 +602,76 @@ console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
       }
     }
 
-if (paginationOptions.projects) {
-  // Split the incoming string by commas and trim whitespace from each project name
-  const projectNames = paginationOptions.projects.split(',').map(name => name.trim());
+    if (paginationOptions.projects) {
+      // Split the incoming string by commas and trim whitespace from each project name
+      const projectNames = paginationOptions.projects.split(',').map(name => name.trim());
 
-  // Use the IN operator to check if the project.name is in the array of names
-  data.andWhere('project.name IN (:...projectNames)', { projectNames });
-}
-
-if (
-  currentUser.employeePosition.code == RoleEnum.PM &&
-  !paginationOptions.status
-) {
-  // Default filter for PM: show items that are 'APPROVED' and 'OVER BUDGET'
-  data.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
-  data.andWhere('spk.is_over_budget = true');
-}
-
-
-if (paginationOptions.search) {
-  const search = paginationOptions.search;
-
-  // --- Logic to handle Unique IDs ---
-  const potentialUniqueIds = search.split(',').map(item => item.trim());
-  const extractedIds = [];
-  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
-
-  for (const pId of potentialUniqueIds) {
-    const match = pId.match(uniqueIdRegex);
-    if (match) {
-      extractedIds.push(match[1]);
+      // Use the IN operator to check if the project.name is in the array of names
+      data.andWhere('project.name IN (:...projectNames)', { projectNames });
     }
-  }
-  // --- End of Unique ID Logic ---
 
-  if (extractedIds.length > 0) {
-    // Priority 1: Search by one or more Unique IDs
-    data.andWhere('po.id IN (:...ids)', { ids: extractedIds });
-
-  } else if (search.includes(',')) {
-    // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
-    const spkNumbers = search.split(',').map(item => item.trim());
-    data.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
-
-  } else {
-    // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
-    data.andWhere(
-      new Brackets((qb) => {
-        qb.where('spk.spk_number ILIKE :search', {
-          search: `%${search}%`,
-        }).orWhere('site.code ILIKE :searchSite', {
-          searchSite: `%${search}%`,
-        });
-      }),
-    );
-  }
-}
-
-
-  if (paginationOptions.biosron_id) {
-    // This regex extracts the numeric ID from the formatted Biosron ID string 
-    // (e.g., gets "123" from "2024BSN-0708-123")
-    const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
-    const match = String(paginationOptions.biosron_id).match(uniqueIdRegex);
-
-    if (match) {
-      const purchaseOrderId = match[1];
-      // Since the query already joins the 'po' table, we can filter by its ID.
-      data.andWhere('po.id = :purchaseOrderId', { purchaseOrderId });
+    if (
+      currentUser.employeePosition.code == RoleEnum.PM &&
+      !paginationOptions.status
+    ) {
+      // Default filter for PM: show items that are 'APPROVED' and 'OVER BUDGET'
+      data.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
+      data.andWhere('spk.is_over_budget = true');
     }
-  }
+
+
+    if (paginationOptions.search) {
+      const search = paginationOptions.search;
+
+      // --- Logic to handle Unique IDs ---
+      const potentialUniqueIds = search.split(',').map(item => item.trim());
+      const extractedIds = [];
+      const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+
+      for (const pId of potentialUniqueIds) {
+        const match = pId.match(uniqueIdRegex);
+        if (match) {
+          extractedIds.push(match[1]);
+        }
+      }
+      // --- End of Unique ID Logic ---
+
+      if (extractedIds.length > 0) {
+        // Priority 1: Search by one or more Unique IDs
+        data.andWhere('po.id IN (:...ids)', { ids: extractedIds });
+
+      } else if (search.includes(',')) {
+        // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
+        const spkNumbers = search.split(',').map(item => item.trim());
+        data.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
+
+      } else {
+        // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
+        data.andWhere(
+          new Brackets((qb) => {
+            qb.where('spk.spk_number ILIKE :search', {
+              search: `%${search}%`,
+            }).orWhere('site.code ILIKE :searchSite', {
+              searchSite: `%${search}%`,
+            });
+          }),
+        );
+      }
+    }
+
+
+    if (paginationOptions.biosron_id) {
+      // This regex extracts the numeric ID from the formatted Biosron ID string 
+      // (e.g., gets "123" from "2024BSN-0708-123")
+      const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+      const match = String(paginationOptions.biosron_id).match(uniqueIdRegex);
+
+      if (match) {
+        const purchaseOrderId = match[1];
+        // Since the query already joins the 'po' table, we can filter by its ID.
+        data.andWhere('po.id = :purchaseOrderId', { purchaseOrderId });
+      }
+    }
 
     if (paginationOptions.start_date) {
       data.andWhere('spk.created_at >= :start_date', {
@@ -751,7 +751,7 @@ if (paginationOptions.search) {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
-console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
+    console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }
@@ -1343,66 +1343,66 @@ console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
     throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
   }
 
-// Add this entire function inside the SPKService class
+  // Add this entire function inside the SPKService class
 
-// In spk.service.ts
-// Replace your existing approveMany function with this one
+  // In spk.service.ts
+  // Replace your existing approveMany function with this one
 
-async approveMany(ids: number[], user: User, ip: string): Promise<any> {
-  if (!ids || ids.length === 0) {
-    throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
-  }
+  async approveMany(ids: number[], user: User, ip: string): Promise<any> {
+    if (!ids || ids.length === 0) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
+    }
 
-  const currentUser = await this.userService.findOneFull({ id: user.id });
-  const roleCode = currentUser.employeePosition.code;
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+    const roleCode = currentUser.employeePosition.code;
 
-  const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids);
+    const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids);
 
-  let updatePayload = {};
-  
-  // Apply filtering and define the update action based on the user's role
-  if (roleCode === RoleEnum.RPM) {
-    // An RPM approves items that are newly created
-    queryBuilder.andWhere('spk.status IN (:...statuses)', { 
-      statuses: [SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET] 
+    let updatePayload = {};
+
+    // Apply filtering and define the update action based on the user's role
+    if (roleCode === RoleEnum.RPM) {
+      // An RPM approves items that are newly created
+      queryBuilder.andWhere('spk.status IN (:...statuses)', {
+        statuses: [SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET]
+      });
+      updatePayload = {
+        status: SPKStatus.APPROVED,
+        approved_by: user.id
+      };
+    } else if (roleCode === RoleEnum.PM) {
+      // A PM approves items that are already approved by an RPM but are over budget
+      queryBuilder.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
+      queryBuilder.andWhere('spk.is_over_budget = true');
+      updatePayload = {
+        status: SPKStatus.APPROVED_OVER_BUDGET,
+        approved_over_budget_by: user.id
+      };
+    } else {
+      // Block any other roles from using this endpoint
+      throw failedResponse(HttpStatus.FORBIDDEN, 'Your role cannot perform this action.');
+    }
+
+    // Find which of the selected items are valid for this user to approve
+    const itemsToApprove = await queryBuilder.getMany();
+    const validIds = itemsToApprove.map(item => item.id);
+
+    if (validIds.length === 0) {
+      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
+    }
+
+    // Update only the valid items
+    await this.spkRepository.update(validIds, updatePayload);
+
+    // Create a log entry
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Melakukan approve massal untuk BOP dengan ID: ${validIds.join(', ')}`,
+      ip: ip,
     });
-    updatePayload = {
-      status: SPKStatus.APPROVED,
-      approved_by: user.id
-    };
-  } else if (roleCode === RoleEnum.PM) {
-    // A PM approves items that are already approved by an RPM but are over budget
-    queryBuilder.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
-    queryBuilder.andWhere('spk.is_over_budget = true');
-    updatePayload = {
-      status: SPKStatus.APPROVED_OVER_BUDGET,
-      approved_over_budget_by: user.id
-    };
-  } else {
-    // Block any other roles from using this endpoint
-    throw failedResponse(HttpStatus.FORBIDDEN, 'Your role cannot perform this action.');
+
+    return { approved_count: validIds.length, total_selected: ids.length };
   }
-
-  // Find which of the selected items are valid for this user to approve
-  const itemsToApprove = await queryBuilder.getMany();
-  const validIds = itemsToApprove.map(item => item.id);
-
-  if (validIds.length === 0) {
-    throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
-  }
-
-  // Update only the valid items
-  await this.spkRepository.update(validIds, updatePayload);
-
-  // Create a log entry
-  await this.activityLogService.create({
-    user_id: user.id,
-    description: `Melakukan approve massal untuk BOP dengan ID: ${validIds.join(', ')}`,
-    ip: ip,
-  });
-
-  return { approved_count: validIds.length, total_selected: ids.length };
-}
 
   async getAllSPKCategory(paginationOptions: IPaginationOptions) {
     const data = this.spkCategoryRepository.createQueryBuilder('spk_category');
@@ -1459,14 +1459,14 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
       paginationOptions,
     );
   }
-  
+
   async generateReport(siteCodes: string[]): Promise<any> {
     if (!siteCodes || siteCodes.length === 0) {
       return [];
     }
 
 
- // Query ini dirancang untuk menggabungkan data dari beberapa tabel
+    // Query ini dirancang untuk menggabungkan data dari beberapa tabel
     // dan melakukan kalkulasi yang kompleks langsung di database untuk efisiensi.
     const query = `
       SELECT
@@ -1532,34 +1532,34 @@ async approveMany(ids: number[], user: User, ip: string): Promise<any> {
 
 
 
-// In spk.service.ts
-public async findDetailsBySiteCode(siteCode: string, user: any): Promise<any> {
-  // Use 'find' to get all SPKs for the given site code
-  const spkDetails = await this.spkRepository.find({
-    // This 'where' clause searches on the related Site entity
-    where: {
-      site: {
-        code: siteCode,
+  // In spk.service.ts
+  public async findDetailsBySiteCode(siteCode: string, user: any): Promise<any> {
+    // Use 'find' to get all SPKs for the given site code
+    const spkDetails = await this.spkRepository.find({
+      // This 'where' clause searches on the related Site entity
+      where: {
+        site: {
+          code: siteCode,
+        },
       },
-    },
-    relations: [
-      'pay_to_user',
-      'approved_by_user',
-      'po',
-      'po.customer',
-      'site', // Include the site details in the response
-      'region',
-    ],
-  });
+      relations: [
+        'pay_to_user',
+        'approved_by_user',
+        'po',
+        'po.customer',
+        'site', // Include the site details in the response
+        'region',
+      ],
+    });
 
-  if (!spkDetails || spkDetails.length === 0) {
-    throw new NotFoundException(`No SPK details found for Site Code ${siteCode}`);
+    if (!spkDetails || spkDetails.length === 0) {
+      throw new NotFoundException(`No SPK details found for Site Code ${siteCode}`);
+    }
+
+    // Since this returns an array, we can use the same detail resource on each item
+    // Or create a new list resource if needed. For now, let's return the array.
+    return spkDetails.map(spk => SPKResourceDetail(spk));
   }
-
-  // Since this returns an array, we can use the same detail resource on each item
-  // Or create a new list resource if needed. For now, let's return the array.
-  return spkDetails.map(spk => SPKResourceDetail(spk));
-}
 
 }
 

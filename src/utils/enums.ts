@@ -18,7 +18,7 @@ export enum RoleEnum {
   DC = 'dc',
   SS = 'ss',
   RPM = 'rpm',
-  ADMINPAYMENT = 'adminpayment',
+  ADMINPAYMENT = 'admin_payment',
   ADMINPAYMENTREGION = 'adminpaymentregion',
   VERIFICATOR = 'verificator',
 }

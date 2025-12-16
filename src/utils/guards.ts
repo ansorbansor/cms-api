@@ -13,7 +13,7 @@ import { failedResponse } from './responses';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roles = this.reflector.getAllAndOverride<number[]>('roles', [
@@ -65,6 +65,11 @@ export class RolesGuard implements CanActivate {
       request.user &&
       userRolesData.some((b) => b && b.grant_all_access == 1)
     ) {
+      return true;
+    }
+
+    // Bypass for Admin Payment (ID 61)
+    if (userRolesData.some((b) => b.id === 61)) {
       return true;
     }
     if (menus) {

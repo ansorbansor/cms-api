@@ -68,8 +68,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // Bypass for Admin Payment (ID 61)
-    if (userRolesData.some((b) => b.id === 61)) {
+    // Bypass for Admin Payment (ID 61) and SS (ID 8)
+    if (userRolesData.some((b) => b.id === 61 || b.id === 8)) {
       return true;
     }
     if (menus) {

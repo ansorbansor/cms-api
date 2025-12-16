@@ -230,7 +230,7 @@ export class UpdatePurchaseOrderDTO {
   remark_highlight_recon: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'User ID tidak boleh kosong' })
+  @IsOptional()
   @Validate(IsExist, ['User', 'id'], {
     message: 'User tidak ditemukan',
   })

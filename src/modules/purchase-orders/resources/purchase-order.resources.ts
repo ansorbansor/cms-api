@@ -172,6 +172,15 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
     plan_date: po.plan_date
       ? moment(po.plan_date).format('YYYY-MM-DD HH:mm:ss')
       : null,
+    start_progress: po.start_progress
+      ? moment(po.start_progress).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    finish_progress: po.finish_progress
+      ? moment(po.finish_progress).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    done_atp: po.done_atp
+      ? moment(po.done_atp).format('YYYY-MM-DD HH:mm:ss')
+      : null,
     invoices: po.po_invoice
       ? po.po_invoice.map((e) => {
         return {

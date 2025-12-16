@@ -976,7 +976,8 @@ export class SPKService {
       !currentUser.employeePosition?.roleAccess.some(function (e) {
         return e.menu.name == MenuPermission.SPK_KASBON_SETTLEMENT;
       }) &&
-      currentUser.employeePosition?.grant_all_access == false
+      currentUser.employeePosition?.grant_all_access == false &&
+      currentUser.employeePosition?.id != 61
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
@@ -987,7 +988,8 @@ export class SPKService {
       !currentUser.employeePosition?.roleAccess.some(function (e) {
         return e.menu.name == MenuPermission.SPK_KASBON_SETTLEMENT_CLOSE;
       }) &&
-      currentUser.employeePosition?.grant_all_access == false
+      currentUser.employeePosition?.grant_all_access == false &&
+      currentUser.employeePosition?.id != 61
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

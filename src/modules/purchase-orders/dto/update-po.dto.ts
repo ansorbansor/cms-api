@@ -237,6 +237,21 @@ export class UpdatePurchaseOrderDTO {
   @Transform(({ value }) => (value == '' ? null : value))
   plan_date: Date;
 
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  start_progress: Date;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  finish_progress: Date;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  @Transform(({ value }) => (value == '' ? null : value))
+  done_atp: Date;
+
   @ValidateNested({ each: true })
   @Type(() => Invoices)
   invoices: Invoices[];

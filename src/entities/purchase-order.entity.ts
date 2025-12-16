@@ -188,6 +188,15 @@ export class PurchaseOrder extends EntityHelper {
   @Column()
   plan_date: Date;
 
+  @Column()
+  start_progress?: Date;
+
+  @Column()
+  finish_progress?: Date;
+
+  @Column()
+  done_atp?: Date;
+
   @ManyToOne(() => User, {
     eager: true,
   })

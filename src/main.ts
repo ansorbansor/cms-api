@@ -23,7 +23,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: 'https://smarteye.ptbiosron.my.id',
+    origin: ['https://smarteye.ptbiosron.my.id', 'https://smarteye-api.ptbiosron.com', 'https://smarteye.ptbiosron.com'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

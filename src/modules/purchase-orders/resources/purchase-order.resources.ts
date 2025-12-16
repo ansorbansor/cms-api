@@ -27,6 +27,7 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
       name: po.customer.name,
     } : null,
     item_description: po.item_description ? po.item_description : '-',
+    remark_ss: po.remark_ss ? po.remark_ss : '-',
   };
 };
 
@@ -160,6 +161,7 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       : null,
     actual_work_amount: po.actual_work_amount ? po.actual_work_amount : 0,
     actual_work_status: po.actual_work_status ? po.actual_work_status : '-',
+    remark_ss: po.remark_ss ? po.remark_ss : '-',
     remark_highlight_recon: po.remark_highlight_recon
       ? po.remark_highlight_recon
       : '-',

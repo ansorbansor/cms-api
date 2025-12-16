@@ -223,6 +223,10 @@ export class UpdatePurchaseOrderDTO {
 
   @ApiProperty({ example: '123' })
   @IsOptional()
+  remark_ss: string;
+
+  @ApiProperty({ example: '123' })
+  @IsOptional()
   remark_highlight_recon: string;
 
   @ApiProperty({ example: 1 })

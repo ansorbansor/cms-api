@@ -180,6 +180,9 @@ export class PurchaseOrder extends EntityHelper {
   actual_work_status: string;
 
   @Column()
+  remark_ss: string;
+
+  @Column()
   remark_highlight_recon: string;
 
   @Column()

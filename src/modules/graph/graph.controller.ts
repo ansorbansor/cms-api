@@ -320,7 +320,7 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getLiability(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
     @Query('year') year: string,
   ) {

@@ -19,45 +19,41 @@ export class GraphService {
   ) { }
 
   // #3
+  // #3
   async getPOCount(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -68,20 +64,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     let poCount = await getManager().query(
@@ -101,45 +93,41 @@ export class GraphService {
   }
 
   // #4
+  // #4
   async getPOLineAmount(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -150,20 +138,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     let lineAmount = await getManager().query(
@@ -183,45 +167,41 @@ export class GraphService {
   }
 
   // #6
+  // #6
   async getPOCountPerStatus(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.publish_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -232,20 +212,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     const poCount = await getManager().query(
@@ -257,45 +233,41 @@ export class GraphService {
   }
 
   // #1
+  // #1
   async getActualWorkAmountSum(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -306,20 +278,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     let actualWorkAmount = await getManager().query(
@@ -339,45 +307,41 @@ export class GraphService {
   }
 
   // #5
+  // #5
   async getActualWorkAmountPerMonth(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -388,20 +352,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     const actualWorkAmountPerMonth = await getManager().query(
@@ -457,45 +417,41 @@ export class GraphService {
   }
 
   // #8
+  // #8
   async getContractAssetSum(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
     if (actualWorkStatus != '' && actualWorkStatus != null) {
@@ -506,20 +462,16 @@ export class GraphService {
       whereParam.push(`%${actualWorkStatus}%`);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     let contractAsset = await getManager().query(
@@ -539,14 +491,15 @@ export class GraphService {
   }
 
   // #7
+  // #7
   async getOrderLog(
     paginationOptions: IPaginationOptions,
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
     actualWorkStatus: string,
   ) {
     const data = this.poRepository
@@ -555,27 +508,31 @@ export class GraphService {
       .leftJoinAndSelect('po.project', 'project')
       .leftJoinAndSelect('po.bidding_area', 'bidding_area');
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      data.andWhere('po.region_id = :region_id', {
-        region_id: regionId,
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      data.andWhere('po.region_id IN (:...regions)', {
+        regions: regions,
       });
     }
 
     if (month != '' && month != null) {
-      data.andWhere('EXTRACT(MONTH FROM po.publish_date) = :month', {
-        month: month,
+      const months = month.toString().split(',');
+      data.andWhere('EXTRACT(MONTH FROM po.publish_date) IN (:...months)', {
+        months: months,
       });
     }
 
     if (year != '' && year != null) {
-      data.andWhere('EXTRACT(YEAR FROM po.publish_date) = :year', {
-        year: year,
+      const years = year.toString().split(',');
+      data.andWhere('EXTRACT(YEAR FROM po.publish_date) IN (:...years)', {
+        years: years,
       });
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      data.andWhere('po.line_po_status = :linePOStatus', {
-        linePOStatus: linePOStatus,
+      const statuses = linePOStatus.toString().split(',');
+      data.andWhere('po.line_po_status IN (:...statuses)', {
+        statuses: statuses,
       });
     }
 
@@ -585,15 +542,17 @@ export class GraphService {
       });
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      data.andWhere('po.customer_id = :customerId', {
-        customerId: customerId,
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      data.andWhere('po.customer_id IN (:...customerIds)', {
+        customerIds: customerIds,
       });
     }
 
     if (status != '' && status != null) {
-      data.andWhere('po.status = :status', {
-        status: status,
+      const st = status.toString().split(',');
+      data.andWhere('po.status IN (:...status)', {
+        status: st,
       });
     }
 
@@ -618,60 +577,52 @@ export class GraphService {
 
   // dashboard management
   // #1
+  // #1
   async getManagementActualWorkAmountPerMonth(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     const actualWorkAmountPerMonth = await getManager().query(
@@ -701,53 +652,52 @@ export class GraphService {
   }
 
   // #2
+  // #2
   async getManagementInvoicePerformance(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND po.region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND po.region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM poi.invoice_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM poi.invoice_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM poi.invoice_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM poi.invoice_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery + ' AND po.line_po_status = $' + (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND po.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery + ' AND po.customer_id = $' + (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND po.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery = whereQuery + ' AND po.status = $' + (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND po.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     const actualWorkAmountPerMonth = await getManager().query(
@@ -782,60 +732,52 @@ export class GraphService {
   }
 
   // #3
+  // #3
   async getManagementCurrentAsset(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
     linePOStatus: string,
-    customerId: number,
+    customerId: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM purchase_orders.actual_work_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     if (linePOStatus != '' && linePOStatus != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.line_po_status = $' +
-        (whereParam.length + 1);
-      whereParam.push(linePOStatus);
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND purchase_orders.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
     }
 
-    if (customerId != undefined && customerId != null && customerId != 0) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.customer_id = $' +
-        (whereParam.length + 1);
-      whereParam.push(customerId);
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND purchase_orders.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
     }
 
     if (status != '' && status != null) {
-      whereQuery =
-        whereQuery +
-        ' AND purchase_orders.status = $' +
-        (whereParam.length + 1);
-      whereParam.push(status);
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND purchase_orders.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
     }
 
     const sumResult = await getManager().query(
@@ -883,34 +825,32 @@ export class GraphService {
   }
 
   // #4
+  // #4
   async getNettIncome(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND spk.region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND spk.region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM spk.created_at) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM spk.created_at) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM spk.created_at) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM spk.created_at) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     const actualWorkAmountPerMonth = await getManager().query(
@@ -942,34 +882,32 @@ export class GraphService {
   }
 
   // #5
+  // #5
   async getLiability(
     status: string,
-    regionId: number,
+    regionId: string,
     month: string,
     year: string,
   ) {
     let whereQuery = '';
     const whereParam = [];
 
-    if (regionId != undefined && regionId != null && regionId != 0) {
-      whereQuery = ' AND spk.region_id = $' + (whereParam.length + 1);
-      whereParam.push(regionId);
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND spk.region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
     }
 
     if (month != '' && month != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(MONTH FROM spk.created_at) = $' +
-        (whereParam.length + 1);
-      whereParam.push(month);
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM spk.created_at) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
     }
 
     if (year != '' && year != null) {
-      whereQuery =
-        whereQuery +
-        ' AND EXTRACT(YEAR FROM spk.created_at) = $' +
-        (whereParam.length + 1);
-      whereParam.push(year);
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM spk.created_at) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
     }
 
     let liability = await getManager().query(

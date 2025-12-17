@@ -32,11 +32,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async poCount(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
@@ -59,11 +59,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getPOLineAmount(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
@@ -86,11 +86,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async poCountPerStatus(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponseListWithoutPaginate(
@@ -113,11 +113,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getActualWorkAmountSum(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
@@ -140,11 +140,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getContractAssetSum(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
@@ -167,11 +167,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getActualWorkAmountPerMonth(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
   ) {
     return successResponse(
@@ -194,11 +194,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getOrderLog(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('actual_work_status') actualWorkStatus: string,
@@ -229,11 +229,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getManagementActualWorkAmountPerMonth(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
   ) {
     return successResponse(
       await this.graphService.getManagementActualWorkAmountPerMonth(
@@ -254,11 +254,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getManagementInvoicePerformance(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
     @Query('year') year: string,
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
   ) {
     return successResponse(
       await this.graphService.getManagementInvoicePerformance(
@@ -279,11 +279,11 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getManagementCurrentAsset(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
-    @Query('year') year: string,
+    @Query('year') year: string, // already string
     @Query('line_po_status') linePOStatus: string,
-    @Query('customer_id') customerId: number,
+    @Query('customer_id') customerId: string,
   ) {
     return successResponse(
       await this.graphService.getManagementCurrentAsset(
@@ -304,7 +304,7 @@ export class GraphController {
   @HttpCode(HttpStatus.OK)
   async getNettIncome(
     @Query('status') status: string,
-    @Query('region_id') regionId: number,
+    @Query('region_id') regionId: string,
     @Query('month') month: string,
     @Query('year') year: string,
   ) {

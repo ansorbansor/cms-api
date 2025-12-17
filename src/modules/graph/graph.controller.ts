@@ -24,7 +24,7 @@ import { GraphService } from './graph.service';
   version: '1',
 })
 export class GraphController {
-  constructor(private readonly graphService: GraphService) {}
+  constructor(private readonly graphService: GraphService) { }
 
   // #3
   @Get('po/count')
@@ -176,6 +176,33 @@ export class GraphController {
   ) {
     return successResponse(
       await this.graphService.getActualWorkAmountPerMonth(
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+        actualWorkStatus,
+      ),
+      'success',
+    );
+  }
+
+  // #5.1
+  @Get('po/actual-work-amount/per-day')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getActualWorkAmountPerDay(
+    @Query('status') status: string,
+    @Query('region_id') regionId: number,
+    @Query('month') month: string,
+    @Query('year') year: string,
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: number,
+    @Query('actual_work_status') actualWorkStatus: string,
+  ) {
+    return successResponse(
+      await this.graphService.getActualWorkAmountPerDay(
         status,
         regionId,
         month,

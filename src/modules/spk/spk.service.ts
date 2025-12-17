@@ -551,8 +551,16 @@ export class SPKService {
             status: SPKStatus.PAID,
           });
         }
-      } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
-        data.withDeleted();
+      } else if (
+        currentUser.employeePosition.code == RoleEnum.SUPERADMIN ||
+        currentUser.employeePosition.code == RoleEnum.PO_ADMIN ||
+        currentUser.employeePosition.id == 10
+      ) {
+        if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+          data.withDeleted();
+        } else {
+          data.where('spk.deleted_at IS NULL');
+        }
       } else {
         filterRegion = false;
 

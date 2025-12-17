@@ -21,6 +21,7 @@ export enum RoleEnum {
   ADMINPAYMENT = 'admin_payment',
   ADMINPAYMENTREGION = 'adminpaymentregion',
   VERIFICATOR = 'verificator',
+  PO_ADMIN = 'po_admin',
 }
 
 export enum FileTypeEnum {

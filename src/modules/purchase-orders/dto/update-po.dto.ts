@@ -256,6 +256,22 @@ export class UpdatePurchaseOrderDTO {
   @Transform(({ value }) => (value == '' ? null : value))
   done_atp: Date;
 
+  @ApiProperty({ example: 'YES' })
+  @IsOptional()
+  start_progress_confirmed_by_rpm: string;
+
+  @ApiProperty({ example: 'YES' })
+  @IsOptional()
+  finish_progress_confirmed_by_rpm: string;
+
+  @ApiProperty({ example: 'YES' })
+  @IsOptional()
+  done_atp_confirmed_by_rpm: string;
+
+  @ApiProperty({ example: 'Remark RPM' })
+  @IsOptional()
+  remark_rpm: string;
+
   @ValidateNested({ each: true })
   @Type(() => Invoices)
   invoices: Invoices[];

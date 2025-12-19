@@ -32,6 +32,15 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
     finish_progress_confirmed_by_rpm: po.finish_progress_confirmed_by_rpm ? po.finish_progress_confirmed_by_rpm : null,
     done_atp_confirmed_by_rpm: po.done_atp_confirmed_by_rpm ? po.done_atp_confirmed_by_rpm : null,
     remark_rpm: po.remark_rpm ? po.remark_rpm : '-',
+    start_progress: po.start_progress
+      ? moment(po.start_progress).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    finish_progress: po.finish_progress
+      ? moment(po.finish_progress).format('YYYY-MM-DD HH:mm:ss')
+      : null,
+    done_atp: po.done_atp
+      ? moment(po.done_atp).format('YYYY-MM-DD HH:mm:ss')
+      : null,
   };
 };
 

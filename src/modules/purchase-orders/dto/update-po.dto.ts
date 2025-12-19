@@ -244,16 +244,19 @@ export class UpdatePurchaseOrderDTO {
   @ApiProperty({ example: 1 })
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
+  @Type(() => Date)
   start_progress: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
+  @Type(() => Date)
   finish_progress: Date;
 
   @ApiProperty({ example: 1 })
   @IsOptional()
   @Transform(({ value }) => (value == '' ? null : value))
+  @Type(() => Date)
   done_atp: Date;
 
   @ApiProperty({ example: 'YES' })

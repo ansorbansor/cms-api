@@ -200,6 +200,18 @@ export class PurchaseOrder extends EntityHelper {
   @Column()
   done_atp?: Date;
 
+  @Column()
+  start_progress_confirmed_by_rpm?: string;
+
+  @Column()
+  finish_progress_confirmed_by_rpm?: string;
+
+  @Column()
+  done_atp_confirmed_by_rpm?: string;
+
+  @Column()
+  remark_rpm?: string;
+
   @ManyToOne(() => User, {
     eager: true,
   })

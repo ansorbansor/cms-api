@@ -28,6 +28,10 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
     } : null,
     item_description: po.item_description ? po.item_description : '-',
     remark_ss: po.remark_ss ? po.remark_ss : '-',
+    start_progress_confirmed_by_rpm: po.start_progress_confirmed_by_rpm ? po.start_progress_confirmed_by_rpm : null,
+    finish_progress_confirmed_by_rpm: po.finish_progress_confirmed_by_rpm ? po.finish_progress_confirmed_by_rpm : null,
+    done_atp_confirmed_by_rpm: po.done_atp_confirmed_by_rpm ? po.done_atp_confirmed_by_rpm : null,
+    remark_rpm: po.remark_rpm ? po.remark_rpm : '-',
   };
 };
 

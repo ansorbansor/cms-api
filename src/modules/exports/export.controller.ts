@@ -78,19 +78,24 @@ export class ExportController {
     @Query('search') search: string,
     @Query('status') status: string,
   ) {
-    const job = await this.exportService.exportPO(
-      req.user,
-      req.ip,
-      startDate,
-      endDate,
-      search,
-      status,
-    );
+    try {
+      const job = await this.exportService.exportPO(
+        req.user,
+        req.ip,
+        startDate,
+        endDate,
+        search,
+        status,
+      );
 
-    return res.status(HttpStatus.OK).json({
-      meta: { status: 200, message: 'Export queued', success: true },
-      data: job,
-    });
+      return res.status(HttpStatus.OK).json({
+        meta: { status: 200, message: 'Export queued', success: true },
+        data: job,
+      });
+    } catch (error) {
+      console.error('Error in exportPO:', error);
+      throw error;
+    }
   }
 
   @Get('spk')

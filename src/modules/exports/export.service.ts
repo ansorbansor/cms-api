@@ -146,17 +146,15 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
-    const f = await new Promise((resolve) => {
-      tmp.file(
-        { mode: 0o644, prefix: 'Pengguna-', postfix: '.xlsx' },
-        function _tempFileCreated(err, path) {
-          if (err) throw err;
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
 
-          XLSX.writeFile(wb, path, { compression: true });
-          resolve(path);
-        },
-      );
-    });
+    const fileName = `Pengguna-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -164,7 +162,7 @@ export class ExportService {
       ip: ip,
     });
 
-    return f;
+    return filePath;
   }
 
   private async _generatePOFile(
@@ -524,17 +522,15 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
-    const f = await new Promise((resolve) => {
-      tmp.file(
-        { mode: 0o644, prefix: 'SPK-', postfix: '.xlsx' },
-        function _tempFileCreated(err, path) {
-          if (err) throw err;
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
 
-          XLSX.writeFile(wb, path, { compression: true });
-          resolve(path);
-        },
-      );
-    });
+    const fileName = `SPK-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -542,7 +538,7 @@ export class ExportService {
       ip: ip,
     });
 
-    return f;
+    return filePath;
   }
 
   async exportAbsence(
@@ -587,17 +583,15 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
-    const f = await new Promise((resolve) => {
-      tmp.file(
-        { mode: 0o644, prefix: 'Absence-', postfix: '.xlsx' },
-        function _tempFileCreated(err, path) {
-          if (err) throw err;
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
 
-          XLSX.writeFile(wb, path, { compression: true });
-          resolve(path);
-        },
-      );
-    });
+    const fileName = `Absence-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -605,7 +599,7 @@ export class ExportService {
       ip: ip,
     });
 
-    return f;
+    return filePath;
   }
 
   async exportSPKOperational(
@@ -721,17 +715,15 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
-    const f = await new Promise((resolve) => {
-      tmp.file(
-        { mode: 0o644, prefix: 'SPK-Operational-', postfix: '.xlsx' },
-        function _tempFileCreated(err, path) {
-          if (err) throw err;
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
 
-          XLSX.writeFile(wb, path, { compression: true });
-          resolve(path);
-        },
-      );
-    });
+    const fileName = `SPK-Operational-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -739,6 +731,6 @@ export class ExportService {
       ip: ip,
     });
 
-    return f;
+    return filePath;
   }
 }

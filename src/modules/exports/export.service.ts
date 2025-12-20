@@ -18,6 +18,7 @@ import { RoleEnum, SPKStatus } from 'src/utils/enums';
 import { ExportSPKOperationalResource } from './resources/export-spk-operational.resources';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import * as async from 'async';
+import { ExportJob } from 'src/entities/export-job.entity';
 
 @Injectable()
 export class ExportService {
@@ -32,9 +33,89 @@ export class ExportService {
     private absenceRepository: Repository<Absence>,
     @InjectRepository(SPKOperational)
     private spkOperationalRepository: Repository<SPKOperational>,
+    @InjectRepository(ExportJob)
+    private exportJobRepository: Repository<ExportJob>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
-  ) { }
+  ) {
+    this.exportQueue = async.queue(async (task, callback) => {
+      try {
+        await this.processJob(task);
+        callback();
+      } catch (err) {
+        callback(err);
+      }
+    }, 1);
+  }
+
+  private exportQueue: async.QueueObject<any>;
+
+  async getJobs(user: User) {
+    return this.exportJobRepository.find({
+      where: { user_id: user.id },
+      order: { created_at: 'DESC' },
+      take: 20
+    });
+  }
+
+  async getJob(id: string, user: User) {
+    return this.exportJobRepository.findOne({ where: { id, user_id: user.id } });
+  }
+
+  async exportPO(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+    status: string,
+  ) {
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'PO';
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status });
+    job.status = 'PENDING';
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  private async processJob(jobId: string) {
+    const job = await this.exportJobRepository.findOne(jobId);
+    if (!job) return;
+
+    job.status = 'PROCESSING';
+    await this.exportJobRepository.save(job);
+
+    try {
+      let filePath = '';
+      const payload = JSON.parse(job.payload || '{}');
+
+      if (job.type === 'PO') {
+        const user = await this.usersRepository.findOne(job.user_id);
+        filePath = await this._generatePOFile(
+          user,
+          payload.ip,
+          payload.startDate,
+          payload.endDate,
+          payload.search,
+          payload.status
+        ) as string;
+      }
+
+      job.status = 'COMPLETED';
+      job.file_path = filePath;
+      // Clean up old files logic could go here or cron
+      await this.exportJobRepository.save(job);
+
+    } catch (err) {
+      job.status = 'FAILED';
+      job.error_message = err.message;
+      await this.exportJobRepository.save(job);
+    }
+  }
 
   async exportUser(user: User, ip: string, search: string) {
     const query = this.usersRepository
@@ -85,7 +166,7 @@ export class ExportService {
     return f;
   }
 
-  async exportPO(
+  private async _generatePOFile(
     user: User,
     ip: string,
     startDate: string,
@@ -360,42 +441,42 @@ export class ExportService {
       query.where('spk.deleted_at IS NULL');
     }
 
-if (search) {
-  // --- Logic to handle Unique IDs ---
-  const potentialUniqueIds = search.split(',').map(item => item.trim());
-  const extractedIds = [];
-  const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
+    if (search) {
+      // --- Logic to handle Unique IDs ---
+      const potentialUniqueIds = search.split(',').map(item => item.trim());
+      const extractedIds = [];
+      const uniqueIdRegex = /^\d{4}BSN-\d{4}-(\d+)$/;
 
-  for (const pId of potentialUniqueIds) {
-    const match = pId.match(uniqueIdRegex);
-    if (match) {
-      extractedIds.push(match[1]);
+      for (const pId of potentialUniqueIds) {
+        const match = pId.match(uniqueIdRegex);
+        if (match) {
+          extractedIds.push(match[1]);
+        }
+      }
+      // --- End of Unique ID Logic ---
+
+      if (extractedIds.length > 0) {
+        // Priority 1: Search by one or more Unique IDs
+        query.andWhere('spk.id IN (:...ids)', { ids: extractedIds });
+
+      } else if (search.includes(',')) {
+        // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
+        const spkNumbers = search.split(',').map(item => item.trim());
+        query.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
+
+      } else {
+        // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('spk.spk_number ILIKE :search', {
+              search: `%${search}%`,
+            }).orWhere('site.code ILIKE :searchSite', {
+              searchSite: `%${search}%`,
+            });
+          }),
+        );
+      }
     }
-  }
-  // --- End of Unique ID Logic ---
-
-  if (extractedIds.length > 0) {
-    // Priority 1: Search by one or more Unique IDs
-    query.andWhere('spk.id IN (:...ids)', { ids: extractedIds });
-
-  } else if (search.includes(',')) {
-    // Priority 2: If commas exist, search by a list of exact "No BOP" numbers
-    const spkNumbers = search.split(',').map(item => item.trim());
-    query.andWhere('spk.spk_number IN (:...spkNumbers)', { spkNumbers });
-
-  } else {
-    // Priority 3: Fallback to a single-term search on "No BOP" and "DU ID"
-    query.andWhere(
-      new Brackets((qb) => {
-        qb.where('spk.spk_number ILIKE :search', {
-          search: `%${search}%`,
-        }).orWhere('site.code ILIKE :searchSite', {
-          searchSite: `%${search}%`,
-        });
-      }),
-    );
-  }
-}
 
     if (status) {
       query.andWhere('spk.status = :status', {

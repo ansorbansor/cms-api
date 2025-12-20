@@ -7,6 +7,8 @@ import {
   Res,
   Request,
   UseGuards,
+  Param,
+  NotFoundException,
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,7 +25,28 @@ import { Response } from 'express';
   version: '1',
 })
 export class ExportController {
-  constructor(private readonly exportService: ExportService) {}
+  constructor(private readonly exportService: ExportService) { }
+
+  @Get('jobs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getJobs(@Request() req) {
+    const jobs = await this.exportService.getJobs(req.user);
+    return {
+      meta: { status: 200, message: 'List Data Export Jobs', success: true },
+      data: jobs,
+    };
+  }
+
+  @Get('download/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async download(@Param('id') id: string, @Res() res: Response, @Request() req) {
+    const job = await this.exportService.getJob(id, req.user);
+    if (!job || job.status !== 'COMPLETED' || !job.file_path) {
+      throw new NotFoundException('File not found or not ready');
+    }
+    res.download(job.file_path);
+  }
 
   @Get('users')
   @Header('Content-Type', 'text/xlsx')
@@ -45,7 +68,6 @@ export class ExportController {
   }
 
   @Get('po')
-  @Header('Content-Type', 'text/xlsx')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async exportPO(
@@ -56,7 +78,7 @@ export class ExportController {
     @Query('search') search: string,
     @Query('status') status: string,
   ) {
-    const response = await this.exportService.exportPO(
+    const job = await this.exportService.exportPO(
       req.user,
       req.ip,
       startDate,
@@ -65,7 +87,10 @@ export class ExportController {
       status,
     );
 
-    res.download(`${response}`);
+    return res.status(HttpStatus.OK).json({
+      meta: { status: 200, message: 'Export queued', success: true },
+      data: job,
+    });
   }
 
   @Get('spk')

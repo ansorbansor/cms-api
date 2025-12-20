@@ -9,6 +9,7 @@ import { ExportService } from './export.service';
 import { Absence } from 'src/entities/absence.entity';
 import { UsersModule } from '../users/users.module';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
+import { ExportJob } from 'src/entities/export-job.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SPKOperational } from 'src/entities/spk-operationals.entity';
       SPK,
       Absence,
       SPKOperational,
+      ExportJob,
     ]),
     ActivityLogModule,
     UsersModule,
@@ -26,4 +28,4 @@ import { SPKOperational } from 'src/entities/spk-operationals.entity';
   providers: [ExportService],
   exports: [ExportService],
 })
-export class ExportModule {}
+export class ExportModule { }

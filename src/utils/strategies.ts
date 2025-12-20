@@ -14,7 +14,12 @@ type JwtPayload = Pick<User, 'id'> & { iat: number; exp: number };
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService, configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (req: any) => {
+          return req?.query?.token;
+        },
+      ]),
       secretOrKey: configService.get('auth.secret'),
       passReqToCallback: true,
     });

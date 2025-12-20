@@ -4,7 +4,8 @@ import { User } from 'src/entities/user.entity';
 import { Brackets, Repository, getManager } from 'typeorm';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { ExportUserResource } from './resources/export-user.resources';
-import * as tmp from 'tmp';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ExportPOResource } from './resources/export-po.resources';
 import * as xlsx from 'xlsx';
@@ -343,19 +344,17 @@ export class ExportService {
     XLSX.utils.book_append_sheet(wb, workSheet, 'Detail');
 
     console.log('[ExportPO] Start Create File');
-    const f = await new Promise((resolve) => {
-      tmp.file(
-        { mode: 0o644, prefix: `PO${prefixDate}`, postfix: '.xlsx' },
-        function _tempFileCreated(err, path) {
-          if (err) throw err;
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
 
-          XLSX.writeFile(wb, path, { compression: true });
-          resolve(path);
-        },
-      );
-    });
+    const fileName = `PO${prefixDate.replace(/[: ]/g, '_')}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
 
-    console.log('[ExportPO] Done Create File');
+    XLSX.writeFile(wb, filePath, { compression: true });
+
+    console.log('[ExportPO] Done Create File: ' + filePath);
 
     await this.activityLogService.create({
       user_id: user.id,
@@ -363,7 +362,7 @@ export class ExportService {
       ip: ip,
     });
 
-    return f;
+    return filePath;
   }
 
   async exportSPK(

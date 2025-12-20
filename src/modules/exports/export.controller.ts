@@ -41,11 +41,35 @@ export class ExportController {
   @Get('download/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async download(@Param('id') id: string, @Res() res: Response, @Request() req) {
-    const job = await this.exportService.getJob(id, req.user);
-    if (!job || job.status !== 'COMPLETED' || !job.file_path) {
-      throw new NotFoundException('File not found or not ready');
+    console.log(`[ExportController] Request to download job ID: ${id}`);
+    try {
+      const job = await this.exportService.getJob(id, req.user);
+      console.log(`[ExportController] Job found:`, job);
+
+      if (!job || job.status !== 'COMPLETED' || !job.file_path) {
+        console.error(`[ExportController] Job not ready or invalid status: ${job?.status}`);
+        throw new NotFoundException('File not found or not ready');
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const fs = require('fs');
+      if (!fs.existsSync(job.file_path)) {
+        console.error(`[ExportController] File missing from disk at: ${job.file_path}`);
+        throw new NotFoundException('File missing on server');
+      }
+
+      console.log(`[ExportController] Sending file: ${job.file_path}`);
+      res.download(job.file_path, (err) => {
+        if (err) {
+          console.error(`[ExportController] Error sending file:`, err);
+        } else {
+          console.log('[ExportController] File sent successfully');
+        }
+      });
+    } catch (error) {
+      console.error(`[ExportController] Download Error:`, error);
+      throw error;
     }
-    res.download(job.file_path);
   }
 
   @Get('users')

@@ -196,17 +196,13 @@ export class ExportService {
           .select('COALESCE(SUM(s.cash_advance), 0)', 'total_cash_advance')
           .from(SPK, 's')
           .where('s.po_id = po.id')
-          .andWhere(
-            new Brackets((qb) => {
-              qb.where('s.status = :status1', { status1: SPKStatus.PAID })
-                .orWhere('s.status = :status2', {
-                  status2: SPKStatus.PAID_NEED_EVIDENCE,
-                })
-                .orWhere('s.status = :status3', {
-                  status3: SPKStatus.CLOSED,
-                });
-            }),
-          );
+          .andWhere('s.status IN (:...statuses)', {
+            statuses: [
+              SPKStatus.PAID,
+              SPKStatus.PAID_NEED_EVIDENCE,
+              SPKStatus.CLOSED,
+            ],
+          });
       }, 'po_total_cash_advance')
 
     if (search) {

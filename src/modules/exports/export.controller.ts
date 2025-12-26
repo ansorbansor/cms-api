@@ -58,6 +58,18 @@ export class ExportController {
         throw new NotFoundException('File missing on server');
       }
 
+      const stat = fs.statSync(job.file_path);
+      const fileSize = stat.size;
+      console.log(`[ExportController] File size: ${fileSize} bytes`);
+
+      if (fileSize === 0) {
+        console.error(`[ExportController] File is empty: ${job.file_path}`);
+        throw new NotFoundException('File is empty');
+      }
+
+      res.setHeader('Content-Length', fileSize);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
       console.log(`[ExportController] Sending file: ${job.file_path}`);
       res.download(job.file_path, (err) => {
         if (err) {

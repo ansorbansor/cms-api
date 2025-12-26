@@ -196,13 +196,7 @@ export class ExportService {
           .select('COALESCE(SUM(s.cash_advance), 0)', 'total_cash_advance')
           .from(SPK, 's')
           .where('s.po_id = po.id')
-          .andWhere('s.status IN (:...statuses)', {
-            statuses: [
-              SPKStatus.PAID,
-              SPKStatus.PAID_NEED_EVIDENCE,
-              SPKStatus.CLOSED,
-            ],
-          });
+          .andWhere(`s.status IN (${SPKStatus.PAID}, ${SPKStatus.PAID_NEED_EVIDENCE}, ${SPKStatus.CLOSED})`);
       }, 'po_total_cash_advance')
 
     if (search) {

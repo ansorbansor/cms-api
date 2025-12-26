@@ -177,10 +177,7 @@ export class ExportService {
 
     const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
-      .addSelect(
-        'COALESCE(total_cash_advance.total_cash_advance, 0)',
-        'po_total_cash_advance',
-      )
+
       .leftJoinAndSelect('po.region', 'region')
       .leftJoinAndSelect('po.area', 'area')
       .leftJoinAndSelect('po.customer', 'customer')

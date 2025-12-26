@@ -177,7 +177,10 @@ export class ExportService {
 
     const query = this.purchaseOrdersRepository
       .createQueryBuilder('po')
-
+      .addSelect(
+        'COALESCE(total_cash_advance.total_cash_advance, 0)',
+        'po_total_cash_advance',
+      )
       .leftJoinAndSelect('po.region', 'region')
       .leftJoinAndSelect('po.area', 'area')
       .leftJoinAndSelect('po.customer', 'customer')
@@ -191,13 +194,26 @@ export class ExportService {
       .leftJoinAndSelect('po.pd', 'pd')
       .leftJoinAndSelect('po.po_invoice', 'po_invoice')
       .leftJoinAndSelect('po.pic_data', 'pic_data')
-      .addSelect((subQuery) => {
-        return subQuery
-          .select('COALESCE(SUM(s.cash_advance), 0)', 'total_cash_advance')
-          .from(SPK, 's')
-          .where('s.po_id = po.id')
-          .andWhere(`s.status IN (${SPKStatus.PAID}, ${SPKStatus.PAID_NEED_EVIDENCE}, ${SPKStatus.CLOSED})`);
-      }, 'po_total_cash_advance')
+      .leftJoin(
+        (qb) => {
+          return qb
+            .select('s.po_id')
+            .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+            .from(SPK, 's')
+            .where('s.status = :status1', {
+              status1: SPKStatus.PAID,
+            })
+            .orWhere('s.status = :status2', {
+              status2: SPKStatus.PAID_NEED_EVIDENCE,
+            })
+            .orWhere('s.status = :status3', {
+              status3: SPKStatus.CLOSED,
+            })
+            .groupBy('s.po_id');
+        },
+        'total_cash_advance',
+        '"total_cash_advance"."s_po_id" = po.id',
+      );
 
     if (search) {
       query.andWhere(
@@ -257,26 +273,29 @@ export class ExportService {
 
     const arr = Array.from(new Array(loopCount), (x, i) => i);
 
-    // Use sequential loop to ensure completion before writing file
-    try {
-      for (const value of arr) {
-        console.log(
-          '[ExportPO] Start Get Data : ' + value + ' of ' + loopCount,
-        );
-        query.offset(value * perLoop);
+    await new Promise((resolve, reject) => {
+      async.forEachOf(
+        arr,
+        async (value, key, callback) => {
+          console.log(
+            '[ExportPO] Start Get Data : ' + value + ' of ' + loopCount,
+          );
+          query.offset(value * perLoop);
 
-        const data = await query.getMany();
+          const data = await query.getMany();
 
-        data.forEach((d) => {
-          rows.push(ExportPOResource(d));
-        });
-      }
-      // Sort after all data is fetched
-      rows.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    } catch (err) {
-      console.error(err.message);
-      throw err;
-    }
+          data.forEach((d) => {
+            rows.push(ExportPOResource(d));
+          });
+        },
+        (err) => {
+          if (err) console.error(err.message);
+          // configs is now a map of JSON data
+          rows.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+          resolve(1);
+        },
+      );
+    });
 
     console.log('[ExportPO] Start Loop Invoice ' + rows.length);
     let iid = 0;

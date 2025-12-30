@@ -36,7 +36,7 @@ import { UpdateSPKOperationalSettlementDTO } from './dto/update-spk-operational-
   version: '1',
 })
 export class SPKOperationalController {
-  constructor(private readonly spkOperationalService: SPKOperationalService) {}
+  constructor(private readonly spkOperationalService: SPKOperationalService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -110,30 +110,42 @@ export class SPKOperationalController {
     );
   }
 
-  @Post('cost-evidence/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(AnyFilesInterceptor())
   async updateCostEvidence(
     @Request() req,
     @Param() param: IDParamDto,
-    @Body('id') id: number[],
-    @Body('name') name: string[],
-    @Body('cost') cost: number[],
-    @Body('deleted_id') deletedId: number[],
+    @Body('id') id: any,
+    @Body('name') name: any,
+    @Body('cost') cost: any,
+    @Body('deleted_id') deletedId: any,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
+    const parseNumberArray = (input: any): number[] => {
+      if (!input) return [];
+      if (Array.isArray(input)) return input.map(Number);
+      return [Number(input)];
+    };
+
+    const parseStringArray = (input: any): string[] => {
+      if (!input) return [];
+      if (Array.isArray(input)) return input.map(String);
+      return [String(input)];
+    };
+
+    const parsedIds = parseNumberArray(id);
+    const parsedNames = parseStringArray(name);
+    const parsedCosts = parseNumberArray(cost);
+    const parsedDeletedIds = parseNumberArray(deletedId);
+
     return successResponse(
       await this.spkOperationalService.updateCostEvidence(
         param.id,
         req.user,
         req.ip,
-        id,
-        name,
-        cost,
+        parsedIds,
+        parsedNames,
+        parsedCosts,
         files,
-        deletedId,
+        parsedDeletedIds,
       ),
       'success',
     );

@@ -1583,5 +1583,33 @@ export class SPKService {
     return spkDetails.map(spk => SPKResourceDetail(spk));
   }
 
+  async getFilterOptions() {
+    const regions = await this.spkRepository
+      .createQueryBuilder('spk')
+      .leftJoin('spk.region', 'region')
+      .select('DISTINCT region.id', 'id')
+      .addSelect('region.name', 'name')
+      .where('spk.deleted_at IS NULL')
+      .andWhere('region.deleted_at IS NULL')
+      .orderBy('region.name', 'ASC')
+      .getRawMany();
+
+    const projects = await this.spkRepository
+      .createQueryBuilder('spk')
+      .leftJoin('spk.po', 'po')
+      .leftJoin('po.project', 'project')
+      .select('DISTINCT project.name', 'name')
+      .where('spk.deleted_at IS NULL')
+      .andWhere('po.deleted_at IS NULL')
+      .andWhere('project.deleted_at IS NULL')
+      .andWhere("project.name IS NOT NULL AND project.name != ''")
+      .orderBy('project.name', 'ASC')
+      .getRawMany();
+
+    return {
+      regions,
+      projects,
+    };
+  }
 }
 

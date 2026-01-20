@@ -199,6 +199,16 @@ export class SPKController {
   }
 
 
+  @Get('filter-options')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getFilterOptions() {
+    return successResponse(
+      await this.spkService.getFilterOptions(),
+      'success',
+    );
+  }
+
   @Get('category')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

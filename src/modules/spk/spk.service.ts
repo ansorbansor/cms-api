@@ -618,6 +618,11 @@ export class SPKService {
       data.andWhere('project.name IN (:...projectNames)', { projectNames });
     }
 
+    if (paginationOptions.regions) {
+      const regionIds = paginationOptions.regions.split(',');
+      data.andWhere('region.id IN (:...regionIds)', { regionIds });
+    }
+
     if (
       currentUser.employeePosition.code == RoleEnum.PM &&
       !paginationOptions.status

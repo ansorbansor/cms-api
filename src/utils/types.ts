@@ -1,9 +1,9 @@
 export declare type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Array<infer U>
-    ? Array<DeepPartial<U>>
-    : T[P] extends ReadonlyArray<infer U>
-    ? ReadonlyArray<DeepPartial<U>>
-    : DeepPartial<T[P]> | T[P];
+  ? Array<DeepPartial<U>>
+  : T[P] extends ReadonlyArray<infer U>
+  ? ReadonlyArray<DeepPartial<U>>
+  : DeepPartial<T[P]> | T[P];
 };
 
 export type FindOptions<T> = {
@@ -27,10 +27,11 @@ export interface IPaginationOptions {
   status?: number;
   status_bool?: boolean;
   status_string?: string;
-biosron_id?: string;
+  biosron_id?: string;
   is_admin?: boolean;
   employeePosition?: number;
   type?: number;
   source?: string;
-projects?: string;
+  projects?: string;
+  regions?: string;
 }

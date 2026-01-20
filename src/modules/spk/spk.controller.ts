@@ -161,12 +161,47 @@ export class SPKController {
     );
   }
 
-// In spk.controller.ts
+  // In spk.controller.ts
 
-@Get()
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findAll(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('status') status: number,
+    @Query('mobile') mobile: boolean,
+    @Query('projects') projects: string,
+    @Query('regions') regions: string,
+  return successResponseList(
+      await this.spkService.findManyWithPagination(
+        {
+          page,
+          limit,
+          total: 0,
+          search: search,
+          start_date: startDate,
+          end_date: endDate,
+          status: status,
+          projects: projects, // <-- AND ADD THIS LINE
+          regions: regions,
+        },
+        req.user,
+        mobile,
+      ),
+      'success',
+    );
+}
+
+
+@Get('category')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @HttpCode(HttpStatus.OK)
-async findAll(
+async getAllSPKCategory(
   @Request() req,
   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
   @Query('limit') limit: number,
@@ -174,164 +209,130 @@ async findAll(
   @Query('start_date') startDate: string,
   @Query('end_date') endDate: string,
   @Query('status') status: number,
-  @Query('mobile') mobile: boolean,
-  @Query('projects') projects: string, // <-- ADD THIS LINE
 ) {
   return successResponseList(
-    await this.spkService.findManyWithPagination(
+    await this.spkService.getAllSPKCategory({
+      page,
+      limit,
+      total: 0,
+      search: search,
+      start_date: startDate,
+      end_date: endDate,
+      status: status,
+    }),
+    'success',
+  );
+}
+
+@Get('subcategory')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+async getAllSPKSubCategory(
+  @Request() req,
+  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  @Query('limit') limit: number,
+  @Query('search') search: string,
+  @Query('start_date') startDate: string,
+  @Query('end_date') endDate: string,
+  @Query('status') status: number,
+) {
+  return successResponseList(
+    await this.spkService.getAllSPKSubCategory({
+      page,
+      limit,
+      total: 0,
+      search: search,
+      start_date: startDate,
+      end_date: endDate,
+      status: status,
+    }),
+    'success',
+  );
+}
+
+@Get(':id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+async findOne(@Param() param: IDParamDto, @Request() req) {
+  return successResponse(
+    await this.spkService.findOne(
       {
-        page,
-        limit,
-        total: 0,
-        search: search,
-        start_date: startDate,
-        end_date: endDate,
-        status: status,
-        projects: projects, // <-- AND ADD THIS LINE
+        id: +param.id,
       },
       req.user,
-      mobile,
     ),
     'success',
   );
-} 
+}
 
+@Delete(':id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+async remove(@Param() param: IDParamDto, @Request() req) {
+  return successResponse(
+    await this.spkService.softDelete(param.id, req.user, req.ip),
+    'success',
+  );
+}
 
-  @Get('category')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async getAllSPKCategory(
-    @Request() req,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit') limit: number,
-    @Query('search') search: string,
-    @Query('start_date') startDate: string,
-    @Query('end_date') endDate: string,
-    @Query('status') status: number,
-  ) {
-    return successResponseList(
-      await this.spkService.getAllSPKCategory({
-        page,
-        limit,
-        total: 0,
-        search: search,
-        start_date: startDate,
-        end_date: endDate,
-        status: status,
-      }),
-      'success',
-    );
-  }
+@Get('approve-over-budget/:id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_OVER_BUDGET)
+async approveOverBudget(
+  @Param() param: IDParamDto,
+  @Request() req,
+  @Query('remark') remark: string,
+) {
+  return successResponse(
+    await this.spkService.approveOverBudget(param.id, req.user, remark),
+    'success',
+  );
+}
 
-  @Get('subcategory')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async getAllSPKSubCategory(
-    @Request() req,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit') limit: number,
-    @Query('search') search: string,
-    @Query('start_date') startDate: string,
-    @Query('end_date') endDate: string,
-    @Query('status') status: number,
-  ) {
-    return successResponseList(
-      await this.spkService.getAllSPKSubCategory({
-        page,
-        limit,
-        total: 0,
-        search: search,
-        start_date: startDate,
-        end_date: endDate,
-        status: status,
-      }),
-      'success',
-    );
-  }
+@Get('approve/:id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_APPROVE)
+async approve(
+  @Param() param: IDParamDto,
+  @Request() req,
+  @Query('remark') remark: string,
+) {
+  return successResponse(
+    await this.spkService.approve(param.id, req.user, remark),
+    'success',
+  );
+}
 
-  @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  async findOne(@Param() param: IDParamDto, @Request() req) {
-    return successResponse(
-      await this.spkService.findOne(
-        {
-          id: +param.id,
-        },
-        req.user,
-      ),
-      'success',
-    );
-  }
+@Get('reject/:id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_APPROVE)
+async reject(
+  @Param() param: IDParamDto,
+  @Request() req,
+  @Query('remark') remark: string,
+) {
+  return successResponse(
+    await this.spkService.reject(param.id, req.user, remark),
+    'BOP Berhasil Direject',
+  );
+}
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param() param: IDParamDto, @Request() req) {
-    return successResponse(
-      await this.spkService.softDelete(param.id, req.user, req.ip),
-      'success',
-    );
-  }
-
-  @Get('approve-over-budget/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Menus(MenuPermission.SPK_OVER_BUDGET)
-  async approveOverBudget(
-    @Param() param: IDParamDto,
-    @Request() req,
-    @Query('remark') remark: string,
-  ) {
-    return successResponse(
-      await this.spkService.approveOverBudget(param.id, req.user, remark),
-      'success',
-    );
-  }
-
-  @Get('approve/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Menus(MenuPermission.SPK_APPROVE)
-  async approve(
-    @Param() param: IDParamDto,
-    @Request() req,
-    @Query('remark') remark: string,
-  ) {
-    return successResponse(
-      await this.spkService.approve(param.id, req.user, remark),
-      'success',
-    );
-  }
-
-  @Get('reject/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Menus(MenuPermission.SPK_APPROVE)
-  async reject(
-    @Param() param: IDParamDto,
-    @Request() req,
-    @Query('remark') remark: string,
-  ) {
-    return successResponse(
-      await this.spkService.reject(param.id, req.user, remark),
-      'BOP Berhasil Direject',
-    );
-  }
-
-  @Get('reject-over-budget/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Menus(MenuPermission.SPK_OVER_BUDGET)
-  async rejectOverBudget(
-    @Param() param: IDParamDto,
-    @Request() req,
-    @Query('remark') remark: string,
-  ) {
-    return successResponse(
-      await this.spkService.rejectOverBudget(param.id, req.user, remark),
-      'BOP Berhasil Direject',
-    );
-  }
+@Get('reject-over-budget/:id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_OVER_BUDGET)
+async rejectOverBudget(
+  @Param() param: IDParamDto,
+  @Request() req,
+  @Query('remark') remark: string,
+) {
+  return successResponse(
+    await this.spkService.rejectOverBudget(param.id, req.user, remark),
+    'BOP Berhasil Direject',
+  );
+}
 
 // Add this entire function inside the SPKController class
 
@@ -350,19 +351,19 @@ async approveMany(@Request() req, @Body() body: { ids: number[] }) {
 }
 
 
-  @Post('reports/generate')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @Menus(MenuPermission.SPK_APPROVE) // Anda bisa mengganti ini dengan permission yang lebih sesuai jika ada
-  async generateReport(
-    @Request() req,
-    @Body() generateSpkReportDto: GenerateSpkReportDto, // Menggunakan DTO yang sudah di-import
-  ) {
-    return successResponse(
-      await this.spkService.generateReport(generateSpkReportDto.site_codes),
-      'Report generated successfully',
-    );
-  }
+@Post('reports/generate')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@HttpCode(HttpStatus.OK)
+@Menus(MenuPermission.SPK_APPROVE) // Anda bisa mengganti ini dengan permission yang lebih sesuai jika ada
+async generateReport(
+  @Request() req,
+  @Body() generateSpkReportDto: GenerateSpkReportDto, // Menggunakan DTO yang sudah di-import
+) {
+  return successResponse(
+    await this.spkService.generateReport(generateSpkReportDto.site_codes),
+    'Report generated successfully',
+  );
+}
 
 // In spk.controller.ts
 

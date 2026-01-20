@@ -1584,27 +1584,38 @@ export class SPKService {
   }
 
   async getFilterOptions() {
-    const regions = await this.spkRepository
+    const regionsRaw = await this.spkRepository
       .createQueryBuilder('spk')
       .leftJoin('spk.region', 'region')
-      .select('DISTINCT region.id', 'id')
-      .addSelect('region.name', 'name')
+      .select(['region.id', 'region.name'])
       .where('spk.deleted_at IS NULL')
+      .andWhere('region.id IS NOT NULL')
       .andWhere('region.deleted_at IS NULL')
+      .distinct(true)
       .orderBy('region.name', 'ASC')
       .getRawMany();
 
-    const projects = await this.spkRepository
+    const regions = regionsRaw.map(r => ({
+      id: r.region_id,
+      name: r.region_name,
+    }));
+
+    const projectsRaw = await this.spkRepository
       .createQueryBuilder('spk')
       .leftJoin('spk.po', 'po')
       .leftJoin('po.project', 'project')
-      .select('DISTINCT project.name', 'name')
+      .select(['project.name'])
       .where('spk.deleted_at IS NULL')
       .andWhere('po.deleted_at IS NULL')
       .andWhere('project.deleted_at IS NULL')
       .andWhere("project.name IS NOT NULL AND project.name != ''")
+      .distinct(true)
       .orderBy('project.name', 'ASC')
       .getRawMany();
+
+    const projects = projectsRaw.map(p => ({
+      name: p.project_name,
+    }));
 
     return {
       regions,

@@ -175,10 +175,10 @@ export class SPKController {
     @Query('end_date') endDate: string,
     @Query('status') status: number,
     @Query('mobile') mobile: boolean,
-    @Query('projects') projects: string,
     @Query('regions') regions: string | string[],
     @Query('projects') projects: string | string[],
-  return successResponseList(
+  ) {
+    return successResponseList(
       await this.spkService.findManyWithPagination(
         {
           page,
@@ -188,7 +188,7 @@ export class SPKController {
           start_date: startDate,
           end_date: endDate,
           status: status,
-          projects: projects, // <-- AND ADD THIS LINE
+          projects: projects,
           regions: regions,
         },
         req.user,
@@ -196,189 +196,189 @@ export class SPKController {
       ),
       'success',
     );
-}
+  }
 
 
-@Get('category')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-async getAllSPKCategory(
-  @Request() req,
-  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  @Query('limit') limit: number,
-  @Query('search') search: string,
-  @Query('start_date') startDate: string,
-  @Query('end_date') endDate: string,
-  @Query('status') status: number,
-) {
-  return successResponseList(
-    await this.spkService.getAllSPKCategory({
-      page,
-      limit,
-      total: 0,
-      search: search,
-      start_date: startDate,
-      end_date: endDate,
-      status: status,
-    }),
-    'success',
-  );
-}
+  @Get('category')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getAllSPKCategory(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('status') status: number,
+  ) {
+    return successResponseList(
+      await this.spkService.getAllSPKCategory({
+        page,
+        limit,
+        total: 0,
+        search: search,
+        start_date: startDate,
+        end_date: endDate,
+        status: status,
+      }),
+      'success',
+    );
+  }
 
-@Get('subcategory')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-async getAllSPKSubCategory(
-  @Request() req,
-  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  @Query('limit') limit: number,
-  @Query('search') search: string,
-  @Query('start_date') startDate: string,
-  @Query('end_date') endDate: string,
-  @Query('status') status: number,
-) {
-  return successResponseList(
-    await this.spkService.getAllSPKSubCategory({
-      page,
-      limit,
-      total: 0,
-      search: search,
-      start_date: startDate,
-      end_date: endDate,
-      status: status,
-    }),
-    'success',
-  );
-}
+  @Get('subcategory')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getAllSPKSubCategory(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('status') status: number,
+  ) {
+    return successResponseList(
+      await this.spkService.getAllSPKSubCategory({
+        page,
+        limit,
+        total: 0,
+        search: search,
+        start_date: startDate,
+        end_date: endDate,
+        status: status,
+      }),
+      'success',
+    );
+  }
 
-@Get(':id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-async findOne(@Param() param: IDParamDto, @Request() req) {
-  return successResponse(
-    await this.spkService.findOne(
-      {
-        id: +param.id,
-      },
-      req.user,
-    ),
-    'success',
-  );
-}
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param() param: IDParamDto, @Request() req) {
+    return successResponse(
+      await this.spkService.findOne(
+        {
+          id: +param.id,
+        },
+        req.user,
+      ),
+      'success',
+    );
+  }
 
-@Delete(':id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-async remove(@Param() param: IDParamDto, @Request() req) {
-  return successResponse(
-    await this.spkService.softDelete(param.id, req.user, req.ip),
-    'success',
-  );
-}
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async remove(@Param() param: IDParamDto, @Request() req) {
+    return successResponse(
+      await this.spkService.softDelete(param.id, req.user, req.ip),
+      'success',
+    );
+  }
 
-@Get('approve-over-budget/:id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_OVER_BUDGET)
-async approveOverBudget(
-  @Param() param: IDParamDto,
-  @Request() req,
-  @Query('remark') remark: string,
-) {
-  return successResponse(
-    await this.spkService.approveOverBudget(param.id, req.user, remark),
-    'success',
-  );
-}
+  @Get('approve-over-budget/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_OVER_BUDGET)
+  async approveOverBudget(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.approveOverBudget(param.id, req.user, remark),
+      'success',
+    );
+  }
 
-@Get('approve/:id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_APPROVE)
-async approve(
-  @Param() param: IDParamDto,
-  @Request() req,
-  @Query('remark') remark: string,
-) {
-  return successResponse(
-    await this.spkService.approve(param.id, req.user, remark),
-    'success',
-  );
-}
+  @Get('approve/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_APPROVE)
+  async approve(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.approve(param.id, req.user, remark),
+      'success',
+    );
+  }
 
-@Get('reject/:id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_APPROVE)
-async reject(
-  @Param() param: IDParamDto,
-  @Request() req,
-  @Query('remark') remark: string,
-) {
-  return successResponse(
-    await this.spkService.reject(param.id, req.user, remark),
-    'BOP Berhasil Direject',
-  );
-}
+  @Get('reject/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_APPROVE)
+  async reject(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.reject(param.id, req.user, remark),
+      'BOP Berhasil Direject',
+    );
+  }
 
-@Get('reject-over-budget/:id')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_OVER_BUDGET)
-async rejectOverBudget(
-  @Param() param: IDParamDto,
-  @Request() req,
-  @Query('remark') remark: string,
-) {
-  return successResponse(
-    await this.spkService.rejectOverBudget(param.id, req.user, remark),
-    'BOP Berhasil Direject',
-  );
-}
+  @Get('reject-over-budget/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_OVER_BUDGET)
+  async rejectOverBudget(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @Query('remark') remark: string,
+  ) {
+    return successResponse(
+      await this.spkService.rejectOverBudget(param.id, req.user, remark),
+      'BOP Berhasil Direject',
+    );
+  }
 
-// Add this entire function inside the SPKController class
+  // Add this entire function inside the SPKController class
 
-@Post('approve-many')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(
-  MenuPermission.SPK_APPROVE,
-  MenuPermission.SPK_OVER_BUDGET
-) // <-- Correct: The closing parenthesis comes after all permissions
-async approveMany(@Request() req, @Body() body: { ids: number[] }) {
-  return successResponse(
-    await this.spkService.approveMany(body.ids, req.user, req.ip),
-    'success',
-  );
-}
+  @Post('approve-many')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(
+    MenuPermission.SPK_APPROVE,
+    MenuPermission.SPK_OVER_BUDGET
+  ) // <-- Correct: The closing parenthesis comes after all permissions
+  async approveMany(@Request() req, @Body() body: { ids: number[] }) {
+    return successResponse(
+      await this.spkService.approveMany(body.ids, req.user, req.ip),
+      'success',
+    );
+  }
 
 
-@Post('reports/generate')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-@Menus(MenuPermission.SPK_APPROVE) // Anda bisa mengganti ini dengan permission yang lebih sesuai jika ada
-async generateReport(
-  @Request() req,
-  @Body() generateSpkReportDto: GenerateSpkReportDto, // Menggunakan DTO yang sudah di-import
-) {
-  return successResponse(
-    await this.spkService.generateReport(generateSpkReportDto.site_codes),
-    'Report generated successfully',
-  );
-}
+  @Post('reports/generate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.SPK_APPROVE) // Anda bisa mengganti ini dengan permission yang lebih sesuai jika ada
+  async generateReport(
+    @Request() req,
+    @Body() generateSpkReportDto: GenerateSpkReportDto, // Menggunakan DTO yang sudah di-import
+  ) {
+    return successResponse(
+      await this.spkService.generateReport(generateSpkReportDto.site_codes),
+      'Report generated successfully',
+    );
+  }
 
-// In spk.controller.ts
+  // In spk.controller.ts
 
-// The route now correctly reflects that we are searching by site code
-@Get('details-by-site-code/:siteCode')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@HttpCode(HttpStatus.OK)
-async findDetailsBySiteCode(@Param('siteCode') siteCode: string, @Request() req) {
-  return successResponse(
-    // We will create this new service method next
-    await this.spkService.findDetailsBySiteCode(siteCode, req.user),
-    'success',
-  );
-}
+  // The route now correctly reflects that we are searching by site code
+  @Get('details-by-site-code/:siteCode')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findDetailsBySiteCode(@Param('siteCode') siteCode: string, @Request() req) {
+    return successResponse(
+      // We will create this new service method next
+      await this.spkService.findDetailsBySiteCode(siteCode, req.user),
+      'success',
+    );
+  }
 }
 
 

@@ -611,15 +611,22 @@ export class SPKService {
     }
 
     if (paginationOptions.projects) {
-      // Split the incoming string by commas and trim whitespace from each project name
-      const projectNames = paginationOptions.projects.split(',').map(name => name.trim());
-
-      // Use the IN operator to check if the project.name is in the array of names
+      let projectNames: string[];
+      if (Array.isArray(paginationOptions.projects)) {
+        projectNames = paginationOptions.projects.map(p => p.trim());
+      } else {
+        projectNames = paginationOptions.projects.split(',').map(name => name.trim());
+      }
       data.andWhere('project.name IN (:...projectNames)', { projectNames });
     }
 
     if (paginationOptions.regions) {
-      const regionIds = paginationOptions.regions.split(',');
+      let regionIds: string[];
+      if (Array.isArray(paginationOptions.regions)) {
+        regionIds = paginationOptions.regions;
+      } else {
+        regionIds = paginationOptions.regions.split(',');
+      }
       data.andWhere('region.id IN (:...regionIds)', { regionIds });
     }
 

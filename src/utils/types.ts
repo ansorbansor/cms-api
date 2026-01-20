@@ -32,6 +32,7 @@ export interface IPaginationOptions {
   employeePosition?: number;
   type?: number;
   source?: string;
-  projects?: string;
-  regions?: string;
+  site_id?: number | string;
+  regions?: string | string[];
+  projects?: string | string[];
 }

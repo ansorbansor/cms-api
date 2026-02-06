@@ -153,6 +153,14 @@ export class PurchaseOrderService {
       });
     }
 
+    if (paginationOptions.needs_confirmation_bool) {
+      data.andWhere(new Brackets((qb) => {
+        qb.where(`(po.start_progress IS NOT NULL AND (po.start_progress_confirmed_by_rpm IS NULL OR po.start_progress_confirmed_by_rpm != 'YES'))`)
+          .orWhere(`(po.finish_progress IS NOT NULL AND (po.finish_progress_confirmed_by_rpm IS NULL OR po.finish_progress_confirmed_by_rpm != 'YES'))`)
+          .orWhere(`(po.done_atp IS NOT NULL AND (po.done_atp_confirmed_by_rpm IS NULL OR po.done_atp_confirmed_by_rpm != 'YES'))`);
+      }));
+    }
+
     data.orderBy('po.created_at', 'DESC');
 
     const total = await data.getCount();
@@ -228,6 +236,15 @@ export class PurchaseOrderService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { invoices, deleted_invoice_id, ...updatedDataPO } =
       updatePurchaseOrderDto;
+
+    // Logic for Auto-Fill on Finish Confirmation (RPM)
+    if (updatedDataPO.finish_progress_confirmed_by_rpm === 'YES') {
+      const finishProgressDate = updatedDataPO.finish_progress || exists.finish_progress;
+      if (finishProgressDate) {
+        updatedDataPO.actual_completion_date = finishProgressDate;
+        updatedDataPO.actual_work_status = 'Work Done';
+      }
+    }
 
     await this.purchaseOrdersRepository.update(id, {
       ...updatedDataPO,

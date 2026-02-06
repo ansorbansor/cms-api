@@ -292,12 +292,40 @@ export class PurchaseOrderService {
 
     const po = await this.findOne({ id: id });
 
+    // Detect changed columns for logging
+    const changedColumns = [];
+    const fieldsToCheck = [
+      'start_progress', 'finish_progress', 'done_atp',
+      'remark_ss', 'remark_rpm', 'status', 'start_progress_confirmed_by_rpm',
+      'finish_progress_confirmed_by_rpm', 'done_atp_confirmed_by_rpm', 'actual_completion_date', 'actual_work_status'
+    ];
+
+    fieldsToCheck.forEach(field => {
+      // Check if field is in updatedDataPO (meaning it was part of the request) and different from existing
+      // Note: Dates might need special handling if formats differ, but simple string comparison works for most if formats match or if just checking dirty state
+      if (updatedDataPO.hasOwnProperty(field)) {
+        let newValue = updatedDataPO[field];
+        let oldValue = exists[field];
+
+        // Simple normalization for dates/nulls if needed, or just let strict equality check
+        if (newValue != oldValue) {
+          // Human readable format
+          const humanField = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          changedColumns.push(humanField);
+        }
+      }
+    });
+
+    let logDescription;
+    if (changedColumns.length > 0) {
+      logDescription = `Updated Colonm ${changedColumns.join(', ')} on PO ${exportUniqueId(po.id, po.createdAtParseDate)}`;
+    } else {
+      logDescription = `Mengupdate Data PO dengan nomor ${exportUniqueId(po.id, po.createdAtParseDate)}`;
+    }
+
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Mengupdate Data PO dengan nomor ${exportUniqueId(
-        po.id,
-        po.createdAtParseDate,
-      )}`,
+      description: logDescription,
       ip: ip,
     });
 

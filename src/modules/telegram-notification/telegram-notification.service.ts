@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
-import * as moment from 'moment';
+import moment from 'moment';
 import { ActivityLog } from 'src/entities/activity-log.entity';
 import { Brackets, Repository } from 'typeorm';
 
@@ -24,9 +24,9 @@ export class TelegramNotificationService {
     async handleCron() {
         this.logger.log('Running daily PO Log Telegram notification task...');
 
-        // Calculate time range: Yesterday 20:00 to Today 19:59
-        const endDate = moment().tz('Asia/Jakarta').set({ hour: 19, minute: 59, second: 59, millisecond: 999 });
-        const startDate = moment().tz('Asia/Jakarta').subtract(1, 'days').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
+        // Calculate time range: Yesterday 20:00 to Today 19:59 (Asia/Jakarta is UTC+7)
+        const endDate = moment().utcOffset(7).set({ hour: 19, minute: 59, second: 59, millisecond: 999 });
+        const startDate = moment().utcOffset(7).subtract(1, 'days').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
 
         this.logger.log(`Fetching logs from ${startDate.format()} to ${endDate.format()}`);
 
@@ -73,7 +73,7 @@ export class TelegramNotificationService {
         for (const user in groupedLogs) {
             message += `👤 **${user}**\n`;
             groupedLogs[user].forEach(log => {
-                const time = moment(log.created_at).tz('Asia/Jakarta').format('HH:mm');
+                const time = moment(log.created_at).utcOffset(7).format('HH:mm');
                 message += `• [${time}] ${log.description}\n`;
             });
             message += `\n`;

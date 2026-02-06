@@ -70,103 +70,75 @@ export class TelegramNotificationService {
 
         const chunks: string[] = [];
         let currentChunk = header;
-        const MAX_LENGTH = 4000; // Safe limit below 4096
+        const MAX_LENGTH = 4000;
 
-        const groupedLogs: { [key: string]: ActivityLog[] } = {};
+        const groupedLogs: { [key: string]: Set<string> } = {};
 
         logs.forEach(log => {
             const userName = log.user ? log.user.name : 'Unknown User';
             if (!groupedLogs[userName]) {
-                groupedLogs[userName] = [];
+                groupedLogs[userName] = new Set();
             }
-            groupedLogs[userName].push(log);
+
+            // Extract ID: usually the last part of the message
+            // "Updated Column ... on PO 2026BSN-..."
+            // "Menambahkan data PO dengan nomor 2026BSN-..."
+            // "update PO ..." (from my regex earlier? No, this runs on raw DB data usually unless I changed what's stored. 
+            // Wait, the DB stores the full string. My previous edit didn't change DB data, only the *display* in the report.
+            // So I should parse the RAW description from DB.)
+
+            const parts = log.description.trim().split(' ');
+            const potentialId = parts[parts.length - 1];
+
+            // Basic validation to avoid junk? 
+            // If it looks like - or contains BSN or just assume last word is ID.
+            if (potentialId) {
+                groupedLogs[userName].add(potentialId);
+            }
         });
 
-        for (const user in groupedLogs) {
-            let userSection = `👤 **${user}**\n`;
+        let totalUniquePOs = 0;
 
-            // If user header alone pushes over limit, push current chunk
+        for (const user in groupedLogs) {
+            const uniqueIds = Array.from(groupedLogs[user]);
+            totalUniquePOs += uniqueIds.length;
+
+            let userSection = `👤 **${user}** updated ${uniqueIds.length} PO\n`;
+
+            // Check if header fits
             if (currentChunk.length + userSection.length > MAX_LENGTH) {
                 chunks.push(currentChunk);
-                currentChunk = header + `(Continued)\n\n` + userSection; // Start new chunk with header
+                currentChunk = header + `(Continued)\n\n` + userSection;
             } else {
                 currentChunk += userSection;
             }
 
-            const userLogs = groupedLogs[user];
-            let previousLogLine = '';
-            let repeatCount = 1;
-
-            userLogs.forEach((log, index) => {
-                const time = moment(log.created_at).utcOffset(7).format('HH:mm');
-                let cleanDescription = log.description.trim();
-
-                // Compact the description
-                cleanDescription = cleanDescription
-                    .replace(/Mengupdate Data PO dengan nomor/g, 'Update PO')
-                    .replace(/Updated Column/g, 'Upd Col')
-                    .replace(/on PO/g, '@')
-                    .replace(/Remark Rpm/g, 'Remark RPM')
-                    .replace(/Start Progress/g, 'Start Prog')
-                    .replace(/Finish Progress/g, 'Finish Prog');
-
-                const logLine = `• [${time}] ${cleanDescription}`;
-
-                const isLastLog = index === userLogs.length - 1;
-                const nextLog = !isLastLog ? userLogs[index + 1] : null;
-
-                // Check ahead for duplicates
-                if (nextLog) {
-                    const nextTime = moment(nextLog.created_at).utcOffset(7).format('HH:mm');
-                    let nextDescription = nextLog.description.trim();
-                    nextDescription = nextDescription
-                        .replace(/Mengupdate Data PO dengan nomor/g, 'Update PO')
-                        .replace(/Updated Column/g, 'Upd Col')
-                        .replace(/on PO/g, '@')
-                        .replace(/Remark Rpm/g, 'Remark RPM')
-                        .replace(/Start Progress/g, 'Start Prog')
-                        .replace(/Finish Progress/g, 'Finish Prog');
-
-                    const nextLogLine = `• [${nextTime}] ${nextDescription}`;
-
-                    if (nextLogLine === logLine) {
-                        repeatCount++;
-                        return; // Skip adding this line, wait for the last duplicate
-                    }
-                }
-
-                // Construct final line with count if needed
-                let finalLine = logLine;
-                if (repeatCount > 1) {
-                    finalLine += ` (x${repeatCount})`;
-                }
-                finalLine += `\n`;
-
-                // Reset count
-                repeatCount = 1;
-
-                if (currentChunk.length + finalLine.length > MAX_LENGTH) {
+            uniqueIds.forEach(id => {
+                const line = `${id}\n`;
+                if (currentChunk.length + line.length > MAX_LENGTH) {
                     chunks.push(currentChunk);
-                    currentChunk = header + `(Continued)\n\n👤 **${user}** (Cont.)\n` + finalLine;
+                    currentChunk = header + `(Continued)\n\n👤 **${user}** (Cont.)\n` + line;
                 } else {
-                    currentChunk += finalLine;
+                    currentChunk += line;
                 }
             });
 
-            // Add spacing between users if room permits
             if (currentChunk.length + 1 < MAX_LENGTH) {
                 currentChunk += `\n`;
             }
         }
 
-        const footer = `✨ Total Aktivitas: ${logs.length}`;
-        if (currentChunk.length + footer.length > MAX_LENGTH) {
-            chunks.push(currentChunk);
-            chunks.push(header + `(Continued)\n\n` + footer);
-        } else {
-            currentChunk += footer;
-            chunks.push(currentChunk);
-        }
+        // footer
+        // "Total Activities" doesn't make sense with unique POs. 
+        // Maybe "Total Unique POs modified"? Or just remove total? 
+        // User sample didn't explicitly show total, but I'll add "Total Unique POs" or similar.
+        // Actually user sample didn't have total line in the "show me sample" request before, it had. 
+        // I'll leave a simple total or omit it if strictly following "I just need report like this".
+        // The user's block ended with "same BIOSRON ID doesnt reported again...". No total line shown in that block.
+        // BUT, looking closely at the requested text block:
+        // "👤 Dede Ansor updated 2 PO ... 👤 Ardian updated 1 PO ..."
+        // I will omit the footer to be safe or just show Total: X
+        // I'll stick to the requested format strictly.
 
         return chunks;
     }

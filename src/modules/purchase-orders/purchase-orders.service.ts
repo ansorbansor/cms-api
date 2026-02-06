@@ -62,12 +62,13 @@ export class PurchaseOrderService {
       await this.purchaseOrderInvoiceRepository.save(saveInvoice);
     }
 
+    // Fix: createdAtParseDate might be undefined after save. Use current date or reload.
+    const createdDateC = po.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : moment().format('YYYY-MM-DD HH:mm:ss');
+    const uniqueIdPO = exportUniqueId(po.id, createdDateC);
+
     await this.activityLogService.create({
       user_id: user_id,
-      description: `Menambahkan data PO dengan nomor ${exportUniqueId(
-        po.id,
-        po.createdAtParseDate,
-      )}`,
+      description: `Menambahkan data PO dengan nomor ${uniqueIdPO}`,
       ip: ip,
     });
 
@@ -342,7 +343,9 @@ export class PurchaseOrderService {
 
     let logDescription;
     // Use exists which we know has the correct properties from the logs
-    const uniqueId = exportUniqueId(exists.id, exists.createdAtParseDate);
+    // Ensure createdAtParseDate is available or derive it
+    const createdDateForId = exists.createdAtParseDate || (exists.created_at ? moment(exists.created_at).format('YYYY-MM-DD HH:mm:ss') : null);
+    const uniqueId = exportUniqueId(exists.id, createdDateForId);
 
     if (changedColumns.length > 0) {
       logDescription = `Updated Column ${changedColumns.join(', ')} on PO ${uniqueId}`;

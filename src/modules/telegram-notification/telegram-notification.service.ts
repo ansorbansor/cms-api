@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import moment from 'moment';
 import { ActivityLog } from 'src/entities/activity-log.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Repository, Between } from 'typeorm';
 
 @Injectable()
 export class TelegramNotificationService {
@@ -28,6 +28,19 @@ export class TelegramNotificationService {
         const endDate = moment().utcOffset(7).set({ hour: 19, minute: 59, second: 59, millisecond: 999 });
         const startDate = moment().utcOffset(7).subtract(1, 'days').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
 
+        // Idempotency Check: Prevent duplicate sending if multiple instances are running
+        const sentLog = await this.activityLogRepository.findOne({
+            where: {
+                description: 'TELEGRAM_DAILY_REPORT_SENT',
+                created_at: Between(startDate.toDate(), endDate.toDate())
+            }
+        });
+
+        if (sentLog) {
+            this.logger.warn('Daily report already sent for this period. Skipping.');
+            return;
+        }
+
         this.logger.log(`Fetching logs from ${startDate.format()} to ${endDate.format()}`);
 
         const logs = await this.activityLogRepository.createQueryBuilder('acl')
@@ -42,19 +55,33 @@ export class TelegramNotificationService {
             .addOrderBy('acl.created_at', 'ASC')
             .getMany();
 
-        if (logs.length === 0) {
+        if (logs.length > 0) {
+            const messages = this.generateReportChunks(logs, startDate, endDate);
+
+            this.logger.log(`Report generated. Sending ${messages.length} chunks.`);
+
+            for (const [index, msg] of messages.entries()) {
+                this.logger.log(`Sending chunk ${index + 1}/${messages.length}`);
+                await this.sendTelegramMessage(msg);
+            }
+        } else {
             this.logger.log('No logs found for the period.');
-            await this.sendTelegramMessage(this.generateEmptyReport(startDate, endDate));
-            return;
+            // Optional: Send "No Activity" message? User wants simple report. 
+            // If no logs, silence is usually preferred or a simple "No updates".
+            // Given user complaints about duplicates, silence on empty is safer.
         }
 
-        const messages = this.generateReportChunks(logs, startDate, endDate);
-
-        this.logger.log(`Report generated. Sending ${messages.length} chunks.`);
-
-        for (const [index, msg] of messages.entries()) {
-            this.logger.log(`Sending chunk ${index + 1}/${messages.length}`);
-            await this.sendTelegramMessage(msg);
+        // Mark as sent
+        // Using user_id: 1 (System/Admin) or the first available user from logs if possible.
+        // If no user 1, this might fail. Safest is to try/catch.
+        try {
+            await this.activityLogRepository.save(this.activityLogRepository.create({
+                user_id: 1, // Assuming ID 1 is always present (Super Admin)
+                description: 'TELEGRAM_DAILY_REPORT_SENT',
+                ip: '127.0.0.1'
+            }));
+        } catch (e) {
+            this.logger.error('Failed to save sent marker', e);
         }
     }
 
@@ -90,18 +117,22 @@ export class TelegramNotificationService {
             const parts = log.description.trim().split(' ');
             const potentialId = parts[parts.length - 1];
 
-            // Basic validation to avoid junk? 
-            // If it looks like - or contains BSN or just assume last word is ID.
+            // Validate ID: 
+            // If ID is missing ('-'), we still include it.
+            // User asked "what is - mean??" but also "we should report it". 
+            // So we report exactly what we find.
             if (potentialId) {
                 groupedLogs[userName].add(potentialId);
             }
         });
 
-        let totalUniquePOs = 0;
+        // let totalUniquePOs = 0; // This variable is no longer used based on the instruction's changes.
 
         for (const user in groupedLogs) {
             const uniqueIds = Array.from(groupedLogs[user]);
-            totalUniquePOs += uniqueIds.length;
+
+            // Skip only if truly empty (shouldn't happen with the logic above)
+            if (uniqueIds.length === 0) continue;
 
             let userSection = `👤 **${user}** updated ${uniqueIds.length} PO\n`;
 

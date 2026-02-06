@@ -39,7 +39,7 @@ export class TelegramNotificationService {
         // Idempotency Check: Prevent duplicate sending if multiple instances are running
         const sentLog = await this.activityLogRepository.findOne({
             where: {
-                description: 'TELEGRAM_DAILY_REPORT_SENT',
+                description: 'TELEGRAM_DAILY_REPORT_SENT_V2',
                 created_at: Between(startDate.toDate(), endDate.toDate())
             }
         });
@@ -85,7 +85,7 @@ export class TelegramNotificationService {
         try {
             await this.activityLogRepository.save(this.activityLogRepository.create({
                 user_id: 1, // Assuming ID 1 is always present (Super Admin)
-                description: 'TELEGRAM_DAILY_REPORT_SENT',
+                description: 'TELEGRAM_DAILY_REPORT_SENT_V2',
                 ip: '127.0.0.1'
             }));
         } catch (e) {

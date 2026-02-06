@@ -237,6 +237,15 @@ export class PurchaseOrderService {
     const { invoices, deleted_invoice_id, ...updatedDataPO } =
       updatePurchaseOrderDto;
 
+    // Logic for Auto-Fill on Finish Confirmation (RPM)
+    if (updatedDataPO.finish_progress_confirmed_by_rpm === 'YES') {
+      const finishProgressDate = updatedDataPO.finish_progress || exists.finish_progress;
+      if (finishProgressDate) {
+        updatedDataPO.actual_completion_date = finishProgressDate;
+        updatedDataPO.actual_work_status = 'Work Done';
+      }
+    }
+
     await this.purchaseOrdersRepository.update(id, {
       ...updatedDataPO,
     });

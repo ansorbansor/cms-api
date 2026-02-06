@@ -300,12 +300,18 @@ export class PurchaseOrderService {
       'finish_progress_confirmed_by_rpm', 'done_atp_confirmed_by_rpm', 'actual_completion_date', 'actual_work_status'
     ];
 
+    console.log('DEBUG: Updating PO ID:', id);
+    console.log('DEBUG: Incoming Data:', updatedDataPO);
+    console.log('DEBUG: Existing Data:', exists);
+
     fieldsToCheck.forEach(field => {
       // Check if field is in updatedDataPO (meaning it was part of the request) and different from existing
       // Note: Dates might need special handling if formats differ, but simple string comparison works for most if formats match or if just checking dirty state
       if (updatedDataPO.hasOwnProperty(field)) {
         let newValue = updatedDataPO[field];
         let oldValue = exists[field];
+
+        console.log(`DEBUG: Checking field ${field}. Old: ${oldValue}, New: ${newValue}`);
 
         // Simple normalization for dates/nulls if needed, or just let strict equality check
         if (newValue != oldValue) {

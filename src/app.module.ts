@@ -43,7 +43,9 @@ import { AbsenceModule } from './modules/absence/absence.module';
 import { SPKOperationalModule } from './modules/spk-operational/spk-operational.module';
 import { SPKOperationalCategoryModule } from './modules/spk-operational-category/spk-operational-category.module';
 import { SPKOperationalRequestTypeModule } from './modules/spk-operational-request-type/spk-operational-request-type.module';
-import { InventoryModule } from './modules/inventory/inventory.module'; // <-- ADD THIS IMPORT
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { TelegramNotificationModule } from './modules/telegram-notification/telegram-notification.module';
+
 
 @Module({
   imports: [
@@ -104,7 +106,9 @@ import { InventoryModule } from './modules/inventory/inventory.module'; // <-- A
     SPKOperationalModule,
     SPKOperationalCategoryModule,
     SPKOperationalRequestTypeModule,
-    InventoryModule, // <-- ADD THIS LINE
+    InventoryModule,
+    TelegramNotificationModule,
+
   ],
   providers: [
     {
@@ -117,4 +121,4 @@ import { InventoryModule } from './modules/inventory/inventory.module'; // <-- A
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

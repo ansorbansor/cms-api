@@ -22,7 +22,15 @@ export class TelegramNotificationService {
         timeZone: 'Asia/Jakarta',
     })
     async handleCron() {
-        this.logger.log('Running daily PO Log Telegram notification task...');
+        // Rate limiting/Concurrency control:
+        // We see 6 instances running (PIDs 31, 37, 43, 51, 58, 65).
+        // To prevent race conditions where they all check DB at the same millisecond and succeed,
+        // we add a random delay (jitter) of 0-60 seconds.
+        const randomDelay = Math.floor(Math.random() * 60000);
+        this.logger.log(`Waiting ${randomDelay}ms before starting daily PO Log task to prevent duplicate sending...`);
+        await new Promise(resolve => setTimeout(resolve, randomDelay));
+
+        this.logger.log('Starting daily PO Log Telegram notification task...');
 
         // Calculate time range: Yesterday 20:00 to Today 19:59 (Asia/Jakarta is UTC+7)
         const endDate = moment().utcOffset(7).set({ hour: 19, minute: 59, second: 59, millisecond: 999 });
@@ -37,7 +45,7 @@ export class TelegramNotificationService {
         });
 
         if (sentLog) {
-            this.logger.warn('Daily report already sent for this period. Skipping.');
+            this.logger.warn('Daily report already sent for this period (found lock). Skipping.');
             return;
         }
 

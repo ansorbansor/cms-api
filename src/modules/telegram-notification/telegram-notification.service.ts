@@ -99,7 +99,17 @@ export class TelegramNotificationService {
 
             userLogs.forEach((log, index) => {
                 const time = moment(log.created_at).utcOffset(7).format('HH:mm');
-                const cleanDescription = log.description.trim();
+                let cleanDescription = log.description.trim();
+
+                // Compact the description
+                cleanDescription = cleanDescription
+                    .replace(/Mengupdate Data PO dengan nomor/g, 'Update PO')
+                    .replace(/Updated Column/g, 'Upd Col')
+                    .replace(/on PO/g, '@')
+                    .replace(/Remark Rpm/g, 'Remark RPM')
+                    .replace(/Start Progress/g, 'Start Prog')
+                    .replace(/Finish Progress/g, 'Finish Prog');
+
                 const logLine = `• [${time}] ${cleanDescription}`;
 
                 const isLastLog = index === userLogs.length - 1;
@@ -108,7 +118,15 @@ export class TelegramNotificationService {
                 // Check ahead for duplicates
                 if (nextLog) {
                     const nextTime = moment(nextLog.created_at).utcOffset(7).format('HH:mm');
-                    const nextDescription = nextLog.description.trim();
+                    let nextDescription = nextLog.description.trim();
+                    nextDescription = nextDescription
+                        .replace(/Mengupdate Data PO dengan nomor/g, 'Update PO')
+                        .replace(/Updated Column/g, 'Upd Col')
+                        .replace(/on PO/g, '@')
+                        .replace(/Remark Rpm/g, 'Remark RPM')
+                        .replace(/Start Progress/g, 'Start Prog')
+                        .replace(/Finish Progress/g, 'Finish Prog');
+
                     const nextLogLine = `• [${nextTime}] ${nextDescription}`;
 
                     if (nextLogLine === logLine) {

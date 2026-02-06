@@ -35,9 +35,8 @@ export class TelegramNotificationService {
             .where('acl.created_at >= :startDate', { startDate: startDate.toDate() })
             .andWhere('acl.created_at <= :endDate', { endDate: endDate.toDate() })
             .andWhere(new Brackets(qb => {
-                qb.where('acl.description ILIKE :poKey', { poKey: '%PO%' })
-                    .orWhere('acl.description ILIKE :purchaseOrderKey', { purchaseOrderKey: '%Purchase Order%' })
-                    .orWhere('acl.description ILIKE :nomor', { nomor: '%nomor%' }); // Based on "Menambahkan data PO dengan nomor..."
+                qb.where('acl.description ILIKE :poKey', { poKey: '% PO %' })
+                    .orWhere('acl.description ILIKE :purchaseOrderKey', { purchaseOrderKey: '%Purchase Order%' });
             }))
             .orderBy('user.name', 'ASC')
             .addOrderBy('acl.created_at', 'ASC')
@@ -94,15 +93,45 @@ export class TelegramNotificationService {
                 currentChunk += userSection;
             }
 
-            groupedLogs[user].forEach(log => {
-                const time = moment(log.created_at).utcOffset(7).format('HH:mm');
-                const logLine = `• [${time}] ${log.description}\n`;
+            const userLogs = groupedLogs[user];
+            let previousLogLine = '';
+            let repeatCount = 1;
 
-                if (currentChunk.length + logLine.length > MAX_LENGTH) {
+            userLogs.forEach((log, index) => {
+                const time = moment(log.created_at).utcOffset(7).format('HH:mm');
+                const cleanDescription = log.description.trim();
+                const logLine = `• [${time}] ${cleanDescription}`;
+
+                const isLastLog = index === userLogs.length - 1;
+                const nextLog = !isLastLog ? userLogs[index + 1] : null;
+
+                // Check ahead for duplicates
+                if (nextLog) {
+                    const nextTime = moment(nextLog.created_at).utcOffset(7).format('HH:mm');
+                    const nextDescription = nextLog.description.trim();
+                    const nextLogLine = `• [${nextTime}] ${nextDescription}`;
+
+                    if (nextLogLine === logLine) {
+                        repeatCount++;
+                        return; // Skip adding this line, wait for the last duplicate
+                    }
+                }
+
+                // Construct final line with count if needed
+                let finalLine = logLine;
+                if (repeatCount > 1) {
+                    finalLine += ` (x${repeatCount})`;
+                }
+                finalLine += `\n`;
+
+                // Reset count
+                repeatCount = 1;
+
+                if (currentChunk.length + finalLine.length > MAX_LENGTH) {
                     chunks.push(currentChunk);
-                    currentChunk = header + `(Continued)\n\n👤 **${user}** (Cont.)\n` + logLine;
+                    currentChunk = header + `(Continued)\n\n👤 **${user}** (Cont.)\n` + finalLine;
                 } else {
-                    currentChunk += logLine;
+                    currentChunk += finalLine;
                 }
             });
 

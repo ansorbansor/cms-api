@@ -305,17 +305,35 @@ export class PurchaseOrderService {
     console.log('DEBUG: Existing Data:', exists);
 
     fieldsToCheck.forEach(field => {
-      // Check if field is in updatedDataPO (meaning it was part of the request) and different from existing
-      // Note: Dates might need special handling if formats differ, but simple string comparison works for most if formats match or if just checking dirty state
       if (updatedDataPO.hasOwnProperty(field)) {
         let newValue = updatedDataPO[field];
         let oldValue = exists[field];
 
-        console.log(`DEBUG: Checking field ${field}. Old: ${oldValue}, New: ${newValue}`);
+        let isDifferent = false;
 
-        // Simple normalization for dates/nulls if needed, or just let strict equality check
-        if (newValue != oldValue) {
-          // Human readable format
+        // Normalize for comparison
+        const normalize = (val) => {
+          if (val === null || val === undefined) return '';
+          // Check if date-like (simple check or moment)
+          // If it's a Date object, formatting it usually works best for comparison with DB strings
+          if (val instanceof Date) {
+            return moment(val).format('YYYY-MM-DD');
+          }
+          if (typeof val === 'string' && val.length > 10 && moment(val, moment.ISO_8601, true).isValid()) {
+            return moment(val).format('YYYY-MM-DD');
+          }
+          return val.toString().trim();
+        };
+
+        const normNew = normalize(newValue);
+        const normOld = normalize(oldValue);
+
+        if (normNew !== normOld) {
+          isDifferent = true;
+          console.log(`DEBUG: Field ${field} changed. Old: ${normOld} -> New: ${normNew}`);
+        }
+
+        if (isDifferent) {
           const humanField = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           changedColumns.push(humanField);
         }
@@ -323,17 +341,27 @@ export class PurchaseOrderService {
     });
 
     let logDescription;
+    // Use exists which we know has the correct properties from the logs
+    const uniqueId = exportUniqueId(exists.id, exists.createdAtParseDate);
+
     if (changedColumns.length > 0) {
-      logDescription = `Updated Colonm ${changedColumns.join(', ')} on PO ${exportUniqueId(po.id, po.createdAtParseDate)}`;
+      logDescription = `Updated Column ${changedColumns.join(', ')} on PO ${uniqueId}`;
     } else {
-      logDescription = `Mengupdate Data PO dengan nomor ${exportUniqueId(po.id, po.createdAtParseDate)}`;
+      logDescription = `Mengupdate Data PO dengan nomor ${uniqueId}`;
     }
 
-    await this.activityLogService.create({
-      user_id: user.id,
-      description: logDescription,
-      ip: ip,
-    });
+    console.log('DEBUG: Generated Log Description:', logDescription);
+
+    try {
+      await this.activityLogService.create({
+        user_id: user.id,
+        description: logDescription,
+        ip: ip,
+      });
+      console.log('DEBUG: Activity Log successfully created.');
+    } catch (error) {
+      console.error('ERROR creating activity log:', error);
+    }
 
     return po;
   }

@@ -45,20 +45,33 @@ export class TelegramNotificationService {
 
         if (logs.length === 0) {
             this.logger.log('No logs found for the period.');
-            // Optional: Send "No activity" message? User didn't specify. 
-            // Better to send nothing or a summary saying 0.
-            // Let's send a summary saying 0 activities to verify it works.
-            await this.sendTelegramMessage(this.generateReport(logs, startDate, endDate));
+            await this.sendTelegramMessage(this.generateEmptyReport(startDate, endDate));
             return;
         }
 
-        const message = this.generateReport(logs, startDate, endDate);
-        await this.sendTelegramMessage(message);
+        const messages = this.generateReportChunks(logs, startDate, endDate);
+
+        this.logger.log(`Report generated. Sending ${messages.length} chunks.`);
+
+        for (const [index, msg] of messages.entries()) {
+            this.logger.log(`Sending chunk ${index + 1}/${messages.length}`);
+            await this.sendTelegramMessage(msg);
+        }
     }
 
-    private generateReport(logs: ActivityLog[], startDate: moment.Moment, endDate: moment.Moment): string {
-        let message = `📊 **Laporan Aktivitas PO Harian**\n`;
-        message += `📅 Periode: ${startDate.format('YYYY-MM-DD HH:mm')} - ${endDate.format('YYYY-MM-DD HH:mm')}\n\n`;
+    private generateEmptyReport(startDate: moment.Moment, endDate: moment.Moment): string {
+        return `📊 **Laporan Aktivitas PO Harian**\n` +
+            `📅 Periode: ${startDate.format('YYYY-MM-DD HH:mm')} - ${endDate.format('YYYY-MM-DD HH:mm')}\n\n` +
+            `✨ Total Aktivitas: 0`;
+    }
+
+    private generateReportChunks(logs: ActivityLog[], startDate: moment.Moment, endDate: moment.Moment): string[] {
+        const header = `📊 **Laporan Aktivitas PO Harian**\n` +
+            `📅 Periode: ${startDate.format('YYYY-MM-DD HH:mm')} - ${endDate.format('YYYY-MM-DD HH:mm')}\n\n`;
+
+        const chunks: string[] = [];
+        let currentChunk = header;
+        const MAX_LENGTH = 4000; // Safe limit below 4096
 
         const groupedLogs: { [key: string]: ActivityLog[] } = {};
 
@@ -71,19 +84,44 @@ export class TelegramNotificationService {
         });
 
         for (const user in groupedLogs) {
-            message += `👤 **${user}**\n`;
+            let userSection = `👤 **${user}**\n`;
+
+            // If user header alone pushes over limit, push current chunk
+            if (currentChunk.length + userSection.length > MAX_LENGTH) {
+                chunks.push(currentChunk);
+                currentChunk = header + `(Continued)\n\n` + userSection; // Start new chunk with header
+            } else {
+                currentChunk += userSection;
+            }
+
             groupedLogs[user].forEach(log => {
                 const time = moment(log.created_at).utcOffset(7).format('HH:mm');
-                message += `• [${time}] ${log.description}\n`;
+                const logLine = `• [${time}] ${log.description}\n`;
+
+                if (currentChunk.length + logLine.length > MAX_LENGTH) {
+                    chunks.push(currentChunk);
+                    currentChunk = header + `(Continued)\n\n👤 **${user}** (Cont.)\n` + logLine;
+                } else {
+                    currentChunk += logLine;
+                }
             });
-            message += `\n`;
+
+            // Add spacing between users if room permits
+            if (currentChunk.length + 1 < MAX_LENGTH) {
+                currentChunk += `\n`;
+            }
         }
 
-        message += `✨ Total Aktivitas: ${logs.length}`;
+        const footer = `✨ Total Aktivitas: ${logs.length}`;
+        if (currentChunk.length + footer.length > MAX_LENGTH) {
+            chunks.push(currentChunk);
+            chunks.push(header + `(Continued)\n\n` + footer);
+        } else {
+            currentChunk += footer;
+            chunks.push(currentChunk);
+        }
 
-        // Telegram message limit is 4096 chars. Truncate if needed or split. 
-        // For now simple implementation.
-        return message;
+        return chunks;
     }
 
     private async sendTelegramMessage(text: string) {

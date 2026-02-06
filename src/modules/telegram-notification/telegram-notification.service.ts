@@ -140,6 +140,11 @@ export class TelegramNotificationService {
         // I will omit the footer to be safe or just show Total: X
         // I'll stick to the requested format strictly.
 
+        // Push the final chunk if it contains more than just the header
+        if (currentChunk.length > header.length) {
+            chunks.push(currentChunk);
+        }
+
         return chunks;
     }
 

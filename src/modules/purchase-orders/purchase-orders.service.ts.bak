@@ -84,7 +84,28 @@ export class PurchaseOrderService {
       .leftJoinAndSelect('po.customer', 'customer');
 
     if (paginationOptions.search) {
-      if (paginationOptions.search.split('-').length == 3) {
+      if (paginationOptions.search.includes(',')) {
+        const searchItems = paginationOptions.search.split(',').map(s => s.trim());
+        data.andWhere(new Brackets((qb) => {
+          searchItems.forEach((search, index) => {
+            if (search.split('-').length == 3) {
+              const uniqueId = search.split('-')[2];
+              const poDate = `${search.substring(0, 4)}-${search.substring(8, 10)}-${search.substring(10, 12)}`;
+
+              if (!isNaN(Number(uniqueId))) {
+                qb.orWhere(`(po.id = :uniqueId${index} AND DATE_TRUNC('day', "po"."created_at") = :poDate${index})`, {
+                  [`uniqueId${index}`]: uniqueId,
+                  [`poDate${index}`]: poDate
+                });
+              }
+            } else {
+              // Fallback for non-ID terms within the comma list? 
+              // Usually comma list implies specific IDs, but user said "search multiple Biosron ID".
+              // Let's assume strict Biosron ID format for simplicity or ignore invalid ones.
+            }
+          });
+        }));
+      } else if (paginationOptions.search.split('-').length == 3) {
         const uniqueId = paginationOptions.search.split('-')[2];
         const search = paginationOptions.search;
         const poDate = `${search.substring(0, 4)}-${search.substring(8, 10)}-${search.substring(10, 12)}`;

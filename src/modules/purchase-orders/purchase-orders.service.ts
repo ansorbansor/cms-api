@@ -153,6 +153,14 @@ export class PurchaseOrderService {
       });
     }
 
+    if (paginationOptions.needs_confirmation_bool) {
+      data.andWhere(new Brackets((qb) => {
+        qb.where(`(po.start_progress IS NOT NULL AND (po.start_progress_confirmed_by_rpm IS NULL OR po.start_progress_confirmed_by_rpm != 'YES'))`)
+          .orWhere(`(po.finish_progress IS NOT NULL AND (po.finish_progress_confirmed_by_rpm IS NULL OR po.finish_progress_confirmed_by_rpm != 'YES'))`)
+          .orWhere(`(po.done_atp IS NOT NULL AND (po.done_atp_confirmed_by_rpm IS NULL OR po.done_atp_confirmed_by_rpm != 'YES'))`);
+      }));
+    }
+
     data.orderBy('po.created_at', 'DESC');
 
     const total = await data.getCount();

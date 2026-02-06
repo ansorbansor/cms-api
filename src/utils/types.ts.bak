@@ -26,7 +26,6 @@ export interface IPaginationOptions {
   user_id?: number;
   status?: number;
   status_bool?: boolean;
-  needs_confirmation_bool?: boolean;
   status_string?: string;
   biosron_id?: string;
   is_admin?: boolean;

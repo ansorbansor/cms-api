@@ -33,7 +33,7 @@ import { Menus } from 'src/utils/decorator';
   version: '1',
 })
 export class PurchaseOrderController {
-  constructor(private readonly poService: PurchaseOrderService) { }
+  constructor(private readonly poService: PurchaseOrderService) {}
 
   @Post('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,7 +61,6 @@ export class PurchaseOrderController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
     @Query('status') status: string,
-    @Query('needs_confirmation') needsConfirmation: string,
   ) {
     return successResponseList(
       await this.poService.findManyWithPagination({
@@ -72,7 +71,6 @@ export class PurchaseOrderController {
         start_date: startDate,
         end_date: endDate,
         status_string: status,
-        needs_confirmation_bool: needsConfirmation === 'true',
       }),
       'success',
     );

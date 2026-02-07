@@ -765,8 +765,7 @@ export class ImportService {
                     submit_date: (() => {
                       const val = value[`ac${invNo} submit date`];
                       if (val && !moment(val, moment.ISO_8601).isValid()) {
-                        throw failedResponse(
-                          HttpStatus.BAD_REQUEST,
+                        throw new Error(
                           `Invalid Date format at line ${line} column ac${invNo} submit date`,
                         );
                       }
@@ -778,8 +777,7 @@ export class ImportService {
                     approve_date: (() => {
                       const val = value[`ac${invNo} approve date`];
                       if (val && !moment(val, moment.ISO_8601).isValid()) {
-                        throw failedResponse(
-                          HttpStatus.BAD_REQUEST,
+                        throw new Error(
                           `Invalid Date format at line ${line} column ac${invNo} approve date`,
                         );
                       }

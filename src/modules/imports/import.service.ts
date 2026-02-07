@@ -762,11 +762,29 @@ export class ImportService {
                     unit_price: value[`ac${invNo} unit price`]
                       ? value[`ac${invNo} unit price`]
                       : 0,
-                    submit_date: value[`ac${invNo} submit date`],
+                    submit_date: (() => {
+                      const val = value[`ac${invNo} submit date`];
+                      if (val && !moment(val, moment.ISO_8601).isValid()) {
+                        throw failedResponse(
+                          HttpStatus.BAD_REQUEST,
+                          `Invalid Date format at line ${line} column ac${invNo} submit date`,
+                        );
+                      }
+                      return val;
+                    })(),
                     submit_amount: value[`ac${invNo} submit amount`]
                       ? value[`ac${invNo} submit amount`]
                       : 0,
-                    approve_date: value[`ac${invNo} approve date`],
+                    approve_date: (() => {
+                      const val = value[`ac${invNo} approve date`];
+                      if (val && !moment(val, moment.ISO_8601).isValid()) {
+                        throw failedResponse(
+                          HttpStatus.BAD_REQUEST,
+                          `Invalid Date format at line ${line} column ac${invNo} approve date`,
+                        );
+                      }
+                      return val;
+                    })(),
                     approve_amount: value[`ac${invNo} approve amount`]
                       ? value[`ac${invNo} approve amount`]
                       : 0,

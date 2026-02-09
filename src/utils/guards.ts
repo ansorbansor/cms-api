@@ -72,15 +72,18 @@ export class RolesGuard implements CanActivate {
     if (userRolesData.some((b) => b.id === 61 || b.id === 8)) {
       return true;
     }
+
+    // Role check first (Override Menu check if role matches)
+    if (roles) {
+      if (
+        roles.some((a) => userRolesData.some((b) => a == b.id))
+      ) {
+        return true;
+      }
+    }
+
     if (menus) {
       return canAccess(userRolesData);
-    } else if (roles) {
-      if (
-        roles.filter((a) => userRolesData.some((b) => a === b.id)).length <= 0
-      ) {
-        throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);
-      }
-      return true;
     } else {
       if (request.user && userRolesData.length <= 0) {
         throw failedResponse(HttpStatus.FORBIDDEN, ErrorMessage.FORBIDDEN);

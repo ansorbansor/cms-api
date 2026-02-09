@@ -25,7 +25,7 @@ import { PurchaseOrderResource } from './resources/purchase-order.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 import { MenuPermission } from 'src/utils/enums';
-import { Menus } from 'src/utils/decorator';
+import { Menus, Roles } from 'src/utils/decorator';
 
 @ApiBearerAuth()
 @ApiTags('Purchase Order')
@@ -94,6 +94,7 @@ export class PurchaseOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @Menus(MenuPermission.PO_CREATE)
+  @Roles(22)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(

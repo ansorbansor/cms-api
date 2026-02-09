@@ -48,6 +48,8 @@ export class SPKOperationalController {
     @Request() req,
     @Body() createSPKOperationalDto: CreateSPKOperationalDTO,
   ) {
+    console.log('DTO:', createSPKOperationalDto);
+    console.log('Files:', req.files);
     return successResponse(
       SPKOperationalResourceDetail(
         await this.spkOperationalService.create(

@@ -68,7 +68,7 @@ export class SPKOperational extends EntityHelper {
   description?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   customer_id?: number;
 
   @ApiProperty({ example: 'Test' })

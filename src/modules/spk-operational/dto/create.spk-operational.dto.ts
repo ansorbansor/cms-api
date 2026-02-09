@@ -47,6 +47,7 @@ export class CreateSPKOperationalDTO {
   @Validate(IsExist, ['User', 'id'], {
     message: 'pay_to_user_id tidak ditemukan',
   })
+  @Transform(({ value }) => (value == '' || value == 'null' || value == null ? null : value))
   pay_to_user_id?: number;
 
   @ApiProperty({ example: 'Test' })
@@ -58,6 +59,7 @@ export class CreateSPKOperationalDTO {
   @Validate(IsExist, ['Area', 'id'], {
     message: 'Area tidak ditemukan',
   })
+  @Transform(({ value }) => (value == '' || value == 'null' || value == null ? null : value))
   area_id?: number;
 
   @ApiProperty({ example: 'Test' })
@@ -81,6 +83,7 @@ export class CreateSPKOperationalDTO {
   @Validate(IsExist, ['Customer', 'id'], {
     message: 'Customer tidak ditemukan',
   })
+  @Transform(({ value }) => (value == '' || value == 'null' || value == null ? null : value))
   customer_id: number;
 
   @ApiProperty({ example: 'Test' })

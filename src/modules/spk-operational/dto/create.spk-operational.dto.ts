@@ -12,6 +12,7 @@ export class CreateSPKOperationalDTO {
   @Validate(IsExist, ['Region', 'id'], {
     message: 'Region tidak ditemukan',
   })
+  @Transform(({ value }) => (value == '' || value == 'null' || value == null ? null : value))
   region_id?: number;
 
   @ApiProperty({ example: 'Test' })

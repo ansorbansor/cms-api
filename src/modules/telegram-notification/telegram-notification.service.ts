@@ -17,37 +17,26 @@ export class TelegramNotificationService {
         private activityLogRepository: Repository<ActivityLog>,
     ) { }
 
-    @Cron('0 20 * * *', {
-        name: 'sendDailyPOLogs',
+    @Cron('0 * * * *', {
+        name: 'sendHourlyPOLogs',
         timeZone: 'Asia/Jakarta',
     })
     async handleCron() {
-        // Rate limiting/Concurrency control:
-        // We see 6 instances running (PIDs 31, 37, 43, 51, 58, 65).
-        // To prevent race conditions where they all check DB at the same millisecond and succeed,
-        // we add a random delay (jitter) of 0-60 seconds.
-        const randomDelay = Math.floor(Math.random() * 60000);
-        this.logger.log(`Waiting ${randomDelay}ms before starting daily PO Log task to prevent duplicate sending...`);
-        await new Promise(resolve => setTimeout(resolve, randomDelay));
+        this.logger.log('Starting hourly PO Log Telegram notification task...');
 
-        this.logger.log('Starting daily PO Log Telegram notification task...');
+        // Calculate time range: Cumulative from last 20:00 WIB
+        // Cycle is 20:00 (Previous Day) to 20:00 (Today).
+        // If 20:00 -> Finalize previous cycle (Yesterday 20:00 to Today 20:00).
+        // If > 20:00 -> Start new cycle (Today 20:00 to Now).
+        // If < 20:00 -> Continue cycle (Yesterday 20:00 to Now).
+        const now = moment().utcOffset(7);
+        const currentHour = now.hour();
 
-        // Calculate time range: Yesterday 20:00 to Today 19:59 (Asia/Jakarta is UTC+7)
-        const endDate = moment().utcOffset(7).set({ hour: 19, minute: 59, second: 59, millisecond: 999 });
-        const startDate = moment().utcOffset(7).subtract(1, 'days').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
+        const startDate = (currentHour > 20)
+            ? moment().utcOffset(7).set({ hour: 20, minute: 0, second: 0, millisecond: 0 })
+            : moment().utcOffset(7).subtract(1, 'days').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
 
-        // Idempotency Check: Prevent duplicate sending if multiple instances are running
-        const sentLog = await this.activityLogRepository.findOne({
-            where: {
-                description: 'TELEGRAM_DAILY_REPORT_SENT_V2',
-                created_at: Between(startDate.toDate(), endDate.toDate())
-            }
-        });
-
-        if (sentLog) {
-            this.logger.warn('Daily report already sent for this period (found lock). Skipping.');
-            return;
-        }
+        const endDate = moment().utcOffset(7);
 
         this.logger.log(`Fetching logs from ${startDate.format()} to ${endDate.format()}`);
 
@@ -74,23 +63,9 @@ export class TelegramNotificationService {
             }
         } else {
             this.logger.log('No logs found for the period.');
-            // Optional: Send "No Activity" message? User wants simple report. 
-            // If no logs, silence is usually preferred or a simple "No updates".
-            // Given user complaints about duplicates, silence on empty is safer.
         }
 
-        // Mark as sent
-        // Using user_id: 1 (System/Admin) or the first available user from logs if possible.
-        // If no user 1, this might fail. Safest is to try/catch.
-        try {
-            await this.activityLogRepository.save(this.activityLogRepository.create({
-                user_id: 1, // Assuming ID 1 is always present (Super Admin)
-                description: 'TELEGRAM_DAILY_REPORT_SENT_V2',
-                ip: '127.0.0.1'
-            }));
-        } catch (e) {
-            this.logger.error('Failed to save sent marker', e);
-        }
+        // Lock removed as requested. All instances will send reports.
     }
 
     private generateEmptyReport(startDate: moment.Moment, endDate: moment.Moment): string {

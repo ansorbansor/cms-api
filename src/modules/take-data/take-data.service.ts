@@ -146,6 +146,44 @@ export class TakeDataService {
         return submission;
     }
 
+    async downloadAssignmentPhotos(assignmentId: number, res: any) {
+        const assignment = await this.assignmentRepository.findOne({
+            where: { id: assignmentId },
+            relations: ['site', 'template', 'template.items', 'submissions', 'submissions.photo'],
+        });
+
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        const archive = require('archiver')('zip', {
+            zlib: { level: 9 },
+        });
+
+        res.attachment(`${assignment.site.code}_${assignment.template.name}.zip`);
+        archive.pipe(res);
+
+        const path = require('path');
+        const fs = require('fs');
+
+        for (const item of assignment.template.items) {
+            const folderName = item.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const submissions = assignment.submissions.filter(s => s.template_item_id === item.id);
+
+            for (const sub of submissions) {
+                if (sub.photo && sub.photo.name) {
+                    // Assuming files are stored in ./files relative to cwd
+                    const filePath = path.join(process.cwd(), 'files', sub.photo.name);
+                    if (fs.existsSync(filePath)) {
+                        archive.file(filePath, { name: `${folderName}/${sub.photo.name}` });
+                    }
+                }
+            }
+        }
+
+        await archive.finalize();
+    }
+
     private async updateAssignmentProgress(assignmentId: number) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id: assignmentId },

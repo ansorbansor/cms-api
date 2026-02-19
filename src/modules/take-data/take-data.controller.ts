@@ -8,6 +8,7 @@ import {
     UseGuards,
     UseInterceptors,
     Request,
+    Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -76,6 +77,13 @@ export class TakeDataController {
     async getAssignments() {
         const result = await this.takeDataService.getAssignments();
         return successResponseListWithoutPaginate(result as any, 'Assignments retrieved successfully');
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Get('assignments/:id/download')
+    async downloadPhotos(@Param('id') id: number, @Res() res) {
+        return this.takeDataService.downloadAssignmentPhotos(id, res);
     }
 
     // Android

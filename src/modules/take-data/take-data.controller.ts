@@ -31,7 +31,14 @@ export class TakeDataController {
     @UseGuards(AuthGuard('jwt'))
     @Post('templates')
     async createTemplate(@Body() createDto: CreateTakeDataTemplateDto, @Request() request) {
-        return this.takeDataService.createTemplate(createDto, request.user.id);
+        console.log('Create Template Request:', createDto);
+        console.log('User:', request.user);
+        try {
+            return await this.takeDataService.createTemplate(createDto, request.user.id);
+        } catch (error) {
+            console.error('Error creating template:', error);
+            throw error;
+        }
     }
 
     @ApiBearerAuth()

@@ -51,8 +51,10 @@ export class TakeDataController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Post('templates/items')
-    async addItem(@Body() createItemDto: CreateTakeDataTemplateItemDto) {
-        return this.takeDataService.addItemToTemplate(createItemDto);
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('sample_photo'))
+    async addItem(@Body() createItemDto: CreateTakeDataTemplateItemDto, @UploadedFile() file, @Request() request) {
+        return this.takeDataService.addItemToTemplate(createItemDto, file, request.user.id);
     }
 
     // Assignments

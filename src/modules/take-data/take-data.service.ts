@@ -49,13 +49,27 @@ export class TakeDataService {
         });
     }
 
-    async addItemToTemplate(createItemDto: CreateTakeDataTemplateItemDto) {
+    async addItemToTemplate(createItemDto: CreateTakeDataTemplateItemDto, file: any, userId: number) {
         const template = await this.templateRepository.findOne({ where: { id: createItemDto.template_id } });
         if (!template) {
             throw new HttpException('Template not found', HttpStatus.NOT_FOUND);
         }
 
-        const item = this.templateItemRepository.create(createItemDto);
+        let samplePhotoId = null;
+        if (file) {
+            const photoEntity = await this.filesService.uploadFile(
+                file,
+                userId,
+                FilePath.TAKE_DATA,
+                'Sample Photo'
+            );
+            samplePhotoId = photoEntity.id;
+        }
+
+        const item = this.templateItemRepository.create({
+            ...createItemDto,
+            sample_photo_id: samplePhotoId ? samplePhotoId : createItemDto.sample_photo_id
+        });
         return this.templateItemRepository.save(item);
     }
 

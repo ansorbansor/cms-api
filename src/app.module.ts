@@ -45,6 +45,7 @@ import { SPKOperationalCategoryModule } from './modules/spk-operational-category
 import { SPKOperationalRequestTypeModule } from './modules/spk-operational-request-type/spk-operational-request-type.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { TelegramNotificationModule } from './modules/telegram-notification/telegram-notification.module';
+import { TakeDataModule } from './modules/take-data/take-data.module';
 
 
 @Module({
@@ -108,6 +109,7 @@ import { TelegramNotificationModule } from './modules/telegram-notification/tele
     SPKOperationalRequestTypeModule,
     InventoryModule,
     TelegramNotificationModule,
+    TakeDataModule,
 
   ],
   providers: [

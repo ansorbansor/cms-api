@@ -1,15 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class SubmitTakeDataDto {
     @ApiProperty({ example: 1 })
     @IsNotEmpty()
     @IsNumber()
+    @Type(() => Number)
     assignment_id: number;
 
     @ApiProperty({ example: 1 })
     @IsNotEmpty()
     @IsNumber()
+    @Type(() => Number)
     template_item_id: number;
 
     @ApiProperty({ type: 'string', format: 'binary' })

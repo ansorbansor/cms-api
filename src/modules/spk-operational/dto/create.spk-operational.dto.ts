@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsOptional, Validate } from 'class-validator';
 import { IsExist } from 'src/utils/validators';
 
@@ -40,6 +40,7 @@ export class CreateSPKOperationalDTO {
 
   @ApiProperty({ example: 'Test' })
   @IsNotEmpty({ message: 'Cash advance tidak boleh kosong' })
+  @Type(() => Number)
   cash_advance?: number;
 
   @ApiProperty({ example: 'Test' })
@@ -69,6 +70,12 @@ export class CreateSPKOperationalDTO {
   @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'Inhouse team tidak boleh kosong' })
   @IsArray({ message: 'Inhouse team harus array' })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value.map((v) => Number(v));
+    }
+    return [Number(value)];
+  })
   inhouse_team_user_id: number[];
 
   @ApiProperty({ example: 'Lorem ipsum' })

@@ -17,6 +17,7 @@ import { CreateTakeDataTemplateDto } from './dto/create-template.dto';
 import { CreateTakeDataTemplateItemDto } from './dto/create-template-item.dto';
 import { AssignTemplateDto } from './dto/assign-template.dto';
 import { SubmitTakeDataDto } from './dto/submit-data.dto';
+import { successResponse, successResponseListWithoutPaginate } from '../../utils/responses';
 
 @ApiTags('Take Data')
 @Controller({
@@ -34,7 +35,8 @@ export class TakeDataController {
         console.log('Create Template Request:', createDto);
         console.log('User:', request.user);
         try {
-            return await this.takeDataService.createTemplate(createDto, request.user.id);
+            const result = await this.takeDataService.createTemplate(createDto, request.user.id);
+            return successResponse(result, 'Template created successfully');
         } catch (error) {
             console.error('Error creating template:', error);
             throw error;
@@ -45,7 +47,8 @@ export class TakeDataController {
     @UseGuards(AuthGuard('jwt'))
     @Get('templates')
     async findAllTemplates() {
-        return this.takeDataService.findAllTemplates();
+        const result = await this.takeDataService.findAllTemplates();
+        return successResponseListWithoutPaginate(result as any, 'Templates retrieved successfully');
     }
 
     @ApiBearerAuth()
@@ -54,7 +57,8 @@ export class TakeDataController {
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('sample_photo'))
     async addItem(@Body() createItemDto: CreateTakeDataTemplateItemDto, @UploadedFile() file, @Request() request) {
-        return this.takeDataService.addItemToTemplate(createItemDto, file, request.user.id);
+        const result = await this.takeDataService.addItemToTemplate(createItemDto, file, request.user.id);
+        return successResponse(result, 'Item added successfully');
     }
 
     // Assignments
@@ -62,14 +66,16 @@ export class TakeDataController {
     @UseGuards(AuthGuard('jwt'))
     @Post('assign')
     async assignTemplate(@Body() assignDto: AssignTemplateDto, @Request() request) {
-        return this.takeDataService.assignTemplateToSite(assignDto, request.user.id);
+        const result = await this.takeDataService.assignTemplateToSite(assignDto, request.user.id);
+        return successResponse(result, 'Template assigned successfully');
     }
 
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get('assignments')
     async getAssignments() {
-        return this.takeDataService.getAssignments();
+        const result = await this.takeDataService.getAssignments();
+        return successResponseListWithoutPaginate(result as any, 'Assignments retrieved successfully');
     }
 
     // Android
@@ -77,7 +83,8 @@ export class TakeDataController {
     @UseGuards(AuthGuard('jwt'))
     @Get('sites/:siteId')
     async getTemplatesForSite(@Param('siteId') siteId: number) {
-        return this.takeDataService.getTemplatesForSite(siteId);
+        const result = await this.takeDataService.getTemplatesForSite(siteId);
+        return successResponseListWithoutPaginate(result as any, 'Templates retrieved successfully');
     }
 
     @ApiBearerAuth()
@@ -86,6 +93,7 @@ export class TakeDataController {
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('photo'))
     async submitData(@Body() submitDto: SubmitTakeDataDto, @UploadedFile() file, @Request() request) {
-        return this.takeDataService.submitData(submitDto, file, request.user.id);
+        const result = await this.takeDataService.submitData(submitDto, file, request.user.id);
+        return successResponse(result, 'Data submitted successfully');
     }
 }

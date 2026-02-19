@@ -98,7 +98,7 @@ export class TakeDataService {
 
     async getAssignments() {
         return this.assignmentRepository.find({
-            relations: ['site', 'template'],
+            relations: ['site', 'template', 'template.items', 'template.items.sample_photo'],
             order: { created_at: 'DESC' },
         });
     }

@@ -20,7 +20,7 @@ export class SiteService {
     @InjectRepository(PurchaseOrder)
     private poRepository: Repository<PurchaseOrder>,
     private activityLogService: ActivityLogService,
-  ) {}
+  ) { }
 
   async create(createSiteDTO: CreateSiteDTO, user_id?: number, ip?: string) {
     const site = await this.siteRepository.save(
@@ -81,9 +81,12 @@ export class SiteService {
     const data = this.siteRepository.createQueryBuilder('site');
 
     if (paginationOptions.search) {
-      data.andWhere('site.code ILIKE :search', {
-        search: `%${paginationOptions.search}%`,
-      });
+      data.andWhere(
+        '(site.code ILIKE :search OR site.name ILIKE :search)',
+        {
+          search: `%${paginationOptions.search}%`,
+        },
+      );
     }
 
     data.orderBy('site.code', 'ASC');

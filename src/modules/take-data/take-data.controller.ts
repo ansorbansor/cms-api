@@ -9,6 +9,7 @@ import {
     UseInterceptors,
     Request,
     Res,
+    Put,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -16,6 +17,8 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { TakeDataService } from './take-data.service';
 import { CreateTakeDataTemplateDto } from './dto/create-template.dto';
 import { CreateTakeDataTemplateItemDto } from './dto/create-template-item.dto';
+import { UpdateTakeDataTemplateDto } from './dto/update-template.dto';
+import { UpdateTakeDataTemplateItemDto } from './dto/update-template-item.dto';
 import { AssignTemplateDto } from './dto/assign-template.dto';
 import { SubmitTakeDataDto } from './dto/submit-data.dto';
 import { successResponse, successResponseListWithoutPaginate } from '../../utils/responses';
@@ -60,6 +63,32 @@ export class TakeDataController {
     async addItem(@Body() createItemDto: CreateTakeDataTemplateItemDto, @UploadedFile() file, @Request() request) {
         const result = await this.takeDataService.addItemToTemplate(createItemDto, file, request.user.id);
         return successResponse(result, 'Item added successfully');
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Put('templates/:id')
+    async updateTemplate(
+        @Param('id') id: number,
+        @Body() updateDto: UpdateTakeDataTemplateDto
+    ) {
+        const result = await this.takeDataService.updateTemplate(id, updateDto);
+        return successResponse(result, 'Template updated successfully');
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Put('templates/items/:id')
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('sample_photo'))
+    async updateItem(
+        @Param('id') id: number,
+        @Body() updateItemDto: UpdateTakeDataTemplateItemDto,
+        @UploadedFile() file,
+        @Request() request
+    ) {
+        const result = await this.takeDataService.updateItem(id, updateItemDto, file, request.user.id);
+        return successResponse(result, 'Item updated successfully');
     }
 
     // Assignments

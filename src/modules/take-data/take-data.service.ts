@@ -7,6 +7,8 @@ import { SiteTakeDataAssignment } from '../../entities/site-take-data-assignment
 import { TakeDataSubmission } from '../../entities/take-data-submission.entity';
 import { CreateTakeDataTemplateDto } from './dto/create-template.dto';
 import { CreateTakeDataTemplateItemDto } from './dto/create-template-item.dto';
+import { UpdateTakeDataTemplateDto } from './dto/update-template.dto';
+import { UpdateTakeDataTemplateItemDto } from './dto/update-template-item.dto';
 import { AssignTemplateDto } from './dto/assign-template.dto';
 import { SubmitTakeDataDto } from './dto/submit-data.dto';
 import { FilesService } from '../files/files.service';
@@ -70,6 +72,36 @@ export class TakeDataService {
             ...createItemDto,
             sample_photo_id: samplePhotoId ? samplePhotoId : createItemDto.sample_photo_id
         });
+        return this.templateItemRepository.save(item);
+    }
+
+    async updateTemplate(id: number, updateDto: UpdateTakeDataTemplateDto) {
+        const template = await this.templateRepository.findOne({ where: { id } });
+        if (!template) {
+            throw new HttpException('Template not found', HttpStatus.NOT_FOUND);
+        }
+
+        Object.assign(template, updateDto);
+        return this.templateRepository.save(template);
+    }
+
+    async updateItem(id: number, updateDto: UpdateTakeDataTemplateItemDto, file: any, userId: number) {
+        const item = await this.templateItemRepository.findOne({ where: { id } });
+        if (!item) {
+            throw new HttpException('Template Item not found', HttpStatus.NOT_FOUND);
+        }
+
+        if (file) {
+            const photoEntity = await this.filesService.uploadFile(
+                file,
+                userId,
+                FilePath.TAKE_DATA,
+                'Sample Photo'
+            );
+            updateDto.sample_photo_id = photoEntity.id;
+        }
+
+        Object.assign(item, updateDto);
         return this.templateItemRepository.save(item);
     }
 

@@ -11,8 +11,12 @@ import { UpdateTakeDataTemplateDto } from './dto/update-template.dto';
 import { UpdateTakeDataTemplateItemDto } from './dto/update-template-item.dto';
 import { AssignTemplateDto } from './dto/assign-template.dto';
 import { SubmitTakeDataDto } from './dto/submit-data.dto';
+import { GenerateDocumentDto } from './dto/generate-document.dto';
 import { FilesService } from '../files/files.service';
 import { FilePath } from 'src/utils/enums';
+import * as exceljs from 'exceljs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class TakeDataService {
@@ -254,5 +258,113 @@ export class TakeDataService {
         }
 
         await this.assignmentRepository.save(assignment);
+    }
+
+    async generateDocument(generateDto: GenerateDocumentDto, file: any, res: any) {
+        const assignment = await this.assignmentRepository.findOne({
+            where: { id: generateDto.assignment_id },
+            relations: ['site', 'template', 'template.items', 'submissions', 'submissions.photo'],
+        });
+
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        const workbook = new exceljs.Workbook();
+        await workbook.xlsx.load(file.buffer);
+
+        const submissions = assignment.submissions;
+        const items = assignment.template.items;
+
+        workbook.eachSheet((worksheet, sheetId) => {
+            worksheet.eachRow((row, rowNumber) => {
+                row.eachCell((cell, colNumber) => {
+                    if (cell.type === exceljs.ValueType.String && cell.value) {
+                        const cellText = cell.value.toString().trim();
+                        if (cellText.toLowerCase().startsWith('simpro:')) {
+                            const itemNamePart = cellText.substring(7).trim(); // Remove 'simpro:'
+
+                            // Find matching item (case-insensitive)
+                            const matchedItem = items.find(item => item.name.toLowerCase() === itemNamePart.toLowerCase());
+
+                            if (matchedItem) {
+                                // Find a submission for this item
+                                const submission = submissions.find(s => s.template_item_id === matchedItem.id);
+
+                                if (submission && submission.photo && submission.photo.name) {
+                                    const photoPath = path.join(process.cwd(), 'files', submission.photo.name);
+                                    if (fs.existsSync(photoPath)) {
+                                        const ext = path.extname(photoPath).toLowerCase();
+                                        const imageExtensionPattern = /\.(jpeg|jpg|png|gif)$/i;
+
+                                        if (imageExtensionPattern.test(ext)) {
+                                            const imageId = workbook.addImage({
+                                                filename: photoPath,
+                                                extension: ext === '.png' ? 'png' : ext === '.gif' ? 'gif' : 'jpeg',
+                                            });
+
+                                            // Clear the placeholder text
+                                            cell.value = '';
+
+                                            let targetMergeRange = null;
+
+                                            // Check if cell is part of a merge
+                                            // _mergeCount and custom properties aren't completely exposed
+                                            // The best way to check merges in exceljs is checking the model
+                                            const masterNode = cell.master;
+
+                                            if (masterNode && (masterNode.address !== cell.address || worksheet.model.merges?.some(m => m.includes(masterNode.address)))) {
+                                                // ExcelJS handles merges via string arrays like 'A1:C3' in model
+                                                const mergeLabel = worksheet.model.merges?.find(m => {
+                                                    const [_start, end] = m.split(':');
+                                                    // We just need to know if this cell is part of this range.
+                                                    // If masterNode address is within it, it's the right merge.
+                                                    // masterNode.address represents the top-left of the merge.
+                                                    return m.startsWith(masterNode.address + ':');
+                                                });
+
+                                                if (mergeLabel) {
+                                                    const [start, end] = mergeLabel.split(':');
+
+                                                    // Parse row/col
+                                                    const startCol = parseInt(start.replace(/[0-9]/g, ''), 36) - 9; // simple A-Z parse (A=1) wait, excel columns can be AA.
+                                                    // Built in converter:
+                                                    const startCell = worksheet.getCell(start);
+                                                    const endCell = worksheet.getCell(end);
+
+                                                    worksheet.addImage(imageId, {
+                                                        tl: { col: startCell.col - 1, row: startCell.row - 1 },
+                                                        br: { col: endCell.col, row: endCell.row },
+                                                        editAs: 'oneCell'
+                                                    });
+                                                } else {
+                                                    worksheet.addImage(imageId, {
+                                                        tl: { col: cell.col - 1, row: cell.row - 1 },
+                                                        ext: { width: 100, height: 100 },
+                                                        editAs: 'oneCell'
+                                                    });
+                                                }
+                                            } else {
+                                                worksheet.addImage(imageId, {
+                                                    tl: { col: cell.col - 1, row: cell.row - 1 },
+                                                    ext: { width: 100, height: 100 },
+                                                    editAs: 'oneCell'
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${assignment.site.code}_Document.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
     }
 }

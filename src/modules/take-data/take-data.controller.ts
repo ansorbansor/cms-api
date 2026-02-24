@@ -21,6 +21,7 @@ import { UpdateTakeDataTemplateDto } from './dto/update-template.dto';
 import { UpdateTakeDataTemplateItemDto } from './dto/update-template-item.dto';
 import { AssignTemplateDto } from './dto/assign-template.dto';
 import { SubmitTakeDataDto } from './dto/submit-data.dto';
+import { GenerateDocumentDto } from './dto/generate-document.dto';
 import { successResponse, successResponseListWithoutPaginate } from '../../utils/responses';
 
 @ApiTags('Take Data')
@@ -132,5 +133,14 @@ export class TakeDataController {
     async submitData(@Body() submitDto: SubmitTakeDataDto, @UploadedFile() file, @Request() request) {
         const result = await this.takeDataService.submitData(submitDto, file, request.user.id);
         return successResponse(result, 'Data submitted successfully');
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Post('generate-document')
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file'))
+    async generateDocument(@Body() generateDto: GenerateDocumentDto, @UploadedFile() file, @Res() res) {
+        return this.takeDataService.generateDocument(generateDto, file, res);
     }
 }

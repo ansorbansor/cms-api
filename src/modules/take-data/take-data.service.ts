@@ -333,20 +333,20 @@ export class TakeDataService {
                                                     const endCell = worksheet.getCell(end);
 
                                                     worksheet.addImage(imageId, {
-                                                        tl: { col: startCell.col - 1, row: startCell.row - 1 },
-                                                        br: { col: endCell.col, row: endCell.row },
+                                                        tl: { col: Number(startCell.col) - 1, row: Number(startCell.row) - 1 } as any,
+                                                        br: { col: Number(endCell.col), row: Number(endCell.row) } as any,
                                                         editAs: 'oneCell'
                                                     });
                                                 } else {
                                                     worksheet.addImage(imageId, {
-                                                        tl: { col: cell.col - 1, row: cell.row - 1 },
+                                                        tl: { col: Number(cell.col) - 1, row: Number(cell.row) - 1 } as any,
                                                         ext: { width: 100, height: 100 },
                                                         editAs: 'oneCell'
                                                     });
                                                 }
                                             } else {
                                                 worksheet.addImage(imageId, {
-                                                    tl: { col: cell.col - 1, row: cell.row - 1 },
+                                                    tl: { col: Number(cell.col) - 1, row: Number(cell.row) - 1 } as any,
                                                     ext: { width: 100, height: 100 },
                                                     editAs: 'oneCell'
                                                 });

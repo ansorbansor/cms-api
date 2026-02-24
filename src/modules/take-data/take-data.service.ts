@@ -271,7 +271,16 @@ export class TakeDataService {
         }
 
         const workbook = new exceljs.Workbook();
-        await workbook.xlsx.load(file.buffer);
+        if (file.buffer) {
+            await workbook.xlsx.load(file.buffer);
+        } else if (file.path) {
+            await workbook.xlsx.readFile(file.path);
+            if (fs.existsSync(file.path)) {
+                fs.unlinkSync(file.path);
+            }
+        } else {
+            throw new HttpException('Uploaded file is invalid or missing', HttpStatus.BAD_REQUEST);
+        }
 
         const submissions = assignment.submissions;
         const items = assignment.template.items;

@@ -366,9 +366,41 @@ export class TakeDataService {
                                             const finalW = imgW * scale;
                                             const finalH = imgH * scale;
 
+                                            // Calculate centering offsets
+                                            let offsetX = (boxW - finalW) / 2;
+                                            let offsetY = (boxH - finalH) / 2;
+
+                                            let colBase = Number(startCellNode.col) - 1;
+                                            let cIdx = Number(startCellNode.col);
+                                            while (offsetX > 0) {
+                                                let w = getColWidth(worksheet.getColumn(cIdx));
+                                                if (offsetX < w) {
+                                                    colBase += (offsetX / w);
+                                                    break;
+                                                } else {
+                                                    offsetX -= w;
+                                                    colBase += 1;
+                                                    cIdx++;
+                                                }
+                                            }
+
+                                            let rowBase = Number(startCellNode.row) - 1;
+                                            let rIdx = Number(startCellNode.row);
+                                            while (offsetY > 0) {
+                                                let h = getRowHeight(worksheet.getRow(rIdx));
+                                                if (offsetY < h) {
+                                                    rowBase += (offsetY / h);
+                                                    break;
+                                                } else {
+                                                    offsetY -= h;
+                                                    rowBase += 1;
+                                                    rIdx++;
+                                                }
+                                            }
+
                                             // Insert image with computed extension to preserve aspect ratio
                                             worksheet.addImage(imageId, {
-                                                tl: { col: Number(startCellNode.col) - 1, row: Number(startCellNode.row) - 1 } as any,
+                                                tl: { col: colBase, row: rowBase } as any,
                                                 ext: { width: finalW, height: finalH },
                                                 editAs: 'oneCell'
                                             });

@@ -27,6 +27,10 @@ export class SiteTakeDataAssignment extends EntityHelper {
     @Column({ nullable: true })
     assigned_by: number;
 
+    @ApiProperty({ example: 'My Custom Watermark' })
+    @Column({ nullable: true, type: 'text' })
+    custom_watermark: string;
+
     @ManyToOne(() => Site)
     @JoinColumn({ name: 'site_id' })
     site: Site;

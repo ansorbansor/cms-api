@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class AssignTemplateDto {
     @ApiProperty({ example: 1 })
@@ -11,4 +11,9 @@ export class AssignTemplateDto {
     @IsNotEmpty()
     @IsNumber()
     template_id: number;
+
+    @ApiProperty({ example: 'My Custom Watermark', required: false })
+    @IsOptional()
+    @IsString()
+    custom_watermark?: string;
 }

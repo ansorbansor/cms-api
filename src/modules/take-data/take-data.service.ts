@@ -320,7 +320,8 @@ export class TakeDataService {
                                             let imgW = 100;
                                             let imgH = 100;
                                             try {
-                                                const sizeOf = require('image-size');
+                                                const sizeOfModule = require('image-size');
+                                                const sizeOf = typeof sizeOfModule === 'function' ? sizeOfModule : (sizeOfModule.imageSize || sizeOfModule.default);
                                                 const dimensions = sizeOf(photoPath);
                                                 imgW = dimensions.width || 100;
                                                 imgH = dimensions.height || 100;

@@ -103,6 +103,7 @@ export class TakeDataService {
                 'Sample Photo'
             );
             updateDto.sample_photo_id = photoEntity.id;
+            item.sample_photo = photoEntity;
         }
 
         Object.assign(item, updateDto);
@@ -315,51 +316,62 @@ export class TakeDataService {
                                             // Clear the placeholder text
                                             cell.value = '';
 
-                                            let targetMergeRange = null;
+                                            // Read original image dimensions
+                                            let imgW = 100;
+                                            let imgH = 100;
+                                            try {
+                                                const sizeOf = require('image-size');
+                                                const dimensions = sizeOf(photoPath);
+                                                imgW = dimensions.width || 100;
+                                                imgH = dimensions.height || 100;
+                                            } catch (e) {
+                                                console.error('Failed to read image dimensions', e);
+                                            }
 
-                                            // Check if cell is part of a merge
-                                            // _mergeCount and custom properties aren't completely exposed
-                                            // The best way to check merges in exceljs is checking the model
+                                            // Helper to get Excel cell dimensions in pixels
+                                            const getColWidth = (c) => (c && c.width ? c.width : 8.43) * 7.5;
+                                            const getRowHeight = (r) => (r && r.height ? r.height : 15) * 1.33;
+
+                                            let boxW = getColWidth(worksheet.getColumn(Number(cell.col)));
+                                            let boxH = getRowHeight(worksheet.getRow(Number(cell.row)));
+                                            let startCellNode = cell;
+
                                             const masterNode = cell.master;
 
                                             if (masterNode && (masterNode.address !== cell.address || worksheet.model.merges?.some(m => m.includes(masterNode.address)))) {
-                                                // ExcelJS handles merges via string arrays like 'A1:C3' in model
-                                                const mergeLabel = worksheet.model.merges?.find(m => {
-                                                    const [_start, end] = m.split(':');
-                                                    // We just need to know if this cell is part of this range.
-                                                    // If masterNode address is within it, it's the right merge.
-                                                    // masterNode.address represents the top-left of the merge.
-                                                    return m.startsWith(masterNode.address + ':');
-                                                });
-
+                                                const mergeLabel = worksheet.model.merges?.find(m => m.startsWith(masterNode.address + ':'));
                                                 if (mergeLabel) {
                                                     const [start, end] = mergeLabel.split(':');
-
-                                                    // Parse row/col
-                                                    const startCol = parseInt(start.replace(/[0-9]/g, ''), 36) - 9; // simple A-Z parse (A=1) wait, excel columns can be AA.
-                                                    // Built in converter:
                                                     const startCell = worksheet.getCell(start);
                                                     const endCell = worksheet.getCell(end);
+                                                    startCellNode = startCell;
 
-                                                    worksheet.addImage(imageId, {
-                                                        tl: { col: Number(startCell.col) - 1, row: Number(startCell.row) - 1 } as any,
-                                                        br: { col: Number(endCell.col), row: Number(endCell.row) } as any,
-                                                        editAs: 'oneCell'
-                                                    });
-                                                } else {
-                                                    worksheet.addImage(imageId, {
-                                                        tl: { col: Number(cell.col) - 1, row: Number(cell.row) - 1 } as any,
-                                                        ext: { width: 100, height: 100 },
-                                                        editAs: 'oneCell'
-                                                    });
+                                                    boxW = 0;
+                                                    for (let c = Number(startCell.col); c <= Number(endCell.col); c++) {
+                                                        boxW += getColWidth(worksheet.getColumn(c));
+                                                    }
+                                                    boxH = 0;
+                                                    for (let r = Number(startCell.row); r <= Number(endCell.row); r++) {
+                                                        boxH += getRowHeight(worksheet.getRow(r));
+                                                    }
                                                 }
-                                            } else {
-                                                worksheet.addImage(imageId, {
-                                                    tl: { col: Number(cell.col) - 1, row: Number(cell.row) - 1 } as any,
-                                                    ext: { width: 100, height: 100 },
-                                                    editAs: 'oneCell'
-                                                });
                                             }
+
+                                            // Scale image to fit within the box while preserving aspect ratio
+                                            const padding = 0.95; // 5% padding
+                                            const scaleW = (boxW * padding) / imgW;
+                                            const scaleH = (boxH * padding) / imgH;
+                                            const scale = Math.min(scaleW, scaleH);
+
+                                            const finalW = imgW * scale;
+                                            const finalH = imgH * scale;
+
+                                            // Insert image with computed extension to preserve aspect ratio
+                                            worksheet.addImage(imageId, {
+                                                tl: { col: Number(startCellNode.col) - 1, row: Number(startCellNode.row) - 1 } as any,
+                                                ext: { width: finalW, height: finalH },
+                                                editAs: 'oneCell'
+                                            });
                                         }
                                     }
                                 }

@@ -6,6 +6,7 @@ import { TakeDataTemplate } from '../../entities/take-data-template.entity';
 import { TakeDataTemplateItem } from '../../entities/take-data-template-item.entity';
 import { SiteTakeDataAssignment } from '../../entities/site-take-data-assignment.entity';
 import { TakeDataSubmission } from '../../entities/take-data-submission.entity';
+import { User } from '../../entities/user.entity';
 import { FilesModule } from '../files/files.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { FilesModule } from '../files/files.module';
             TakeDataTemplateItem,
             SiteTakeDataAssignment,
             TakeDataSubmission,
+            User,
         ]),
         FilesModule,
     ],

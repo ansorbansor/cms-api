@@ -5,6 +5,7 @@ import { TakeDataTemplate } from '../../entities/take-data-template.entity';
 import { TakeDataTemplateItem } from '../../entities/take-data-template-item.entity';
 import { SiteTakeDataAssignment } from '../../entities/site-take-data-assignment.entity';
 import { TakeDataSubmission } from '../../entities/take-data-submission.entity';
+import { User } from '../../entities/user.entity';
 import { CreateTakeDataTemplateDto } from './dto/create-template.dto';
 import { CreateTakeDataTemplateItemDto } from './dto/create-template-item.dto';
 import { UpdateTakeDataTemplateDto } from './dto/update-template.dto';
@@ -29,6 +30,8 @@ export class TakeDataService {
         private assignmentRepository: Repository<SiteTakeDataAssignment>,
         @InjectRepository(TakeDataSubmission)
         private submissionRepository: Repository<TakeDataSubmission>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
         private readonly filesService: FilesService,
     ) { }
 
@@ -140,10 +143,12 @@ export class TakeDataService {
         });
     }
 
-    async deleteAssignment(id: number, user: any) {
+    async deleteAssignment(id: number, reqUser: any) {
+        // Fetch full user to get employee_position_id
+        const user = await this.userRepository.findOne({ where: { id: reqUser.id } });
+
         // Enforce Super Admin only.
-        const roleId = user.employee_position_id?.toString() || user.role_id?.toString();
-        if (roleId !== '1') {
+        if (user?.employee_position_id !== 1 && user?.employee_position_id?.toString() !== '1') {
             throw new HttpException('Only Super Admin can delete assignments', HttpStatus.FORBIDDEN);
         }
 

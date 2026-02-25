@@ -322,7 +322,8 @@ export class TakeDataService {
                                             try {
                                                 const sizeOfModule = require('image-size');
                                                 const sizeOf = typeof sizeOfModule === 'function' ? sizeOfModule : (sizeOfModule.imageSize || sizeOfModule.default);
-                                                const dimensions = sizeOf(photoPath);
+                                                const buffer = fs.readFileSync(photoPath);
+                                                const dimensions = sizeOf(buffer);
                                                 imgW = dimensions.width || 100;
                                                 imgH = dimensions.height || 100;
                                             } catch (e) {

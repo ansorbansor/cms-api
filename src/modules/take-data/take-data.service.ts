@@ -144,11 +144,16 @@ export class TakeDataService {
     }
 
     async deleteAssignment(id: number, reqUser: any) {
-        // Fetch full user to get employee_position_id
-        const user = await this.userRepository.findOne({ where: { id: reqUser.id } });
+        // Fetch full user to get employeePosition details
+        const user = await this.userRepository.findOne({
+            where: { id: reqUser.id },
+            relations: ['employeePosition'] // Ensure employeePosition is loaded
+        });
 
-        // Enforce Super Admin only.
-        if (user?.employee_position_id !== 1 && user?.employee_position_id?.toString() !== '1') {
+        // Enforce Super Admin only. They must explicitly be role 1 or explicitly have grant_all_access.
+        const isSuperAdmin = user?.employee_position_id === 1 || user?.employee_position_id?.toString() === '1' || user?.employeePosition?.grant_all_access === true;
+
+        if (!isSuperAdmin) {
             throw new HttpException('Only Super Admin can delete assignments', HttpStatus.FORBIDDEN);
         }
 

@@ -10,6 +10,7 @@ import {
     Request,
     Res,
     Put,
+    Delete,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -114,6 +115,14 @@ export class TakeDataController {
     @Get('assignments/:id/download')
     async downloadPhotos(@Param('id') id: number, @Res() res) {
         return this.takeDataService.downloadAssignmentPhotos(id, res);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Delete('assignments/:id')
+    async deleteAssignment(@Param('id') id: number, @Request() request) {
+        const result = await this.takeDataService.deleteAssignment(id, request.user);
+        return successResponse(result, 'Assignment deleted successfully');
     }
 
     // Android

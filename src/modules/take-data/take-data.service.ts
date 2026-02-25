@@ -140,6 +140,32 @@ export class TakeDataService {
         });
     }
 
+    async deleteAssignment(id: number, user: any) {
+        // Enforce Super Admin only.
+        const roleId = user.employee_position_id?.toString() || user.role_id?.toString();
+        if (roleId !== '1') {
+            throw new HttpException('Only Super Admin can delete assignments', HttpStatus.FORBIDDEN);
+        }
+
+        const assignment = await this.assignmentRepository.findOne({
+            where: { id },
+            relations: ['submissions']
+        });
+
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        if (assignment.submissions && assignment.submissions.length > 0) {
+            // Delete associated submissions first. TypeORM might cascade in some configs,
+            // but manually deleting ensures we don't hit foreign key constraints if cascade is off.
+            await this.submissionRepository.remove(assignment.submissions);
+        }
+
+        await this.assignmentRepository.remove(assignment);
+        return { message: 'Assignment deleted successfully' };
+    }
+
     // Android API
     async getTemplatesForSite(siteId: number) {
         const assignments = await this.assignmentRepository.find({

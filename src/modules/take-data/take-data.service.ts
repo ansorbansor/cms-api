@@ -398,10 +398,62 @@ export class TakeDataService {
                                                 }
                                             }
 
+                                            // Convert final width and height to br relative to the calculated tl (colBase, rowBase)
+                                            let brCol = colBase;
+                                            let remainingW = finalW;
+                                            let tempColIdx = Math.floor(colBase);
+                                            // Handle fractional part of start column first
+                                            let firstColW = getColWidth(worksheet.getColumn(tempColIdx + 1));
+                                            let startingFractionW = firstColW * (1 - (colBase % 1));
+
+                                            if (remainingW <= startingFractionW) {
+                                                brCol += (remainingW / firstColW);
+                                            } else {
+                                                brCol += (1 - (colBase % 1));
+                                                remainingW -= startingFractionW;
+                                                tempColIdx++;
+                                                while (remainingW > 0) {
+                                                    let cw = getColWidth(worksheet.getColumn(tempColIdx + 1));
+                                                    if (remainingW <= cw) {
+                                                        brCol += (remainingW / cw);
+                                                        break;
+                                                    } else {
+                                                        brCol += 1;
+                                                        remainingW -= cw;
+                                                        tempColIdx++;
+                                                    }
+                                                }
+                                            }
+
+                                            let brRow = rowBase;
+                                            let remainingH = finalH;
+                                            let tempRowIdx = Math.floor(rowBase);
+                                            let firstRowH = getRowHeight(worksheet.getRow(tempRowIdx + 1));
+                                            let startingFractionH = firstRowH * (1 - (rowBase % 1));
+
+                                            if (remainingH <= startingFractionH) {
+                                                brRow += (remainingH / firstRowH);
+                                            } else {
+                                                brRow += (1 - (rowBase % 1));
+                                                remainingH -= startingFractionH;
+                                                tempRowIdx++;
+                                                while (remainingH > 0) {
+                                                    let rh = getRowHeight(worksheet.getRow(tempRowIdx + 1));
+                                                    if (remainingH <= rh) {
+                                                        brRow += (remainingH / rh);
+                                                        break;
+                                                    } else {
+                                                        brRow += 1;
+                                                        remainingH -= rh;
+                                                        tempRowIdx++;
+                                                    }
+                                                }
+                                            }
+
                                             // Insert image with computed extension to preserve aspect ratio
                                             worksheet.addImage(imageId, {
                                                 tl: { col: colBase, row: rowBase } as any,
-                                                ext: { width: finalW, height: finalH },
+                                                br: { col: brCol, row: brRow } as any,
                                                 editAs: 'oneCell'
                                             });
                                         }

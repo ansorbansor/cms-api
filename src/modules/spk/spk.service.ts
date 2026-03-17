@@ -611,23 +611,37 @@ export class SPKService {
     }
 
     if (paginationOptions.projects) {
-      let projectNames: string[];
-      if (Array.isArray(paginationOptions.projects)) {
-        projectNames = paginationOptions.projects.map(p => p.trim());
-      } else {
-        projectNames = paginationOptions.projects.split(',').map(name => name.trim());
+      let projectNames: string[] = [];
+      const projectsArr = Array.isArray(paginationOptions.projects) 
+        ? paginationOptions.projects 
+        : [paginationOptions.projects];
+      
+      for (const p of projectsArr) {
+        if (p && typeof p === 'string') {
+          projectNames.push(...p.split(',').map(name => name.trim()));
+        }
       }
-      data.andWhere('project.name IN (:...projectNames)', { projectNames });
+      
+      if (projectNames.length > 0) {
+        data.andWhere('project.name IN (:...projectNames)', { projectNames });
+      }
     }
 
     if (paginationOptions.regions) {
-      let regionIds: string[];
-      if (Array.isArray(paginationOptions.regions)) {
-        regionIds = paginationOptions.regions;
-      } else {
-        regionIds = paginationOptions.regions.split(',');
+      let regionIds: string[] = [];
+      const regionsArr = Array.isArray(paginationOptions.regions)
+        ? paginationOptions.regions
+        : [paginationOptions.regions];
+      
+      for (const r of regionsArr) {
+        if (r && typeof r === 'string') {
+          regionIds.push(...r.split(',').map(id => id.trim()));
+        }
       }
-      data.andWhere('region.id IN (:...regionIds)', { regionIds });
+      
+      if (regionIds.length > 0) {
+        data.andWhere('region.id IN (:...regionIds)', { regionIds });
+      }
     }
 
     if (

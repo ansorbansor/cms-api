@@ -444,9 +444,14 @@ export class SPKOperationalService {
     }
 
     if (paginationOptions.pay_to_name) {
-      data.andWhere('pay_to_user.name ILIKE :payToName', {
-        payToName: `%${paginationOptions.pay_to_name}%`,
-      });
+      const names = paginationOptions.pay_to_name.split(',').map(n => n.trim()).filter(Boolean);
+      if (names.length === 1) {
+        data.andWhere('pay_to_user.name ILIKE :payToName', {
+          payToName: `%${names[0]}%`,
+        });
+      } else if (names.length > 1) {
+        data.andWhere('pay_to_user.name IN (:...payToNames)', { payToNames: names });
+      }
     }
 
     if (paginationOptions.status) {
@@ -974,5 +979,27 @@ export class SPKOperationalService {
     }
 
     throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
+  }
+
+  async getFilterOptions() {
+    const payToUsersRaw = await this.spkOperationalRepository
+      .createQueryBuilder('spk-operational')
+      .leftJoin('spk-operational.pay_to_user', 'pay_to_user')
+      .select(['pay_to_user.id', 'pay_to_user.name'])
+      .where('spk-operational.deleted_at IS NULL')
+      .andWhere('pay_to_user.id IS NOT NULL')
+      .andWhere("pay_to_user.name IS NOT NULL AND pay_to_user.name != ''")
+      .distinct(true)
+      .orderBy('pay_to_user.name', 'ASC')
+      .getRawMany();
+
+    const payToUsers = payToUsersRaw.map(u => ({
+      id: u.pay_to_user_id,
+      name: u.pay_to_user_name,
+    }));
+
+    return {
+      pay_to_users: payToUsers,
+    };
   }
 }

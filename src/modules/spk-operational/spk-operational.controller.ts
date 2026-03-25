@@ -174,6 +174,16 @@ export class SPKOperationalController {
     );
   }
 
+  @Get('filter-options')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getFilterOptions() {
+    return successResponse(
+      await this.spkOperationalService.getFilterOptions(),
+      'success',
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

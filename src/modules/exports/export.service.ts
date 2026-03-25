@@ -70,11 +70,17 @@ export class ExportService {
     endDate: string,
     search: string,
     status: string,
+    regionId?: string,
+    month?: string,
+    year?: string,
+    linePOStatus?: string,
+    customerId?: string,
+    actualWorkStatus?: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'PO';
-    job.payload = JSON.stringify({ ip, startDate, endDate, search, status });
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -102,7 +108,13 @@ export class ExportService {
           payload.startDate,
           payload.endDate,
           payload.search,
-          payload.status
+          payload.status,
+          payload.regionId,
+          payload.month,
+          payload.year,
+          payload.linePOStatus,
+          payload.customerId,
+          payload.actualWorkStatus
         ) as string;
       }
 
@@ -172,6 +184,12 @@ export class ExportService {
     endDate: string,
     search: string,
     status: string,
+    regionId?: string,
+    month?: string,
+    year?: string,
+    linePOStatus?: string,
+    customerId?: string,
+    actualWorkStatus?: string,
   ) {
     const rows = [];
 
@@ -234,6 +252,47 @@ export class ExportService {
     if (status) {
       query.andWhere('LOWER(po.status) = :status', {
         status: status,
+      });
+    }
+
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      query.andWhere('po.region_id IN (:...regions)', {
+        regions: regions,
+      });
+    }
+
+    if (month != '' && month != null) {
+      const months = month.toString().split(',');
+      query.andWhere('EXTRACT(MONTH FROM po.publish_date) IN (:...months)', {
+        months: months,
+      });
+    }
+
+    if (year != '' && year != null) {
+      const years = year.toString().split(',');
+      query.andWhere('EXTRACT(YEAR FROM po.publish_date) IN (:...years)', {
+        years: years,
+      });
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      const statuses = linePOStatus.toString().split(',');
+      query.andWhere('po.line_po_status IN (:...statuses)', {
+        statuses: statuses,
+      });
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      query.andWhere('po.actual_work_status ILIKE :actualWorkStatus', {
+        actualWorkStatus: `%${actualWorkStatus}%`,
+      });
+    }
+
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      query.andWhere('po.customer_id IN (:...customerIds)', {
+        customerIds: customerIds,
       });
     }
 

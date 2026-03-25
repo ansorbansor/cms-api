@@ -177,6 +177,7 @@ export class SPKController {
     @Query('mobile') mobile: boolean,
     @Query('regions') regions: string | string[],
     @Query('projects') projects: string | string[],
+    @Query('pay_to_name') payToName: string,
   ) {
     return successResponseList(
       await this.spkService.findManyWithPagination(
@@ -190,6 +191,7 @@ export class SPKController {
           status: status,
           projects: projects,
           regions: regions,
+          pay_to_name: payToName,
         },
         req.user,
         mobile,

@@ -153,6 +153,7 @@ export class SPKOperationalController {
     @Query('end_date') endDate: string,
     @Query('status') status: number,
     @Query('mobile') mobile: boolean,
+    @Query('pay_to_name') payToName: string,
   ) {
     return successResponseList(
       await this.spkOperationalService.findManyWithPagination(
@@ -164,6 +165,7 @@ export class SPKOperationalController {
           start_date: startDate,
           end_date: endDate,
           status: status,
+          pay_to_name: payToName,
         },
         req.user,
         mobile,

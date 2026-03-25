@@ -443,6 +443,12 @@ export class SPKOperationalService {
       });
     }
 
+    if (paginationOptions.pay_to_name) {
+      data.andWhere('pay_to_user.name ILIKE :payToName', {
+        payToName: `%${paginationOptions.pay_to_name}%`,
+      });
+    }
+
     if (paginationOptions.status) {
       const stat = paginationOptions.status;
       if (stat == SPKStatus.APPROVED) {

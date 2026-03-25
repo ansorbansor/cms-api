@@ -36,4 +36,5 @@ export interface IPaginationOptions {
   site_id?: number | string;
   regions?: string | string[];
   projects?: string | string[];
+  pay_to_name?: string;
 }

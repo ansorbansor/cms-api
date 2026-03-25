@@ -107,6 +107,7 @@ export class ExportController {
     @Query('line_po_status') linePOStatus: string,
     @Query('customer_id') customerId: string,
     @Query('actual_work_status') actualWorkStatus: string,
+    @Query('date_filter_by') dateFilterBy: string,
   ) {
     try {
       const job = await this.exportService.exportPO(
@@ -121,7 +122,8 @@ export class ExportController {
         year,
         linePOStatus,
         customerId,
-        actualWorkStatus
+        actualWorkStatus,
+        dateFilterBy
       );
 
       return res.status(HttpStatus.OK).json({

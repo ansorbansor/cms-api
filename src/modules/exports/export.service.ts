@@ -76,11 +76,12 @@ export class ExportService {
     linePOStatus?: string,
     customerId?: string,
     actualWorkStatus?: string,
+    dateFilterBy?: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'PO';
-    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus });
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus, dateFilterBy });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -114,7 +115,8 @@ export class ExportService {
           payload.year,
           payload.linePOStatus,
           payload.customerId,
-          payload.actualWorkStatus
+          payload.actualWorkStatus,
+          payload.dateFilterBy
         ) as string;
       }
 
@@ -190,6 +192,7 @@ export class ExportService {
     linePOStatus?: string,
     customerId?: string,
     actualWorkStatus?: string,
+    dateFilterBy?: string,
   ) {
     const rows = [];
 
@@ -262,16 +265,18 @@ export class ExportService {
       });
     }
 
+    const dateCol = dateFilterBy === 'actual_work_date' ? 'po.actual_work_date' : 'po.publish_date';
+
     if (month != '' && month != null) {
       const months = month.toString().split(',');
-      query.andWhere('EXTRACT(MONTH FROM po.publish_date) IN (:...months)', {
+      query.andWhere(`EXTRACT(MONTH FROM ${dateCol}) IN (:...months)`, {
         months: months,
       });
     }
 
     if (year != '' && year != null) {
       const years = year.toString().split(',');
-      query.andWhere('EXTRACT(YEAR FROM po.publish_date) IN (:...years)', {
+      query.andWhere(`EXTRACT(YEAR FROM ${dateCol}) IN (:...years)`, {
         years: years,
       });
     }

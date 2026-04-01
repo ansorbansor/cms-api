@@ -126,3 +126,5 @@ uploads
 
 # Others
 .DS_Storesrc/utils/google-firebase.json
+
+ormconfig.json

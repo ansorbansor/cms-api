@@ -28,6 +28,8 @@ export default class CreateAdmin implements Seeder {
       if (!existsEmployeePosition) {
         const employeePosition = new EmployeePosition();
         employeePosition.name = 'Superadmin Position';
+        employeePosition.code = 'SA';
+        employeePosition.grant_all_access = true;
         existsEmployeePosition = await queryRunner.manager.save(
           employeePosition,
         );
@@ -41,7 +43,8 @@ export default class CreateAdmin implements Seeder {
       user.password = 'Password9';
       user.provider = 'email';
       user.employee_position_id = existsEmployeePosition.id;
-      user.photo = null;
+      user.phone = '1234567890';
+      user.status = true;
 
       await queryRunner.manager.save(user);
 

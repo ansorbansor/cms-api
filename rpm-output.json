@@ -1,0 +1,33 @@
+{
+  "spkRegion": "WEST JAVA",
+  "rpms": [
+    {
+      "id": 9,
+      "name": "BAYU NOVIANTO",
+      "email": "bayu@example.com",
+      "region": "-",
+      "gm_region": "NATIONAL"
+    },
+    {
+      "id": 85,
+      "name": "aang akbar",
+      "email": "hr@ptbiosron.com",
+      "region": "bandung",
+      "gm_region": "west java"
+    },
+    {
+      "id": 269,
+      "name": "Eko Handoko Wijoyo",
+      "email": "eko.biosron19@gmail.com",
+      "region": "CENTRAL NORTH SUMATERA",
+      "gm_region": "CENTRAL NORTH SUMATERA"
+    },
+    {
+      "id": 372,
+      "name": "Isma Nur Afni",
+      "email": "isma.finance@ptbiosron.com",
+      "region": "Bandung",
+      "gm_region": "NATIONAL"
+    }
+  ]
+}

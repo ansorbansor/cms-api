@@ -1,0 +1,15 @@
+2026/04/18-19:26:44.335 5c6c Reusing MANIFEST D:\Android\SIMPRO Update 25 Nov 26\cms-api\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/04/18-19:26:44.342 5c6c Recovering log #16
+2026/04/18-19:26:44.345 5c6c Reusing old log D:\Android\SIMPRO Update 25 Nov 26\cms-api\.wwebjs_auth\session\Default\Local Storage\leveldb/000016.log 
+2026/04/18-19:37:08.953 3ec0 Level-0 table #20: started
+2026/04/18-19:37:08.960 3ec0 Level-0 table #20: 10979 bytes OK
+2026/04/18-19:37:08.962 3ec0 Delete type=0 #16
+2026/04/18-19:37:08.964 3ec0 Compacting 4@0 + 1@1 files
+2026/04/18-19:37:08.971 3ec0 Generated table #21@0: 53 keys, 10952 bytes
+2026/04/18-19:37:08.972 3ec0 Compacted 4@0 + 1@1 files => 10952 bytes
+2026/04/18-19:37:08.972 3ec0 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/04/18-19:37:08.973 3ec0 Delete type=2 #8
+2026/04/18-19:37:08.973 3ec0 Delete type=2 #11
+2026/04/18-19:37:08.974 3ec0 Delete type=2 #14
+2026/04/18-19:37:08.974 3ec0 Delete type=2 #17
+2026/04/18-19:37:08.974 3ec0 Delete type=2 #20

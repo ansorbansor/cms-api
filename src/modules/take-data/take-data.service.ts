@@ -136,11 +136,15 @@ export class TakeDataService {
         return this.assignmentRepository.save(assignment);
     }
 
-    async getAssignments() {
-        return this.assignmentRepository.find({
+    async getAssignments(page = 1, limit = 10) {
+        const skip = (page - 1) * limit;
+        const [data, total] = await this.assignmentRepository.findAndCount({
             relations: ['site', 'template', 'template.items', 'template.items.sample_photo', 'submissions', 'submissions.photo', 'reviewer'],
             order: { created_at: 'DESC' },
+            skip,
+            take: limit,
         });
+        return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
 
     async reviewAssignment(

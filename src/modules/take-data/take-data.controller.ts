@@ -4,6 +4,7 @@ import {
     Get,
     Param,
     Post,
+    Query,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -105,9 +106,12 @@ export class TakeDataController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get('assignments')
-    async getAssignments() {
-        const result = await this.takeDataService.getAssignments();
-        return successResponseListWithoutPaginate(result as any, 'Assignments retrieved successfully');
+    async getAssignments(
+        @Query('page') page = 1,
+        @Query('limit') limit = 10,
+    ) {
+        const result = await this.takeDataService.getAssignments(Number(page), Number(limit));
+        return successResponse(result, 'Assignments retrieved successfully');
     }
 
     @ApiBearerAuth()

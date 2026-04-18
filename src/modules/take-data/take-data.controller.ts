@@ -162,6 +162,8 @@ export class TakeDataController {
         @UploadedFile() file, 
         @Request() request
     ) {
+        const perfKey = `submitData-${Date.now()}`;
+        console.time(perfKey);
         try {
             if (latitude && longitude && !submitDto.coordinate) {
                 submitDto.coordinate = `${latitude},${longitude}`;
@@ -170,8 +172,10 @@ export class TakeDataController {
                 submitDto.timestamp = new Date();
             }
             const result = await this.takeDataService.submitData(submitDto, file, request.user.id);
+            console.timeEnd(perfKey);
             return successResponse(result, 'Data submitted successfully');
         } catch (e) {
+            console.timeEnd(perfKey);
             console.error('SubmitTakeData Error:', e);
             throw new HttpException(
                 e.message || 'Internal server error while submitting data', 

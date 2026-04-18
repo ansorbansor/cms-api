@@ -22,34 +22,19 @@ import { randomStringGenerator } from '@nestjs/common/utils/random-string-genera
             diskStorage({
               destination: './files',
               filename: (request, file, callback) => {
-                callback(
-                  null,
-                  `${randomStringGenerator()}.${file.originalname
-                    .split('.')
-                    .pop()
-                    .toLowerCase()}`,
-                );
+                // Preserve original filename but sanitize spaces and special chars
+                const sanitized = file.originalname
+                  .replace(/\s+/g, '_')
+                  .replace(/[^a-zA-Z0-9._-]/g, '');
+                const uniquePrefix = randomStringGenerator().substring(0, 8);
+                callback(null, `${uniquePrefix}_${sanitized}`);
               },
             }),
         };
 
         return {
           fileFilter: (request, file, callback) => {
-            if (!file.originalname.match(/\.(jpg|jpeg|png|gif|xlsx|xls)$/i)) {
-              return callback(
-                new HttpException(
-                  {
-                    status: HttpStatus.UNPROCESSABLE_ENTITY,
-                    errors: {
-                      file: `cantUploadFileType`,
-                    },
-                  },
-                  HttpStatus.UNPROCESSABLE_ENTITY,
-                ),
-                false,
-              );
-            }
-
+            // Accept all file types
             callback(null, true);
           },
           storage: storages[configService.get('file.driver')](),

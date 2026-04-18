@@ -345,7 +345,7 @@ export class SPKService {
     const { inhouse_team_user_id, ...updatedDataSPK } = updateSPKDTO;
 
     await this.spkRepository.update(id, {
-      ...updatedDataSPK,
+      ...(updatedDataSPK as any),
     });
 
     //update inhouse team
@@ -1329,8 +1329,8 @@ export class SPKService {
     return null;
   }
 
-  async approve(id: number, user: User, remark: string): Promise<void> {
-    const existingSPK = await this.spkRepository.findOne(id);
+  async approve(id: number, user: User, remark: string, workload_ticket_id?: number): Promise<void> {
+    const existingSPK = await this.spkRepository.findOne(id, { relations: ['po'] });
     if (!existingSPK) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
     } else if (existingSPK.status >= SPKStatus.APPROVED) {
@@ -1338,6 +1338,15 @@ export class SPKService {
         HttpStatus.BAD_REQUEST,
         `SPK tidak dapat diapprove kembali!`,
       );
+    }
+
+    if (existingSPK.po) {
+      if (!existingSPK.po.workload_ticket_id && !workload_ticket_id) {
+        throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for this PO`);
+      }
+      if (workload_ticket_id && !existingSPK.po.workload_ticket_id) {
+        await getManager().update(PurchaseOrder, existingSPK.po.id, { workload_ticket_id });
+      }
     }
 
     await this.spkRepository.update(id, {
@@ -1395,7 +1404,7 @@ export class SPKService {
   // In spk.service.ts
   // Replace your existing approveMany function with this one
 
-  async approveMany(ids: number[], user: User, ip: string): Promise<any> {
+  async approveMany(ids: number[], user: User, ip: string, workload_ticket_id?: number): Promise<any> {
     if (!ids || ids.length === 0) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
     }
@@ -1403,7 +1412,7 @@ export class SPKService {
     const currentUser = await this.userService.findOneFull({ id: user.id });
     const roleCode = currentUser.employeePosition.code;
 
-    const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids);
+    const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids).leftJoinAndSelect('spk.po', 'po');
 
     let updatePayload = {};
 
@@ -1436,6 +1445,21 @@ export class SPKService {
 
     if (validIds.length === 0) {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
+    }
+
+    for (const item of itemsToApprove) {
+      if (item.po) {
+        if (!item.po.workload_ticket_id && !workload_ticket_id) {
+           throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for SPK ${item.spk_number}`, {
+             requireWorkloadTicket: true,
+             siteId: item.site_id,
+             poId: item.po.id
+           });
+        }
+        if (workload_ticket_id && !item.po.workload_ticket_id) {
+           await getManager().update(PurchaseOrder, item.po.id, { workload_ticket_id });
+        }
+      }
     }
 
     // Update only the valid items

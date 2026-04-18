@@ -138,9 +138,38 @@ export class TakeDataService {
 
     async getAssignments() {
         return this.assignmentRepository.find({
-            relations: ['site', 'template', 'template.items', 'template.items.sample_photo', 'submissions', 'submissions.photo'],
+            relations: ['site', 'template', 'template.items', 'template.items.sample_photo', 'submissions', 'submissions.photo', 'reviewer'],
             order: { created_at: 'DESC' },
         });
+    }
+
+    async reviewAssignment(
+        id: number,
+        reviewDto: import('./dto/review-assignment.dto').ReviewAssignmentDto,
+        userId: number
+    ) {
+        const assignment = await this.assignmentRepository.findOne({ where: { id } });
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        // Determine overall status based on whether ANY item is rejected
+        let overallStatus = 'Passed';
+        const itemReviews = reviewDto.item_reviews;
+        
+        for (const key in itemReviews) {
+            if (itemReviews[key].status === 'Rejected') {
+                overallStatus = 'Rejected';
+                break;
+            }
+        }
+
+        assignment.review_status = overallStatus;
+        assignment.item_reviews = JSON.stringify(itemReviews);
+        assignment.reviewed_by = userId;
+        assignment.reviewed_at = new Date();
+
+        return this.assignmentRepository.save(assignment);
     }
 
     async deleteAssignment(id: number, reqUser: any) {

@@ -20,7 +20,7 @@ export class AuthRegisterLoginDto {
   name: string | null;
 
   @ApiProperty({ example: 'john.tor@example.com' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(({ value }) => (typeof value === 'string' ? value.toLowerCase().trim() : null))
   @IsNotEmpty({ message: 'Email tidak boleh kosong' })
   @Validate(IsNotExist, ['User'], {
     message: 'Email telah digunakan',

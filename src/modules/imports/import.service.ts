@@ -118,17 +118,28 @@ export class ImportService {
             );
 
             if (indexDataExisting > -1) {
+              const existingId = userData[indexDataExisting].id;
+              if (updateDataUserList.some(u => u.id === existingId)) continue;
               const updateData = await this.validateUserData(
                 value,
                 userData[indexDataExisting],
               );
+              if (updateData.email) {
+                if (userData.some(u => u.email === updateData.email && u.id !== existingId) || updateDataUserList.some(u => u.email === updateData.email)) {
+                  delete updateData.email;
+                }
+              }
 
               if (Object.keys(updateData).length > 0) {
                 //add user to updated object and push to list
-                updateData.id = userData[indexDataExisting].id;
+                updateData.id = existingId;
                 updateDataUserList.push(updateData);
               }
             } else {
+              const currentNik = value['id number (ktp)'];
+              if (insertDataUserList.some(u => u.nik === currentNik)) {
+                  continue;
+              }
               const inserUser = new User();
               inserUser.region = value['region office'];
               inserUser.gm_region = value['gm region'];
@@ -136,7 +147,14 @@ export class ImportService {
               inserUser.category = value['position'];
               inserUser.name = value['resource name'];
               inserUser.nik = value['id number (ktp)'];
-              inserUser.email = value['email'];
+              const rawEmail = typeof value['email'] === 'string' ? value['email'].trim() : value['email'];
+              let finalEmail = rawEmail ? rawEmail : null;
+              if (finalEmail) {
+                if (userData.some(u => u.email === finalEmail) || insertDataUserList.some(u => u.email === finalEmail)) {
+                  finalEmail = null;
+                }
+              }
+              inserUser.email = finalEmail;
               inserUser.phone = value['phone number']
                 ? value['phone number'].replace(/[^0-9]/g, '')
                 : null;
@@ -146,14 +164,11 @@ export class ImportService {
               inserUser.team_number = value['employee id'];
               inserUser.uniportal_account = value['uniportal account'];
               inserUser.project = value['join date'];
-              inserUser.status =
-                value['remark employee status'].trim().toLowerCase() ==
-                  'on board'
-                  ? true
-                  : false;
-              inserUser.status_description = value['remark employee status']
-                .trim()
-                .toLowerCase();
+              const remarkStatus = typeof value['remark employee status'] === 'string'
+                ? value['remark employee status'].trim().toLowerCase()
+                : '';
+              inserUser.status = remarkStatus === 'on board' ? true : false;
+              inserUser.status_description = remarkStatus || null;
               inserUser.pass_id_number = value['pass id number'];
               inserUser.cyber_security_status = value['cyber security status'];
               inserUser.level_iresource = value['status karyawan'];
@@ -581,6 +596,9 @@ export class ImportService {
               ).isValid()
                 ? value['plan date']
                 : null;
+
+              // Initialize total_acceptance to 0 to prevent not-null constraint error on first save
+              insertPO.total_acceptance = 0;
 
               //insert new PO to DB
               const newPO = await this.poRepository.save(insertPO);
@@ -1080,8 +1098,9 @@ export class ImportService {
     }
 
     //check email
-    if (excelData['email'] && dbData.email != excelData['email']) {
-      updateData.email = excelData['email'];
+    const rawEmailUpdate = typeof excelData['email'] === 'string' ? excelData['email'].trim() : excelData['email'];
+    if (rawEmailUpdate && dbData.email != rawEmailUpdate) {
+      updateData.email = rawEmailUpdate;
     }
 
     //check phone
@@ -1124,18 +1143,19 @@ export class ImportService {
     }
 
     //check remark employee status
+    const excelStatus = typeof excelData['remark employee status'] === 'string' 
+      ? excelData['remark employee status'].trim().toLowerCase() 
+      : '';
+    const dbStatusStr = typeof dbData.status_description === 'string' 
+      ? dbData.status_description.trim().toLowerCase() 
+      : '';
+
     if (
       excelData['remark employee status'] &&
-      dbData.status_description.trim().toLowerCase() !=
-      excelData['remark employee status'].trim().toLowerCase()
+      dbStatusStr !== excelStatus
     ) {
-      updateData.status =
-        excelData['remark employee status'].trim().toLowerCase() == 'on board'
-          ? true
-          : false;
-      updateData.status_description = excelData['remark employee status']
-        .trim()
-        .toLowerCase();
+      updateData.status = excelStatus === 'on board' ? true : false;
+      updateData.status_description = excelStatus || null;
     }
 
     //check pass id number

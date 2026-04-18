@@ -11,6 +11,7 @@ export const SPKResource = (spk: SPK): any => {
   return {
     id: spk.id,
     unique_id: spk.po ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate) : '-',
+    has_workload_ticket: spk.po ? !!spk.po.workload_ticket_id : false,
     spk_number: spk.spk_number,
     spk_date: moment(spk.created_at).format('YYYY-MM-DD HH:mm:ss'),
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',

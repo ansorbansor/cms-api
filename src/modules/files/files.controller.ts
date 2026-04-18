@@ -56,7 +56,29 @@ export class FilesController {
 
   @Get(':path')
   @ApiParam({ name: 'path', example: 'background.png' })
-  async download(@Param('path') path, @Response() response) {
-    return response.sendFile(path, { root: './files' });
+  async download(@Param('path') pathParam, @Response() response) {
+    let targetPath = pathParam;
+
+    try {
+      const fs = require('fs');
+      const pathMod = require('path');
+      const physicalPath = pathMod.join(process.cwd(), 'files', pathParam);
+
+      if (!fs.existsSync(physicalPath)) {
+        const fileRecord = await this.filesService.getFiles(pathParam);
+        if (fileRecord && fileRecord.path) {
+          const actualName = fileRecord.path.split('/').pop();
+          if (actualName) targetPath = actualName;
+        }
+      }
+    } catch (e) {
+      // Ignore if not found in DB
+    }
+
+    response.sendFile(targetPath, { root: './files' }, (err) => {
+      if (err) {
+        response.status(404).send('File not found');
+      }
+    });
   }
 }

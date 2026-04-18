@@ -8,12 +8,17 @@ import {
   ParseIntPipe,
   HttpStatus,
   HttpCode,
+  Post,
+  Body,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse, successResponseList } from 'src/utils/responses';
+import { Roles } from 'src/utils/decorator';
 import { IDParamDto } from 'src/utils/id-param.dto';
 import { TransportationService } from './transportation.service';
+import { CreateTransportationDto } from './dto/create-transportation.dto';
+import { TransportationResource } from './resources/transportation.resources';
 
 @ApiBearerAuth()
 @ApiTags('Transportation')
@@ -23,6 +28,19 @@ import { TransportationService } from './transportation.service';
 })
 export class TransportationController {
   constructor(private readonly transportationService: TransportationService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(8)
+  @HttpCode(HttpStatus.OK)
+  async create(@Body() createDto: CreateTransportationDto) {
+    return successResponse(
+      TransportationResource(
+        await this.transportationService.create(createDto)
+      ),
+      'success',
+    );
+  }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)

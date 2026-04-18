@@ -46,9 +46,9 @@ export class CreateSPKDTO {
   })
   area_id: number;
 
-  @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'Jarak tidak boleh kosong' })
-  distance: number;
+  @ApiProperty({ example: '2026-04-09' })
+  @IsNotEmpty({ message: 'Periode Biaya tidak boleh kosong' })
+  distance: string;
 
   @ApiProperty({ example: 'Lorem ipsum' })
   @IsNotEmpty({ message: 'Work type tidak boleh kosong' })

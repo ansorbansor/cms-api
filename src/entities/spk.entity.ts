@@ -24,124 +24,124 @@ import { SPKSubCategory } from './spk-subcategory.entity';
 
 @Entity({ name: 'spk' })
 export class SPK extends EntityHelper {
-  @Column()
+  @Column({ nullable: true })
   spk_number?: string;
 
-  @Column()
+  @Column({ nullable: true })
   status?: number;
 
-  @Column()
+  @Column({ nullable: true })
   region_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   transportation_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   police_number?: string;
 
-  @Column()
+  @Column({ nullable: true })
   cash_advance?: number;
 
-  @Column()
+  @Column({ nullable: true })
   pay_to_user_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   site_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   area_id?: number;
 
-  @Column()
-  distance?: number;
+  @Column({ nullable: true })
+  distance?: string;
 
-  @Column()
+  @Column({ nullable: true })
   work_type?: string;
 
-  @Column()
+  @Column({ nullable: true })
   po_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   distance_to_site_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   remark_inhouse_team?: string;
 
-  @Column()
+  @Column({ nullable: true })
   km_range_start_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   km_range_end_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   km_back_to_office_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   total_range?: number;
 
-  @Column()
+  @Column({ nullable: true })
   check_in_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   check_out_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   transfer_proof_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   closing_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   operation_cost?: number;
 
-  @Column()
+  @Column({ nullable: true })
   delta_of_settlement?: number;
 
-  @Column()
+  @Column({ nullable: true })
   cashback?: number;
 
-  @Column()
+  @Column({ nullable: true })
   cashout?: number;
 
-  @Column()
+  @Column({ nullable: true })
   remark_admin?: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_verificator?: string;
 
-  @Column()
+  @Column({ nullable: true })
   created_by?: number;
 
-  @Column()
+  @Column({ nullable: true })
   approved_by?: number;
 
-  @Column()
+  @Column({ nullable: true })
   approved_over_budget_by?: number;
 
-  @Column()
+  @Column({ nullable: true })
   paid_by?: number;
 
-  @Column()
+  @Column({ nullable: true })
   closed_by?: number;
 
-  @Column()
+  @Column({ nullable: true })
   remark_pm?: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_rpm?: string;
 
-  @Column()
+  @Column({ nullable: true })
   category_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   subcategory_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   is_over_budget?: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   remark_superadmin?: string;
 
-  @Column()
+  @Column({ nullable: true })
   customer_id?: number;
 
   @OneToOne(() => Region)
@@ -240,10 +240,10 @@ export class SPK extends EntityHelper {
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 
-  @Column({ select: false, insert: false, readonly: true })
+  @Column({ select: false, insert: false, readonly: true, nullable: true })
   total_cash_advance: number;
 
-  @Column({ select: false, insert: false, readonly: true })
+  @Column({ select: false, insert: false, readonly: true, nullable: true })
   total_po_unit_price: number;
 
   @BeforeInsert()
@@ -253,7 +253,7 @@ export class SPK extends EntityHelper {
     )}-${new Date().valueOf()}`;
   }
 
-  @Column()
+  @Column({ nullable: true })
   paid_date: Date;
   paidDateParseDate: string;
 

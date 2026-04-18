@@ -64,6 +64,7 @@ export const getFileType = (mimes: string): number => {
   else if (mimes === 'application/rtf,') fileType = FileTypeEnum.document;
   else if (mimes === 'text/rtf,') fileType = FileTypeEnum.document;
   else if (mimes === 'text/plain,') fileType = FileTypeEnum.document;
+  else fileType = FileTypeEnum.document; // fallback: treat all unrecognized types as document
   return fileType;
 };
 

@@ -20,196 +20,200 @@ import { StatusAcceptance } from './status-acceptance.entity';
 import { PendingType } from './pending-type.entity';
 import { PD } from './pd.entity';
 import { PurchaseOrderInvoice } from './purchase-order-invoice.entity';
+import { WorkloadTicket } from './workload-ticket.entity';
 
 @Entity({ name: 'purchase_orders' })
 export class PurchaseOrder extends EntityHelper {
-  @Column()
+  @Column({ nullable: true })
   user_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   cc: string;
 
-  @Column()
+  @Column({ nullable: true })
   line_po_status: number;
 
-  @Column()
+  @Column({ nullable: true })
   line_po_number: string;
 
-  @Column()
+  @Column({ nullable: true })
   po_number: string;
 
-  @Column()
+  @Column({ nullable: true })
   shipment_number: string;
 
-  @Column()
+  @Column({ nullable: true })
   region_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   area_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   operator_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   customer_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   project_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   site_id: number;
 
-  @Column()
+  @Column({ nullable: true })
+  workload_ticket_id: number;
+
+  @Column({ nullable: true })
   status: string;
 
-  @Column()
+  @Column({ nullable: true })
   item_code: string;
 
-  @Column()
+  @Column({ nullable: true })
   item_description: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   unit_price: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   unit_price_1: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   unit_price_2: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   requested_qty: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   billed_qty: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   due_qty: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   line_amount: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   remaining_from_po: number;
 
-  @Column()
+  @Column({ nullable: true })
   unit: string;
 
-  @Column()
+  @Column({ nullable: true })
   payment_terms: string;
 
-  @Column()
+  @Column({ nullable: true })
   bidding_area_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   publish_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   start_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   end_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   priority_esar_approve: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_weekly: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_project_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   status_acceptance_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   pending_type_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   pending_approval_pd: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   amount_pending_approval_pd: number;
 
-  @Column()
+  @Column({ nullable: true })
   pd_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   actual_completion_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   ready_invoice: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   amount_ready_invoice: number;
 
-  @Column()
+  @Column({ nullable: true })
   remark_highlight: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   budget_percentage: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   total_acceptance: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   ny_invoice: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   ny_invoice_date?: Date;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   piutang: number;
 
-  @Column()
+  @Column({ nullable: true })
   priority_site_list: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   amount_priority: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   achievement_priority: number;
 
-  @Column()
+  @Column({ nullable: true })
   actual_work_date?: Date;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   actual_work_amount: number;
 
-  @Column()
+  @Column({ nullable: true })
   actual_work_status: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_ss: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_highlight_recon: string;
 
-  @Column()
+  @Column({ nullable: true })
   pic: number;
 
-  @Column()
+  @Column({ nullable: true })
   plan_date: Date;
 
-  @Column()
+  @Column({ nullable: true })
   start_progress?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   finish_progress?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   done_atp?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   start_progress_confirmed_by_rpm?: string;
 
-  @Column()
+  @Column({ nullable: true })
   finish_progress_confirmed_by_rpm?: string;
 
-  @Column()
+  @Column({ nullable: true })
   done_atp_confirmed_by_rpm?: string;
 
-  @Column()
+  @Column({ nullable: true })
   remark_rpm?: string;
 
   @ManyToOne(() => User, {
@@ -218,47 +222,47 @@ export class PurchaseOrder extends EntityHelper {
   @JoinColumn({ name: 'user_id' })
   user?: User;
 
-  @OneToOne(() => Region)
+  @ManyToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;
 
-  @OneToOne(() => Project)
+  @ManyToOne(() => Project)
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
-  @OneToOne(() => Area)
+  @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })
   area: Area;
 
-  @OneToOne(() => Operator)
+  @ManyToOne(() => Operator)
   @JoinColumn({ name: 'operator_id' })
   operator: Operator;
 
-  @OneToOne(() => Customer)
+  @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 
-  @OneToOne(() => Site)
+  @ManyToOne(() => Site)
   @JoinColumn({ name: 'site_id' })
   site: Site;
 
-  @OneToOne(() => BiddingArea)
+  @ManyToOne(() => BiddingArea)
   @JoinColumn({ name: 'bidding_area_id' })
   bidding_area: BiddingArea;
 
-  @OneToOne(() => RemarkProject)
+  @ManyToOne(() => RemarkProject)
   @JoinColumn({ name: 'remark_project_id' })
   remark_project: RemarkProject;
 
-  @OneToOne(() => StatusAcceptance)
+  @ManyToOne(() => StatusAcceptance)
   @JoinColumn({ name: 'status_acceptance_id' })
   status_acceptance: StatusAcceptance;
 
-  @OneToOne(() => PendingType)
+  @ManyToOne(() => PendingType)
   @JoinColumn({ name: 'pending_type_id' })
   pending_type: PendingType;
 
-  @OneToOne(() => PD)
+  @ManyToOne(() => PD)
   @JoinColumn({ name: 'pd_id' })
   pd: PD;
 
@@ -266,12 +270,16 @@ export class PurchaseOrder extends EntityHelper {
   @JoinColumn()
   po_invoice?: PurchaseOrderInvoice[];
 
+  @ManyToOne(() => WorkloadTicket, (wt) => wt.purchase_orders)
+  @JoinColumn({ name: 'workload_ticket_id' })
+  workload_ticket?: WorkloadTicket;
+
   @ManyToOne(() => User, {
     eager: true,
   })
   @JoinColumn({ name: 'pic' })
   pic_data?: User;
 
-  @Column({ select: false, insert: false, readonly: true })
+  @Column({ type: 'float', select: false, insert: false, readonly: true, nullable: true })
   total_cash_advance: number;
 }

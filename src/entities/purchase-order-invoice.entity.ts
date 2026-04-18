@@ -4,52 +4,52 @@ import { PurchaseOrder } from './purchase-order.entity';
 
 @Entity({ name: 'purchase_order_invoices' })
 export class PurchaseOrderInvoice extends EntityHelper {
-  @Column()
+  @Column({ nullable: true })
   user_id?: number;
 
-  @Column()
+  @Column({ nullable: true })
   invoice_number?: string;
 
-  @Column()
+  @Column({ nullable: true })
   invoice_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   invoice_status?: string;
 
-  @Column()
+  @Column({ nullable: true })
   payment_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   supplier_tax_number?: string;
 
-  @Column()
+  @Column({ nullable: true })
   supplier_tax_date?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   purchase_order_id?: string;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   payment_amount?: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   deduction_amount?: number;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   unit_price?: number;
 
-  @Column()
+  @Column({ nullable: true })
   submit_date?: Date;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   submit_amount?: number;
 
-  @Column()
+  @Column({ nullable: true })
   approve_date?: Date;
 
-  @Column()
+  @Column({ type: 'float', nullable: true })
   approve_amount?: number;
 
-  @Column()
+  @Column({ nullable: true })
   position?: number;
 
   @ManyToOne(() => PurchaseOrder, {})

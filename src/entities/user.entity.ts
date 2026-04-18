@@ -22,13 +22,13 @@ export class User extends EntityHelper {
   public generatePassword?: boolean;
 
   @Index()
-  @Column()
+  @Column({ nullable: true })
   name: string | null;
 
   @Column({ unique: true })
   nik: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   email: string | null;
 
   @Column()
@@ -37,14 +37,14 @@ export class User extends EntityHelper {
   @Column({ default: AuthProvidersEnum.email })
   provider: string;
 
-  @Column()
-  photo?: number;
+  @Column({ nullable: true })
+  photo?: number | null;
 
-  @Column({})
-  employee_position_id: number;
+  @Column({ nullable: true })
+  employee_position_id: number | null;
 
-  @Column({})
-  phone: string;
+  @Column({ nullable: true })
+  phone: string | null;
 
   @Column({ default: 1 })
   @Index()

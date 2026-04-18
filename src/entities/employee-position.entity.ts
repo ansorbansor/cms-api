@@ -8,7 +8,7 @@ import { Allow } from 'class-validator';
 @Entity({ name: 'employee_positions' })
 export class EmployeePosition extends EntityHelper {
   @Index()
-  @Column()
+  @Column({ nullable: true })
   name: string | null;
 
   @OneToMany(() => RoleAccess, (roleAccess) => roleAccess.employeePosition)
@@ -16,11 +16,11 @@ export class EmployeePosition extends EntityHelper {
   roleAccess?: RoleAccess[];
 
   @ApiProperty({ example: 'Admin' })
-  @Column()
+  @Column({ nullable: true })
   code?: string;
 
   @Allow()
-  @Column()
+  @Column({ nullable: true })
   @Transform(({ value }) => value === 1)
   grant_all_access?: boolean;
 }

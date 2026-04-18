@@ -6,6 +6,7 @@ import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { Transportation } from 'src/entities/transportation.entity';
 import { TransportationResource } from './resources/transportation.resources';
+import { CreateTransportationDto } from './dto/create-transportation.dto';
 
 @Injectable()
 export class TransportationService {
@@ -14,6 +15,11 @@ export class TransportationService {
     private transportationRepository: Repository<Transportation>,
     private activityLogService: ActivityLogService,
   ) {}
+
+  async create(createDto: CreateTransportationDto): Promise<Transportation> {
+    const data = this.transportationRepository.create(createDto);
+    return await this.transportationRepository.save(data);
+  }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {
     const data =

@@ -1,0 +1,168 @@
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
+import { successResponse } from 'src/utils/responses';
+import { WorkloadTicketsService } from './workload-tickets.service';
+
+@ApiBearerAuth()
+@ApiTags('Workload Tickets')
+@Controller({
+  path: 'workload-tickets',
+  version: '1',
+})
+export class WorkloadTicketsController {
+  constructor(private readonly ticketsService: WorkloadTicketsService) {}
+
+  @Post('create/:siteId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[] }, @Request() req) {
+    return successResponse(
+      await this.ticketsService.create(siteId, req.user.id, body.poIds),
+      'Workload ticket created successfully'
+    );
+  }
+
+  @Post(':id/purchase-orders')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }) {
+    await this.ticketsService.addPurchaseOrders(+id, body.poIds);
+    return successResponse(null, 'Purchase orders added successfully');
+  }
+
+  @Delete(':id/purchase-orders/:poId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async removePurchaseOrder(@Param('id') id: string, @Param('poId') poId: string) {
+    await this.ticketsService.removePurchaseOrder(+id, +poId);
+    return successResponse(null, 'Purchase order removed successfully');
+  }
+
+  @Get('unassigned-pos/:siteId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getUnassignedPos(@Param('siteId') siteId: string) {
+    return successResponse(
+      await this.ticketsService.getUnassignedPos(+siteId),
+      'Success'
+    );
+  }
+
+  @Get('my-tasks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMyTasks(@Request() req, @Query() query: any) {
+    const result = await this.ticketsService.getMyTasks(req.user.id, query);
+    return {
+      statusCode: 200,
+      message: 'Success',
+      data: result.data,
+      total: result.total,
+      page: Number(query.page || 1),
+      limit: Number(query.limit || 10)
+    };
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async findAll(@Query() query: any) {
+    const result = await this.ticketsService.findAll(query);
+    return {
+      statusCode: 200,
+      message: 'Workload Tickets retrieved successfully',
+      data: result.data,
+      total: result.total,
+      page: Number(query.page || 1),
+      limit: Number(query.limit || 10)
+    };
+  }
+
+  @Get('tasks/unique-names')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getUniqueTaskNames() {
+    return successResponse(
+      await this.ticketsService.getUniqueTaskNames(),
+      'Success'
+    );
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async findOne(@Param('id') id: string) {
+    return successResponse(
+      await this.ticketsService.findOne(+id),
+      'Success'
+    );
+  }
+
+  @Post(':id/milestones')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addMilestone(@Param('id') ticketId: string, @Body() body: { name: string }) {
+    return successResponse(
+      await this.ticketsService.addMilestone(+ticketId, body.name),
+      'Milestone added successfully'
+    );
+  }
+
+  @Patch(':id/milestones/reorder')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async reorderMilestones(@Param('id') ticketId: string, @Body() body: { orderIds: number[] }) {
+    return successResponse(
+      await this.ticketsService.reorderMilestones(+ticketId, body.orderIds),
+      'Milestones reordered successfully'
+    );
+  }
+
+  @Patch('milestones/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async editMilestone(@Param('id') id: string, @Body() body: { name: string }) {
+    return successResponse(
+      await this.ticketsService.editMilestone(+id, body.name),
+      'Milestone updated successfully'
+    );
+  }
+
+  @Delete('milestones/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async deleteMilestone(@Param('id') id: string) {
+    await this.ticketsService.deleteMilestone(+id);
+    return successResponse(null, 'Milestone deleted successfully');
+  }
+
+  @Post('milestones/:milestoneId/tasks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addTask(@Param('milestoneId') milestoneId: string, @Body() body: any) {
+    return successResponse(
+      await this.ticketsService.addTask(+milestoneId, body),
+      'Task added successfully'
+    );
+  }
+
+  @Delete('tasks/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async deleteTask(@Param('id') id: string) {
+    await this.ticketsService.deleteTask(+id);
+    return successResponse(null, 'Task deleted successfully');
+  }
+
+  @Patch('tasks/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async updateTaskStatus(@Param('id') taskId: string, @Body() body: any) {
+    return successResponse(
+      await this.ticketsService.updateTaskStatus(+taskId, body),
+      'Task status updated successfully'
+    );
+  }
+
+  @Post('tasks/:id/attachments')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addTaskAttachment(@Param('id') taskId: string, @Body() body: { fileId: number }) {
+    return successResponse(
+      await this.ticketsService.addTaskAttachment(+taskId, body.fileId),
+      'Attachment added successfully'
+    );
+  }
+
+  @Delete('tasks/:taskId/attachments/:attachmentId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async removeTaskAttachment(@Param('taskId') taskId: string, @Param('attachmentId') attachmentId: string) {
+    await this.ticketsService.removeTaskAttachment(+taskId, +attachmentId);
+    return successResponse(null, 'Attachment removed successfully');
+  }
+}

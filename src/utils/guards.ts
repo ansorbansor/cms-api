@@ -29,20 +29,17 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     const userRolesData = await getManager().query(`
-      SELECT r.id, r.grant_all_access, ra.menu_access, m.name
+      SELECT r.id, r.name as role_name, r.grant_all_access, ra.menu_access, m.name
       FROM users ur 
       LEFT JOIN employee_positions r 
-      ON ur.employee_position_id = r.id
+        ON ur.employee_position_id = r.id AND r.deleted_at IS NULL
       LEFT JOIN role_access ra 
-      ON ra.employee_position_id = ur.employee_position_id
+        ON ra.employee_position_id = ur.employee_position_id AND ra.deleted_at IS NULL
       LEFT JOIN menus m
-      ON ra.menu_id = m.id
+        ON ra.menu_id = m.id AND m.deleted_at IS NULL
       WHERE
       ur.id = ${request.user.id}
-      AND r.deleted_at IS NULL
-      AND ra.deleted_at IS NULL
       AND ur.deleted_at IS NULL
-      AND m.deleted_at IS NULL
     `);
 
     const canAccess = function (data) {
@@ -68,8 +65,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // Bypass for Admin Payment (ID 61) and SS (ID 8)
-    if (userRolesData.some((b) => b.id === 61 || b.id === 8)) {
+    // Bypass for Admin Payment (ID 61), SS (ID 8), and RPM
+    if (userRolesData.some((b) => b.id === 61 || b.id === 8 || (b.role_name && b.role_name.toLowerCase() === 'rpm'))) {
       return true;
     }
 

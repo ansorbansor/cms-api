@@ -46,6 +46,8 @@ import { SPKOperationalRequestTypeModule } from './modules/spk-operational-reque
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { TelegramNotificationModule } from './modules/telegram-notification/telegram-notification.module';
 import { TakeDataModule } from './modules/take-data/take-data.module';
+import { WorkloadTicketsModule } from './modules/workload-tickets/workload-tickets.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 
 
 @Module({
@@ -110,7 +112,8 @@ import { TakeDataModule } from './modules/take-data/take-data.module';
     InventoryModule,
     TelegramNotificationModule,
     TakeDataModule,
-
+    WorkloadTicketsModule,
+    WhatsappModule,
   ],
   providers: [
     {

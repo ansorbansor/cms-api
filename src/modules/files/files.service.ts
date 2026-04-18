@@ -49,31 +49,17 @@ export class FilesService {
       );
     }
 
-    if (
-      !(
-        file.mimetype.includes('jpeg') ||
-        file.mimetype.includes('png') ||
-        file.mimetype.includes('image/*')
-      )
-    ) {
-      throw new HttpException(
-        'File type not supported',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     const savedFile = await this.fileRepository.save(
       this.fileRepository.create({
-        name: file.filename,
-        path: file.path,
+        name: file.originalname,
+        path: `/api/v1/files/${file.filename}`,
         file_type: getFileType(file.mimetype),
         extension: getFileExtension(file.originalname),
         description: description,
         user_id: userId,
       }),
     );
-
-    console.log('Saved file entity:', savedFile);  // <-- Added logging here
 
     return savedFile;
   }

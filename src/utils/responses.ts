@@ -11,14 +11,14 @@ export const successResponse = <T>(data: T, message: string) => {
   };
 };
 
-export const failedResponse = (status: number, message: string) => {
+export const failedResponse = (status: number, message: string, data?: any) => {
   return new HttpException(
     {
       meta: {
         code: status,
         message: message,
       },
-      data: null,
+      data: data || null,
     },
     status,
   );

@@ -125,6 +125,18 @@ export class TakeDataController {
         return successResponse(result, 'Assignment deleted successfully');
     }
 
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Post('assignments/:id/review')
+    async reviewAssignment(
+        @Param('id') id: number,
+        @Body() reviewDto: import('./dto/review-assignment.dto').ReviewAssignmentDto,
+        @Request() request
+    ) {
+        const result = await this.takeDataService.reviewAssignment(id, reviewDto, request.user.id);
+        return successResponse(result, 'Assignment reviewed successfully');
+    }
+
     // Android
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))

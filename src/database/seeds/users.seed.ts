@@ -5,13 +5,14 @@ import { EmployeePosition } from 'src/entities/employee-position.entity';
 
 export default class CreateAdmin implements Seeder {
   public async run(factory: Factory, connection: Connection): Promise<void> {
-    const countUser = await connection
+    const adminExists = await connection
       .createQueryBuilder()
       .select()
       .from(User, 'User')
+      .where('User.email = :email', { email: 'john.tor@example.com' })
       .getCount();
 
-    if (countUser === 0) {
+    if (adminExists === 0) {
       const queryRunner = connection.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
@@ -37,7 +38,7 @@ export default class CreateAdmin implements Seeder {
 
       const user = new User();
 
-      user.nik = '1';
+      user.nik = '0000000000000000';
       user.name = 'John Tor';
       user.email = 'john.tor@example.com';
       user.password = 'Password9';

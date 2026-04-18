@@ -5,7 +5,7 @@ import { IsNotExist } from 'src/utils/validators';
 
 export class AuthUpdateDto {
   @ApiProperty({ example: 'john.tor@example.com' })
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @Transform(({ value }) => (typeof value === 'string' ? value.toLowerCase().trim() : null))
   @IsOptional()
   @IsEmail({}, { message: 'Format email salah' })
   @Validate(IsNotExist, ['User'], {

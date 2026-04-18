@@ -310,9 +310,10 @@ export class SPKController {
     @Param() param: IDParamDto,
     @Request() req,
     @Query('remark') remark: string,
+    @Query('workload_ticket_id') workload_ticket_id?: number,
   ) {
     return successResponse(
-      await this.spkService.approve(param.id, req.user, remark),
+      await this.spkService.approve(param.id, req.user, remark, workload_ticket_id),
       'success',
     );
   }
@@ -356,9 +357,9 @@ export class SPKController {
     MenuPermission.SPK_APPROVE,
     MenuPermission.SPK_OVER_BUDGET
   ) // <-- Correct: The closing parenthesis comes after all permissions
-  async approveMany(@Request() req, @Body() body: { ids: number[] }) {
+  async approveMany(@Request() req, @Body() body: { ids: number[], workload_ticket_id?: number }) {
     return successResponse(
-      await this.spkService.approveMany(body.ids, req.user, req.ip),
+      await this.spkService.approveMany(body.ids, req.user, req.ip, body.workload_ticket_id),
       'success',
     );
   }

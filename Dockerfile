@@ -6,7 +6,7 @@ ENV NODE_OPTIONS=--max_old_space_size=10240
 RUN npm i -g @nestjs/cli typescript ts-node
 
 COPY package*.json /tmp/app/
-RUN cd /tmp/app && npm install
+RUN cd /tmp/app && npm install --legacy-peer-deps
 
 COPY . /usr/src/app
 RUN cp -a /tmp/app/node_modules /usr/src/app

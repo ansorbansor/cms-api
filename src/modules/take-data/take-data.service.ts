@@ -293,7 +293,7 @@ export class TakeDataService {
     private async updateAssignmentProgress(assignmentId: number) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id: assignmentId },
-            relations: ['template', 'template.items', 'submissions'],
+            relations: ['template', 'template.items'],
         });
 
         if (!assignment || !assignment.template || !assignment.template.items) return;
@@ -301,11 +301,23 @@ export class TakeDataService {
         const totalItems = assignment.template.items.length;
         if (totalItems === 0) return;
 
+        const submissionCounts = await this.submissionRepository
+            .createQueryBuilder('submission')
+            .select('submission.template_item_id', 'itemId')
+            .addSelect('COUNT(submission.id)', 'count')
+            .where('submission.assignment_id = :assignmentId', { assignmentId })
+            .groupBy('submission.template_item_id')
+            .getRawMany();
+
+        const countMap = new Map();
+        submissionCounts.forEach(sc => {
+            countMap.set(sc.itemId, Number(sc.count));
+        });
+
         let completedItems = 0;
 
         for (const item of assignment.template.items) {
-            const submissionCount = assignment.submissions?.filter(s => s.template_item_id === item.id).length || 0;
-            // Use 1 as minimum photos if item.min_photos is perfectly falsy or 0 to be safe
+            const submissionCount = countMap.get(item.id) || 0;
             const minPhotos = item.min_photos && item.min_photos > 0 ? item.min_photos : 1;
             
             if (submissionCount >= minPhotos) {

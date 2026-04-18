@@ -12,6 +12,8 @@ import {
     Res,
     Put,
     Delete,
+    HttpException,
+    HttpStatus
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';

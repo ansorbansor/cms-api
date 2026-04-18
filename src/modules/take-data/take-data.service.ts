@@ -296,24 +296,19 @@ export class TakeDataService {
             relations: ['template', 'template.items', 'submissions'],
         });
 
-        if (!assignment) return;
+        if (!assignment || !assignment.template || !assignment.template.items) return;
 
         const totalItems = assignment.template.items.length;
-        // Count unique items submitted. 
-        // Logic: Each item needs min_photos? 
-        // Plan says "each foto will give a name by admin". Usually 1 photo per item unless specified.
-        // Plan also says "each colomn minimum to take data is 3 photo". Wait.
-        // "each colomn minimum to take data is 3 photo" means one TemplateItem requires 3 photos?
-        // My entity `TakeDataTemplateItem` has `min_photos`.
-
-        // Let's implement robust progress calculation.
-        // For each item, check if submission count >= min_photos.
+        if (totalItems === 0) return;
 
         let completedItems = 0;
 
         for (const item of assignment.template.items) {
-            const submissionCount = assignment.submissions.filter(s => s.template_item_id === item.id).length;
-            if (submissionCount >= item.min_photos) {
+            const submissionCount = assignment.submissions?.filter(s => s.template_item_id === item.id).length || 0;
+            // Use 1 as minimum photos if item.min_photos is perfectly falsy or 0 to be safe
+            const minPhotos = item.min_photos && item.min_photos > 0 ? item.min_photos : 1;
+            
+            if (submissionCount >= minPhotos) {
                 completedItems++;
             }
         }

@@ -155,9 +155,29 @@ export class TakeDataController {
     @Post('submit')
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('photo'))
-    async submitData(@Body() submitDto: SubmitTakeDataDto, @UploadedFile() file, @Request() request) {
-        const result = await this.takeDataService.submitData(submitDto, file, request.user.id);
-        return successResponse(result, 'Data submitted successfully');
+    async submitData(
+        @Body() submitDto: SubmitTakeDataDto, 
+        @Body('latitude') latitude: string, 
+        @Body('longitude') longitude: string, 
+        @UploadedFile() file, 
+        @Request() request
+    ) {
+        try {
+            if (latitude && longitude && !submitDto.coordinate) {
+                submitDto.coordinate = `${latitude},${longitude}`;
+            }
+            if (!submitDto.timestamp) {
+                submitDto.timestamp = new Date();
+            }
+            const result = await this.takeDataService.submitData(submitDto, file, request.user.id);
+            return successResponse(result, 'Data submitted successfully');
+        } catch (e) {
+            console.error('SubmitTakeData Error:', e);
+            throw new HttpException(
+                e.message || 'Internal server error while submitting data', 
+                e.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @ApiBearerAuth()

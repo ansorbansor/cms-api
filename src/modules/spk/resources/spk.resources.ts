@@ -155,7 +155,7 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
         : null,
     },
     distance_to_site_photo: spk.distance_to_site_file
-      ? minioConfig().fullUrl + spk.distance_to_site_file.path
+      ? (String(spk.distance_to_site_file.path).startsWith("http") ? spk.distance_to_site_file.path : minioConfig().fullUrl + spk.distance_to_site_file.path)
       : null,
     inhouse_team: spk.inhouse_team
       ? spk.inhouse_team.map((inhouseTeam) => {
@@ -186,19 +186,19 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
       : null,
     total_range: spk.total_range ? spk.total_range : 0,
     km_range_start_photo: spk.km_range_start_file
-      ? minioConfig().fullUrl + spk.km_range_start_file.path
+      ? (String(spk.km_range_start_file.path).startsWith("http") ? spk.km_range_start_file.path : minioConfig().fullUrl + spk.km_range_start_file.path)
       : null,
     km_range_end_photo: spk.km_range_end_file
-      ? minioConfig().fullUrl + spk.km_range_end_file.path
+      ? (String(spk.km_range_end_file.path).startsWith("http") ? spk.km_range_end_file.path : minioConfig().fullUrl + spk.km_range_end_file.path)
       : null,
     km_back_to_office_photo: spk.km_back_to_office_file
-      ? minioConfig().fullUrl + spk.km_back_to_office_file.path
+      ? (String(spk.km_back_to_office_file.path).startsWith("http") ? spk.km_back_to_office_file.path : minioConfig().fullUrl + spk.km_back_to_office_file.path)
       : null,
     check_in_photo: spk.check_in_file
-      ? minioConfig().fullUrl + spk.check_in_file.path
+      ? (String(spk.check_in_file.path).startsWith("http") ? spk.check_in_file.path : minioConfig().fullUrl + spk.check_in_file.path)
       : null,
     check_out_photo: spk.check_out_file
-      ? minioConfig().fullUrl + spk.check_out_file.path
+      ? (String(spk.check_out_file.path).startsWith("http") ? spk.check_out_file.path : minioConfig().fullUrl + spk.check_out_file.path)
       : null,
     closing_date: spk.closing_date
       ? moment(spk.closing_date).format('YYYY-MM-DD HH:mm:ss')
@@ -218,8 +218,7 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
           cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
           photo:
             costEvidence && costEvidence.cost_evidence_photo_file
-              ? minioConfig().fullUrl +
-              costEvidence.cost_evidence_photo_file.path
+              ? (String(costEvidence.cost_evidence_photo_file.path).startsWith("http") ? costEvidence.cost_evidence_photo_file.path : minioConfig().fullUrl + costEvidence.cost_evidence_photo_file.path)
               : null,
         };
       })
@@ -233,7 +232,7 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
     paid_date: spk.paidDateParseDate,
     closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     transfer_proof_photo: spk.transfer_proof_file
-      ? minioConfig().fullUrl + spk.transfer_proof_file.path
+      ? (String(spk.transfer_proof_file.path).startsWith("http") ? spk.transfer_proof_file.path : minioConfig().fullUrl + spk.transfer_proof_file.path)
       : null,
     remark_pm: spk.remark_pm ? spk.remark_pm : '-',
     remark_rpm: spk.remark_rpm ? spk.remark_rpm : '-',

@@ -12,7 +12,7 @@ export const ExportAbsenceResource = (absence: Absence): any => {
         ? `${absence.clock_in_latitude}, ${absence.clock_in_longitude}`
         : '-',
     'Clock In Photo': absence.clock_in_photo_file
-      ? minioConfig().fullUrl + absence.clock_in_photo_file.path
+      ? (String(absence.clock_in_photo_file.path).startsWith("http") ? absence.clock_in_photo_file.path : minioConfig().fullUrl + absence.clock_in_photo_file.path)
       : null,
     'Clock Out': absence.clockOutParseDate ? absence.clockOutParseDate : '-',
     'Clock Out Location':
@@ -20,7 +20,7 @@ export const ExportAbsenceResource = (absence: Absence): any => {
         ? `${absence.clock_out_latitude}, ${absence.clock_out_longitude}`
         : '-',
     'Clock Out Photo': absence.clock_out_photo_file
-      ? minioConfig().fullUrl + absence.clock_out_photo_file.path
+      ? (String(absence.clock_out_photo_file.path).startsWith("http") ? absence.clock_out_photo_file.path : minioConfig().fullUrl + absence.clock_out_photo_file.path)
       : null,
     // Added the new fields for the export
     'Activity Plan': absence.activity_plan ? absence.activity_plan : '-',

@@ -6,7 +6,7 @@ import { FileEntity } from "src/entities/file.entity";
 export const FileResource = (file: FileEntity): any => {
   return {
     name: file && file.name ? file.name : null,
-    path: file && file.path ? minioConfig().fullUrl + file.path : null,
+    path: file && file.path ? (String(file.path).startsWith("http") ? file.path : minioConfig().fullUrl + file.path) : null,
     description: file && file.description ? file.description : null,
   };
 };

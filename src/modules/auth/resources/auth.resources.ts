@@ -28,7 +28,7 @@ export const AuthResource = (token: string, user: User): any => {
       email: user.email,
       photo:
         user.photoFile && user.photoFile.path
-          ? minioConfig().fullUrl + user.photoFile.path
+          ? (String(user.photoFile.path).startsWith("http") ? user.photoFile.path : minioConfig().fullUrl + user.photoFile.path)
           : null,
       provider: user.provider,
       status: user.status,

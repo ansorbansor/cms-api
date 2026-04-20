@@ -171,8 +171,7 @@ export const SPKOperationalResourceDetail = (
           cost: costEvidence && costEvidence.cost ? costEvidence.cost : null,
           photo:
             costEvidence && costEvidence.cost_evidence_photo_file
-              ? minioConfig().fullUrl +
-              costEvidence.cost_evidence_photo_file.path
+              ? (String(costEvidence.cost_evidence_photo_file.path).startsWith("http") ? costEvidence.cost_evidence_photo_file.path : minioConfig().fullUrl + costEvidence.cost_evidence_photo_file.path)
               : null,
         };
       })
@@ -186,7 +185,7 @@ export const SPKOperationalResourceDetail = (
     paid_date: spk.paidDateParseDate,
     closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     transfer_proof_photo: spk.transfer_proof_file
-      ? minioConfig().fullUrl + spk.transfer_proof_file.path
+      ? (String(spk.transfer_proof_file.path).startsWith("http") ? spk.transfer_proof_file.path : minioConfig().fullUrl + spk.transfer_proof_file.path)
       : null,
     remark_pm: spk.remark_pm ? spk.remark_pm : '-',
     remark_rpm: spk.remark_rpm ? spk.remark_rpm : '-',

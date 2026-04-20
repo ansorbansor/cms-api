@@ -31,10 +31,10 @@ export const AbsenceResourceDetail = (absence: Absence): any => {
     clock_in: absence.clockInParseDate ? absence.clockInParseDate : '-',
     clock_out: absence.clockOutParseDate ? absence.clockOutParseDate : '-',
     clock_in_photo: absence.clock_in_photo_file
-      ? minioConfig().fullUrl + absence.clock_in_photo_file.path
+      ? (String(absence.clock_in_photo_file.path).startsWith("http") ? absence.clock_in_photo_file.path : minioConfig().fullUrl + absence.clock_in_photo_file.path)
       : null,
     clock_out_photo: absence.clock_out_photo_file
-      ? minioConfig().fullUrl + absence.clock_out_photo_file.path
+      ? (String(absence.clock_out_photo_file.path).startsWith("http") ? absence.clock_out_photo_file.path : minioConfig().fullUrl + absence.clock_out_photo_file.path)
       : null,
     clock_in_latitude: absence.clock_in_latitude ? absence.clock_in_latitude : '-',
     clock_in_longitude: absence.clock_in_longitude ? absence.clock_in_longitude : '-',

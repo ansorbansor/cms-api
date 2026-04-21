@@ -23,6 +23,7 @@ import { SPKCategoryResource } from './resources/spk-category.resources';
 import { log } from 'console';
 import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
 import { SPKSubCategoryResource } from './resources/spk-subcategory.resources';
+import { getFlag } from 'src/utils/feature-flags.util';
 
 @Injectable()
 export class SPKService {
@@ -1340,7 +1341,8 @@ export class SPKService {
       );
     }
 
-    if (existingSPK.po) {
+    const requireWorkloadTicket = getFlag('require_workload_ticket');
+    if (existingSPK.po && requireWorkloadTicket) {
       if (!existingSPK.po.workload_ticket_id && !workload_ticket_id) {
         throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for this PO`);
       }
@@ -1447,8 +1449,9 @@ export class SPKService {
       throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
     }
 
+    const requireWorkloadTicket = getFlag('require_workload_ticket');
     for (const item of itemsToApprove) {
-      if (item.po) {
+      if (item.po && requireWorkloadTicket) {
         if (!item.po.workload_ticket_id && !workload_ticket_id) {
            throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for SPK ${item.spk_number}`, {
              requireWorkloadTicket: true,

@@ -48,6 +48,7 @@ import { TelegramNotificationModule } from './modules/telegram-notification/tele
 import { TakeDataModule } from './modules/take-data/take-data.module';
 import { WorkloadTicketsModule } from './modules/workload-tickets/workload-tickets.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
+import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 
 
 @Module({
@@ -114,6 +115,7 @@ import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
     TakeDataModule,
     WorkloadTicketsModule,
     WhatsappModule,
+    FeatureFlagsModule,
   ],
   providers: [
     {

@@ -13,20 +13,25 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.logger.log('Initializing WhatsApp Client...');
+    const puppeteerArgs = [
+      '--no-sandbox', 
+      '--disable-setuid-sandbox', 
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote'
+    ];
+
+    if (process.env.NODE_ENV !== 'local') {
+      puppeteerArgs.push('--single-process');
+      puppeteerArgs.push('--disable-gpu');
+    }
+
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
         headless: true,
-        args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox', 
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
-        ],
+        args: puppeteerArgs,
         dumpio: true,
       }
     });

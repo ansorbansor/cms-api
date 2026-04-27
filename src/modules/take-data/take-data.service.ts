@@ -303,11 +303,16 @@ export class TakeDataService {
             const submissions = assignment.submissions.filter(s => s.template_item_id === item.id);
 
             for (const sub of submissions) {
-                if (sub.photo && sub.photo.name) {
+                if (sub.photo && sub.photo.path) {
+                    // Get the physical file name from path, e.g. /api/v1/files/UUID_filename.jpg
+                    const physicalName = sub.photo.path.split('/').pop();
+                    if (!physicalName) continue;
+
                     // Assuming files are stored in ./files relative to cwd
-                    const filePath = path.join(process.cwd(), 'files', sub.photo.name);
+                    const filePath = path.join(process.cwd(), 'files', physicalName);
                     if (fs.existsSync(filePath)) {
-                        archive.file(filePath, { name: `${folderName}/${sub.photo.name}` });
+                        const displayName = sub.photo.name || physicalName;
+                        archive.file(filePath, { name: `${folderName}/${displayName}` });
                     }
                 }
             }

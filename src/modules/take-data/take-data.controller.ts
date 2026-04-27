@@ -4,6 +4,7 @@ import {
     Get,
     Param,
     Post,
+    Patch,
     Query,
     UploadedFile,
     UseGuards,
@@ -94,6 +95,18 @@ export class TakeDataController {
     ) {
         const result = await this.takeDataService.updateItem(id, updateItemDto, file, request.user.id);
         return successResponse(result, 'Item updated successfully');
+    }
+
+    // Assignments
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Patch('templates/:id/reorder')
+    async reorderItems(
+        @Param('id') id: number,
+        @Body() body: { item_ids: number[] }
+    ) {
+        const result = await this.takeDataService.reorderItems(id, body.item_ids);
+        return successResponse(result, 'Items reordered successfully');
     }
 
     // Assignments

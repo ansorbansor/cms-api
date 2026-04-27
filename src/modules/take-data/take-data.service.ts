@@ -45,17 +45,26 @@ export class TakeDataService {
     }
 
     async findAllTemplates() {
-        return this.templateRepository.find({
+        const templates = await this.templateRepository.find({
             relations: ['items', 'items.sample_photo'],
             order: { created_at: 'DESC' },
         });
+        // Sort items by order ASC
+        templates.forEach(t => {
+            if (t.items) t.items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        });
+        return templates;
     }
 
     async findTemplateById(id: number) {
-        return this.templateRepository.findOne({
+        const template = await this.templateRepository.findOne({
             where: { id },
             relations: ['items', 'items.sample_photo'],
         });
+        if (template?.items) {
+            template.items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        }
+        return template;
     }
 
     async addItemToTemplate(createItemDto: CreateTakeDataTemplateItemDto, file: any, userId: number) {
@@ -75,9 +84,13 @@ export class TakeDataService {
             samplePhotoId = photoEntity.id;
         }
 
+        // Auto-assign order to the end
+        const existingCount = await this.templateItemRepository.count({ where: { template_id: createItemDto.template_id } });
+
         const item = this.templateItemRepository.create({
             ...createItemDto,
-            sample_photo_id: samplePhotoId ? samplePhotoId : createItemDto.sample_photo_id
+            sample_photo_id: samplePhotoId ? samplePhotoId : createItemDto.sample_photo_id,
+            order: existingCount,
         });
         return this.templateItemRepository.save(item);
     }
@@ -113,6 +126,21 @@ export class TakeDataService {
         return this.templateItemRepository.save(item);
     }
 
+    // Reorder items
+    async reorderItems(templateId: number, itemIds: number[]) {
+        const template = await this.templateRepository.findOne({ where: { id: templateId } });
+        if (!template) {
+            throw new HttpException('Template not found', HttpStatus.NOT_FOUND);
+        }
+
+        const updates = itemIds.map((id, index) =>
+            this.templateItemRepository.update({ id, template_id: templateId }, { order: index })
+        );
+        await Promise.all(updates);
+
+        return { message: 'Items reordered successfully' };
+    }
+
     // Assignment
     async assignTemplateToSite(assignDto: AssignTemplateDto, userId: number) {
         // Removed the check that prevented assigning the same template multiple times
@@ -134,6 +162,12 @@ export class TakeDataService {
             order: { created_at: 'DESC' },
             skip,
             take: limit,
+        });
+        // Sort template items by order ASC
+        data.forEach(a => {
+            if (a.template?.items) {
+                a.template.items.sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
+            }
         });
         return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }

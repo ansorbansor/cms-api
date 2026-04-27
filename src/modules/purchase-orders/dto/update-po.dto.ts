@@ -60,6 +60,10 @@ export class UpdatePurchaseOrderDTO {
   @IsOptional()
   site_id: number;
 
+  @ApiProperty({ example: 'Site Name Baru' })
+  @IsOptional()
+  site_name?: string;
+
   @ApiProperty({ example: 1 })
   @IsOptional()
   status: string;

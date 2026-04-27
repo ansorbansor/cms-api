@@ -60,6 +60,16 @@ export class IsNotExist implements ValidatorConstraintInterface {
       where,
     )) as ValidationNotExistsEntity;
 
+    console.log('[DEBUG IsNotExist]', {
+      property: validationArguments.property,
+      value,
+      entityId: entity?.id,
+      currentValueId: currentValue?.id,
+      currentValueName: currentValue?.name,
+      currentValueCode: currentValue?.code,
+      currentValueCc: currentValue?.cc,
+    });
+
     if (
       ((currentValue.name || currentValue.code || currentValue.cc) &&
         currentValue.id &&
@@ -72,11 +82,14 @@ export class IsNotExist implements ValidatorConstraintInterface {
             entity?.cc.toLowerCase() === currentValue?.cc.toLowerCase()))) ||
       !entity
     ) {
+      console.log('[DEBUG IsNotExist] Returns true from first block');
       return true;
     } else if (entity?.id === currentValue?.id) {
+      console.log('[DEBUG IsNotExist] Returns true from else if');
       return true;
     }
 
+    console.log('[DEBUG IsNotExist] Returns false!');
     return false;
   }
 }

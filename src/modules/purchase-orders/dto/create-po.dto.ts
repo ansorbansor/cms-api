@@ -78,6 +78,10 @@ export class CreatePurchaseOrderDTO {
   @IsNotEmpty({ message: 'Status tidak boleh kosong' })
   status: string;
 
+  @ApiProperty({ example: 'Site Name Baru' })
+  @IsOptional()
+  site_name?: string;
+
   @ApiProperty({ example: 1 })
   @IsOptional()
   item_code: string;

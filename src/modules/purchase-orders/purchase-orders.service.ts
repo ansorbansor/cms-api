@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Brackets, Repository } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
+import { Site } from 'src/entities/site.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CreatePurchaseOrderDTO } from './dto/create-po.dto';
@@ -23,6 +24,8 @@ export class PurchaseOrderService {
     private purchaseOrdersRepository: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderInvoice)
     private purchaseOrderInvoiceRepository: Repository<PurchaseOrderInvoice>,
+    @InjectRepository(Site)
+    private siteRepository: Repository<Site>,
     private activityLogService: ActivityLogService,
   ) { }
 
@@ -45,10 +48,16 @@ export class PurchaseOrderService {
       createPurchaseOrderDTO['total_acceptance'] = totalAcceptance;
     }
 
+    const { site_name, ...createDataPO } = createPurchaseOrderDTO;
+
+    if (site_name && createDataPO.site_id) {
+      await this.siteRepository.update({ id: createDataPO.site_id }, { name: site_name });
+    }
+
     const po = await this.purchaseOrdersRepository.save(
       this.purchaseOrdersRepository.create({
         user_id: user_id,
-        ...createPurchaseOrderDTO,
+        ...createDataPO,
       }),
     );
 
@@ -241,8 +250,12 @@ export class PurchaseOrderService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { invoices, deleted_invoice_id, ...updatedDataPO } =
+    const { invoices, deleted_invoice_id, site_name, ...updatedDataPO } =
       updatePurchaseOrderDto;
+
+    if (site_name && updatedDataPO.site_id) {
+      await this.siteRepository.update({ id: updatedDataPO.site_id }, { name: site_name });
+    }
 
     // Logic for Auto-Fill on Finish Confirmation (RPM)
     if (updatedDataPO.finish_progress_confirmed_by_rpm === 'YES') {

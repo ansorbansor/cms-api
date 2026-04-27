@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -yq \
     libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 \
     libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
     fonts-liberation libnss3 lsb-release xdg-utils \
+    libgbm1 libxshmfence1 libdrm2 libwayland-client0 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm i -g @nestjs/cli typescript ts-node

@@ -162,6 +162,12 @@ export class PurchaseOrderService {
       }));
     }
 
+    if (paginationOptions.project_name) {
+      data.andWhere('LOWER(project.name) LIKE LOWER(:project_name)', {
+        project_name: `%${paginationOptions.project_name}%`,
+      });
+    }
+
     data.orderBy('po.created_at', 'DESC');
 
     const total = await data.getCount();

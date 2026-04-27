@@ -62,6 +62,7 @@ export class PurchaseOrderController {
     @Query('end_date') endDate: string,
     @Query('status') status: string,
     @Query('needs_confirmation') needsConfirmation: string,
+    @Query('project_name') projectName: string,
   ) {
     return successResponseList(
       await this.poService.findManyWithPagination({
@@ -73,6 +74,7 @@ export class PurchaseOrderController {
         end_date: endDate,
         status_string: status,
         needs_confirmation_bool: needsConfirmation === 'true',
+        project_name: projectName,
       }),
       'success',
     );

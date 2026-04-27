@@ -77,11 +77,12 @@ export class ExportService {
     customerId?: string,
     actualWorkStatus?: string,
     dateFilterBy?: string,
+    projectName?: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'PO';
-    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus, dateFilterBy });
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus, dateFilterBy, projectName });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -116,7 +117,8 @@ export class ExportService {
           payload.linePOStatus,
           payload.customerId,
           payload.actualWorkStatus,
-          payload.dateFilterBy
+          payload.dateFilterBy,
+          payload.projectName
         ) as string;
       }
 
@@ -193,6 +195,7 @@ export class ExportService {
     customerId?: string,
     actualWorkStatus?: string,
     dateFilterBy?: string,
+    projectName?: string,
   ) {
     const rows = [];
 
@@ -298,6 +301,12 @@ export class ExportService {
       const customerIds = customerId.toString().split(',').map(Number);
       query.andWhere('po.customer_id IN (:...customerIds)', {
         customerIds: customerIds,
+      });
+    }
+
+    if (projectName) {
+      query.andWhere('LOWER(project.name) LIKE LOWER(:projectName)', {
+        projectName: `%${projectName}%`,
       });
     }
 

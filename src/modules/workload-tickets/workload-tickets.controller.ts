@@ -73,6 +73,16 @@ export class WorkloadTicketsController {
     };
   }
 
+  @Get('kpi/employees')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getEmployeeKpi(@Query('from') from: string, @Query('to') to: string) {
+    const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const toDate = to ? new Date(to) : new Date();
+    toDate.setHours(23, 59, 59, 999);
+    const data = await this.ticketsService.getEmployeeKpi(fromDate, toDate);
+    return successResponse(data, 'KPI data retrieved successfully');
+  }
+
   @Get('tasks/unique-names')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getUniqueTaskNames() {
@@ -141,12 +151,30 @@ export class WorkloadTicketsController {
     return successResponse(null, 'Task deleted successfully');
   }
 
+  @Post('tasks/:id/predecessor')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async addPredecessorTask(@Param('id') taskId: string, @Body() body: any) {
+    return successResponse(
+      await this.ticketsService.addPredecessorTask(+taskId, body),
+      'Predecessor task injected successfully'
+    );
+  }
+
   @Patch('tasks/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async updateTaskStatus(@Param('id') taskId: string, @Body() body: any) {
     return successResponse(
       await this.ticketsService.updateTaskStatus(+taskId, body),
       'Task status updated successfully'
+    );
+  }
+
+  @Patch('tasks/:id/assignee')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async updateTaskAssignee(@Param('id') taskId: string, @Body() body: { assigned_to: number }) {
+    return successResponse(
+      await this.ticketsService.updateTaskAssignee(+taskId, body.assigned_to),
+      'Task PIC updated successfully'
     );
   }
 

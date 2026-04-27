@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
+import { WorkloadTicketsCronService } from './workload-tickets.cron.service';
 import { Milestone } from 'src/entities/milestone.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
@@ -14,6 +15,7 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
 @Module({
   imports: [TypeOrmModule.forFeature([WorkloadTicket, Milestone, WorkloadTask, PurchaseOrder, Site, WorkloadTaskAttachment, FileEntity]), WhatsappModule],
   controllers: [WorkloadTicketsController],
-  providers: [WorkloadTicketsService],
+  providers: [WorkloadTicketsService, WorkloadTicketsCronService],
+  exports: [WorkloadTicketsService],
 })
 export class WorkloadTicketsModule {}

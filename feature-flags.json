@@ -1,0 +1,6 @@
+{
+  "require_workload_ticket": true,
+  "enable_daily_reminder": true,
+  "daily_reminder_time": "13:12",
+  "show_workload_menu": true
+}

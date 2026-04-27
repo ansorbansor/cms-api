@@ -115,17 +115,8 @@ export class TakeDataService {
 
     // Assignment
     async assignTemplateToSite(assignDto: AssignTemplateDto, userId: number) {
-        // Check if already assigned
-        const existing = await this.assignmentRepository.findOne({
-            where: {
-                site_id: assignDto.site_id,
-                template_id: assignDto.template_id,
-            },
-        });
-
-        if (existing) {
-            throw new HttpException('Template already assigned to this site', HttpStatus.BAD_REQUEST);
-        }
+        // Removed the check that prevented assigning the same template multiple times
+        // to allow sites to have the same template assigned for different tasks/events.
 
         const assignment = this.assignmentRepository.create({
             ...assignDto,

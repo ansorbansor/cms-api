@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { I18nModule, HeaderResolver, I18nJsonParser } from 'nestjs-i18n';
 import * as path from 'path';
 import appConfig from './config/app.config';
@@ -49,6 +50,7 @@ import { TakeDataModule } from './modules/take-data/take-data.module';
 import { WorkloadTicketsModule } from './modules/workload-tickets/workload-tickets.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
+import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-presets.module';
 
 
 @Module({
@@ -58,6 +60,7 @@ import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module
       load: [appConfig, authConfig, databaseConfig, fileConfig, mailConfig],
       envFilePath: ['.env'],
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({}),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -116,6 +119,7 @@ import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module
     WorkloadTicketsModule,
     WhatsappModule,
     FeatureFlagsModule,
+    TaskNamePresetsModule,
   ],
   providers: [
     {

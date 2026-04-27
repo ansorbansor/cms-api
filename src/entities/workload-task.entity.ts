@@ -22,11 +22,17 @@ export class WorkloadTask extends EntityHelper {
   @Column({ nullable: true })
   status: string; // Pending, In Progress, Completed, Issue, No Need
 
+  @Column({ type: 'timestamp', nullable: true })
+  in_progress_at: Date;
+
   @Column({ nullable: true })
   evidence_file_id: number;
 
   @Column({ nullable: true })
   watermark_notes: string;
+
+  @Column({ type: 'json', nullable: true })
+  pic_history: any;
 
   @Column({ nullable: true })
   task_order_index: number;

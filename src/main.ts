@@ -59,18 +59,10 @@ async function bootstrap() {
     // Listen on all interfaces so Android devices on the same LAN can connect
     await app.listen(configService.get('app.port'), '0.0.0.0');
   } else {
-    if (cluster.isPrimary) {
-      console.log(`Master ${process.pid} is running`);
-      for (let i = 0; i < numCPUs; i++) {
-        cluster.fork();
-      }
-      cluster.on('exit', (worker) => {
-        console.log(`worker ${worker.process.pid} died`);
-      });
-    } else {
-      await app.listen(configService.get('app.port'));
-      console.log(`Worker ${process.pid} started`);
-    }
+    // Disable cluster mode to prevent multiple Puppeteer/WhatsApp instances 
+    // from crashing due to conflicting access to the same .wwebjs_auth directory.
+    await app.listen(configService.get('app.port'), '0.0.0.0');
+    console.log(`Server started on port ${configService.get('app.port')}`);
   }
 }
 

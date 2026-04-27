@@ -243,6 +243,41 @@ export class TakeDataService {
         return submission;
     }
 
+    async deleteSubmission(submissionId: number, reqUser: any) {
+        const submission = await this.submissionRepository.findOne({
+            where: { id: submissionId },
+            relations: ['assignment'],
+        });
+
+        if (!submission) {
+            throw new HttpException('Submission not found', HttpStatus.NOT_FOUND);
+        }
+
+        // Load the assignment to check review status
+        const assignment = await this.assignmentRepository.findOne({
+            where: { id: submission.assignment_id },
+        });
+
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        // Block deletion if the assignment has already passed review
+        if (assignment.review_status === 'Passed') {
+            throw new HttpException(
+                'Cannot delete a submission whose assignment has already Passed review.',
+                HttpStatus.FORBIDDEN,
+            );
+        }
+
+        await this.submissionRepository.remove(submission);
+
+        // Recalculate progress after deletion
+        await this.updateAssignmentProgress(assignment.id);
+
+        return { message: 'Submission deleted', submissionId };
+    }
+
     async downloadAssignmentPhotos(assignmentId: number, res: any) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id: assignmentId },

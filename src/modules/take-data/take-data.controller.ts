@@ -194,4 +194,20 @@ export class TakeDataController {
     async generateDocument(@Body() generateDto: GenerateDocumentDto, @UploadedFile() file, @Res() res) {
         return this.takeDataService.generateDocument(generateDto, file, res);
     }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Delete('submission/:id')
+    async deleteSubmission(@Param('id') id: number, @Request() request) {
+        try {
+            const result = await this.takeDataService.deleteSubmission(id, request.user);
+            return successResponse(result, 'Submission deleted successfully');
+        } catch (e) {
+            throw new HttpException(
+                e.message || 'Failed to delete submission',
+                e.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
+

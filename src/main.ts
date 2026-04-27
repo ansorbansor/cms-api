@@ -56,7 +56,8 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   if (process.env.NODE_ENV == 'local') {
-    await app.listen(configService.get('app.port'));
+    // Listen on all interfaces so Android devices on the same LAN can connect
+    await app.listen(configService.get('app.port'), '0.0.0.0');
   } else {
     if (cluster.isPrimary) {
       console.log(`Master ${process.pid} is running`);

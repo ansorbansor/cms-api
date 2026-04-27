@@ -128,3 +128,6 @@ uploads
 .DS_Storesrc/utils/google-firebase.json
 
 ormconfig.json
+
+.wwebjs_auth/
+.wwebjs_cache/

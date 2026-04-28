@@ -124,8 +124,9 @@ export class TakeDataController {
     async getAssignments(
         @Query('page') page = 1,
         @Query('limit') limit = 10,
+        @Query('search') search?: string,
     ) {
-        const result = await this.takeDataService.getAssignments(Number(page), Number(limit));
+        const result = await this.takeDataService.getAssignments(Number(page), Number(limit), search);
         return successResponse(result, 'Assignments retrieved successfully');
     }
 

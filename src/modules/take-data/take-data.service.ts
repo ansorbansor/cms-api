@@ -155,14 +155,31 @@ export class TakeDataService {
         return this.assignmentRepository.save(assignment);
     }
 
-    async getAssignments(page = 1, limit = 10) {
+    async getAssignments(page = 1, limit = 10, search?: string) {
         const skip = (page - 1) * limit;
-        const [data, total] = await this.assignmentRepository.findAndCount({
-            relations: ['site', 'template', 'template.items', 'template.items.sample_photo', 'submissions', 'submissions.photo', 'reviewer'],
-            order: { created_at: 'DESC' },
-            skip,
-            take: limit,
-        });
+
+        const qb = this.assignmentRepository.createQueryBuilder('a')
+            .leftJoinAndSelect('a.site', 'site')
+            .leftJoinAndSelect('a.template', 'template')
+            .leftJoinAndSelect('template.items', 'items')
+            .leftJoinAndSelect('items.sample_photo', 'sample_photo')
+            .leftJoinAndSelect('a.submissions', 'submissions')
+            .leftJoinAndSelect('submissions.photo', 'photo')
+            .leftJoinAndSelect('a.reviewer', 'reviewer')
+            .orderBy('a.created_at', 'DESC')
+            .skip(skip)
+            .take(limit);
+
+        if (search && search.trim()) {
+            const term = `%${search.trim().toLowerCase()}%`;
+            qb.andWhere(
+                '(LOWER(site.code) LIKE :term OR LOWER(site.name) LIKE :term)',
+                { term }
+            );
+        }
+
+        const [data, total] = await qb.getManyAndCount();
+
         // Sort template items by order ASC
         data.forEach(a => {
             if (a.template?.items) {

@@ -155,7 +155,7 @@ export class TakeDataService {
         return this.assignmentRepository.save(assignment);
     }
 
-    async getAssignments(page = 1, limit = 10, search?: string) {
+    async getAssignments(page = 1, limit = 10, search?: string, reviewStatus?: string) {
         const skip = (page - 1) * limit;
 
         const qb = this.assignmentRepository.createQueryBuilder('a')
@@ -176,6 +176,14 @@ export class TakeDataService {
                 '(LOWER(site.code) LIKE :term OR LOWER(site.name) LIKE :term)',
                 { term }
             );
+        }
+
+        if (reviewStatus && reviewStatus.trim() && reviewStatus !== 'all') {
+            if (reviewStatus === 'pending') {
+                qb.andWhere('(a.review_status IS NULL OR a.review_status = :pending)', { pending: 'pending' });
+            } else {
+                qb.andWhere('a.review_status = :reviewStatus', { reviewStatus });
+            }
         }
 
         const [data, total] = await qb.getManyAndCount();

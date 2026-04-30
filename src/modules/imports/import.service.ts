@@ -556,7 +556,8 @@ export class ImportService {
               ).isValid()
                 ? value['ny invoice date']
                 : null;
-              insertPO.piutang = value['piutang'] ? value['piutang'] : 0;
+              // PIUTANG IS AUTO CALCULATED, IGNORE EXCEL INPUT
+              // insertPO.piutang = value['piutang'] ? value['piutang'] : 0;
               insertPO.priority_site_list = value['priority site list']
                 ? value['priority site list']
                 : null;
@@ -1697,7 +1698,8 @@ export class ImportService {
     ) {
       updateData.ny_invoice_date = excelData['ny invoice date'];
     }
-
+    // PIUTANG IS AUTO CALCULATED, IGNORE EXCEL INPUT
+    /*
     //check piutang
     if (
       excelData['piutang'] != null &&
@@ -1711,6 +1713,7 @@ export class ImportService {
         updateData.piutang = intVal;
       }
     }
+    */
 
     //check priority site list
     if (

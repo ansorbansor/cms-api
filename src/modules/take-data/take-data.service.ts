@@ -19,6 +19,44 @@ import * as exceljs from 'exceljs';
 import * as fs from 'fs';
 import * as path from 'path';
 
+class TaskQueue {
+    private queue: (() => Promise<void>)[] = [];
+    private activeCount = 0;
+    private readonly concurrency: number;
+
+    constructor(concurrency: number) {
+        this.concurrency = concurrency;
+    }
+
+    add<T>(task: () => Promise<T>): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this.queue.push(async () => {
+                try {
+                    const result = await task();
+                    resolve(result);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            this.next();
+        });
+    }
+
+    private next() {
+        if (this.activeCount >= this.concurrency || this.queue.length === 0) {
+            return;
+        }
+        this.activeCount++;
+        const task = this.queue.shift();
+        if (task) {
+            task().finally(() => {
+                this.activeCount--;
+                this.next();
+            });
+        }
+    }
+}
+
 @Injectable()
 export class TakeDataService {
     constructor(
@@ -34,6 +72,9 @@ export class TakeDataService {
         private userRepository: Repository<User>,
         private readonly filesService: FilesService,
     ) { }
+
+    // Upload queue to prevent server crashes on concurrent uploads
+    private uploadQueue = new TaskQueue(3);
 
     // Template Management
     async createTemplate(createTemplateDto: CreateTakeDataTemplateDto, userId: number) {
@@ -272,34 +313,36 @@ export class TakeDataService {
     }
 
     async submitData(submitDto: SubmitTakeDataDto, file: any, userId: number) {
-        const assignment = await this.assignmentRepository.findOne({ where: { id: submitDto.assignment_id } });
-        if (!assignment) {
-            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
-        }
+        return this.uploadQueue.add(async () => {
+            const assignment = await this.assignmentRepository.findOne({ where: { id: submitDto.assignment_id } });
+            if (!assignment) {
+                throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+            }
 
-        // Upload photo
-        const photoEntity = await this.filesService.uploadFile(
-            file,
-            userId,
-            FilePath.USER, // Using USER path for now, maybe create a specific one?
-            'Take Data Photo'
-        );
+            // Upload photo
+            const photoEntity = await this.filesService.uploadFile(
+                file,
+                userId,
+                FilePath.USER, // Using USER path for now, maybe create a specific one?
+                'Take Data Photo'
+            );
 
-        const submission = this.submissionRepository.create({
-            assignment_id: submitDto.assignment_id,
-            template_item_id: submitDto.template_item_id,
-            photo_id: photoEntity.id,
-            coordinate: submitDto.coordinate,
-            timestamp: submitDto.timestamp,
-            submitted_by: userId,
+            const submission = this.submissionRepository.create({
+                assignment_id: submitDto.assignment_id,
+                template_item_id: submitDto.template_item_id,
+                photo_id: photoEntity.id,
+                coordinate: submitDto.coordinate,
+                timestamp: submitDto.timestamp,
+                submitted_by: userId,
+            });
+
+            await this.submissionRepository.save(submission);
+
+            // Update progress
+            await this.updateAssignmentProgress(assignment.id);
+
+            return submission;
         });
-
-        await this.submissionRepository.save(submission);
-
-        // Update progress
-        await this.updateAssignmentProgress(assignment.id);
-
-        return submission;
     }
 
     async deleteSubmission(submissionId: number, reqUser: any) {

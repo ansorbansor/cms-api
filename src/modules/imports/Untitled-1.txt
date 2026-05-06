@@ -1,0 +1,174 @@
+[Skip to main content](https://docs.openclaw.ai/#content-area)
+[OpenClaw home page](https://docs.openclaw.ai/)
+- [GitHub](https://github.com/openclaw/openclaw)
+- [Releases](https://github.com/openclaw/openclaw/releases)
+- [Discord](https://discord.com/invite/clawd)
+[GitHub](https://github.com/openclaw/openclaw)
+[Releases](https://github.com/openclaw/openclaw/releases)
+[Discord](https://discord.com/invite/clawd)
+[Get started](https://docs.openclaw.ai/)
+[Install](https://docs.openclaw.ai/install)
+[Channels](https://docs.openclaw.ai/channels)
+[Agents](https://docs.openclaw.ai/concepts/architecture)
+[Tools & Plugins](https://docs.openclaw.ai/tools)
+[Models](https://docs.openclaw.ai/providers)
+[Platforms](https://docs.openclaw.ai/platforms)
+[Gateway & Ops](https://docs.openclaw.ai/gateway)
+[Reference](https://docs.openclaw.ai/cli)
+[Help](https://docs.openclaw.ai/help)
+
+##### Overview
+- [OpenClaw](https://docs.openclaw.ai/)
+- [Showcase](https://docs.openclaw.ai/start/showcase)
+- [Features](https://docs.openclaw.ai/concepts/features)
+[OpenClaw](https://docs.openclaw.ai/)
+[Showcase](https://docs.openclaw.ai/start/showcase)
+[Features](https://docs.openclaw.ai/concepts/features)
+
+##### First steps
+- [Getting started](https://docs.openclaw.ai/start/getting-started)
+- [Onboarding Overview](https://docs.openclaw.ai/start/onboarding-overview)
+- [Onboarding: CLI](https://docs.openclaw.ai/start/wizard)
+- [Onboarding: macOS App](https://docs.openclaw.ai/start/onboarding)
+[Getting started](https://docs.openclaw.ai/start/getting-started)
+[Onboarding Overview](https://docs.openclaw.ai/start/onboarding-overview)
+[Onboarding: CLI](https://docs.openclaw.ai/start/wizard)
+[Onboarding: macOS App](https://docs.openclaw.ai/start/onboarding)
+
+##### Guides
+- [Personal assistant setup](https://docs.openclaw.ai/start/openclaw)
+- [CLI reference](https://docs.openclaw.ai/start/wizard-cli-reference)
+- [CLI automation](https://docs.openclaw.ai/start/wizard-cli-automation)
+[Personal assistant setup](https://docs.openclaw.ai/start/openclaw)
+[CLI reference](https://docs.openclaw.ai/start/wizard-cli-reference)
+[CLI automation](https://docs.openclaw.ai/start/wizard-cli-automation)
+- [OpenClaw 🦞](https://docs.openclaw.ai/#openclaw-)
+- [What is OpenClaw?](https://docs.openclaw.ai/#what-is-openclaw)
+- [How it works](https://docs.openclaw.ai/#how-it-works)
+- [Key capabilities](https://docs.openclaw.ai/#key-capabilities)
+- [Quick start](https://docs.openclaw.ai/#quick-start)
+- [Dashboard](https://docs.openclaw.ai/#dashboard)
+- [Configuration (optional)](https://docs.openclaw.ai/#configuration-optional)
+- [Start here](https://docs.openclaw.ai/#start-here)
+- [Learn more](https://docs.openclaw.ai/#learn-more)
+[OpenClaw 🦞](https://docs.openclaw.ai/#openclaw-)
+[What is OpenClaw?](https://docs.openclaw.ai/#what-is-openclaw)
+[How it works](https://docs.openclaw.ai/#how-it-works)
+[Key capabilities](https://docs.openclaw.ai/#key-capabilities)
+[Quick start](https://docs.openclaw.ai/#quick-start)
+[Dashboard](https://docs.openclaw.ai/#dashboard)
+[Configuration (optional)](https://docs.openclaw.ai/#configuration-optional)
+[Start here](https://docs.openclaw.ai/#start-here)
+[Learn more](https://docs.openclaw.ai/#learn-more)
+
+## Documentation Index
+
+Fetch the complete documentation index at: [https://docs.openclaw.ai/llms.txt](https://docs.openclaw.ai/llms.txt)
+Use this file to discover all available pages before exploring further.
+
+# [​](https://docs.openclaw.ai/#openclaw-)OpenClaw 🦞
+
+[​](https://docs.openclaw.ai/#openclaw-)
+Any OS gateway for AI agents across Discord, Google Chat, iMessage, Matrix, Microsoft Teams, Signal, Slack, Telegram, WhatsApp, Zalo, and more. Send a message, get an agent response from your pocket. Run one Gateway across built-in channels, bundled channel plugins, WebChat, and mobile nodes.
+
+## Run Onboarding
+```
+openclaw onboard
+```
+
+## [​](https://docs.openclaw.ai/#what-is-openclaw)What is OpenClaw?
+[​](https://docs.openclaw.ai/#what-is-openclaw)
+- Self-hosted: runs on your hardware, your rules
+- Multi-channel: one Gateway serves built-in channels plus bundled or external channel plugins simultaneously
+- Agent-native: built for coding agents with tool use, sessions, memory, and multi-agent routing
+- Open source: MIT licensed, community-driven
+
+```
+22.14+
+```
+
+## [​](https://docs.openclaw.ai/#how-it-works)How it works
+[​](https://docs.openclaw.ai/#how-it-works)
+
+## [​](https://docs.openclaw.ai/#key-capabilities)Key capabilities
+[​](https://docs.openclaw.ai/#key-capabilities)
+
+## [​](https://docs.openclaw.ai/#quick-start)Quick start
+[​](https://docs.openclaw.ai/#quick-start)
+Install OpenClaw
+
+```
+npm install -g openclaw@latest
+```
+
+
+```
+npm install -g openclaw@latest
+```
+
+Onboard and install the service
+
+```
+openclaw onboard --install-daemon
+```
+
+
+```
+openclaw onboard --install-daemon
+```
+
+Chat
+
+```
+openclaw dashboard
+```
+
+
+```
+openclaw dashboard
+```
+
+[Telegram](https://docs.openclaw.ai/channels/telegram)
+[Getting Started](https://docs.openclaw.ai/start/getting-started)
+
+## [​](https://docs.openclaw.ai/#dashboard)Dashboard
+[​](https://docs.openclaw.ai/#dashboard)
+- Local default: [http://127.0.0.1:18789/](http://127.0.0.1:18789/)
+- Remote access: [Web surfaces](https://docs.openclaw.ai/web) and [Tailscale](https://docs.openclaw.ai/gateway/tailscale)
+[http://127.0.0.1:18789/](http://127.0.0.1:18789/)
+[Web surfaces](https://docs.openclaw.ai/web)
+[Tailscale](https://docs.openclaw.ai/gateway/tailscale)
+
+## [​](https://docs.openclaw.ai/#configuration-optional)Configuration (optional)
+[​](https://docs.openclaw.ai/#configuration-optional)
+
+```
+~/.openclaw/openclaw.json
+```
+
+- If you do nothing, OpenClaw uses the bundled Pi binary in RPC mode with per-sender sessions.
+- If you want to lock it down, start with channels.whatsapp.allowFrom and (for groups) mention rules.
+
+```
+channels.whatsapp.allowFrom
+```
+
+
+```
+{ channels: { whatsapp: { allowFrom: ["+15555550123"], groups: { "*": { requireMention: true } }, }, }, messages: { groupChat: { mentionPatterns: ["@openclaw"] } }, }
+```
+
+
+```
+{ channels: { whatsapp: { allowFrom: ["+15555550123"], groups: { "*": { requireMention: true } }, }, }, messages: { groupChat: { mentionPatterns: ["@openclaw"] } }, }
+```
+
+## [​](https://docs.openclaw.ai/#start-here)Start here
+[​](https://docs.openclaw.ai/#start-here)
+
+## [​](https://docs.openclaw.ai/#learn-more)Learn more
+[​](https://docs.openclaw.ai/#learn-more)
+
+## About and credits
+[Showcase](https://docs.openclaw.ai/start/showcase)
+[Powered byThis documentation is built and hosted on Mintlify, a developer documentation platform](https://www.mintlify.com?utm_campaign=poweredBy&utm_medium=referral&utm_source=clawdhub)

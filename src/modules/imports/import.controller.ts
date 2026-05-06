@@ -28,7 +28,8 @@ export class ImportController {
   @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
   async importPO(@UploadedFile() file, @Request() req) {
-    return await this.importService.importPO(file, req.user, req.ip);
+    const forceCc = req.body.force_cc === 'true';
+    return await this.importService.importPO(file, req.user, req.ip, forceCc);
   }
 
   @Post('user')

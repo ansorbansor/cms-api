@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as xlsx from 'xlsx';
 import { User } from 'src/entities/user.entity';
@@ -269,7 +269,7 @@ export class ImportService {
     }
   }
 
-  async importPO(file, user: User, ip: string) {
+  async importPO(file, user: User, ip: string, forceCc: boolean = false) {
     if (!file) {
       throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
     }
@@ -281,6 +281,8 @@ export class ImportService {
       const worksheet = workbook.Sheets['Detail'];
       let totalInsertPO = 0;
       let totalUpdatePO = 0;
+      let totalInsertESAR = 0;
+      let totalUpdateESAR = 0;
       let totalInsertInvoice = 0;
       let totalUpdateInvoice = 0;
 
@@ -337,7 +339,9 @@ export class ImportService {
 
         //filter not empty data
         rowData = rowData.filter((value) => {
-          return value['cc'] != '' && value['cc'] != null;
+          const hasCc = value['cc'] != '' && value['cc'] != null;
+          const hasUniqueId = value['unique id'] != '' && value['unique id'] != null;
+          return hasCc || hasUniqueId;
         });
 
         console.log(`size rowData after filter : ${rowData.length}`);
@@ -399,6 +403,7 @@ export class ImportService {
         const insertedDataPOExistingInvoiceList = [];
 
         line = 0;
+        let lastProcessedCc = '-';
 
         for (const [index, value] of rowData.entries()) {
           line = index + 2;
@@ -415,12 +420,37 @@ export class ImportService {
               value['unique id'] != undefined &&
               value['unique id'] != ''
             ) {
-              uniqueId = importUniqueId(value['unique id']);
+              const parsedId = importUniqueId(value['unique id']);
+              // importUniqueId returns the 3rd segment of format "YYYYBsn-MMDD-{id}"
+              // If the format is wrong (e.g. plain number from Excel), parsedId will be undefined
+              uniqueId = parsedId != null && parsedId != undefined && parsedId != '' ? parsedId : '';
             }
 
             //check if new PO
             if (uniqueId == '' || uniqueId == null) {
               console.log(`checking new PO row ${index} of ${rowData.length}`);
+
+              // NEW CC CHECK LOGIC
+              const ccCode = value['cc'];
+              if (ccCode) {
+                const ccExists = poData.some(po => po.cc === ccCode);
+                if (ccExists && !forceCc) {
+                    if (fs.existsSync(file.path)) {
+                        fs.unlinkSync(file.path);
+                    }
+                    throw new HttpException({
+                        meta: {
+                            code: 'CC_CONFLICT',
+                            message: `cc berikut "${ccCode}" sudah memiliki Biosron ID, di file yang kamu export belum ada Biosron ID nya. Mau Lanjut daftarin cc ini menggunakan Biosron ID baru??`,
+                        },
+                        data: {
+                            new_count: totalInsertPO,
+                            update_count: totalUpdatePO,
+                            last_cc: lastProcessedCc
+                        }
+                    }, HttpStatus.CONFLICT);
+                }
+              }
 
               const insertPO = new PurchaseOrder();
               insertPO.user_id = user.id;
@@ -609,9 +639,13 @@ export class ImportService {
 
               //get list invoice
               const insertedInvoice = [];
+              const invNumbersInsert = new Set<string>();
               for (const key of Object.keys(value)) {
-                if (/^ac.*inv$/.test(key)) {
-                  const invNo = key.replace('ac', '').replace(' inv', '');
+                const match = key.match(/^ac(\d+)/);
+                if (match) invNumbersInsert.add(match[1]);
+              }
+
+              for (const invNo of Array.from(invNumbersInsert)) {
                   const inv = {
                     purchase_order_id: newPO.id,
                     invoice_number: value[`ac${invNo} inv`],
@@ -684,21 +718,20 @@ export class ImportService {
 
                   insertedInvoice.push(inv);
                   totalInsertInvoice++;
-                }
+              }
 
-                if (
-                  totalAcceptance != 0 &&
-                  newPO.total_acceptance != totalAcceptance
-                ) {
-                  await this.poRepository.update(
-                    {
-                      id: newPO.id,
-                    },
-                    {
-                      total_acceptance: totalAcceptance,
-                    },
-                  );
-                }
+              if (
+                totalAcceptance != 0 &&
+                newPO.total_acceptance != totalAcceptance
+              ) {
+                await this.poRepository.update(
+                  {
+                    id: newPO.id,
+                  },
+                  {
+                    total_acceptance: totalAcceptance,
+                  },
+                );
               }
 
               if (insertedInvoice.length > 0) {
@@ -717,7 +750,9 @@ export class ImportService {
               );
 
               if (indexDataExisting < 0) {
-                throw new Error(`Data PO has been deleted`);
+                // PO not found - could be invalid Biosron ID format or truly deleted
+                console.warn(`PO with id ${uniqueId} not found in DB, skipping row ${index}`);
+                continue;
               }
 
               const updateDataPO = await this.validatePOData(
@@ -737,82 +772,86 @@ export class ImportService {
 
               let totalAcceptance = 0;
 
-              for (const key of Object.keys(value)) {
-                if (/^ac.*inv$/.test(key)) {
-                  const invNo = key.replace('ac', '').replace(' inv', '');
-                  const inv = {
+              const rowKeys = Object.keys(value);
+
+              // Detect which part is being imported based on column headers in the row
+              const hasESARCols = rowKeys.some(k =>
+                /^ac\d+ unit price$/.test(k) ||
+                /^ac\d+ submit date$/.test(k) ||
+                /^ac\d+ submit amount$/.test(k) ||
+                /^ac\d+ approve date$/.test(k) ||
+                /^ac\d+ approve amount$/.test(k)
+              );
+              const hasInvCols = rowKeys.some(k =>
+                /^ac\d+ inv$/.test(k) ||
+                /^ac\d+ inv date$/.test(k) ||
+                /^ac\d+ inv status$/.test(k) ||
+                /^payment date \d+$/.test(k) ||
+                /^ac\d+ \(supplier tax/.test(k) ||
+                /^ac\d+ payment amount$/.test(k) ||
+                /^ac\d+ deduction amount$/.test(k)
+              );
+
+              console.log(`Row ${index}: hasESARCols=${hasESARCols}, hasInvCols=${hasInvCols}`);
+
+              const invNumbersUpdate = new Set<string>();
+              for (const key of rowKeys) {
+                // Capture from ac{N} prefixed columns
+                const acMatch = key.match(/^ac(\d+)/);
+                if (acMatch) invNumbersUpdate.add(acMatch[1]);
+                // Also capture from 'payment date {N}' columns
+                const pdMatch = key.match(/^payment date (\d+)$/);
+                if (pdMatch) invNumbersUpdate.add(pdMatch[1]);
+              }
+
+              for (const invNo of Array.from(invNumbersUpdate)) {
+                  // Build inv object conditionally based on which mode is active
+                  const inv: any = {
                     purchase_order_id: uniqueId,
-                    invoice_number: value[`ac${invNo} inv`],
-                    invoice_date:
-                      value[`ac${invNo} inv date`] &&
-                        moment(
-                          value[`ac${invNo} inv date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} inv date`]
-                        : null,
-                    invoice_status: value[`ac${invNo} inv status`],
-                    payment_date:
-                      value[`payment date ${invNo}`] &&
-                        moment(
-                          value[`payment date ${invNo}`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`payment date ${invNo}`]
-                        : null,
-                    supplier_tax_number:
-                      value[`ac${invNo} (supplier tax invoice no.)`],
-                    supplier_tax_date:
-                      value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                        moment(
-                          value[`ac${invNo} (supplier tax invoice no.) date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} (supplier tax invoice no.) date`]
-                        : null,
+                    position: invNo,
                     user_id: user.id,
                     cc: value['cc'],
-                    payment_amount: value[`ac${invNo} payment amount`]
-                      ? value[`ac${invNo} payment amount`]
-                      : 0,
-                    deduction_amount: value[`ac${invNo} deduction amount`]
-                      ? value[`ac${invNo} deduction amount`]
-                      : 0,
-                    unit_price: value[`ac${invNo} unit price`]
-                      ? value[`ac${invNo} unit price`]
-                      : 0,
-                    submit_date: (() => {
-                      const val = value[`ac${invNo} submit date`];
-                      if (val && !moment(val, moment.ISO_8601).isValid()) {
-                        throw new Error(
-                          `Invalid Date format at line ${line} column ac${invNo} submit date`,
-                        );
-                      }
-                      return val;
-                    })(),
-                    submit_amount: value[`ac${invNo} submit amount`]
-                      ? value[`ac${invNo} submit amount`]
-                      : 0,
-                    approve_date: (() => {
-                      const val = value[`ac${invNo} approve date`];
-                      if (val && !moment(val, moment.ISO_8601).isValid()) {
-                        throw new Error(
-                          `Invalid Date format at line ${line} column ac${invNo} approve date`,
-                        );
-                      }
-                      return val;
-                    })(),
-                    approve_amount: value[`ac${invNo} approve amount`]
-                      ? value[`ac${invNo} approve amount`]
-                      : 0,
-                    position: invNo,
                   };
+
+                  // ESAR fields — only populate if file has ESAR columns
+                  if (hasESARCols) {
+                    inv.unit_price = value[`ac${invNo} unit price`] ? value[`ac${invNo} unit price`] : 0;
+                    inv.submit_amount = value[`ac${invNo} submit amount`] ? value[`ac${invNo} submit amount`] : 0;
+                    inv.approve_amount = value[`ac${invNo} approve amount`] ? value[`ac${invNo} approve amount`] : 0;
+                    const submitDateVal = value[`ac${invNo} submit date`];
+                    if (submitDateVal && !moment(submitDateVal, moment.ISO_8601).isValid()) {
+                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} submit date`);
+                    }
+                    inv.submit_date = submitDateVal || null;
+                    const approveDateVal = value[`ac${invNo} approve date`];
+                    if (approveDateVal && !moment(approveDateVal, moment.ISO_8601).isValid()) {
+                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} approve date`);
+                    }
+                    inv.approve_date = approveDateVal || null;
+                  }
+
+                  // Invoice fields — only populate if file has Invoice columns
+                  if (hasInvCols) {
+                    inv.invoice_number = value[`ac${invNo} inv`];
+                    inv.invoice_date = value[`ac${invNo} inv date`] &&
+                      moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
+                        ? value[`ac${invNo} inv date`] : null;
+                    inv.invoice_status = value[`ac${invNo} inv status`];
+                    inv.payment_date = value[`payment date ${invNo}`] &&
+                      moment(value[`payment date ${invNo}`], moment.ISO_8601).isValid()
+                        ? value[`payment date ${invNo}`] : null;
+                    inv.supplier_tax_number = value[`ac${invNo} (supplier tax invoice no.)`];
+                    inv.supplier_tax_date = value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                      moment(value[`ac${invNo} (supplier tax invoice no.) date`], moment.ISO_8601).isValid()
+                        ? value[`ac${invNo} (supplier tax invoice no.) date`] : null;
+                    inv.payment_amount = value[`ac${invNo} payment amount`] ? value[`ac${invNo} payment amount`] : 0;
+                    inv.deduction_amount = value[`ac${invNo} deduction amount`] ? value[`ac${invNo} deduction amount`] : 0;
+                  }
 
                   const indexDataInvoiceExisting = poInvoiceData.findIndex(
                     (item) =>
-                      item.invoice_number == inv.invoice_number &&
                       item.po_id == inv.purchase_order_id &&
-                      (item.position == inv.position || item.position == null),
+                      (item.position == inv.position || (inv.invoice_number && item.invoice_number == inv.invoice_number))
                   );
 
                   if (indexDataInvoiceExisting > -1) {
@@ -820,25 +859,33 @@ export class ImportService {
                       inv,
                       poInvoiceData[indexDataInvoiceExisting],
                       poData[indexDataExisting],
+                      hasESARCols,
+                      hasInvCols,
                     );
 
                     if (Object.keys(updateData).length > 0) {
-                      //add user to updated object and push to list
+                      updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
+                      updateData.purchase_order_id = uniqueId;
                       updateData.user_id = user.id;
-                      updateData.id =
-                        poInvoiceData[indexDataInvoiceExisting].poi_id;
+
                       updateDataPOExistingInvoiceList.push(updateData);
-                      totalUpdateInvoice++;
+                      if (hasESARCols) totalUpdateESAR++;
+                      if (hasInvCols) totalUpdateInvoice++;
                     }
                   } else {
-                    totalInsertInvoice++;
-                    insertedDataPOExistingInvoiceList.push(inv);
+                    // Insert new invoice if it has any relevant data
+                    const hasData = (hasESARCols && (inv.unit_price || inv.submit_amount || inv.approve_amount || inv.submit_date || inv.approve_date)) ||
+                                    (hasInvCols && (inv.invoice_number || inv.invoice_date || inv.payment_date || inv.payment_amount || inv.supplier_tax_number || inv.supplier_tax_date || inv.deduction_amount));
+                    if (hasData) {
+                      if (hasESARCols) totalInsertESAR++;
+                      if (hasInvCols) totalInsertInvoice++;
+                      insertedDataPOExistingInvoiceList.push(inv);
+                    }
                   }
 
                   if (inv.approve_date != null && inv.approve_date != '') {
                     totalAcceptance += Number(inv.approve_amount);
                   }
-                }
               }
 
               if (
@@ -908,7 +955,7 @@ export class ImportService {
           fs.unlinkSync(file.path);
         }
 
-        const successMessage = `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`;
+        const successMessage = `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertESAR} ESAR, mengupdate ${totalUpdateESAR} ESAR, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`;
 
         await this.activityLogService.create({
           user_id: user.id,
@@ -928,6 +975,10 @@ export class ImportService {
         fs.unlinkSync(file.path);
       }
 
+      if (err instanceof HttpException && err.getStatus() === HttpStatus.CONFLICT) {
+        throw err;
+      }
+
       console.log(err.message);
       console.log(err.stack);
 
@@ -938,125 +989,123 @@ export class ImportService {
     }
   }
 
-  async validateInvoicePOData(excelData: any, dbData: any, poData: any) {
+  async validateInvoicePOData(excelData: any, dbData: any, poData: any, hasESARCols = true, hasInvCols = true) {
     const updateData: any = {};
 
-    //check invoice date
-    if (
-      dbData.invoice_date &&
-      moment(dbData.invoice_date).format('YYYY-MM-D') !=
-      moment(excelData.invoice_date).format('YYYY-MM-D')
-    ) {
-      updateData.invoice_date = excelData.invoice_date;
+    // ---- INVOICE FIELDS (only if file has invoice columns) ----
+    if (hasInvCols) {
+      //check invoice number
+      if (
+        excelData.invoice_number != null &&
+        excelData.invoice_number != '' &&
+        dbData.invoice_number != excelData.invoice_number
+      ) {
+        updateData.invoice_number = excelData.invoice_number;
+      }
+
+      //check invoice date
+      if (
+        excelData.invoice_date != null &&
+        (!dbData.invoice_date || moment(dbData.invoice_date).format('YYYY-MM-D') != moment(excelData.invoice_date).format('YYYY-MM-D'))
+      ) {
+        updateData.invoice_date = excelData.invoice_date;
+      }
+
+      //check invoice status
+      if (
+        excelData.invoice_status &&
+        dbData.invoice_status != excelData.invoice_status
+      ) {
+        updateData.invoice_status = excelData.invoice_status;
+      }
+
+      //check payment date
+      if (
+        excelData.payment_date != null &&
+        (!dbData.payment_date || moment(dbData.payment_date).format('YYYY-MM-D') != moment(excelData.payment_date).format('YYYY-MM-D'))
+      ) {
+        updateData.payment_date = excelData.payment_date;
+      }
+
+      //check supplier tax number
+      if (
+        excelData.supplier_tax_number &&
+        dbData.supplier_tax_number != excelData.supplier_tax_number
+      ) {
+        updateData.supplier_tax_number = excelData.supplier_tax_number;
+      }
+
+      //check supplier tax date
+      if (
+        excelData.supplier_tax_date != null &&
+        (!dbData.supplier_tax_date || moment(dbData.supplier_tax_date).format('YYYY-MM-D') != moment(excelData.supplier_tax_date).format('YYYY-MM-D'))
+      ) {
+        updateData.supplier_tax_date = excelData.supplier_tax_date;
+      }
+
+      //check payment amount
+      if (
+        excelData.payment_amount != null &&
+        dbData.payment_amount != excelData.payment_amount
+      ) {
+        updateData.payment_amount = isNaN(Number(excelData.payment_amount)) ? 0 : Number(excelData.payment_amount);
+      }
+
+      //check deduction amount
+      if (
+        excelData.deduction_amount != null &&
+        dbData.deduction_amount != excelData.deduction_amount
+      ) {
+        updateData.deduction_amount = isNaN(Number(excelData.deduction_amount)) ? 0 : Number(excelData.deduction_amount);
+      }
     }
 
-    //check invoice status
-    if (
-      excelData.invoice_status &&
-      dbData.invoice_status != excelData.invoice_status
-    ) {
-      updateData.invoice_status = excelData.invoice_status;
+    // ---- ESAR FIELDS (only if file has ESAR columns) ----
+    if (hasESARCols) {
+      //check unit price
+      if (
+        excelData.unit_price != null &&
+        dbData.unit_price != excelData.unit_price
+      ) {
+        updateData.unit_price = isNaN(Number(excelData.unit_price)) ? 0 : Number(excelData.unit_price);
+      }
+
+      //check submit date
+      if (
+        excelData.submit_date != null &&
+        (!dbData.submit_date || moment(dbData.submit_date).format('YYYY-MM-D') != moment(excelData.submit_date).format('YYYY-MM-D'))
+      ) {
+        updateData.submit_date = excelData.submit_date;
+      }
+
+      //check submit amount
+      if (
+        excelData.submit_amount != null &&
+        dbData.submit_amount != excelData.submit_amount
+      ) {
+        updateData.submit_amount = isNaN(Number(excelData.submit_amount)) ? 0 : Number(excelData.submit_amount);
+      }
+
+      //check approve date
+      if (
+        excelData.approve_date != null &&
+        (!dbData.approve_date || moment(dbData.approve_date).format('YYYY-MM-D') != moment(excelData.approve_date).format('YYYY-MM-D'))
+      ) {
+        updateData.approve_date = excelData.approve_date;
+      }
+
+      //check approve amount
+      if (
+        excelData.approve_amount != null &&
+        dbData.approve_amount != excelData.approve_amount
+      ) {
+        updateData.approve_amount = isNaN(Number(excelData.approve_amount)) ? 0 : Number(excelData.approve_amount);
+      }
     }
 
-    //check payment date
-    if (
-      dbData.payment_date &&
-      moment(dbData.payment_date).format('YYYY-MM-D') !=
-      moment(excelData.payment_date).format('YYYY-MM-D')
-    ) {
-      updateData.payment_date = excelData.payment_date;
-    }
-
-    //check supplier tax number
-    if (
-      excelData.supplier_tax_number &&
-      dbData.supplier_tax_number != excelData.supplier_tax_number
-    ) {
-      updateData.supplier_tax_number = excelData.supplier_tax_number;
-    }
-
-    //check supplier tax date
-    if (
-      dbData.supplier_tax_date &&
-      moment(dbData.supplier_tax_date).format('YYYY-MM-D') !=
-      moment(excelData.supplier_tax_date).format('YYYY-MM-D')
-    ) {
-      updateData.supplier_tax_date = excelData.supplier_tax_date;
-    }
-
-    //check payment amount
-    if (
-      excelData.payment_amount != null &&
-      dbData.payment_amount != excelData.payment_amount
-    ) {
-      updateData.payment_amount = isNaN(Number(excelData.payment_amount))
-        ? 0
-        : Number(excelData.payment_amount);
-    }
-
-    //check deduction amount
-    if (
-      excelData.deduction_amount != null &&
-      dbData.deduction_amount != excelData.deduction_amount
-    ) {
-      updateData.deduction_amount = isNaN(Number(excelData.deduction_amount))
-        ? 0
-        : Number(excelData.deduction_amount);
-    }
-
-    //check unit price
-    if (
-      excelData.unit_price != null &&
-      dbData.unit_price != excelData.unit_price
-    ) {
-      updateData.unit_price = isNaN(Number(excelData.unit_price))
-        ? 0
-        : Number(excelData.unit_price);
-    }
-
-    //check submit date
-    if (
-      dbData.submit_date &&
-      moment(dbData.submit_date).format('YYYY-MM-D') !=
-      moment(excelData.submit_date).format('YYYY-MM-D')
-    ) {
-      updateData.submit_date = excelData.submit_date;
-    }
-
-    //check submit amount
-    if (
-      excelData.submit_amount != null &&
-      dbData.submit_amount != excelData.submit_amount
-    ) {
-      updateData.submit_amount = isNaN(Number(excelData.submit_amount))
-        ? 0
-        : Number(excelData.submit_amount);
-    }
-
-    //check approve date
-    if (
-      dbData.approve_date &&
-      moment(dbData.approve_date).format('YYYY-MM-D') !=
-      moment(excelData.approve_date).format('YYYY-MM-D')
-    ) {
-      updateData.approve_date = excelData.approve_date;
-    }
-
-    //check approve amount
-    if (
-      excelData.approve_amount != null &&
-      dbData.approve_amount != excelData.approve_amount
-    ) {
-      updateData.approve_amount = isNaN(Number(excelData.approve_amount))
-        ? 0
-        : Number(excelData.approve_amount);
-    }
-
-    //check position
+    //check position (always)
     if (excelData.position != null && dbData.position != excelData.position) {
-      updateData.position = isNaN(Number(excelData.position))
-        ? 0
-        : Number(excelData.position);
+      updateData.position = isNaN(Number(excelData.position)) ? 0 : Number(excelData.position);
     }
 
     return updateData;

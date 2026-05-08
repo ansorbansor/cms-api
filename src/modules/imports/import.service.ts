@@ -811,6 +811,7 @@ export class ImportService {
                     position: invNo,
                     user_id: user.id,
                     cc: value['cc'],
+                    invoice_number: '',
                   };
 
                   // ESAR fields — only populate if file has ESAR columns
@@ -832,7 +833,7 @@ export class ImportService {
 
                   // Invoice fields — only populate if file has Invoice columns
                   if (hasInvCols) {
-                    inv.invoice_number = value[`ac${invNo} inv`];
+                    inv.invoice_number = value[`ac${invNo} inv`] || '';
                     inv.invoice_date = value[`ac${invNo} inv date`] &&
                       moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
                         ? value[`ac${invNo} inv date`] : null;

@@ -197,9 +197,10 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       ? moment(po.done_atp).format('YYYY-MM-DD HH:mm:ss')
       : null,
     invoices: po.po_invoice
-      ? po.po_invoice.map((e) => {
+      ? [...po.po_invoice].sort((a, b) => (a.position || 0) - (b.position || 0)).map((e) => {
         return {
           id: e.id,
+          position: e.position ? Number(e.position) : 0,
           invoice_number: e.invoice_number,
           date: e.invoice_date
             ? moment(e.invoice_date).format('YYYY-MM-DD HH:mm:ss')

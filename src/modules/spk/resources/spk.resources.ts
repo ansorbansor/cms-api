@@ -5,9 +5,6 @@ import { SPKStatus } from 'src/utils/enums';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
 export const SPKResource = (spk: SPK): any => {
-  console.log('--- DEBUGGING SPK OBJECT ---');
-  console.log(JSON.stringify(spk, null, 2));
-  console.log('----------------------------');
   return {
     id: spk.id,
     unique_id: spk.po ? exportUniqueId(spk.po.id, spk.po.createdAtParseDate) : '-',

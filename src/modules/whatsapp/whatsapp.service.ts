@@ -23,7 +23,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
     ];
 
     if (process.env.NODE_ENV !== 'local') {
-      puppeteerArgs.push('--single-process');
+      // Removed --single-process to prevent CPU spikes and memory leaks
       puppeteerArgs.push('--disable-gpu');
     }
 
@@ -32,7 +32,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       puppeteer: {
         headless: true,
         args: puppeteerArgs,
-        dumpio: true,
+        dumpio: false, // Set to false to prevent IO overhead
       }
     });
 

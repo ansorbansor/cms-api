@@ -42,8 +42,7 @@ export class TakeDataController {
     @UseGuards(AuthGuard('jwt'))
     @Post('templates')
     async createTemplate(@Body() createDto: CreateTakeDataTemplateDto, @Request() request) {
-        console.log('Create Template Request:', createDto);
-        console.log('User:', request.user);
+
         try {
             const result = await this.takeDataService.createTemplate(createDto, request.user.id);
             return successResponse(result, 'Template created successfully');

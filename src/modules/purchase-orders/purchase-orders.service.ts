@@ -320,9 +320,7 @@ export class PurchaseOrderService {
       'finish_progress_confirmed_by_rpm', 'done_atp_confirmed_by_rpm', 'actual_completion_date', 'actual_work_status'
     ];
 
-    console.log('DEBUG: Updating PO ID:', id);
-    console.log('DEBUG: Incoming Data:', updatedDataPO);
-    console.log('DEBUG: Existing Data:', exists);
+
 
     fieldsToCheck.forEach(field => {
       if (updatedDataPO.hasOwnProperty(field)) {
@@ -350,7 +348,7 @@ export class PurchaseOrderService {
 
         if (normNew !== normOld) {
           isDifferent = true;
-          console.log(`DEBUG: Field ${field} changed. Old: ${normOld} -> New: ${normNew}`);
+
         }
 
         if (isDifferent) {
@@ -372,7 +370,7 @@ export class PurchaseOrderService {
       logDescription = `Mengupdate Data PO dengan nomor ${uniqueId}`;
     }
 
-    console.log('DEBUG: Generated Log Description:', logDescription);
+
 
     try {
       await this.activityLogService.create({
@@ -380,7 +378,7 @@ export class PurchaseOrderService {
         description: logDescription,
         ip: ip,
       });
-      console.log('DEBUG: Activity Log successfully created.');
+
     } catch (error) {
       console.error('ERROR creating activity log:', error);
     }

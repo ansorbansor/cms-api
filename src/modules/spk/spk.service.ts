@@ -398,7 +398,7 @@ export class SPKService {
     user: User,
     mobile: boolean,
   ) {
-    console.log('--- 3. BACKEND RECEIVED OPTIONS ---:', paginationOptions);
+
     const data = this.spkRepository
       .createQueryBuilder('spk')
       .withDeleted()
@@ -414,7 +414,7 @@ export class SPKService {
       .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
-    console.log('--- 4. USER ROLE CODE ---:', currentUser.employeePosition.code);
+
 
     let filterRegion = true;
 
@@ -797,7 +797,7 @@ export class SPKService {
     data.take(paginationOptions.limit);
 
     const returnedData = await data.getMany();
-    console.log('--- DATABASE QUERY RESULT (returnedData) ---', returnedData);
+
 
     return infinityPagination(returnedData, SPKResource, paginationOptions);
   }

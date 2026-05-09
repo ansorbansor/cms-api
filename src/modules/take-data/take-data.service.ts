@@ -167,8 +167,6 @@ export class TakeDataService {
             .leftJoinAndSelect('a.template', 'template')
             .leftJoinAndSelect('template.items', 'items')
             .leftJoinAndSelect('items.sample_photo', 'sample_photo')
-            .leftJoinAndSelect('a.submissions', 'submissions')
-            .leftJoinAndSelect('submissions.photo', 'photo')
             .leftJoinAndSelect('a.reviewer', 'reviewer')
             .orderBy('a.created_at', 'DESC')
             .skip(skip)
@@ -191,6 +189,20 @@ export class TakeDataService {
         }
 
         const [data, total] = await qb.getManyAndCount();
+
+        // Fetch submissions separately to avoid Cartesian product
+        if (data.length > 0) {
+            const assignmentIds = data.map(a => a.id);
+            const submissions = await this.submissionRepository
+                .createQueryBuilder('sub')
+                .leftJoinAndSelect('sub.photo', 'photo')
+                .where('sub.assignment_id IN (:...ids)', { ids: assignmentIds })
+                .getMany();
+            
+            data.forEach(a => {
+                a.submissions = submissions.filter(s => s.assignment_id === a.id);
+            });
+        }
 
         // Sort template items by order ASC
         data.forEach(a => {
@@ -267,8 +279,21 @@ export class TakeDataService {
     async getTemplatesForSite(siteId: number) {
         const assignments = await this.assignmentRepository.find({
             where: { site_id: siteId },
-            relations: ['template', 'template.items', 'template.items.sample_photo', 'submissions', 'submissions.photo'],
+            relations: ['template', 'template.items', 'template.items.sample_photo'],
         });
+
+        if (assignments.length > 0) {
+            const assignmentIds = assignments.map(a => a.id);
+            const submissions = await this.submissionRepository
+                .createQueryBuilder('sub')
+                .leftJoinAndSelect('sub.photo', 'photo')
+                .where('sub.assignment_id IN (:...ids)', { ids: assignmentIds })
+                .getMany();
+            
+            assignments.forEach(a => {
+                a.submissions = submissions.filter(s => s.assignment_id === a.id);
+            });
+        }
 
         // Map to a more friendly format for Android if needed, or return as is.
         // For now returning as is, but including submissions is important to show what's already done.
@@ -344,12 +369,19 @@ export class TakeDataService {
     async downloadAssignmentPhotos(assignmentId: number, res: any) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id: assignmentId },
-            relations: ['site', 'template', 'template.items', 'submissions', 'submissions.photo'],
+            relations: ['site', 'template', 'template.items'],
         });
 
         if (!assignment) {
             throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
         }
+
+        const submissions = await this.submissionRepository
+            .createQueryBuilder('sub')
+            .leftJoinAndSelect('sub.photo', 'photo')
+            .where('sub.assignment_id = :id', { id: assignmentId })
+            .getMany();
+        assignment.submissions = submissions;
 
         const archive = require('archiver')('zip', {
             zlib: { level: 1 }, // Changed from 9 to 1 to prevent CPU overload
@@ -434,12 +466,19 @@ export class TakeDataService {
     async generateDocument(generateDto: GenerateDocumentDto, file: any, res: any) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id: generateDto.assignment_id },
-            relations: ['site', 'template', 'template.items', 'submissions', 'submissions.photo'],
+            relations: ['site', 'template', 'template.items'],
         });
 
         if (!assignment) {
             throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
         }
+
+        const submissions = await this.submissionRepository
+            .createQueryBuilder('sub')
+            .leftJoinAndSelect('sub.photo', 'photo')
+            .where('sub.assignment_id = :id', { id: generateDto.assignment_id })
+            .getMany();
+        assignment.submissions = submissions;
 
         const workbook = new exceljs.Workbook();
         if (file.buffer) {

@@ -492,7 +492,6 @@ export class TakeDataService {
             throw new HttpException('Uploaded file is invalid or missing', HttpStatus.BAD_REQUEST);
         }
 
-        const submissions = assignment.submissions;
         const items = assignment.template.items;
 
         workbook.eachSheet((worksheet, sheetId) => {

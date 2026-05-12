@@ -150,7 +150,7 @@ export class ExportService {
     }
 
     if (onboardOnly) {
-      query.andWhere('user.status = :status', { status: true });
+      query.andWhere('LOWER(user.status_description) = :desc', { desc: 'on board' });
     }
 
     const data = await query.getMany();

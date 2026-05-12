@@ -134,7 +134,7 @@ export class ExportService {
     }
   }
 
-  async exportUser(user: User, ip: string, search: string) {
+  async exportUser(user: User, ip: string, search: string, onboardOnly = false) {
     const query = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
@@ -147,6 +147,10 @@ export class ExportService {
       query.andWhere('user.name ILIKE :search', {
         search: `%${search}%`,
       });
+    }
+
+    if (onboardOnly) {
+      query.andWhere('user.status = :status', { status: true });
     }
 
     const data = await query.getMany();
@@ -167,14 +171,15 @@ export class ExportService {
       fs.mkdirSync(exportsDir);
     }
 
-    const fileName = `Pengguna-${Date.now()}.xlsx`;
+    const suffix = onboardOnly ? '_OnBoard' : '_Semua';
+    const fileName = `Pengguna${suffix}-${Date.now()}.xlsx`;
     const filePath = path.join(exportsDir, fileName);
 
     XLSX.writeFile(wb, filePath, { compression: true });
 
     await this.activityLogService.create({
       user_id: user.id,
-      description: `Export Data Pengguna`,
+      description: `Export Data Pengguna${onboardOnly ? ' (On Board Only)' : ''}`,
       ip: ip,
     });
 

@@ -81,11 +81,13 @@ export class ExportController {
     @Res() res: Response,
     @Request() req,
     @Query('search') search: string,
+    @Query('onboard_only') onboardOnly: string,
   ) {
     const response = await this.exportService.exportUser(
       req.user,
       req.ip,
       search,
+      onboardOnly === 'true',
     );
 
     res.download(`${response}`);

@@ -27,7 +27,7 @@ import { FilePath } from 'src/utils/enums';
   version: '1',
 })
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(private readonly filesService: FilesService) { }
 
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
@@ -77,7 +77,9 @@ export class FilesController {
 
     response.sendFile(targetPath, { root: './files' }, (err) => {
       if (err) {
-        response.status(404).send('File not found');
+        if (!response.headersSent) {
+          response.status(404).send('File not found');
+        }
       }
     });
   }

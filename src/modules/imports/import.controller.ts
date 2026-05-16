@@ -6,6 +6,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Post,
+  Get,
   Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -20,7 +21,18 @@ import { ImportService } from './import.service';
   version: '1',
 })
 export class ImportController {
-  constructor(private readonly importService: ImportService) {}
+  constructor(private readonly importService: ImportService) { }
+
+  @Get('jobs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getJobs(@Request() req) {
+    const jobs = await this.importService.getJobs(req.user);
+    return {
+      meta: { status: 200, message: 'List Data Import Jobs', success: true },
+      data: jobs,
+    };
+  }
 
   @Post('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,7 +41,7 @@ export class ImportController {
   @HttpCode(HttpStatus.OK)
   async importPO(@UploadedFile() file, @Request() req) {
     const forceCc = req.body.force_cc === 'true';
-    return await this.importService.importPO(file, req.user, req.ip, forceCc);
+    return await this.importService.queueImportPO(file, req.user, req.ip, forceCc);
   }
 
   @Post('user')

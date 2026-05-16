@@ -24,6 +24,8 @@ import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity
 import { EmployeePosition } from 'src/entities/employee-position.entity';
 import * as bcrypt from 'bcryptjs';
 import { importUniqueId } from 'src/utils/encryption-helper';
+import * as async from 'async';
+import { ExportJob } from 'src/entities/export-job.entity';
 
 @Injectable()
 export class ImportService {
@@ -58,8 +60,78 @@ export class ImportService {
     private employeePositionRepository: Repository<EmployeePosition>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(ExportJob)
+    private exportJobRepository: Repository<ExportJob>,
     private activityLogService: ActivityLogService,
-  ) { }
+  ) {
+    this.importQueue = async.queue(async (task, callback) => {
+      try {
+        await this.processImportJob(task);
+        callback();
+      } catch (err) {
+        callback(err);
+      }
+    }, 1);
+  }
+
+  private importQueue: async.QueueObject<any>;
+
+  async getJobs(user: User) {
+    return this.exportJobRepository.find({
+      where: { user_id: user.id, type: 'IMPORT_PO' },
+      order: { created_at: 'DESC' },
+      take: 20
+    });
+  }
+
+  async queueImportPO(file, user: User, ip: string, forceCc: boolean) {
+    if (!file) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Harap kirimkan file');
+    }
+
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'IMPORT_PO';
+    job.payload = JSON.stringify({ ip, forceCc, originalname: file.originalname });
+    job.status = 'PENDING';
+    job.file_path = file.path;
+    await this.exportJobRepository.save(job);
+
+    this.importQueue.push(job.id);
+
+    return successResponse({ job_id: job.id }, 'Import sedang diproses di belakang layar. Silahkan cek Import History.');
+  }
+
+  private async processImportJob(jobId: string) {
+    const job = await this.exportJobRepository.findOne(jobId);
+    if (!job) return;
+
+    job.status = 'PROCESSING';
+    await this.exportJobRepository.save(job);
+
+    try {
+      const payload = JSON.parse(job.payload);
+      const mockFile = { path: job.file_path, originalname: payload.originalname };
+      const userObj = await this.userRepository.findOne(job.user_id);
+
+      const result = await this.importPO(mockFile, userObj, payload.ip, payload.forceCc);
+
+      job.status = 'COMPLETED';
+      // Store the success string in error_message or payload
+      job.error_message = result.meta.message;
+      await this.exportJobRepository.save(job);
+    } catch (err) {
+      job.status = 'FAILED';
+      if (err instanceof HttpException && err.getStatus() === HttpStatus.CONFLICT) {
+        // CC_CONFLICT scenario
+        const response: any = err.getResponse();
+        job.error_message = JSON.stringify(response);
+      } else {
+        job.error_message = err.message || 'Unknown error occurred during import';
+      }
+      await this.exportJobRepository.save(job);
+    }
+  }
 
   regionData = null;
   areaData = null;
@@ -138,7 +210,7 @@ export class ImportService {
             } else {
               const currentNik = value['id number (ktp)'];
               if (insertDataUserList.some(u => u.nik === currentNik)) {
-                  continue;
+                continue;
               }
               const inserUser = new User();
               inserUser.region = value['region office'];
@@ -435,20 +507,20 @@ export class ImportService {
               if (ccCode) {
                 const ccExists = poData.some(po => po.cc === ccCode);
                 if (ccExists && !forceCc) {
-                    if (fs.existsSync(file.path)) {
-                        fs.unlinkSync(file.path);
+                  if (fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                  }
+                  throw new HttpException({
+                    meta: {
+                      code: 'CC_CONFLICT',
+                      message: `cc berikut "${ccCode}" sudah memiliki Biosron ID, di file yang kamu export belum ada Biosron ID nya. Mau Lanjut daftarin cc ini menggunakan Biosron ID baru??`,
+                    },
+                    data: {
+                      new_count: totalInsertPO,
+                      update_count: totalUpdatePO,
+                      last_cc: lastProcessedCc
                     }
-                    throw new HttpException({
-                        meta: {
-                            code: 'CC_CONFLICT',
-                            message: `cc berikut "${ccCode}" sudah memiliki Biosron ID, di file yang kamu export belum ada Biosron ID nya. Mau Lanjut daftarin cc ini menggunakan Biosron ID baru??`,
-                        },
-                        data: {
-                            new_count: totalInsertPO,
-                            update_count: totalUpdatePO,
-                            last_cc: lastProcessedCc
-                        }
-                    }, HttpStatus.CONFLICT);
+                  }, HttpStatus.CONFLICT);
                 }
               }
 
@@ -646,78 +718,78 @@ export class ImportService {
               }
 
               for (const invNo of Array.from(invNumbersInsert)) {
-                  const inv = {
-                    purchase_order_id: newPO.id,
-                    invoice_number: value[`ac${invNo} inv`],
-                    invoice_date:
-                      value[`ac${invNo} inv date`] &&
-                        moment(
-                          value[`ac${invNo} inv date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} inv date`]
-                        : null,
-                    invoice_status: value[`ac${invNo} inv status`],
-                    payment_date:
-                      value[`payment date ${invNo}`] &&
-                        moment(
-                          value[`payment date ${invNo}`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`payment date ${invNo}`]
-                        : null,
-                    supplier_tax_number:
-                      value[`ac${invNo} (supplier tax invoice no.)`],
-                    supplier_tax_date:
-                      value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                        moment(
-                          value[`ac${invNo} (supplier tax invoice no.) date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} (supplier tax invoice no.) date`]
-                        : null,
-                    user_id: user.id,
-                    cc: value['cc'],
-                    payment_amount: value[`ac${invNo} payment amount`]
-                      ? value[`ac${invNo} payment amount`]
-                      : 0,
-                    deduction_amount: value[`ac${invNo} deduction amount`]
-                      ? value[`ac${invNo} deduction amount`]
-                      : 0,
-                    unit_price: value[`ac${invNo} unit price`]
-                      ? value[`ac${invNo} unit price`]
-                      : 0,
-                    submit_date:
-                      value[`ac${invNo} submit date`] &&
-                        moment(
-                          value[`ac${invNo} submit date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} submit date`]
-                        : null,
-                    submit_amount: value[`ac${invNo} submit amount`]
-                      ? value[`ac${invNo} submit amount`]
-                      : 0,
-                    approve_date:
-                      value[`ac${invNo} approve date`] &&
-                        moment(
-                          value[`ac${invNo} approve date`],
-                          moment.ISO_8601,
-                        ).isValid()
-                        ? value[`ac${invNo} approve date`]
-                        : null,
-                    approve_amount: value[`ac${invNo} approve amount`]
-                      ? value[`ac${invNo} approve amount`]
-                      : 0,
-                    position: invNo,
-                  };
+                const inv = {
+                  purchase_order_id: newPO.id,
+                  invoice_number: value[`ac${invNo} inv`],
+                  invoice_date:
+                    value[`ac${invNo} inv date`] &&
+                      moment(
+                        value[`ac${invNo} inv date`],
+                        moment.ISO_8601,
+                      ).isValid()
+                      ? value[`ac${invNo} inv date`]
+                      : null,
+                  invoice_status: value[`ac${invNo} inv status`],
+                  payment_date:
+                    value[`payment date ${invNo}`] &&
+                      moment(
+                        value[`payment date ${invNo}`],
+                        moment.ISO_8601,
+                      ).isValid()
+                      ? value[`payment date ${invNo}`]
+                      : null,
+                  supplier_tax_number:
+                    value[`ac${invNo} (supplier tax invoice no.)`],
+                  supplier_tax_date:
+                    value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                      moment(
+                        value[`ac${invNo} (supplier tax invoice no.) date`],
+                        moment.ISO_8601,
+                      ).isValid()
+                      ? value[`ac${invNo} (supplier tax invoice no.) date`]
+                      : null,
+                  user_id: user.id,
+                  cc: value['cc'],
+                  payment_amount: value[`ac${invNo} payment amount`]
+                    ? value[`ac${invNo} payment amount`]
+                    : 0,
+                  deduction_amount: value[`ac${invNo} deduction amount`]
+                    ? value[`ac${invNo} deduction amount`]
+                    : 0,
+                  unit_price: value[`ac${invNo} unit price`]
+                    ? value[`ac${invNo} unit price`]
+                    : 0,
+                  submit_date:
+                    value[`ac${invNo} submit date`] &&
+                      moment(
+                        value[`ac${invNo} submit date`],
+                        moment.ISO_8601,
+                      ).isValid()
+                      ? value[`ac${invNo} submit date`]
+                      : null,
+                  submit_amount: value[`ac${invNo} submit amount`]
+                    ? value[`ac${invNo} submit amount`]
+                    : 0,
+                  approve_date:
+                    value[`ac${invNo} approve date`] &&
+                      moment(
+                        value[`ac${invNo} approve date`],
+                        moment.ISO_8601,
+                      ).isValid()
+                      ? value[`ac${invNo} approve date`]
+                      : null,
+                  approve_amount: value[`ac${invNo} approve amount`]
+                    ? value[`ac${invNo} approve amount`]
+                    : 0,
+                  position: invNo,
+                };
 
-                  if (inv.approve_date != null && inv.approve_date != '') {
-                    totalAcceptance += Number(inv.approve_amount);
-                  }
+                if (inv.approve_date != null && inv.approve_date != '') {
+                  totalAcceptance += Number(inv.approve_amount);
+                }
 
-                  insertedInvoice.push(inv);
-                  totalInsertInvoice++;
+                insertedInvoice.push(inv);
+                totalInsertInvoice++;
               }
 
               if (
@@ -805,88 +877,88 @@ export class ImportService {
               }
 
               for (const invNo of Array.from(invNumbersUpdate)) {
-                  // Build inv object conditionally based on which mode is active
-                  const inv: any = {
-                    purchase_order_id: uniqueId,
-                    position: invNo,
-                    user_id: user.id,
-                    cc: value['cc'],
-                    invoice_number: '',
-                  };
+                // Build inv object conditionally based on which mode is active
+                const inv: any = {
+                  purchase_order_id: uniqueId,
+                  position: invNo,
+                  user_id: user.id,
+                  cc: value['cc'],
+                  invoice_number: '',
+                };
 
-                  // ESAR fields — only populate if file has ESAR columns
-                  if (hasESARCols) {
-                    inv.unit_price = value[`ac${invNo} unit price`] ? value[`ac${invNo} unit price`] : 0;
-                    inv.submit_amount = value[`ac${invNo} submit amount`] ? value[`ac${invNo} submit amount`] : 0;
-                    inv.approve_amount = value[`ac${invNo} approve amount`] ? value[`ac${invNo} approve amount`] : 0;
-                    const submitDateVal = value[`ac${invNo} submit date`];
-                    if (submitDateVal && !moment(submitDateVal, moment.ISO_8601).isValid()) {
-                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} submit date`);
-                    }
-                    inv.submit_date = submitDateVal || null;
-                    const approveDateVal = value[`ac${invNo} approve date`];
-                    if (approveDateVal && !moment(approveDateVal, moment.ISO_8601).isValid()) {
-                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} approve date`);
-                    }
-                    inv.approve_date = approveDateVal || null;
+                // ESAR fields — only populate if file has ESAR columns
+                if (hasESARCols) {
+                  inv.unit_price = value[`ac${invNo} unit price`] ? value[`ac${invNo} unit price`] : 0;
+                  inv.submit_amount = value[`ac${invNo} submit amount`] ? value[`ac${invNo} submit amount`] : 0;
+                  inv.approve_amount = value[`ac${invNo} approve amount`] ? value[`ac${invNo} approve amount`] : 0;
+                  const submitDateVal = value[`ac${invNo} submit date`];
+                  if (submitDateVal && !moment(submitDateVal, moment.ISO_8601).isValid()) {
+                    throw new Error(`Invalid Date format at line ${line} column ac${invNo} submit date`);
                   }
-
-                  // Invoice fields — only populate if file has Invoice columns
-                  if (hasInvCols) {
-                    inv.invoice_number = value[`ac${invNo} inv`] || '';
-                    inv.invoice_date = value[`ac${invNo} inv date`] &&
-                      moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
-                        ? value[`ac${invNo} inv date`] : null;
-                    inv.invoice_status = value[`ac${invNo} inv status`];
-                    inv.payment_date = value[`payment date ${invNo}`] &&
-                      moment(value[`payment date ${invNo}`], moment.ISO_8601).isValid()
-                        ? value[`payment date ${invNo}`] : null;
-                    inv.supplier_tax_number = value[`ac${invNo} (supplier tax invoice no.)`];
-                    inv.supplier_tax_date = value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                      moment(value[`ac${invNo} (supplier tax invoice no.) date`], moment.ISO_8601).isValid()
-                        ? value[`ac${invNo} (supplier tax invoice no.) date`] : null;
-                    inv.payment_amount = value[`ac${invNo} payment amount`] ? value[`ac${invNo} payment amount`] : 0;
-                    inv.deduction_amount = value[`ac${invNo} deduction amount`] ? value[`ac${invNo} deduction amount`] : 0;
+                  inv.submit_date = submitDateVal || null;
+                  const approveDateVal = value[`ac${invNo} approve date`];
+                  if (approveDateVal && !moment(approveDateVal, moment.ISO_8601).isValid()) {
+                    throw new Error(`Invalid Date format at line ${line} column ac${invNo} approve date`);
                   }
+                  inv.approve_date = approveDateVal || null;
+                }
 
-                  const indexDataInvoiceExisting = poInvoiceData.findIndex(
-                    (item) =>
-                      item.po_id == inv.purchase_order_id &&
-                      (item.position == inv.position || (inv.invoice_number && item.invoice_number == inv.invoice_number))
+                // Invoice fields — only populate if file has Invoice columns
+                if (hasInvCols) {
+                  inv.invoice_number = value[`ac${invNo} inv`] || '';
+                  inv.invoice_date = value[`ac${invNo} inv date`] &&
+                    moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
+                    ? value[`ac${invNo} inv date`] : null;
+                  inv.invoice_status = value[`ac${invNo} inv status`];
+                  inv.payment_date = value[`payment date ${invNo}`] &&
+                    moment(value[`payment date ${invNo}`], moment.ISO_8601).isValid()
+                    ? value[`payment date ${invNo}`] : null;
+                  inv.supplier_tax_number = value[`ac${invNo} (supplier tax invoice no.)`];
+                  inv.supplier_tax_date = value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                    moment(value[`ac${invNo} (supplier tax invoice no.) date`], moment.ISO_8601).isValid()
+                    ? value[`ac${invNo} (supplier tax invoice no.) date`] : null;
+                  inv.payment_amount = value[`ac${invNo} payment amount`] ? value[`ac${invNo} payment amount`] : 0;
+                  inv.deduction_amount = value[`ac${invNo} deduction amount`] ? value[`ac${invNo} deduction amount`] : 0;
+                }
+
+                const indexDataInvoiceExisting = poInvoiceData.findIndex(
+                  (item) =>
+                    item.po_id == inv.purchase_order_id &&
+                    (item.position == inv.position || (inv.invoice_number && item.invoice_number == inv.invoice_number))
+                );
+
+                if (indexDataInvoiceExisting > -1) {
+                  const updateData = await this.validateInvoicePOData(
+                    inv,
+                    poInvoiceData[indexDataInvoiceExisting],
+                    poData[indexDataExisting],
+                    hasESARCols,
+                    hasInvCols,
                   );
 
-                  if (indexDataInvoiceExisting > -1) {
-                    const updateData = await this.validateInvoicePOData(
-                      inv,
-                      poInvoiceData[indexDataInvoiceExisting],
-                      poData[indexDataExisting],
-                      hasESARCols,
-                      hasInvCols,
-                    );
+                  if (Object.keys(updateData).length > 0) {
+                    updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
+                    updateData.purchase_order_id = uniqueId;
+                    updateData.user_id = user.id;
 
-                    if (Object.keys(updateData).length > 0) {
-                      updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
-                      updateData.purchase_order_id = uniqueId;
-                      updateData.user_id = user.id;
-
-                      updateDataPOExistingInvoiceList.push(updateData);
-                      if (hasESARCols) totalUpdateESAR++;
-                      if (hasInvCols) totalUpdateInvoice++;
-                    }
-                  } else {
-                    // Insert new invoice if it has any relevant data
-                    const hasData = (hasESARCols && (inv.unit_price || inv.submit_amount || inv.approve_amount || inv.submit_date || inv.approve_date)) ||
-                                    (hasInvCols && (inv.invoice_number || inv.invoice_date || inv.payment_date || inv.payment_amount || inv.supplier_tax_number || inv.supplier_tax_date || inv.deduction_amount));
-                    if (hasData) {
-                      if (hasESARCols) totalInsertESAR++;
-                      if (hasInvCols) totalInsertInvoice++;
-                      insertedDataPOExistingInvoiceList.push(inv);
-                    }
+                    updateDataPOExistingInvoiceList.push(updateData);
+                    if (hasESARCols) totalUpdateESAR++;
+                    if (hasInvCols) totalUpdateInvoice++;
                   }
-
-                  if (inv.approve_date != null && inv.approve_date != '') {
-                    totalAcceptance += Number(inv.approve_amount);
+                } else {
+                  // Insert new invoice if it has any relevant data
+                  const hasData = (hasESARCols && (inv.unit_price || inv.submit_amount || inv.approve_amount || inv.submit_date || inv.approve_date)) ||
+                    (hasInvCols && (inv.invoice_number || inv.invoice_date || inv.payment_date || inv.payment_amount || inv.supplier_tax_number || inv.supplier_tax_date || inv.deduction_amount));
+                  if (hasData) {
+                    if (hasESARCols) totalInsertESAR++;
+                    if (hasInvCols) totalInsertInvoice++;
+                    insertedDataPOExistingInvoiceList.push(inv);
                   }
+                }
+
+                if (inv.approve_date != null && inv.approve_date != '') {
+                  totalAcceptance += Number(inv.approve_amount);
+                }
               }
 
               if (
@@ -1194,11 +1266,11 @@ export class ImportService {
     }
 
     //check remark employee status
-    const excelStatus = typeof excelData['remark employee status'] === 'string' 
-      ? excelData['remark employee status'].trim().toLowerCase() 
+    const excelStatus = typeof excelData['remark employee status'] === 'string'
+      ? excelData['remark employee status'].trim().toLowerCase()
       : '';
-    const dbStatusStr = typeof dbData.status_description === 'string' 
-      ? dbData.status_description.trim().toLowerCase() 
+    const dbStatusStr = typeof dbData.status_description === 'string'
+      ? dbData.status_description.trim().toLowerCase()
       : '';
 
     if (

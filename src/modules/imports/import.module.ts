@@ -15,6 +15,7 @@ import { RemarkProject } from 'src/entities/remark-project.entity';
 import { Site } from 'src/entities/site.entity';
 import { StatusAcceptance } from 'src/entities/status-acceptance.entity';
 import { User } from 'src/entities/user.entity';
+import { ExportJob } from 'src/entities/export-job.entity';
 import { ActivityLogModule } from '../activity-log/activity-log.module';
 import { MailModule } from '../mail/mail.module';
 import { ImportController } from './import.controller';
@@ -38,6 +39,7 @@ import { ImportService } from './import.service';
       PurchaseOrderInvoice,
       EmployeePosition,
       User,
+      ExportJob,
     ]),
     MailModule,
     ActivityLogModule,
@@ -46,4 +48,4 @@ import { ImportService } from './import.service';
   providers: [ImportService],
   exports: [ImportService],
 })
-export class ImportModule {}
+export class ImportModule { }

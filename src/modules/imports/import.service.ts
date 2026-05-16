@@ -480,505 +480,516 @@ export class ImportService {
 
         line = 0;
         let lastProcessedCc = '-';
+        const errorList: string[] = [];
 
         for (const [index, value] of rowData.entries()) {
           line = index + 2;
-          if (
-            value['delete data'] == null ||
-            value['delete data'] == undefined ||
-            value['delete data'] !== true ||
-            value['delete data'].toLowerCase() != 'true'
-          ) {
-            let uniqueId = '';
-
+          try {
             if (
-              value['unique id'] != null &&
-              value['unique id'] != undefined &&
-              value['unique id'] != ''
+              value['delete data'] == null ||
+              value['delete data'] == undefined ||
+              value['delete data'] !== true ||
+              value['delete data'].toLowerCase() != 'true'
             ) {
-              const parsedId = importUniqueId(value['unique id']);
-              // importUniqueId returns the 3rd segment of format "YYYYBsn-MMDD-{id}"
-              // If the format is wrong (e.g. plain number from Excel), parsedId will be undefined
-              uniqueId = parsedId != null && parsedId != undefined && parsedId != '' ? parsedId : '';
-            }
-
-            //check if new PO
-            if (uniqueId == '' || uniqueId == null) {
-              console.log(`checking new PO row ${index} of ${rowData.length}`);
-
-              // NEW CC CHECK LOGIC
-              const ccCode = value['cc'];
-              if (ccCode) {
-                const ccExists = poData.some(po => po.cc === ccCode);
-                if (ccExists && !forceCc) {
-                  if (fs.existsSync(file.path)) {
-                    fs.unlinkSync(file.path);
-                  }
-                  throw new HttpException({
-                    meta: {
-                      code: 'CC_CONFLICT',
-                      message: `cc berikut "${ccCode}" sudah memiliki Biosron ID, di file yang kamu export belum ada Biosron ID nya. Mau Lanjut daftarin cc ini menggunakan Biosron ID baru??`,
-                    },
-                    data: {
-                      new_count: totalInsertPO,
-                      update_count: totalUpdatePO,
-                      last_cc: lastProcessedCc
-                    }
-                  }, HttpStatus.CONFLICT);
-                }
-              }
-
-              const insertPO = new PurchaseOrder();
-              insertPO.user_id = user.id;
-              insertPO.cc = value['cc'];
-              insertPO.line_po_status =
-                value['line po status'] == 'Active' ? 1 : 0;
-              insertPO.line_po_number = value['po line no.'];
-              insertPO.po_number = value['po no.'];
-              insertPO.shipment_number = value['shipment no.'];
-              insertPO.region_id = value['region']
-                ? (await this.getRegionByName(value['region'])).id
-                : null;
-              insertPO.area_id = value['area']
-                ? (await this.getAreaByName(value['area'])).id
-                : null;
-              insertPO.operator_id = value['operator']
-                ? (await this.getOperatorByName(value['operator'])).id
-                : null;
-              insertPO.customer_id = value['customer']
-                ? (await this.getCustomerByName(value['customer'])).id
-                : null;
-              insertPO.project_id =
-                value['project name'] && value['project code']
-                  ? (
-                    await this.getProjectByName(
-                      value['project name'],
-                      value['project code'],
-                    )
-                  ).id
-                  : null;
-              insertPO.site_id =
-                value['site name'] && value['site code']
-                  ? (
-                    await this.getSiteByName(
-                      value['site name'],
-                      value['site code'],
-                    )
-                  ).id
-                  : null;
-              insertPO.status = value['po status'];
-              insertPO.item_code = value['item code'];
-              insertPO.item_description = value['item description'];
-              insertPO.unit_price = value['unit price']
-                ? value['unit price']
-                : 0;
-              insertPO.unit_price_1 = value['unit price 1 (100/60/70/80)']
-                ? value['unit price 1 (100/60/70/80)']
-                : 0;
-              insertPO.unit_price_2 = value['unit price 2 (20/30/40)']
-                ? value['unit price 2 (20/30/40)']
-                : 0;
-              insertPO.requested_qty = value['requested qty']
-                ? value['requested qty']
-                : 0;
-              insertPO.billed_qty = value['billed qty']
-                ? value['billed qty']
-                : 0;
-              insertPO.due_qty = value['due qty'] ? value['due qty'] : 0;
-              insertPO.line_amount = value['line amount']
-                ? value['line amount']
-                : 0;
-              insertPO.remaining_from_po = value['remaining from po']
-                ? value['remaining from po']
-                : 0;
-              insertPO.unit = value['unit'];
-              insertPO.payment_terms = value['payment terms'];
-              insertPO.bidding_area_id = value['bidding area']
-                ? (await this.getBiddingAreaByName(value['bidding area'])).id
-                : null;
-              insertPO.publish_date = moment(
-                value['publish date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['publish date']
-                : null;
-              insertPO.start_date = moment(
-                value['start date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['start date']
-                : null;
-              insertPO.end_date = moment(
-                value['end date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['end date']
-                : null;
-              insertPO.priority_esar_approve = value['priority esar approve'];
-              insertPO.remark_weekly = value['remark weekly'];
-              insertPO.remark_project_id = value['remark project']
-                ? (await this.getRemarkProjectByName(value['remark project']))
-                  .id
-                : null;
-              insertPO.status_acceptance_id = value['status of acceptance']
-                ? (
-                  await this.getStatusAcceptanceByName(
-                    value['status of acceptance'],
-                  )
-                ).id
-                : null;
-              insertPO.pending_type_id = value['pending type']
-                ? (await this.getPendingTypeByName(value['pending type'])).id
-                : null;
-              insertPO.pending_approval_pd = value['pending approval pd'];
-              insertPO.amount_pending_approval_pd = value[
-                'amount pending approval pd'
-              ]
-                ? value['amount pending approval pd']
-                : 0;
-              insertPO.pd_id = value['pd name']
-                ? (await this.getPDByName(value['pd name'])).id
-                : null;
-              insertPO.actual_completion_date = moment(
-                value['actual completion date vs to pd'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['actual completion date vs to pd']
-                : null;
-              insertPO.ready_invoice = value['ready invoice'];
-              insertPO.amount_ready_invoice = value['amount ready invoice']
-                ? value['amount ready invoice']
-                : 0;
-              insertPO.remark_highlight = value['remark highlight'];
-              insertPO.budget_percentage = value['budget percentage']
-                ? value['budget percentage']
-                : 0;
-              insertPO.ny_invoice = value['ny invoice']
-                ? value['ny invoice']
-                : 0;
-              insertPO.ny_invoice_date = moment(
-                value['ny invoice date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['ny invoice date']
-                : null;
-              // PIUTANG IS AUTO CALCULATED, IGNORE EXCEL INPUT
-              // insertPO.piutang = value['piutang'] ? value['piutang'] : 0;
-              insertPO.priority_site_list = value['priority site list']
-                ? value['priority site list']
-                : null;
-              insertPO.amount_priority = value['amount priority']
-                ? value['amount priority']
-                : 0;
-              insertPO.achievement_priority = value['achievement priority']
-                ? value['achievement priority']
-                : 0;
-              insertPO.actual_work_date = moment(
-                value['actual bulan pengerjaan'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['actual bulan pengerjaan']
-                : null;
-              insertPO.actual_work_amount = value['actual nilai pengerjaan']
-                ? value['actual nilai pengerjaan']
-                : 0;
-              insertPO.actual_work_status = value[
-                'status actual bulan pengerjaan'
-              ]
-                ? value['status actual bulan pengerjaan']
-                : null;
-              insertPO.remark_highlight_recon = value['remark highlight rekon']
-                ? value['remark highlight rekon']
-                : null;
-
-              const pic = await this.getUserByName(value['pic']);
-
-              if (pic != null && pic != undefined) {
-                insertPO.pic = pic.id;
-              }
-
-              insertPO.plan_date = moment(
-                value['plan date'],
-                moment.ISO_8601,
-              ).isValid()
-                ? value['plan date']
-                : null;
-
-              // Initialize total_acceptance to 0 to prevent not-null constraint error on first save
-              insertPO.total_acceptance = 0;
-
-              //insert new PO to DB
-              const newPO = await this.poRepository.save(insertPO);
-              totalInsertPO++;
-
-              let totalAcceptance = 0;
-
-              //get list invoice
-              const insertedInvoice = [];
-              const invNumbersInsert = new Set<string>();
-              for (const key of Object.keys(value)) {
-                const match = key.match(/^ac(\d+)/);
-                if (match) invNumbersInsert.add(match[1]);
-              }
-
-              for (const invNo of Array.from(invNumbersInsert)) {
-                const inv = {
-                  purchase_order_id: newPO.id,
-                  invoice_number: value[`ac${invNo} inv`],
-                  invoice_date:
-                    value[`ac${invNo} inv date`] &&
-                      moment(
-                        value[`ac${invNo} inv date`],
-                        moment.ISO_8601,
-                      ).isValid()
-                      ? value[`ac${invNo} inv date`]
-                      : null,
-                  invoice_status: value[`ac${invNo} inv status`],
-                  payment_date:
-                    value[`payment date ${invNo}`] &&
-                      moment(
-                        value[`payment date ${invNo}`],
-                        moment.ISO_8601,
-                      ).isValid()
-                      ? value[`payment date ${invNo}`]
-                      : null,
-                  supplier_tax_number:
-                    value[`ac${invNo} (supplier tax invoice no.)`],
-                  supplier_tax_date:
-                    value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                      moment(
-                        value[`ac${invNo} (supplier tax invoice no.) date`],
-                        moment.ISO_8601,
-                      ).isValid()
-                      ? value[`ac${invNo} (supplier tax invoice no.) date`]
-                      : null,
-                  user_id: user.id,
-                  cc: value['cc'],
-                  payment_amount: value[`ac${invNo} payment amount`]
-                    ? value[`ac${invNo} payment amount`]
-                    : 0,
-                  deduction_amount: value[`ac${invNo} deduction amount`]
-                    ? value[`ac${invNo} deduction amount`]
-                    : 0,
-                  unit_price: value[`ac${invNo} unit price`]
-                    ? value[`ac${invNo} unit price`]
-                    : 0,
-                  submit_date:
-                    value[`ac${invNo} submit date`] &&
-                      moment(
-                        value[`ac${invNo} submit date`],
-                        moment.ISO_8601,
-                      ).isValid()
-                      ? value[`ac${invNo} submit date`]
-                      : null,
-                  submit_amount: value[`ac${invNo} submit amount`]
-                    ? value[`ac${invNo} submit amount`]
-                    : 0,
-                  approve_date:
-                    value[`ac${invNo} approve date`] &&
-                      moment(
-                        value[`ac${invNo} approve date`],
-                        moment.ISO_8601,
-                      ).isValid()
-                      ? value[`ac${invNo} approve date`]
-                      : null,
-                  approve_amount: value[`ac${invNo} approve amount`]
-                    ? value[`ac${invNo} approve amount`]
-                    : 0,
-                  position: invNo,
-                };
-
-                if (inv.approve_date != null && inv.approve_date != '') {
-                  totalAcceptance += Number(inv.approve_amount);
-                }
-
-                insertedInvoice.push(inv);
-                totalInsertInvoice++;
-              }
+              let uniqueId = '';
 
               if (
-                totalAcceptance != 0 &&
-                newPO.total_acceptance != totalAcceptance
+                value['unique id'] != null &&
+                value['unique id'] != undefined &&
+                value['unique id'] != ''
               ) {
-                await this.poRepository.update(
-                  {
-                    id: newPO.id,
-                  },
-                  {
-                    total_acceptance: totalAcceptance,
-                  },
-                );
+                const parsedId = importUniqueId(value['unique id']);
+                // importUniqueId returns the 3rd segment of format "YYYYBsn-MMDD-{id}"
+                // If the format is wrong (e.g. plain number from Excel), parsedId will be undefined
+                uniqueId = parsedId != null && parsedId != undefined && parsedId != '' ? parsedId : '';
               }
 
-              if (insertedInvoice.length > 0) {
-                console.log(`start insert po total ${insertedInvoice.length}`);
-                await this.poiRepository.save(insertedInvoice, {
-                  chunk: 1000,
-                });
-              }
-            } else {
-              console.log(
-                `checking existing PO row ${index} of ${rowData.length}, id ${uniqueId}`,
-              );
+              //check if new PO
+              if (uniqueId == '' || uniqueId == null) {
+                console.log(`checking new PO row ${index} of ${rowData.length}`);
 
-              const indexDataExisting = poData.findIndex(
-                (item) => item.id == uniqueId,
-              );
-
-              if (indexDataExisting < 0) {
-                // PO not found - could be invalid Biosron ID format or truly deleted
-                console.warn(`PO with id ${uniqueId} not found in DB, skipping row ${index}`);
-                continue;
-              }
-
-              const updateDataPO = await this.validatePOData(
-                value,
-                poData[indexDataExisting],
-              );
-
-              if (Object.keys(updateDataPO).length > 0) {
-                //add user to updated object and push to list
-                updateDataPO.user_id = user.id;
-                updateDataPO.id = uniqueId;
-                updateDataPOList.push(updateDataPO);
-                totalUpdatePO++;
-              }
-
-              //get list invoice
-
-              let totalAcceptance = 0;
-
-              const rowKeys = Object.keys(value);
-
-              // Detect which part is being imported based on column headers in the row
-              const hasESARCols = rowKeys.some(k =>
-                /^ac\d+ unit price$/.test(k) ||
-                /^ac\d+ submit date$/.test(k) ||
-                /^ac\d+ submit amount$/.test(k) ||
-                /^ac\d+ approve date$/.test(k) ||
-                /^ac\d+ approve amount$/.test(k)
-              );
-              const hasInvCols = rowKeys.some(k =>
-                /^ac\d+ inv$/.test(k) ||
-                /^ac\d+ inv date$/.test(k) ||
-                /^ac\d+ inv status$/.test(k) ||
-                /^payment date \d+$/.test(k) ||
-                /^ac\d+ \(supplier tax/.test(k) ||
-                /^ac\d+ payment amount$/.test(k) ||
-                /^ac\d+ deduction amount$/.test(k)
-              );
-
-              console.log(`Row ${index}: hasESARCols=${hasESARCols}, hasInvCols=${hasInvCols}`);
-
-              const invNumbersUpdate = new Set<string>();
-              for (const key of rowKeys) {
-                // Capture from ac{N} prefixed columns
-                const acMatch = key.match(/^ac(\d+)/);
-                if (acMatch) invNumbersUpdate.add(acMatch[1]);
-                // Also capture from 'payment date {N}' columns
-                const pdMatch = key.match(/^payment date (\d+)$/);
-                if (pdMatch) invNumbersUpdate.add(pdMatch[1]);
-              }
-
-              for (const invNo of Array.from(invNumbersUpdate)) {
-                // Build inv object conditionally based on which mode is active
-                const inv: any = {
-                  purchase_order_id: uniqueId,
-                  position: invNo,
-                  user_id: user.id,
-                  cc: value['cc'],
-                  invoice_number: '',
-                };
-
-                // ESAR fields — only populate if file has ESAR columns
-                if (hasESARCols) {
-                  inv.unit_price = value[`ac${invNo} unit price`] ? value[`ac${invNo} unit price`] : 0;
-                  inv.submit_amount = value[`ac${invNo} submit amount`] ? value[`ac${invNo} submit amount`] : 0;
-                  inv.approve_amount = value[`ac${invNo} approve amount`] ? value[`ac${invNo} approve amount`] : 0;
-                  const submitDateVal = value[`ac${invNo} submit date`];
-                  if (submitDateVal && !moment(submitDateVal, moment.ISO_8601).isValid()) {
-                    throw new Error(`Invalid Date format at line ${line} column ac${invNo} submit date`);
+                // NEW CC CHECK LOGIC
+                const ccCode = value['cc'];
+                if (ccCode) {
+                  const ccExists = poData.some(po => po.cc === ccCode);
+                  if (ccExists && !forceCc) {
+                    if (fs.existsSync(file.path)) {
+                      fs.unlinkSync(file.path);
+                    }
+                    throw new HttpException({
+                      meta: {
+                        code: 'CC_CONFLICT',
+                        message: `cc berikut "${ccCode}" sudah memiliki Biosron ID, di file yang kamu export belum ada Biosron ID nya. Mau Lanjut daftarin cc ini menggunakan Biosron ID baru??`,
+                      },
+                      data: {
+                        new_count: totalInsertPO,
+                        update_count: totalUpdatePO,
+                        last_cc: lastProcessedCc
+                      }
+                    }, HttpStatus.CONFLICT);
                   }
-                  inv.submit_date = submitDateVal || null;
-                  const approveDateVal = value[`ac${invNo} approve date`];
-                  if (approveDateVal && !moment(approveDateVal, moment.ISO_8601).isValid()) {
-                    throw new Error(`Invalid Date format at line ${line} column ac${invNo} approve date`);
-                  }
-                  inv.approve_date = approveDateVal || null;
                 }
 
-                // Invoice fields — only populate if file has Invoice columns
-                if (hasInvCols) {
-                  inv.invoice_number = value[`ac${invNo} inv`] || '';
-                  inv.invoice_date = value[`ac${invNo} inv date`] &&
-                    moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
-                    ? value[`ac${invNo} inv date`] : null;
-                  inv.invoice_status = value[`ac${invNo} inv status`];
-                  inv.payment_date = value[`payment date ${invNo}`] &&
-                    moment(value[`payment date ${invNo}`], moment.ISO_8601).isValid()
-                    ? value[`payment date ${invNo}`] : null;
-                  inv.supplier_tax_number = value[`ac${invNo} (supplier tax invoice no.)`];
-                  inv.supplier_tax_date = value[`ac${invNo} (supplier tax invoice no.) date`] &&
-                    moment(value[`ac${invNo} (supplier tax invoice no.) date`], moment.ISO_8601).isValid()
-                    ? value[`ac${invNo} (supplier tax invoice no.) date`] : null;
-                  inv.payment_amount = value[`ac${invNo} payment amount`] ? value[`ac${invNo} payment amount`] : 0;
-                  inv.deduction_amount = value[`ac${invNo} deduction amount`] ? value[`ac${invNo} deduction amount`] : 0;
+                const insertPO = new PurchaseOrder();
+                insertPO.user_id = user.id;
+                insertPO.cc = value['cc'];
+                insertPO.line_po_status =
+                  value['line po status'] == 'Active' ? 1 : 0;
+                insertPO.line_po_number = value['po line no.'];
+                insertPO.po_number = value['po no.'];
+                insertPO.shipment_number = value['shipment no.'];
+                insertPO.region_id = value['region']
+                  ? (await this.getRegionByName(value['region'])).id
+                  : null;
+                insertPO.area_id = value['area']
+                  ? (await this.getAreaByName(value['area'])).id
+                  : null;
+                insertPO.operator_id = value['operator']
+                  ? (await this.getOperatorByName(value['operator'])).id
+                  : null;
+                insertPO.customer_id = value['customer']
+                  ? (await this.getCustomerByName(value['customer'])).id
+                  : null;
+                insertPO.project_id =
+                  value['project name'] && value['project code']
+                    ? (
+                      await this.getProjectByName(
+                        value['project name'],
+                        value['project code'],
+                      )
+                    ).id
+                    : null;
+                insertPO.site_id =
+                  value['site name'] && value['site code']
+                    ? (
+                      await this.getSiteByName(
+                        value['site name'],
+                        value['site code'],
+                      )
+                    ).id
+                    : null;
+                insertPO.status = value['po status'];
+                insertPO.item_code = value['item code'];
+                insertPO.item_description = value['item description'];
+                insertPO.unit_price = value['unit price']
+                  ? value['unit price']
+                  : 0;
+                insertPO.unit_price_1 = value['unit price 1 (100/60/70/80)']
+                  ? value['unit price 1 (100/60/70/80)']
+                  : 0;
+                insertPO.unit_price_2 = value['unit price 2 (20/30/40)']
+                  ? value['unit price 2 (20/30/40)']
+                  : 0;
+                insertPO.requested_qty = value['requested qty']
+                  ? value['requested qty']
+                  : 0;
+                insertPO.billed_qty = value['billed qty']
+                  ? value['billed qty']
+                  : 0;
+                insertPO.due_qty = value['due qty'] ? value['due qty'] : 0;
+                insertPO.line_amount = value['line amount']
+                  ? value['line amount']
+                  : 0;
+                insertPO.remaining_from_po = value['remaining from po']
+                  ? value['remaining from po']
+                  : 0;
+                insertPO.unit = value['unit'];
+                insertPO.payment_terms = value['payment terms'];
+                insertPO.bidding_area_id = value['bidding area']
+                  ? (await this.getBiddingAreaByName(value['bidding area'])).id
+                  : null;
+                insertPO.publish_date = moment(
+                  value['publish date'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['publish date']
+                  : null;
+                insertPO.start_date = moment(
+                  value['start date'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['start date']
+                  : null;
+                insertPO.end_date = moment(
+                  value['end date'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['end date']
+                  : null;
+                insertPO.priority_esar_approve = value['priority esar approve'];
+                insertPO.remark_weekly = value['remark weekly'];
+                insertPO.remark_project_id = value['remark project']
+                  ? (await this.getRemarkProjectByName(value['remark project']))
+                    .id
+                  : null;
+                insertPO.status_acceptance_id = value['status of acceptance']
+                  ? (
+                    await this.getStatusAcceptanceByName(
+                      value['status of acceptance'],
+                    )
+                  ).id
+                  : null;
+                insertPO.pending_type_id = value['pending type']
+                  ? (await this.getPendingTypeByName(value['pending type'])).id
+                  : null;
+                insertPO.pending_approval_pd = value['pending approval pd'];
+                insertPO.amount_pending_approval_pd = value[
+                  'amount pending approval pd'
+                ]
+                  ? value['amount pending approval pd']
+                  : 0;
+                insertPO.pd_id = value['pd name']
+                  ? (await this.getPDByName(value['pd name'])).id
+                  : null;
+                insertPO.actual_completion_date = moment(
+                  value['actual completion date vs to pd'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['actual completion date vs to pd']
+                  : null;
+                insertPO.ready_invoice = value['ready invoice'];
+                insertPO.amount_ready_invoice = value['amount ready invoice']
+                  ? value['amount ready invoice']
+                  : 0;
+                insertPO.remark_highlight = value['remark highlight'];
+                insertPO.budget_percentage = value['budget percentage']
+                  ? value['budget percentage']
+                  : 0;
+                insertPO.ny_invoice = value['ny invoice']
+                  ? value['ny invoice']
+                  : 0;
+                insertPO.ny_invoice_date = moment(
+                  value['ny invoice date'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['ny invoice date']
+                  : null;
+                // PIUTANG IS AUTO CALCULATED, IGNORE EXCEL INPUT
+                // insertPO.piutang = value['piutang'] ? value['piutang'] : 0;
+                insertPO.priority_site_list = value['priority site list']
+                  ? value['priority site list']
+                  : null;
+                insertPO.amount_priority = value['amount priority']
+                  ? value['amount priority']
+                  : 0;
+                insertPO.achievement_priority = value['achievement priority']
+                  ? value['achievement priority']
+                  : 0;
+                insertPO.actual_work_date = moment(
+                  value['actual bulan pengerjaan'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['actual bulan pengerjaan']
+                  : null;
+                insertPO.actual_work_amount = value['actual nilai pengerjaan']
+                  ? value['actual nilai pengerjaan']
+                  : 0;
+                insertPO.actual_work_status = value[
+                  'status actual bulan pengerjaan'
+                ]
+                  ? value['status actual bulan pengerjaan']
+                  : null;
+                insertPO.remark_highlight_recon = value['remark highlight rekon']
+                  ? value['remark highlight rekon']
+                  : null;
+
+                const pic = await this.getUserByName(value['pic']);
+
+                if (pic != null && pic != undefined) {
+                  insertPO.pic = pic.id;
                 }
 
-                const indexDataInvoiceExisting = poInvoiceData.findIndex(
-                  (item) =>
-                    item.po_id == inv.purchase_order_id &&
-                    (item.position == inv.position || (inv.invoice_number && item.invoice_number == inv.invoice_number))
+                insertPO.plan_date = moment(
+                  value['plan date'],
+                  moment.ISO_8601,
+                ).isValid()
+                  ? value['plan date']
+                  : null;
+
+                // Initialize total_acceptance to 0 to prevent not-null constraint error on first save
+                insertPO.total_acceptance = 0;
+
+                //insert new PO to DB
+                const newPO = await this.poRepository.save(insertPO);
+                totalInsertPO++;
+
+                let totalAcceptance = 0;
+
+                //get list invoice
+                const insertedInvoice = [];
+                const invNumbersInsert = new Set<string>();
+                for (const key of Object.keys(value)) {
+                  const match = key.match(/^ac(\d+)/);
+                  if (match) invNumbersInsert.add(match[1]);
+                }
+
+                for (const invNo of Array.from(invNumbersInsert)) {
+                  const inv = {
+                    purchase_order_id: newPO.id,
+                    invoice_number: value[`ac${invNo} inv`],
+                    invoice_date:
+                      value[`ac${invNo} inv date`] &&
+                        moment(
+                          value[`ac${invNo} inv date`],
+                          moment.ISO_8601,
+                        ).isValid()
+                        ? value[`ac${invNo} inv date`]
+                        : null,
+                    invoice_status: value[`ac${invNo} inv status`],
+                    payment_date:
+                      value[`payment date ${invNo}`] &&
+                        moment(
+                          value[`payment date ${invNo}`],
+                          moment.ISO_8601,
+                        ).isValid()
+                        ? value[`payment date ${invNo}`]
+                        : null,
+                    supplier_tax_number:
+                      value[`ac${invNo} (supplier tax invoice no.)`],
+                    supplier_tax_date:
+                      value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                        moment(
+                          value[`ac${invNo} (supplier tax invoice no.) date`],
+                          moment.ISO_8601,
+                        ).isValid()
+                        ? value[`ac${invNo} (supplier tax invoice no.) date`]
+                        : null,
+                    user_id: user.id,
+                    cc: value['cc'],
+                    payment_amount: value[`ac${invNo} payment amount`]
+                      ? value[`ac${invNo} payment amount`]
+                      : 0,
+                    deduction_amount: value[`ac${invNo} deduction amount`]
+                      ? value[`ac${invNo} deduction amount`]
+                      : 0,
+                    unit_price: value[`ac${invNo} unit price`]
+                      ? value[`ac${invNo} unit price`]
+                      : 0,
+                    submit_date:
+                      value[`ac${invNo} submit date`] &&
+                        moment(
+                          value[`ac${invNo} submit date`],
+                          moment.ISO_8601,
+                        ).isValid()
+                        ? value[`ac${invNo} submit date`]
+                        : null,
+                    submit_amount: value[`ac${invNo} submit amount`]
+                      ? value[`ac${invNo} submit amount`]
+                      : 0,
+                    approve_date:
+                      value[`ac${invNo} approve date`] &&
+                        moment(
+                          value[`ac${invNo} approve date`],
+                          moment.ISO_8601,
+                        ).isValid()
+                        ? value[`ac${invNo} approve date`]
+                        : null,
+                    approve_amount: value[`ac${invNo} approve amount`]
+                      ? value[`ac${invNo} approve amount`]
+                      : 0,
+                    position: invNo,
+                  };
+
+                  if (inv.approve_date != null && inv.approve_date != '') {
+                    totalAcceptance += Number(inv.approve_amount);
+                  }
+
+                  insertedInvoice.push(inv);
+                  totalInsertInvoice++;
+                }
+
+                if (
+                  totalAcceptance != 0 &&
+                  newPO.total_acceptance != totalAcceptance
+                ) {
+                  await this.poRepository.update(
+                    {
+                      id: newPO.id,
+                    },
+                    {
+                      total_acceptance: totalAcceptance,
+                    },
+                  );
+                }
+
+                if (insertedInvoice.length > 0) {
+                  console.log(`start insert po total ${insertedInvoice.length}`);
+                  await this.poiRepository.save(insertedInvoice, {
+                    chunk: 1000,
+                  });
+                }
+              } else {
+                console.log(
+                  `checking existing PO row ${index} of ${rowData.length}, id ${uniqueId}`,
                 );
 
-                if (indexDataInvoiceExisting > -1) {
-                  const updateData = await this.validateInvoicePOData(
-                    inv,
-                    poInvoiceData[indexDataInvoiceExisting],
-                    poData[indexDataExisting],
-                    hasESARCols,
-                    hasInvCols,
+                const indexDataExisting = poData.findIndex(
+                  (item) => item.id == uniqueId,
+                );
+
+                if (indexDataExisting < 0) {
+                  // PO not found - could be invalid Biosron ID format or truly deleted
+                  console.warn(`PO with id ${uniqueId} not found in DB, skipping row ${index}`);
+                  continue;
+                }
+
+                const updateDataPO = await this.validatePOData(
+                  value,
+                  poData[indexDataExisting],
+                );
+
+                if (Object.keys(updateDataPO).length > 0) {
+                  //add user to updated object and push to list
+                  updateDataPO.user_id = user.id;
+                  updateDataPO.id = uniqueId;
+                  updateDataPOList.push(updateDataPO);
+                  totalUpdatePO++;
+                }
+
+                //get list invoice
+
+                let totalAcceptance = 0;
+
+                const rowKeys = Object.keys(value);
+
+                // Detect which part is being imported based on column headers in the row
+                const hasESARCols = rowKeys.some(k =>
+                  /^ac\d+ unit price$/.test(k) ||
+                  /^ac\d+ submit date$/.test(k) ||
+                  /^ac\d+ submit amount$/.test(k) ||
+                  /^ac\d+ approve date$/.test(k) ||
+                  /^ac\d+ approve amount$/.test(k)
+                );
+                const hasInvCols = rowKeys.some(k =>
+                  /^ac\d+ inv$/.test(k) ||
+                  /^ac\d+ inv date$/.test(k) ||
+                  /^ac\d+ inv status$/.test(k) ||
+                  /^payment date \d+$/.test(k) ||
+                  /^ac\d+ \(supplier tax/.test(k) ||
+                  /^ac\d+ payment amount$/.test(k) ||
+                  /^ac\d+ deduction amount$/.test(k)
+                );
+
+                console.log(`Row ${index}: hasESARCols=${hasESARCols}, hasInvCols=${hasInvCols}`);
+
+                const invNumbersUpdate = new Set<string>();
+                for (const key of rowKeys) {
+                  // Capture from ac{N} prefixed columns
+                  const acMatch = key.match(/^ac(\d+)/);
+                  if (acMatch) invNumbersUpdate.add(acMatch[1]);
+                  // Also capture from 'payment date {N}' columns
+                  const pdMatch = key.match(/^payment date (\d+)$/);
+                  if (pdMatch) invNumbersUpdate.add(pdMatch[1]);
+                }
+
+                for (const invNo of Array.from(invNumbersUpdate)) {
+                  // Build inv object conditionally based on which mode is active
+                  const inv: any = {
+                    purchase_order_id: uniqueId,
+                    position: invNo,
+                    user_id: user.id,
+                    cc: value['cc'],
+                    invoice_number: '',
+                  };
+
+                  // ESAR fields — only populate if file has ESAR columns
+                  if (hasESARCols) {
+                    inv.unit_price = value[`ac${invNo} unit price`] ? value[`ac${invNo} unit price`] : 0;
+                    inv.submit_amount = value[`ac${invNo} submit amount`] ? value[`ac${invNo} submit amount`] : 0;
+                    inv.approve_amount = value[`ac${invNo} approve amount`] ? value[`ac${invNo} approve amount`] : 0;
+                    const submitDateVal = value[`ac${invNo} submit date`];
+                    if (submitDateVal && !moment(submitDateVal, moment.ISO_8601).isValid()) {
+                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} submit date`);
+                    }
+                    inv.submit_date = submitDateVal || null;
+                    const approveDateVal = value[`ac${invNo} approve date`];
+                    if (approveDateVal && !moment(approveDateVal, moment.ISO_8601).isValid()) {
+                      throw new Error(`Invalid Date format at line ${line} column ac${invNo} approve date`);
+                    }
+                    inv.approve_date = approveDateVal || null;
+                  }
+
+                  // Invoice fields — only populate if file has Invoice columns
+                  if (hasInvCols) {
+                    inv.invoice_number = value[`ac${invNo} inv`] || '';
+                    inv.invoice_date = value[`ac${invNo} inv date`] &&
+                      moment(value[`ac${invNo} inv date`], moment.ISO_8601).isValid()
+                      ? value[`ac${invNo} inv date`] : null;
+                    inv.invoice_status = value[`ac${invNo} inv status`];
+                    inv.payment_date = value[`payment date ${invNo}`] &&
+                      moment(value[`payment date ${invNo}`], moment.ISO_8601).isValid()
+                      ? value[`payment date ${invNo}`] : null;
+                    inv.supplier_tax_number = value[`ac${invNo} (supplier tax invoice no.)`];
+                    inv.supplier_tax_date = value[`ac${invNo} (supplier tax invoice no.) date`] &&
+                      moment(value[`ac${invNo} (supplier tax invoice no.) date`], moment.ISO_8601).isValid()
+                      ? value[`ac${invNo} (supplier tax invoice no.) date`] : null;
+                    inv.payment_amount = value[`ac${invNo} payment amount`] ? value[`ac${invNo} payment amount`] : 0;
+                    inv.deduction_amount = value[`ac${invNo} deduction amount`] ? value[`ac${invNo} deduction amount`] : 0;
+                  }
+
+                  const indexDataInvoiceExisting = poInvoiceData.findIndex(
+                    (item) =>
+                      item.po_id == inv.purchase_order_id &&
+                      (item.position == inv.position || (inv.invoice_number && item.invoice_number == inv.invoice_number))
                   );
 
-                  if (Object.keys(updateData).length > 0) {
-                    updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
-                    updateData.purchase_order_id = uniqueId;
-                    updateData.user_id = user.id;
+                  if (indexDataInvoiceExisting > -1) {
+                    const updateData = await this.validateInvoicePOData(
+                      inv,
+                      poInvoiceData[indexDataInvoiceExisting],
+                      poData[indexDataExisting],
+                      hasESARCols,
+                      hasInvCols,
+                    );
 
-                    updateDataPOExistingInvoiceList.push(updateData);
-                    if (hasESARCols) totalUpdateESAR++;
-                    if (hasInvCols) totalUpdateInvoice++;
+                    if (Object.keys(updateData).length > 0) {
+                      updateData.id = poInvoiceData[indexDataInvoiceExisting].poi_id;
+                      updateData.purchase_order_id = uniqueId;
+                      updateData.user_id = user.id;
+
+                      updateDataPOExistingInvoiceList.push(updateData);
+                      if (hasESARCols) totalUpdateESAR++;
+                      if (hasInvCols) totalUpdateInvoice++;
+                    }
+                  } else {
+                    // Insert new invoice if it has any relevant data
+                    const hasData = (hasESARCols && (inv.unit_price || inv.submit_amount || inv.approve_amount || inv.submit_date || inv.approve_date)) ||
+                      (hasInvCols && (inv.invoice_number || inv.invoice_date || inv.payment_date || inv.payment_amount || inv.supplier_tax_number || inv.supplier_tax_date || inv.deduction_amount));
+                    if (hasData) {
+                      if (hasESARCols) totalInsertESAR++;
+                      if (hasInvCols) totalInsertInvoice++;
+                      insertedDataPOExistingInvoiceList.push(inv);
+                    }
                   }
-                } else {
-                  // Insert new invoice if it has any relevant data
-                  const hasData = (hasESARCols && (inv.unit_price || inv.submit_amount || inv.approve_amount || inv.submit_date || inv.approve_date)) ||
-                    (hasInvCols && (inv.invoice_number || inv.invoice_date || inv.payment_date || inv.payment_amount || inv.supplier_tax_number || inv.supplier_tax_date || inv.deduction_amount));
-                  if (hasData) {
-                    if (hasESARCols) totalInsertESAR++;
-                    if (hasInvCols) totalInsertInvoice++;
-                    insertedDataPOExistingInvoiceList.push(inv);
+
+                  if (inv.approve_date != null && inv.approve_date != '') {
+                    totalAcceptance += Number(inv.approve_amount);
                   }
                 }
 
-                if (inv.approve_date != null && inv.approve_date != '') {
-                  totalAcceptance += Number(inv.approve_amount);
+                if (
+                  totalAcceptance != 0 &&
+                  poData[indexDataExisting].total_acceptance != totalAcceptance
+                ) {
+                  await this.poRepository.update(
+                    {
+                      id: poData[indexDataExisting].id,
+                    },
+                    {
+                      total_acceptance: totalAcceptance,
+                    },
+                  );
                 }
-              }
-
-              if (
-                totalAcceptance != 0 &&
-                poData[indexDataExisting].total_acceptance != totalAcceptance
-              ) {
-                await this.poRepository.update(
-                  {
-                    id: poData[indexDataExisting].id,
-                  },
-                  {
-                    total_acceptance: totalAcceptance,
-                  },
-                );
               }
             }
+          } catch (e) {
+            let msg = e.message;
+            if (e instanceof HttpException && e.getStatus() === HttpStatus.CONFLICT) {
+              const response: any = e.getResponse();
+              msg = response?.meta?.message || msg;
+            }
+            errorList.push(`Line ${line} (CC: ${value['cc'] || '-'}): ${msg}`);
+            continue;
           }
         }
         console.log('done loop');
@@ -1034,13 +1045,21 @@ export class ImportService {
 
         const successMessage = `Berhasil menambah ${totalInsertPO} po, mengupdate ${totalUpdatePO} po, menambah ${totalInsertESAR} ESAR, mengupdate ${totalUpdateESAR} ESAR, menambah ${totalInsertInvoice} invoice, mengupdate ${totalUpdateInvoice} invoice`;
 
+        let finalMessage = successMessage;
+        if (errorList.length > 0) {
+          finalMessage += `\n\nTerdapat ${errorList.length} baris yang di-skip (gagal):\n` + errorList.slice(0, 100).join('\n');
+          if (errorList.length > 100) {
+            finalMessage += `\n...dan ${errorList.length - 100} baris error lainnya.`;
+          }
+        }
+
         await this.activityLogService.create({
           user_id: user.id,
           description: successMessage,
           ip: ip,
         });
 
-        return successResponse(null, successMessage);
+        return successResponse(null, finalMessage);
       } else {
         if (fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);

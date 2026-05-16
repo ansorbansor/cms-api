@@ -429,7 +429,6 @@ export class ImportService {
         //check all rows
         for (const [index, value] of rowData.entries()) {
           line = index + 2;
-          console.log(`checking unique id row ${index} of ${rowData.length}`);
           if (
             value['unique id'] != null &&
             value['unique id'] != undefined &&
@@ -506,7 +505,6 @@ export class ImportService {
 
               //check if new PO
               if (uniqueId == '' || uniqueId == null) {
-                console.log(`checking new PO row ${index} of ${rowData.length}`);
 
                 // NEW CC CHECK LOGIC
                 const ccCode = value['cc'];
@@ -630,7 +628,8 @@ export class ImportService {
                   ).id
                   : null;
                 insertPO.pending_type_id = value['pending type']
-                  ? (await this.getPendingTypeByName(value['pending type'])).id
+                  ? (await this.getPendingTypeByName(value['pending type']))
+                    .id
                   : null;
                 insertPO.pending_approval_pd = value['pending approval pd'];
                 insertPO.amount_pending_approval_pd = value[
@@ -813,16 +812,11 @@ export class ImportService {
                 }
 
                 if (insertedInvoice.length > 0) {
-                  console.log(`start insert po total ${insertedInvoice.length}`);
                   await this.poiRepository.save(insertedInvoice, {
                     chunk: 1000,
                   });
                 }
               } else {
-                console.log(
-                  `checking existing PO row ${index} of ${rowData.length}, id ${uniqueId}`,
-                );
-
                 const indexDataExisting = poData.findIndex(
                   (item) => item.id == uniqueId,
                 );
@@ -870,7 +864,7 @@ export class ImportService {
                   /^ac\d+ deduction amount$/.test(k)
                 );
 
-                console.log(`Row ${index}: hasESARCols=${hasESARCols}, hasInvCols=${hasInvCols}`);
+
 
                 const invNumbersUpdate = new Set<string>();
                 for (const key of rowKeys) {

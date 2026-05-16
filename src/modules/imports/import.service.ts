@@ -122,10 +122,14 @@ export class ImportService {
       await this.exportJobRepository.save(job);
     } catch (err) {
       job.status = 'FAILED';
-      if (err instanceof HttpException && err.getStatus() === HttpStatus.CONFLICT) {
-        // CC_CONFLICT scenario
+      if (err instanceof HttpException) {
         const response: any = err.getResponse();
-        job.error_message = JSON.stringify(response);
+        if (err.getStatus() === HttpStatus.CONFLICT) {
+          // CC_CONFLICT scenario
+          job.error_message = JSON.stringify(response);
+        } else {
+          job.error_message = response?.meta?.message || JSON.stringify(response) || err.message;
+        }
       } else {
         job.error_message = err.message || 'Unknown error occurred during import';
       }

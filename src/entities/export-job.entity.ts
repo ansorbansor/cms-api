@@ -5,7 +5,10 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
+    ManyToOne,
+    JoinColumn,
 } from 'typeorm';
+import { User } from './user.entity';
 
 @Entity({ name: 'export_jobs' })
 export class ExportJob extends BaseEntity {
@@ -14,6 +17,10 @@ export class ExportJob extends BaseEntity {
 
     @Column()
     user_id: number;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'user_id' })
+    user: User;
 
     @Column({ type: 'varchar', length: 50 })
     type: string; // 'PO', 'SPK', etc.

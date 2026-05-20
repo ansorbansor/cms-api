@@ -78,7 +78,8 @@ export class ImportService {
 
   async getJobs(user: User) {
     return this.exportJobRepository.find({
-      where: { user_id: user.id, type: 'IMPORT_PO' },
+      where: { type: 'IMPORT_PO' },
+      relations: ['user'],
       order: { created_at: 'DESC' },
       take: 20
     });

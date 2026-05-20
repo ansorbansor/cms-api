@@ -17,8 +17,12 @@ export class TakeDataSubmission extends EntityHelper {
     template_item_id: number;
 
     @ApiProperty({ example: 1 })
-    @Column()
+    @Column({ nullable: true })
     photo_id: number;
+
+    @ApiProperty({ example: 'Antenna Height: 50m' })
+    @Column({ type: 'text', nullable: true })
+    text_data: string;
 
     @OneToOne(() => FileEntity, { eager: true })
     @JoinColumn({ name: 'photo_id' })

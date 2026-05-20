@@ -198,7 +198,7 @@ export class TakeDataService {
                 .leftJoinAndSelect('sub.photo', 'photo')
                 .where('sub.assignment_id IN (:...ids)', { ids: assignmentIds })
                 .getMany();
-            
+
             data.forEach(a => {
                 a.submissions = submissions.filter(s => s.assignment_id === a.id);
             });
@@ -226,7 +226,7 @@ export class TakeDataService {
         // Determine overall status based on whether ANY item is rejected
         let overallStatus = 'Passed';
         const itemReviews = reviewDto.item_reviews;
-        
+
         for (const key in itemReviews) {
             if (itemReviews[key].status === 'Rejected') {
                 overallStatus = 'Rejected';
@@ -289,7 +289,7 @@ export class TakeDataService {
                 .leftJoinAndSelect('sub.photo', 'photo')
                 .where('sub.assignment_id IN (:...ids)', { ids: assignmentIds })
                 .getMany();
-            
+
             assignments.forEach(a => {
                 a.submissions = submissions.filter(s => s.assignment_id === a.id);
             });
@@ -307,17 +307,39 @@ export class TakeDataService {
         }
 
         // Upload photo
-        const photoEntity = await this.filesService.uploadFile(
-            file,
-            userId,
-            FilePath.USER, // Using USER path for now, maybe create a specific one?
-            'Take Data Photo'
-        );
+        let photoEntityId = null;
+        if (file) {
+            const photoEntity = await this.filesService.uploadFile(
+                file,
+                userId,
+                FilePath.USER, // Using USER path for now, maybe create a specific one?
+                'Take Data Photo'
+            );
+            photoEntityId = photoEntity.id;
+        }
+
+        if (submitDto.text_data && !photoEntityId) {
+            let existingSubmission = await this.submissionRepository.findOne({
+                where: {
+                    assignment_id: submitDto.assignment_id,
+                    template_item_id: submitDto.template_item_id,
+                }
+            });
+
+            if (existingSubmission) {
+                existingSubmission.text_data = submitDto.text_data;
+                existingSubmission.timestamp = submitDto.timestamp || existingSubmission.timestamp;
+                existingSubmission.submitted_by = userId;
+                await this.submissionRepository.save(existingSubmission);
+                return existingSubmission;
+            }
+        }
 
         const submission = this.submissionRepository.create({
             assignment_id: submitDto.assignment_id,
             template_item_id: submitDto.template_item_id,
-            photo_id: photoEntity.id,
+            photo_id: photoEntityId,
+            text_data: submitDto.text_data,
             coordinate: submitDto.coordinate,
             timestamp: submitDto.timestamp,
             submitted_by: userId,
@@ -445,7 +467,7 @@ export class TakeDataService {
         for (const item of assignment.template.items) {
             const submissionCount = countMap.get(item.id) || 0;
             const minPhotos = item.min_photos && item.min_photos > 0 ? item.min_photos : 1;
-            
+
             if (submissionCount >= minPhotos) {
                 completedItems++;
             }
@@ -509,163 +531,167 @@ export class TakeDataService {
                                 // Find a submission for this item
                                 const submission = submissions.find(s => s.template_item_id === matchedItem.id);
 
-                                if (submission && submission.photo && submission.photo.name) {
-                                    const photoPath = path.join(process.cwd(), 'files', submission.photo.name);
-                                    if (fs.existsSync(photoPath)) {
-                                        const ext = path.extname(photoPath).toLowerCase();
-                                        const imageExtensionPattern = /\.(jpeg|jpg|png|gif)$/i;
+                                if (submission) {
+                                    if (submission.text_data) {
+                                        cell.value = submission.text_data;
+                                    } else if (submission.photo && submission.photo.name) {
+                                        const photoPath = path.join(process.cwd(), 'files', submission.photo.name);
+                                        if (fs.existsSync(photoPath)) {
+                                            const ext = path.extname(photoPath).toLowerCase();
+                                            const imageExtensionPattern = /\.(jpeg|jpg|png|gif)$/i;
 
-                                        if (imageExtensionPattern.test(ext)) {
-                                            const imageId = workbook.addImage({
-                                                filename: photoPath,
-                                                extension: ext === '.png' ? 'png' : ext === '.gif' ? 'gif' : 'jpeg',
-                                            });
+                                            if (imageExtensionPattern.test(ext)) {
+                                                const imageId = workbook.addImage({
+                                                    filename: photoPath,
+                                                    extension: ext === '.png' ? 'png' : ext === '.gif' ? 'gif' : 'jpeg',
+                                                });
 
-                                            // Clear the placeholder text
-                                            cell.value = '';
+                                                // Clear the placeholder text
+                                                cell.value = '';
 
-                                            // Read original image dimensions
-                                            let imgW = 100;
-                                            let imgH = 100;
-                                            try {
-                                                const sizeOfModule = require('image-size');
-                                                const sizeOf = typeof sizeOfModule === 'function' ? sizeOfModule : (sizeOfModule.imageSize || sizeOfModule.default);
-                                                // Pass filepath instead of full buffer to save RAM/CPU
-                                                const dimensions = sizeOf(photoPath);
-                                                imgW = dimensions.width || 100;
-                                                imgH = dimensions.height || 100;
-                                            } catch (e) {
-                                                console.error('Failed to read image dimensions', e);
-                                            }
+                                                // Read original image dimensions
+                                                let imgW = 100;
+                                                let imgH = 100;
+                                                try {
+                                                    const sizeOfModule = require('image-size');
+                                                    const sizeOf = typeof sizeOfModule === 'function' ? sizeOfModule : (sizeOfModule.imageSize || sizeOfModule.default);
+                                                    // Pass filepath instead of full buffer to save RAM/CPU
+                                                    const dimensions = sizeOf(photoPath);
+                                                    imgW = dimensions.width || 100;
+                                                    imgH = dimensions.height || 100;
+                                                } catch (e) {
+                                                    console.error('Failed to read image dimensions', e);
+                                                }
 
-                                            // Helper to get Excel cell dimensions in pixels
-                                            const getColWidth = (c) => (c && c.width ? c.width : 8.43) * 7.5;
-                                            const getRowHeight = (r) => (r && r.height ? r.height : 15) * 1.33;
+                                                // Helper to get Excel cell dimensions in pixels
+                                                const getColWidth = (c) => (c && c.width ? c.width : 8.43) * 7.5;
+                                                const getRowHeight = (r) => (r && r.height ? r.height : 15) * 1.33;
 
-                                            let boxW = getColWidth(worksheet.getColumn(Number(cell.col)));
-                                            let boxH = getRowHeight(worksheet.getRow(Number(cell.row)));
-                                            let startCellNode = cell;
+                                                let boxW = getColWidth(worksheet.getColumn(Number(cell.col)));
+                                                let boxH = getRowHeight(worksheet.getRow(Number(cell.row)));
+                                                let startCellNode = cell;
 
-                                            const masterNode = cell.master;
+                                                const masterNode = cell.master;
 
-                                            if (masterNode && (masterNode.address !== cell.address || worksheet.model.merges?.some(m => m.includes(masterNode.address)))) {
-                                                const mergeLabel = worksheet.model.merges?.find(m => m.startsWith(masterNode.address + ':'));
-                                                if (mergeLabel) {
-                                                    const [start, end] = mergeLabel.split(':');
-                                                    const startCell = worksheet.getCell(start);
-                                                    const endCell = worksheet.getCell(end);
-                                                    startCellNode = startCell;
+                                                if (masterNode && (masterNode.address !== cell.address || worksheet.model.merges?.some(m => m.includes(masterNode.address)))) {
+                                                    const mergeLabel = worksheet.model.merges?.find(m => m.startsWith(masterNode.address + ':'));
+                                                    if (mergeLabel) {
+                                                        const [start, end] = mergeLabel.split(':');
+                                                        const startCell = worksheet.getCell(start);
+                                                        const endCell = worksheet.getCell(end);
+                                                        startCellNode = startCell;
 
-                                                    boxW = 0;
-                                                    for (let c = Number(startCell.col); c <= Number(endCell.col); c++) {
-                                                        boxW += getColWidth(worksheet.getColumn(c));
+                                                        boxW = 0;
+                                                        for (let c = Number(startCell.col); c <= Number(endCell.col); c++) {
+                                                            boxW += getColWidth(worksheet.getColumn(c));
+                                                        }
+                                                        boxH = 0;
+                                                        for (let r = Number(startCell.row); r <= Number(endCell.row); r++) {
+                                                            boxH += getRowHeight(worksheet.getRow(r));
+                                                        }
                                                     }
-                                                    boxH = 0;
-                                                    for (let r = Number(startCell.row); r <= Number(endCell.row); r++) {
-                                                        boxH += getRowHeight(worksheet.getRow(r));
-                                                    }
                                                 }
-                                            }
 
-                                            // Scale image to fit within the box while preserving aspect ratio
-                                            const padding = 0.95; // 5% padding
-                                            const scaleW = (boxW * padding) / imgW;
-                                            const scaleH = (boxH * padding) / imgH;
-                                            const scale = Math.min(scaleW, scaleH);
+                                                // Scale image to fit within the box while preserving aspect ratio
+                                                const padding = 0.95; // 5% padding
+                                                const scaleW = (boxW * padding) / imgW;
+                                                const scaleH = (boxH * padding) / imgH;
+                                                const scale = Math.min(scaleW, scaleH);
 
-                                            const finalW = imgW * scale;
-                                            const finalH = imgH * scale;
+                                                const finalW = imgW * scale;
+                                                const finalH = imgH * scale;
 
-                                            // Calculate centering offsets
-                                            let offsetX = (boxW - finalW) / 2;
-                                            let offsetY = (boxH - finalH) / 2;
+                                                // Calculate centering offsets
+                                                let offsetX = (boxW - finalW) / 2;
+                                                let offsetY = (boxH - finalH) / 2;
 
-                                            let colBase = Number(startCellNode.col) - 1;
-                                            let cIdx = Number(startCellNode.col);
-                                            while (offsetX > 0) {
-                                                let w = getColWidth(worksheet.getColumn(cIdx));
-                                                if (offsetX < w) {
-                                                    colBase += (offsetX / w);
-                                                    break;
-                                                } else {
-                                                    offsetX -= w;
-                                                    colBase += 1;
-                                                    cIdx++;
-                                                }
-                                            }
-
-                                            let rowBase = Number(startCellNode.row) - 1;
-                                            let rIdx = Number(startCellNode.row);
-                                            while (offsetY > 0) {
-                                                let h = getRowHeight(worksheet.getRow(rIdx));
-                                                if (offsetY < h) {
-                                                    rowBase += (offsetY / h);
-                                                    break;
-                                                } else {
-                                                    offsetY -= h;
-                                                    rowBase += 1;
-                                                    rIdx++;
-                                                }
-                                            }
-
-                                            // Convert final width and height to br relative to the calculated tl (colBase, rowBase)
-                                            let brCol = colBase;
-                                            let remainingW = finalW;
-                                            let tempColIdx = Math.floor(colBase);
-                                            // Handle fractional part of start column first
-                                            let firstColW = getColWidth(worksheet.getColumn(tempColIdx + 1));
-                                            let startingFractionW = firstColW * (1 - (colBase % 1));
-
-                                            if (remainingW <= startingFractionW) {
-                                                brCol += (remainingW / firstColW);
-                                            } else {
-                                                brCol += (1 - (colBase % 1));
-                                                remainingW -= startingFractionW;
-                                                tempColIdx++;
-                                                while (remainingW > 0) {
-                                                    let cw = getColWidth(worksheet.getColumn(tempColIdx + 1));
-                                                    if (remainingW <= cw) {
-                                                        brCol += (remainingW / cw);
+                                                let colBase = Number(startCellNode.col) - 1;
+                                                let cIdx = Number(startCellNode.col);
+                                                while (offsetX > 0) {
+                                                    let w = getColWidth(worksheet.getColumn(cIdx));
+                                                    if (offsetX < w) {
+                                                        colBase += (offsetX / w);
                                                         break;
                                                     } else {
-                                                        brCol += 1;
-                                                        remainingW -= cw;
-                                                        tempColIdx++;
+                                                        offsetX -= w;
+                                                        colBase += 1;
+                                                        cIdx++;
                                                     }
                                                 }
-                                            }
 
-                                            let brRow = rowBase;
-                                            let remainingH = finalH;
-                                            let tempRowIdx = Math.floor(rowBase);
-                                            let firstRowH = getRowHeight(worksheet.getRow(tempRowIdx + 1));
-                                            let startingFractionH = firstRowH * (1 - (rowBase % 1));
-
-                                            if (remainingH <= startingFractionH) {
-                                                brRow += (remainingH / firstRowH);
-                                            } else {
-                                                brRow += (1 - (rowBase % 1));
-                                                remainingH -= startingFractionH;
-                                                tempRowIdx++;
-                                                while (remainingH > 0) {
-                                                    let rh = getRowHeight(worksheet.getRow(tempRowIdx + 1));
-                                                    if (remainingH <= rh) {
-                                                        brRow += (remainingH / rh);
+                                                let rowBase = Number(startCellNode.row) - 1;
+                                                let rIdx = Number(startCellNode.row);
+                                                while (offsetY > 0) {
+                                                    let h = getRowHeight(worksheet.getRow(rIdx));
+                                                    if (offsetY < h) {
+                                                        rowBase += (offsetY / h);
                                                         break;
                                                     } else {
-                                                        brRow += 1;
-                                                        remainingH -= rh;
-                                                        tempRowIdx++;
+                                                        offsetY -= h;
+                                                        rowBase += 1;
+                                                        rIdx++;
                                                     }
                                                 }
-                                            }
 
-                                            // Insert image with computed extension to preserve aspect ratio
-                                            worksheet.addImage(imageId, {
-                                                tl: { col: colBase, row: rowBase } as any,
-                                                br: { col: brCol, row: brRow } as any,
-                                                editAs: 'oneCell'
-                                            });
+                                                // Convert final width and height to br relative to the calculated tl (colBase, rowBase)
+                                                let brCol = colBase;
+                                                let remainingW = finalW;
+                                                let tempColIdx = Math.floor(colBase);
+                                                // Handle fractional part of start column first
+                                                let firstColW = getColWidth(worksheet.getColumn(tempColIdx + 1));
+                                                let startingFractionW = firstColW * (1 - (colBase % 1));
+
+                                                if (remainingW <= startingFractionW) {
+                                                    brCol += (remainingW / firstColW);
+                                                } else {
+                                                    brCol += (1 - (colBase % 1));
+                                                    remainingW -= startingFractionW;
+                                                    tempColIdx++;
+                                                    while (remainingW > 0) {
+                                                        let cw = getColWidth(worksheet.getColumn(tempColIdx + 1));
+                                                        if (remainingW <= cw) {
+                                                            brCol += (remainingW / cw);
+                                                            break;
+                                                        } else {
+                                                            brCol += 1;
+                                                            remainingW -= cw;
+                                                            tempColIdx++;
+                                                        }
+                                                    }
+                                                }
+
+                                                let brRow = rowBase;
+                                                let remainingH = finalH;
+                                                let tempRowIdx = Math.floor(rowBase);
+                                                let firstRowH = getRowHeight(worksheet.getRow(tempRowIdx + 1));
+                                                let startingFractionH = firstRowH * (1 - (rowBase % 1));
+
+                                                if (remainingH <= startingFractionH) {
+                                                    brRow += (remainingH / firstRowH);
+                                                } else {
+                                                    brRow += (1 - (rowBase % 1));
+                                                    remainingH -= startingFractionH;
+                                                    tempRowIdx++;
+                                                    while (remainingH > 0) {
+                                                        let rh = getRowHeight(worksheet.getRow(tempRowIdx + 1));
+                                                        if (remainingH <= rh) {
+                                                            brRow += (remainingH / rh);
+                                                            break;
+                                                        } else {
+                                                            brRow += 1;
+                                                            remainingH -= rh;
+                                                            tempRowIdx++;
+                                                        }
+                                                    }
+                                                }
+
+                                                // Insert image with computed extension to preserve aspect ratio
+                                                worksheet.addImage(imageId, {
+                                                    tl: { col: colBase, row: rowBase } as any,
+                                                    br: { col: brCol, row: brRow } as any,
+                                                    editAs: 'oneCell'
+                                                });
+                                            }
                                         }
                                     }
                                 }

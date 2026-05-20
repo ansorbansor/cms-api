@@ -14,6 +14,10 @@ export class TakeDataTemplateItem extends EntityHelper {
     @Column()
     name: string;
 
+    @ApiProperty({ example: 'photo' })
+    @Column({ default: 'photo' })
+    type: string;
+
     @ApiProperty({ example: 1 })
     @Column({ nullable: true })
     sample_photo_id: number;

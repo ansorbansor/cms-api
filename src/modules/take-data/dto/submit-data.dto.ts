@@ -15,8 +15,14 @@ export class SubmitTakeDataDto {
     @Type(() => Number)
     template_item_id: number;
 
-    @ApiProperty({ type: 'string', format: 'binary' })
-    photo: any;
+    @ApiProperty({ type: 'string', format: 'binary', required: false })
+    @IsOptional()
+    photo?: any;
+
+    @ApiProperty({ example: '10m', required: false })
+    @IsOptional()
+    @IsString()
+    text_data?: string;
 
     @ApiProperty({ example: '-6.2088,106.8456' })
     @IsOptional()

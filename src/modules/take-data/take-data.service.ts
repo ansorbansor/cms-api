@@ -435,6 +435,29 @@ export class TakeDataService {
             }
         }
 
+        const formItems = assignment.template.items.filter(i => i.type === 'form');
+        if (formItems.length > 0) {
+            const exceljs = require('exceljs');
+            const tempWorkbook = new exceljs.Workbook();
+            const formSheet = tempWorkbook.addWorksheet('Form Data');
+            const headers = ['Site ID', ...formItems.map(i => i.name)];
+            formSheet.addRow(headers);
+            const valuesRow = [assignment.custom_watermark || assignment.site.code || 'N/A'];
+            for (const item of formItems) {
+                const sub = submissions.find(s => s.template_item_id === item.id);
+                valuesRow.push(sub && sub.text_data ? sub.text_data : '');
+            }
+            formSheet.addRow(valuesRow);
+
+            formSheet.getRow(1).font = { bold: true };
+            headers.forEach((h, i) => {
+                formSheet.getColumn(i + 1).width = 30;
+            });
+
+            const buffer = await tempWorkbook.xlsx.writeBuffer();
+            archive.append(buffer, { name: 'Form_Data.xlsx' });
+        }
+
         await archive.finalize();
     }
 

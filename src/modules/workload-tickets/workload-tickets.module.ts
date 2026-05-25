@@ -11,11 +11,12 @@ import { Site } from 'src/entities/site.entity';
 import { WorkloadTaskAttachment } from 'src/entities/workload-task-attachment.entity';
 import { FileEntity } from 'src/entities/file.entity';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WorkloadTicket, Milestone, WorkloadTask, PurchaseOrder, Site, WorkloadTaskAttachment, FileEntity]), WhatsappModule],
+  imports: [TypeOrmModule.forFeature([WorkloadTicket, Milestone, WorkloadTask, PurchaseOrder, Site, WorkloadTaskAttachment, FileEntity]), WhatsappModule, UsersModule],
   controllers: [WorkloadTicketsController],
   providers: [WorkloadTicketsService, WorkloadTicketsCronService],
   exports: [WorkloadTicketsService],
 })
-export class WorkloadTicketsModule {}
+export class WorkloadTicketsModule { }

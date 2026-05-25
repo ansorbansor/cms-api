@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete, Query, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
 import { WorkloadTicketsService } from './workload-tickets.service';
+import { UsersService } from '../users/users.service';
+import { HttpException } from '@nestjs/common';
 
 @ApiBearerAuth()
 @ApiTags('Workload Tickets')
@@ -11,7 +13,10 @@ import { WorkloadTicketsService } from './workload-tickets.service';
   version: '1',
 })
 export class WorkloadTicketsController {
-  constructor(private readonly ticketsService: WorkloadTicketsService) {}
+  constructor(
+    private readonly ticketsService: WorkloadTicketsService,
+    private readonly usersService: UsersService,
+  ) { }
 
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -192,5 +197,22 @@ export class WorkloadTicketsController {
   async removeTaskAttachment(@Param('taskId') taskId: string, @Param('attachmentId') attachmentId: string) {
     await this.ticketsService.removeTaskAttachment(+taskId, +attachmentId);
     return successResponse(null, 'Attachment removed successfully');
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async delete(@Param('id') id: string, @Request() req) {
+    await this.assertSuperAdmin(req);
+    await this.ticketsService.deleteWholeTicket(+id);
+    return successResponse(null, 'Workload ticket deleted successfully');
+  }
+
+  private async assertSuperAdmin(req: any) {
+    const user = await this.usersService.findOneFull({ id: req.user.id });
+    const isSuperAdmin =
+      user?.employeePosition?.grant_all_access === true ||
+      user?.employee_position_id === 1 ||
+      String(user?.employee_position_id) === '1';
+    if (!isSuperAdmin) throw new HttpException('Only Super Admin can delete workload tickets', HttpStatus.FORBIDDEN);
   }
 }

@@ -33,7 +33,7 @@ export class WorkloadTicketsService {
     @InjectRepository(FileEntity)
     private fileRepo: Repository<FileEntity>,
     private whatsappService: WhatsappService,
-  ) {}
+  ) { }
 
   async create(siteId: number, userId: number, poIds: number[] = []): Promise<WorkloadTicket> {
     const site = await this.siteRepo.findOne(siteId);
@@ -43,7 +43,7 @@ export class WorkloadTicketsService {
     const existingCount = await this.ticketRepo.count({
       where: { site_id: siteId }
     });
-    
+
     const sequence = String(existingCount + 1).padStart(4, '0');
     const ticket_id = `${dateStr}_${site.code}-${sequence}`;
 
@@ -89,7 +89,7 @@ export class WorkloadTicketsService {
     const po = await this.poRepo.findOne(poId);
     if (!po) throw failedResponse(HttpStatus.NOT_FOUND, 'Purchase order not found');
     if (po.workload_ticket_id !== ticketId) throw failedResponse(HttpStatus.BAD_REQUEST, 'PO is not attached to this ticket');
-    
+
     po.workload_ticket_id = null;
     await this.poRepo.save(po);
   }
@@ -166,9 +166,9 @@ export class WorkloadTicketsService {
           .leftJoinAndSelect('ptask.assigned_to_user', 'user')
           .leftJoin('ptask.milestone', 'pmilestone')
           .where('pmilestone.workload_ticket_id = :ticketId', { ticketId: task.milestone.workload_ticket_id })
-          .andWhere('(pmilestone.order_index < :mIndex OR (pmilestone.order_index = :mIndex AND ptask.task_order_index < :tIndex))', { 
-             mIndex: task.milestone.order_index, 
-             tIndex: task.task_order_index 
+          .andWhere('(pmilestone.order_index < :mIndex OR (pmilestone.order_index = :mIndex AND ptask.task_order_index < :tIndex))', {
+            mIndex: task.milestone.order_index,
+            tIndex: task.task_order_index
           })
           .orderBy('pmilestone.order_index', 'DESC')
           .addOrderBy('ptask.task_order_index', 'DESC')
@@ -195,10 +195,10 @@ export class WorkloadTicketsService {
   async findOne(id: number): Promise<WorkloadTicket> {
     const ticket = await this.ticketRepo.findOne(id, {
       relations: [
-        'site', 
-        'purchase_orders', 
-        'milestones', 
-        'milestones.tasks', 
+        'site',
+        'purchase_orders',
+        'milestones',
+        'milestones.tasks',
         'milestones.tasks.assigned_to_user',
         'milestones.tasks.evidence_file',
         'milestones.tasks.attachments',
@@ -206,7 +206,7 @@ export class WorkloadTicketsService {
       ]
     });
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
-    
+
     if (ticket.milestones) {
       ticket.milestones.sort((a, b) => a.order_index - b.order_index);
       for (const m of ticket.milestones) {
@@ -225,6 +225,39 @@ export class WorkloadTicketsService {
     return ticket;
   }
 
+  async deleteWholeTicket(id: number): Promise<void> {
+    const ticket = await this.ticketRepo.findOne(id, {
+      relations: ['purchase_orders', 'milestones', 'milestones.tasks', 'milestones.tasks.attachments']
+    });
+    if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
+
+    // 1. Unlink POs
+    if (ticket.purchase_orders && ticket.purchase_orders.length > 0) {
+      for (const po of ticket.purchase_orders) {
+        po.workload_ticket_id = null;
+        await this.poRepo.save(po);
+      }
+    }
+
+    // 2. Delete child data
+    if (ticket.milestones) {
+      for (const m of ticket.milestones) {
+        if (m.tasks) {
+          for (const t of m.tasks) {
+            if (t.attachments) {
+              await this.attachmentRepo.remove(t.attachments);
+            }
+            await this.taskRepo.remove(t);
+          }
+        }
+        await this.milestoneRepo.remove(m);
+      }
+    }
+
+    // 3. Delete ticket
+    await this.ticketRepo.remove(ticket);
+  }
+
   async addMilestone(ticketId: number, name: string): Promise<Milestone> {
     const ticket = await this.ticketRepo.findOne(ticketId, { relations: ['milestones'] });
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
@@ -241,7 +274,7 @@ export class WorkloadTicketsService {
 
   async reorderMilestones(ticketId: number, orderIds: number[]): Promise<void> {
     for (let i = 0; i < orderIds.length; i++) {
-       await this.milestoneRepo.update(orderIds[i], { order_index: i + 1 });
+      await this.milestoneRepo.update(orderIds[i], { order_index: i + 1 });
     }
   }
 
@@ -262,7 +295,7 @@ export class WorkloadTicketsService {
 
     const count = milestone.tasks ? milestone.tasks.length : 0;
     const isFirstActiveTask = (count === 0 && milestone.status === 'Active');
-    
+
     const task = this.taskRepo.create({
       milestone_id: milestoneId,
       name: payload.name,
@@ -384,12 +417,12 @@ export class WorkloadTicketsService {
 
     task.pic_history.push(historyItem);
     task.assigned_to = userId;
-    
+
     // If reassigned while In Progress, reset the timer for the new PIC
     if (task.status === 'In Progress') {
       task.in_progress_at = now;
     }
-    
+
     const newUser = await getManager().getRepository(User).findOne(userId);
     task.assigned_to_user = newUser;
 
@@ -407,12 +440,12 @@ export class WorkloadTicketsService {
   async updateTaskStatus(taskId: number, payload: any): Promise<any> {
     const task = await this.taskRepo.findOne(taskId, { relations: ['milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site', 'assigned_to_user'] });
     if (!task) throw failedResponse(HttpStatus.NOT_FOUND, 'Task not found');
-    
+
     if (payload.status === 'Completed' && !payload.evidence_file_id) {
-       throw failedResponse(HttpStatus.BAD_REQUEST, 'Evidence file is required for Completed status');
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Evidence file is required for Completed status');
     }
     if ((payload.status === 'Issue' || payload.status === 'No Need') && !payload.watermark_notes) {
-       throw failedResponse(HttpStatus.BAD_REQUEST, 'Watermark notes required for Issue/No Need status');
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Watermark notes required for Issue/No Need status');
     }
 
     const isRevertingToPending = payload.status === 'Pending' && task.status !== 'Pending';
@@ -420,7 +453,7 @@ export class WorkloadTicketsService {
     if (payload.status) task.status = payload.status;
     if (payload.evidence_file_id) task.evidence_file_id = payload.evidence_file_id;
     if (payload.watermark_notes) task.watermark_notes = payload.watermark_notes;
-    
+
     await this.taskRepo.save(task);
 
     if (payload.status === 'Completed' || payload.status === 'No Need') {
@@ -428,9 +461,9 @@ export class WorkloadTicketsService {
     } else if (isRevertingToPending) {
       // Find the previous task and set it back to In Progress
       const previousTask = await this.taskRepo.findOne({
-        where: { 
-          milestone_id: task.milestone_id, 
-          task_order_index: task.task_order_index - 1 
+        where: {
+          milestone_id: task.milestone_id,
+          task_order_index: task.task_order_index - 1
         },
         relations: ['assigned_to_user', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
       });
@@ -439,7 +472,7 @@ export class WorkloadTicketsService {
         previousTask.status = 'In Progress';
         previousTask.in_progress_at = new Date();
         await this.taskRepo.save(previousTask);
-        
+
         // Notify the previous user that the task has been rejected
         if (previousTask.assigned_to_user && previousTask.assigned_to_user.phone) {
           const site = task.milestone?.workload_ticket?.site;
@@ -475,9 +508,9 @@ export class WorkloadTicketsService {
     const siteText = currentMilestone.workload_ticket?.site ? ` di Site ${currentMilestone.workload_ticket.site.name} (${currentMilestone.workload_ticket.site.code})` : '';
 
     const nextTask = await this.taskRepo.findOne({
-      where: { 
-        milestone_id: currentTask.milestone_id, 
-        task_order_index: currentTask.task_order_index + 1 
+      where: {
+        milestone_id: currentTask.milestone_id,
+        task_order_index: currentTask.task_order_index + 1
       },
       relations: ['assigned_to_user']
     });
@@ -487,8 +520,8 @@ export class WorkloadTicketsService {
       nextTask.in_progress_at = new Date();
       await this.taskRepo.save(nextTask);
       if (nextTask.assigned_to_user && nextTask.assigned_to_user.phone) {
-          const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
-          await this.sendWhatsappNotification(nextTask.assigned_to_user.phone, `Hai ${nextTask.assigned_to_user.name}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.`);
+        const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
+        await this.sendWhatsappNotification(nextTask.assigned_to_user.phone, `Hai ${nextTask.assigned_to_user.name}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.`);
       }
     } else {
       currentMilestone.status = 'Completed';
@@ -496,15 +529,15 @@ export class WorkloadTicketsService {
 
       const nextMilestone = await this.milestoneRepo.findOne({
         where: {
-           workload_ticket_id: currentMilestone.workload_ticket_id,
-           order_index: currentMilestone.order_index + 1
+          workload_ticket_id: currentMilestone.workload_ticket_id,
+          order_index: currentMilestone.order_index + 1
         }
       });
 
       if (nextMilestone) {
         nextMilestone.status = 'Active';
         await this.milestoneRepo.save(nextMilestone);
-        
+
         const firstTask = await this.taskRepo.findOne({
           where: { milestone_id: nextMilestone.id, task_order_index: 1 },
           relations: ['assigned_to_user']
@@ -513,8 +546,8 @@ export class WorkloadTicketsService {
           firstTask.status = 'In Progress';
           await this.taskRepo.save(firstTask);
           if (firstTask.assigned_to_user && firstTask.assigned_to_user.phone) {
-             const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
-             await this.sendWhatsappNotification(firstTask.assigned_to_user.phone, `Hai ${firstTask.assigned_to_user.name}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.`);
+            const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
+            await this.sendWhatsappNotification(firstTask.assigned_to_user.phone, `Hai ${firstTask.assigned_to_user.name}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.`);
           }
         }
       } else {

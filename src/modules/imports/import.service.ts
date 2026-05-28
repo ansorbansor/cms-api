@@ -76,13 +76,56 @@ export class ImportService {
 
   private importQueue: async.QueueObject<any>;
 
-  async getJobs(user: User) {
-    return this.exportJobRepository.find({
-      where: { type: 'IMPORT_PO' },
-      relations: ['user'],
-      order: { created_at: 'DESC' },
-      take: 20
-    });
+  async getJobs(user: User, page: number = 1) {
+    const limitDays = 1;
+    const offsetDays = (page - 1) * limitDays;
+
+    // 1. Get distinct dates that have imports
+    const distinctDates = await getManager().query(`
+      SELECT DISTINCT DATE(created_at) as job_date
+      FROM export_jobs
+      WHERE type = 'IMPORT_PO'
+      ORDER BY job_date DESC
+      LIMIT ${limitDays} OFFSET ${offsetDays}
+    `);
+
+    if (distinctDates.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          total_page: 0,
+          current_page: page,
+          current_date: null
+        }
+      };
+    }
+
+    const targetDate = moment(distinctDates[0].job_date).format('YYYY-MM-DD');
+
+    // 2. Get total number of distinct dates for pagination
+    const totalDatesResult = await getManager().query(`
+      SELECT COUNT(DISTINCT DATE(created_at)) as total
+      FROM export_jobs
+      WHERE type = 'IMPORT_PO'
+    `);
+    const totalPage = parseInt(totalDatesResult[0].total);
+
+    // 2. Get jobs for that specific date
+    const jobsForDate = await this.exportJobRepository.createQueryBuilder('job')
+      .leftJoinAndSelect('job.user', 'user')
+      .where('job.type = :type', { type: 'IMPORT_PO' })
+      .andWhere('DATE(job.created_at) = :targetDate', { targetDate })
+      .orderBy('job.created_at', 'DESC')
+      .getMany();
+
+    return {
+      data: jobsForDate,
+      pagination: {
+        total_page: totalPage,
+        current_page: page,
+        current_date: targetDate
+      }
+    };
   }
 
   async queueImportPO(file, user: User, ip: string, forceCc: boolean) {

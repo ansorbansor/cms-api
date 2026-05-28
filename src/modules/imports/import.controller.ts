@@ -7,6 +7,7 @@ import {
   UploadedFile,
   Post,
   Get,
+  Query,
   Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,11 +27,12 @@ export class ImportController {
   @Get('jobs')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async getJobs(@Request() req) {
-    const jobs = await this.importService.getJobs(req.user);
+  async getJobs(@Request() req, @Query('page') page: string) {
+    const pageNum = parseInt(page) || 1;
+    const result = await this.importService.getJobs(req.user, pageNum);
     return {
       meta: { status: 200, message: 'List Data Import Jobs', success: true },
-      data: jobs,
+      ...result,
     };
   }
 

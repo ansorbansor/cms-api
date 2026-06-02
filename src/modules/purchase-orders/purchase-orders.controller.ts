@@ -96,7 +96,7 @@ export class PurchaseOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   @Menus(MenuPermission.PO_CREATE)
-  @Roles(22)
+  @Roles(21, 22, 23)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('photo'))
   async update(

@@ -522,6 +522,9 @@ export class SPKOperationalService {
     data.skip((paginationOptions.page - 1) * paginationOptions.limit);
     data.take(paginationOptions.limit);
 
+    console.log('[DEBUG] SPK Ops List Query executed for user:', user.id, 'Role Code:', currentUser.employeePosition?.code);
+    console.log('[DEBUG] SPK Ops List SQL Query:', data.getSql());
+    console.log('[DEBUG] SPK Ops List Parameters:', data.getParameters());
     const returnedData = await data.getMany();
 
     return infinityPagination(

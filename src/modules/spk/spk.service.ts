@@ -608,7 +608,7 @@ export class SPKService {
         });
 
         if (!canAccessAll) {
-          data.andWhere('LOWER(region.name) IN (:...filterRegion)', {
+          data.andWhere('TRIM(LOWER(region.name)) IN (:...filterRegion)', {
             filterRegion: reg,
           });
         }
@@ -628,7 +628,7 @@ export class SPKService {
       }
       
       if (projectNames.length > 0) {
-        data.andWhere('LOWER(project.name) IN (:...projectNames)', { projectNames });
+        data.andWhere('TRIM(LOWER(project.name)) IN (:...projectNames)', { projectNames });
       }
     }
 

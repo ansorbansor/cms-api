@@ -418,7 +418,7 @@ export class SPKOperationalService {
         });
 
         if (!canAccessAll) {
-          data.andWhere('LOWER(region.name) IN (:...filterRegion)', {
+          data.andWhere('TRIM(LOWER(region.name)) IN (:...filterRegion)', {
             filterRegion: reg,
           });
         }

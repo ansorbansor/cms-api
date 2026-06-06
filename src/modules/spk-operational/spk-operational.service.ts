@@ -344,7 +344,8 @@ export class SPKOperationalService {
         data.withDeleted();
       } else if (
         currentUser.employeePosition?.code == RoleEnum.RPM ||
-        currentUser.employeePosition?.id == 9
+        currentUser.employeePosition?.id == 9 ||
+        currentUser.employee_position_id == 9
       ) {
         if (
           !paginationOptions.status ||
@@ -525,6 +526,10 @@ export class SPKOperationalService {
     console.log('[DEBUG] SPK Ops List Query executed for user:', user.id, 'Role Code:', currentUser.employeePosition?.code);
     console.log('[DEBUG] SPK Ops List SQL Query:', data.getSql());
     console.log('[DEBUG] SPK Ops List Parameters:', data.getParameters());
+    
+    (paginationOptions as any).sql_debug = data.getSql();
+    (paginationOptions as any).sql_params = data.getParameters();
+    
     const returnedData = await data.getMany();
 
     return infinityPagination(

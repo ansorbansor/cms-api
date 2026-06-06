@@ -522,7 +522,10 @@ export class SPKService {
         });
 
         data.withDeleted();
-      } else if (currentUser.employeePosition?.code == RoleEnum.RPM) {
+      } else if (
+        currentUser.employeePosition?.code == RoleEnum.RPM ||
+        currentUser.employeePosition?.id == 9
+      ) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.CREATED
@@ -1412,7 +1415,7 @@ export class SPKService {
     }
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
-    const roleCode = currentUser.employeePosition?.code;
+    const roleCode = currentUser.employeePosition?.code?.toLowerCase();
 
     const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids).leftJoinAndSelect('spk.po', 'po');
 

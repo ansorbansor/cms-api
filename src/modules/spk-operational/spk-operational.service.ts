@@ -342,7 +342,10 @@ export class SPKOperationalService {
         });
 
         data.withDeleted();
-      } else if (currentUser.employeePosition?.code == RoleEnum.RPM) {
+      } else if (
+        currentUser.employeePosition?.code == RoleEnum.RPM ||
+        currentUser.employeePosition?.id == 9
+      ) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.CREATED

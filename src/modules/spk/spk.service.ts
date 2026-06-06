@@ -622,12 +622,12 @@ export class SPKService {
       
       for (const p of projectsArr) {
         if (p && typeof p === 'string') {
-          projectNames.push(...p.split(',').map(name => name.trim()));
+          projectNames.push(...p.split(',').map(name => name.trim().toLowerCase()));
         }
       }
       
       if (projectNames.length > 0) {
-        data.andWhere('project.name IN (:...projectNames)', { projectNames });
+        data.andWhere('LOWER(project.name) IN (:...projectNames)', { projectNames });
       }
     }
 

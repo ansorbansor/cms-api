@@ -548,8 +548,8 @@ export class ExportService {
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
     if (
-      currentUser.employeePosition.code != RoleEnum.PM &&
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+      currentUser.employeePosition?.code != RoleEnum.PM &&
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN
     ) {
       query.where('spk.deleted_at IS NULL');
     }
@@ -797,8 +797,8 @@ export class ExportService {
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
     if (
-      currentUser.employeePosition.code != RoleEnum.PM &&
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+      currentUser.employeePosition?.code != RoleEnum.PM &&
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN
     ) {
       query.where('spk-operational.deleted_at IS NULL');
     }

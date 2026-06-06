@@ -440,13 +440,13 @@ export class SPKService {
       );
     } else {
       if (
-        currentUser.employeePosition.code != RoleEnum.PM &&
-        currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+        currentUser.employeePosition?.code != RoleEnum.PM &&
+        currentUser.employeePosition?.code != RoleEnum.SUPERADMIN
       ) {
         data.where('spk.deleted_at IS NULL');
       }
 
-      if (currentUser.employeePosition.code == RoleEnum.PM) {
+      if (currentUser.employeePosition?.code == RoleEnum.PM) {
         //add total spk cash advance
         data.addSelect(
           'total_cash_advance.total_cash_advance',

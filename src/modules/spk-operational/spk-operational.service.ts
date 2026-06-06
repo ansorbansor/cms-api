@@ -311,7 +311,7 @@ export class SPKOperationalService {
         }),
       );
     } else {
-      if (currentUser.employeePosition.code == RoleEnum.PM) {
+      if (currentUser.employeePosition?.code == RoleEnum.PM) {
         //add total po budget / unit price
         // data.addSelect(
         //   'total_unit_price.total_unit_price',
@@ -342,7 +342,7 @@ export class SPKOperationalService {
         });
 
         data.withDeleted();
-      } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+      } else if (currentUser.employeePosition?.code == RoleEnum.RPM) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.CREATED
@@ -352,8 +352,8 @@ export class SPKOperationalService {
           });
         }
       } else if (
-        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
-        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
+        currentUser.employeePosition?.code == RoleEnum.ADMINPAYMENT ||
+        currentUser.employeePosition?.code == RoleEnum.ADMINPAYMENTREGION
       ) {
         if (
           !paginationOptions.status ||
@@ -363,7 +363,7 @@ export class SPKOperationalService {
             status: SPKStatus.APPROVED,
           });
         }
-      } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
+      } else if (currentUser.employeePosition?.code == RoleEnum.VERIFICATOR) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.APPROVED
@@ -372,7 +372,7 @@ export class SPKOperationalService {
             status: SPKStatus.PAID,
           });
         }
-      } else if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+      } else if (currentUser.employeePosition?.code == RoleEnum.SUPERADMIN) {
         data.withDeleted();
       } else {
         filterRegion = false;
@@ -396,7 +396,7 @@ export class SPKOperationalService {
     }
 
     if (
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN &&
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN &&
       filterRegion === true
     ) {
       //filtering by user region if not user admin

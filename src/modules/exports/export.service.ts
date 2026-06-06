@@ -101,9 +101,9 @@ export class ExportService {
     try {
       let filePath = '';
       const payload = JSON.parse(job.payload || '{}');
+      const user = await this.usersRepository.findOne(job.user_id);
 
       if (job.type === 'PO') {
-        const user = await this.usersRepository.findOne(job.user_id);
         filePath = await this._generatePOFile(
           user,
           payload.ip,
@@ -119,6 +119,24 @@ export class ExportService {
           payload.actualWorkStatus,
           payload.dateFilterBy,
           payload.projectName
+        ) as string;
+      } else if (job.type === 'SPK') {
+        filePath = await this._generateSPKFile(
+          user,
+          payload.ip,
+          payload.startDate,
+          payload.endDate,
+          payload.search,
+          payload.status,
+        ) as string;
+      } else if (job.type === 'SPK_OPERATIONAL') {
+        filePath = await this._generateSPKOperationalFile(
+          user,
+          payload.ip,
+          payload.startDate,
+          payload.endDate,
+          payload.search,
+          payload.status,
         ) as string;
       }
 
@@ -449,6 +467,26 @@ export class ExportService {
     search: string,
     status: string,
   ) {
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'SPK';
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status });
+    job.status = 'PENDING';
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  private async _generateSPKFile(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+    status: string,
+  ) {
     const query = this.spkRepository
       .createQueryBuilder('spk')
       .withDeleted()
@@ -681,6 +719,26 @@ export class ExportService {
   }
 
   async exportSPKOperational(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    search: string,
+    status: string,
+  ) {
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'SPK_OPERATIONAL';
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status });
+    job.status = 'PENDING';
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  private async _generateSPKOperationalFile(
     user: User,
     ip: string,
     startDate: string,

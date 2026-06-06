@@ -141,7 +141,6 @@ export class ExportController {
   }
 
   @Get('spk')
-  @Header('Content-Type', 'text/xlsx')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async exportSPK(
@@ -152,16 +151,24 @@ export class ExportController {
     @Query('search') search: string,
     @Query('status') status: string,
   ) {
-    const response = await this.exportService.exportSPK(
-      req.user,
-      req.ip,
-      startDate,
-      endDate,
-      search,
-      status,
-    );
+    try {
+      const job = await this.exportService.exportSPK(
+        req.user,
+        req.ip,
+        startDate,
+        endDate,
+        search,
+        status,
+      );
 
-    res.download(`${response}`);
+      return res.status(HttpStatus.OK).json({
+        meta: { status: 200, message: 'Export queued', success: true },
+        data: job,
+      });
+    } catch (error) {
+      console.error('Error in exportSPK:', error);
+      throw error;
+    }
   }
 
   @Get('absence')
@@ -185,8 +192,8 @@ export class ExportController {
 
     res.download(`${response}`);
   }
+
   @Get('spk-operational')
-  @Header('Content-Type', 'text/xlsx')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async exportSPKOperational(
@@ -197,15 +204,23 @@ export class ExportController {
     @Query('search') search: string,
     @Query('status') status: string,
   ) {
-    const response = await this.exportService.exportSPKOperational(
-      req.user,
-      req.ip,
-      startDate,
-      endDate,
-      search,
-      status,
-    );
+    try {
+      const job = await this.exportService.exportSPKOperational(
+        req.user,
+        req.ip,
+        startDate,
+        endDate,
+        search,
+        status,
+      );
 
-    res.download(`${response}`);
+      return res.status(HttpStatus.OK).json({
+        meta: { status: 200, message: 'Export queued', success: true },
+        data: job,
+      });
+    } catch (error) {
+      console.error('Error in exportSPKOperational:', error);
+      throw error;
+    }
   }
 }

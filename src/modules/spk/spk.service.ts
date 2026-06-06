@@ -404,6 +404,8 @@ export class SPKService {
       .withDeleted()
       .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
       .leftJoinAndSelect('po.project', 'project', 'project.deleted_at IS NULL')
+      .leftJoinAndSelect('po.customer', 'customer')
+      .leftJoinAndSelect('spk.customer', 'spkCustomer')
       .leftJoinAndSelect('spk.pay_to_user', 'pay_to_user')
       .leftJoinAndSelect('spk.site', 'site', 'site.deleted_at IS NULL')
       .leftJoinAndSelect(
@@ -628,7 +630,11 @@ export class SPKService {
       }
       
       if (projectNames.length > 0) {
-        data.andWhere('TRIM(LOWER(project.name)) IN (:...projectNames)', { projectNames });
+        data.andWhere(new Brackets((qb) => {
+          qb.where('TRIM(LOWER(project.name)) IN (:...projectNames)', { projectNames })
+            .orWhere('TRIM(LOWER(customer.name)) IN (:...projectNames)', { projectNames })
+            .orWhere('TRIM(LOWER(spkCustomer.name)) IN (:...projectNames)', { projectNames });
+        }));
       }
     }
 
@@ -1675,9 +1681,24 @@ export class SPKService {
       .orderBy('project.name', 'ASC')
       .getRawMany();
 
-    const projects = projectsRaw.map(p => ({
-      name: p.project_name,
-    }));
+    const customersRaw = await this.spkRepository
+      .createQueryBuilder('spk')
+      .leftJoin('spk.po', 'po')
+      .leftJoin('po.customer', 'customer')
+      .select(['customer.name'])
+      .where('spk.deleted_at IS NULL')
+      .andWhere('po.deleted_at IS NULL')
+      .andWhere('customer.deleted_at IS NULL')
+      .andWhere("customer.name IS NOT NULL AND customer.name != ''")
+      .distinct(true)
+      .orderBy('customer.name', 'ASC')
+      .getRawMany();
+
+    const projectsSet = new Set<string>();
+    projectsRaw.forEach(p => projectsSet.add(p.project_name));
+    customersRaw.forEach(c => projectsSet.add(c.customer_name));
+
+    const projects = Array.from(projectsSet).sort().map(name => ({ name }));
 
     const payToUsersRaw = await this.spkRepository
       .createQueryBuilder('spk')

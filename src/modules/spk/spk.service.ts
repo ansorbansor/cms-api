@@ -234,7 +234,7 @@ export class SPKService {
 
     if (
       exists.status >= SPKStatus.APPROVED &&
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,
@@ -522,7 +522,7 @@ export class SPKService {
         });
 
         data.withDeleted();
-      } else if (currentUser.employeePosition.code == RoleEnum.RPM) {
+      } else if (currentUser.employeePosition?.code == RoleEnum.RPM) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.CREATED
@@ -532,8 +532,8 @@ export class SPKService {
           });
         }
       } else if (
-        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENT ||
-        currentUser.employeePosition.code == RoleEnum.ADMINPAYMENTREGION
+        currentUser.employeePosition?.code == RoleEnum.ADMINPAYMENT ||
+        currentUser.employeePosition?.code == RoleEnum.ADMINPAYMENTREGION
       ) {
         if (
           !paginationOptions.status ||
@@ -543,7 +543,7 @@ export class SPKService {
             status: SPKStatus.CREATED,
           });
         }
-      } else if (currentUser.employeePosition.code == RoleEnum.VERIFICATOR) {
+      } else if (currentUser.employeePosition?.code == RoleEnum.VERIFICATOR) {
         if (
           !paginationOptions.status ||
           paginationOptions.status < SPKStatus.APPROVED
@@ -553,11 +553,11 @@ export class SPKService {
           });
         }
       } else if (
-        currentUser.employeePosition.code == RoleEnum.SUPERADMIN ||
-        currentUser.employeePosition.code == RoleEnum.PO_ADMIN ||
-        currentUser.employeePosition.id == 10
+        currentUser.employeePosition?.code == RoleEnum.SUPERADMIN ||
+        currentUser.employeePosition?.code == RoleEnum.PO_ADMIN ||
+        currentUser.employeePosition?.id == 10
       ) {
-        if (currentUser.employeePosition.code == RoleEnum.SUPERADMIN) {
+        if (currentUser.employeePosition?.code == RoleEnum.SUPERADMIN) {
           data.withDeleted();
         } else {
           data.where('spk.deleted_at IS NULL');
@@ -586,7 +586,7 @@ export class SPKService {
     }
 
     if (
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN &&
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN &&
       filterRegion === true
     ) {
       //filtering by user region if not user admin
@@ -646,7 +646,7 @@ export class SPKService {
     }
 
     if (
-      currentUser.employeePosition.code == RoleEnum.PM &&
+      currentUser.employeePosition?.code == RoleEnum.PM &&
       !paginationOptions.status
     ) {
       // Default filter for PM: show items that are 'APPROVED' and 'OVER BUDGET'
@@ -1412,7 +1412,7 @@ export class SPKService {
     }
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
-    const roleCode = currentUser.employeePosition.code;
+    const roleCode = currentUser.employeePosition?.code;
 
     const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids).leftJoinAndSelect('spk.po', 'po');
 

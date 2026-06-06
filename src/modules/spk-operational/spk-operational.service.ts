@@ -170,7 +170,7 @@ export class SPKOperationalService {
 
     if (
       exists.status >= SPKStatus.APPROVED &&
-      currentUser.employeePosition.code != RoleEnum.SUPERADMIN
+      currentUser.employeePosition?.code != RoleEnum.SUPERADMIN
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

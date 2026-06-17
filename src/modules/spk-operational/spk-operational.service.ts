@@ -992,6 +992,63 @@ export class SPKOperationalService {
     throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak dapat direject!`);
   }
 
+  async approveMany(ids: number[], user: User, ip: string): Promise<any> {
+    if (!ids || ids.length === 0) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'No items selected for approval.');
+    }
+
+    const currentUser = await this.userService.findOneFull({ id: user.id });
+    const roleCode = currentUser.employeePosition?.code?.toLowerCase();
+
+    const queryBuilder = this.spkOperationalRepository.createQueryBuilder('spk_operational').whereInIds(ids);
+
+    let updatePayload = {};
+
+    // Apply filtering and define the update action based on the user's role
+    if (roleCode === RoleEnum.RPM) {
+      // An RPM approves items that are newly created
+      queryBuilder.andWhere('spk_operational.status IN (:...statuses)', {
+        statuses: [SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET]
+      });
+      updatePayload = {
+        status: SPKStatus.APPROVED,
+        approved_by: user.id
+      };
+    } else if (roleCode === RoleEnum.PM) {
+      // A PM approves items that are already approved by an RPM but are over budget
+      queryBuilder.andWhere('spk_operational.status = :status', { status: SPKStatus.APPROVED });
+      queryBuilder.andWhere('spk_operational.cash_advance > :maxBudget', { maxBudget: appConfig().spkOperationMaxBudget });
+      
+      updatePayload = {
+        status: SPKStatus.APPROVED_OVER_BUDGET,
+        approved_over_budget_by: user.id
+      };
+    } else {
+      // Block any other roles from using this endpoint
+      throw failedResponse(HttpStatus.FORBIDDEN, 'Your role cannot perform this action.');
+    }
+
+    // Find which of the selected items are valid for this user to approve
+    const itemsToApprove = await queryBuilder.getMany();
+    const validIds = itemsToApprove.map(item => item.id);
+
+    if (validIds.length === 0) {
+      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
+    }
+
+    // Update only the valid items
+    await this.spkOperationalRepository.update(validIds, updatePayload);
+
+    // Create a log entry
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Melakukan approve massal untuk BOP Pengeluaran Kantor dengan ID: ${validIds.join(', ')}`,
+      ip: ip,
+    });
+
+    return { approved_count: validIds.length, total_selected: ids.length };
+  }
+
   async getFilterOptions() {
     const payToUsersRaw = await this.spkOperationalRepository
       .createQueryBuilder('spk-operational')

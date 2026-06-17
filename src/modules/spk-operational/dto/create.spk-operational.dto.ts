@@ -18,7 +18,7 @@ export class CreateSPKOperationalDTO {
   @ApiProperty({ example: 'Test' })
   @IsOptional()
   @Transform(({ value }) =>
-    value == '' || value == 'null' || value == null ? 0 : value,
+    value == '' || value == 'null' || value == null ? null : value,
   )
   spk_operational_request_type_id?: number;
 

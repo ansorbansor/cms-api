@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { User } from './user.entity';
 import { SPKOperational } from './spk-operationals.entity';
@@ -11,11 +11,11 @@ export class SPKOperationalInhouseTeam extends EntityHelper {
   @Column()
   user_id?: number;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   userInhouse: User;
 
-  @OneToOne(() => SPKOperational)
+  @ManyToOne(() => SPKOperational)
   @JoinColumn({ name: 'spk_operational_id' })
   spk_operational: SPKOperational;
 }

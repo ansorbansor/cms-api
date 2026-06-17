@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { FileEntity } from './file.entity';
 import { SPKOperational } from './spk-operationals.entity';
@@ -17,11 +17,11 @@ export class SPKOperationalCostEvidence extends EntityHelper {
   @Column()
   photo?: number;
 
-  @OneToOne(() => SPKOperational)
+  @ManyToOne(() => SPKOperational)
   @JoinColumn({ name: 'spk_operational_id' })
   spk_operational: SPKOperational;
 
-  @OneToOne(() => FileEntity)
+  @ManyToOne(() => FileEntity)
   @JoinColumn({ name: 'photo' })
   cost_evidence_photo_file: FileEntity;
 }

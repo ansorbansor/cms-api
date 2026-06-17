@@ -274,4 +274,14 @@ export class SPKOperationalController {
       'BOP Berhasil Direject',
     );
   }
+
+  @Post('approve-many')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async approveMany(@Request() req, @Body() body: { ids: number[] }) {
+    return successResponse(
+      await this.spkOperationalService.approveMany(body.ids, req.user, req.ip),
+      'success',
+    );
+  }
 }

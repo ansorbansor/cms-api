@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   OneToMany,
+  ManyToOne,
   OneToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
@@ -36,7 +37,7 @@ export class SPKOperational extends EntityHelper {
   region_id?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   spk_operational_request_type_id?: number;
 
   @ApiProperty({ example: 'Test' })
@@ -72,89 +73,89 @@ export class SPKOperational extends EntityHelper {
   customer_id?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_pm?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_rpm?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_verificator?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_admin?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_superadmin?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   remark_inhouse_team?: string;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   closing_date?: Date;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   paid_date?: Date;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   operation_cost?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   delta_of_settlement?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   cashback?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   cashout?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   created_by?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   approved_by?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   approved_over_budget_by?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   paid_by?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   closed_by?: number;
 
   @ApiProperty({ example: 'Test' })
-  @Column()
+  @Column({ nullable: true })
   transfer_proof_photo?: number;
 
-  @Column()
+  @Column({ nullable: true })
   is_over_budget?: boolean;
 
-  @OneToOne(() => Region)
+  @ManyToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'pay_to_user_id' })
   pay_to_user: User;
 
-  @OneToOne(() => Area)
+  @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })
   area: Area;
 
@@ -162,7 +163,7 @@ export class SPKOperational extends EntityHelper {
   @JoinColumn()
   inhouse_team: SPKOperationalInhouseTeam[];
 
-  @OneToOne(() => FileEntity)
+  @ManyToOne(() => FileEntity)
   @JoinColumn({ name: 'transfer_proof_photo' })
   transfer_proof_file: FileEntity;
 
@@ -173,39 +174,39 @@ export class SPKOperational extends EntityHelper {
   @JoinColumn()
   cost_evidences: SPKOperationalCostEvidence[];
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
   created_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'approved_by' })
   approved_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'approved_over_budget_by' })
   approved_over_budget_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'paid_by' })
   paid_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'closed_by' })
   closed_by_user: User;
 
-  @OneToOne(() => SPKOperationalCategory)
+  @ManyToOne(() => SPKOperationalCategory)
   @JoinColumn({ name: 'spk_operational_category_id' })
   category: SPKOperationalCategory;
 
-  @OneToOne(() => SPKOperationalSubCategory)
+  @ManyToOne(() => SPKOperationalSubCategory)
   @JoinColumn({ name: 'spk_operational_subcategory_id' })
   subcategory: SPKOperationalSubCategory;
 
-  @OneToOne(() => Customer)
+  @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 
-  @OneToOne(() => SPKOperationalRequestType)
+  @ManyToOne(() => SPKOperationalRequestType)
   @JoinColumn({ name: 'spk_operational_request_type_id' })
   request_type: SPKOperationalRequestType;
 

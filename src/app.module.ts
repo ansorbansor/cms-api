@@ -51,7 +51,7 @@ import { WorkloadTicketsModule } from './modules/workload-tickets/workload-ticke
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-presets.module';
-
+import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
 
 @Module({
   imports: [
@@ -120,6 +120,7 @@ import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-pre
     WhatsappModule,
     FeatureFlagsModule,
     TaskNamePresetsModule,
+    DocumentStorageModule,
   ],
   providers: [
     {

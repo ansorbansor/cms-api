@@ -944,6 +944,156 @@ export class GraphService {
     ];
   }
 
+  // #9
+  async getPOSubmitAmountSum(
+    status: string,
+    regionId: string,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: string,
+    actualWorkStatus: string,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND po.region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
+    }
+
+    if (month != '' && month != null) {
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM poi.submit_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
+    }
+
+    if (year != '' && year != null) {
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM poi.submit_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND po.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND po.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
+    }
+
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND po.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
+    }
+
+    if (status != '' && status != null) {
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND po.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
+    }
+
+    let submitAmount = await getManager().query(
+      `SELECT SUM(poi.submit_amount) FROM purchase_order_invoices poi
+       INNER JOIN purchase_orders po ON poi.purchase_order_id = po.id
+       WHERE poi.deleted_at IS NULL AND po.deleted_at IS NULL ${whereQuery}`,
+      whereParam,
+    );
+
+    if (submitAmount.length > 0 && submitAmount[0].sum != null) {
+      submitAmount = submitAmount[0].sum;
+    } else {
+      submitAmount = 0;
+    }
+
+    return {
+      submit_amount: submitAmount,
+    };
+  }
+
+  // #10
+  async getPOPaymentAmountSum(
+    status: string,
+    regionId: string,
+    month: string,
+    year: string,
+    linePOStatus: string,
+    customerId: string,
+    actualWorkStatus: string,
+  ) {
+    let whereQuery = '';
+    const whereParam = [];
+
+    if (regionId != undefined && regionId != null && regionId !== '' && regionId !== '0') {
+      const regions = regionId.toString().split(',').map(Number);
+      whereQuery += ' AND po.region_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(regions);
+    }
+
+    if (month != '' && month != null) {
+      const months = month.toString().split(',');
+      whereQuery += ' AND EXTRACT(MONTH FROM poi.payment_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(months);
+    }
+
+    if (year != '' && year != null) {
+      const years = year.toString().split(',');
+      whereQuery += ' AND EXTRACT(YEAR FROM poi.payment_date) = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(years);
+    }
+
+    if (linePOStatus != '' && linePOStatus != null) {
+      const linePOStatuses = linePOStatus.toString().split(',');
+      whereQuery += ' AND po.line_po_status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(linePOStatuses);
+    }
+
+    if (actualWorkStatus != '' && actualWorkStatus != null) {
+      whereQuery =
+        whereQuery +
+        ' AND po.actual_work_status ILIKE $' +
+        (whereParam.length + 1);
+      whereParam.push(`%${actualWorkStatus}%`);
+    }
+
+    if (customerId != undefined && customerId != null && customerId !== '' && customerId !== '0') {
+      const customerIds = customerId.toString().split(',').map(Number);
+      whereQuery += ' AND po.customer_id = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(customerIds);
+    }
+
+    if (status != '' && status != null) {
+      const statuses = status.toString().split(',');
+      whereQuery += ' AND po.status = ANY($' + (whereParam.length + 1) + ')';
+      whereParam.push(statuses);
+    }
+
+    let paymentAmount = await getManager().query(
+      `SELECT SUM(poi.payment_amount) FROM purchase_order_invoices poi
+       INNER JOIN purchase_orders po ON poi.purchase_order_id = po.id
+       WHERE poi.deleted_at IS NULL AND po.deleted_at IS NULL ${whereQuery}`,
+      whereParam,
+    );
+
+    if (paymentAmount.length > 0 && paymentAmount[0].sum != null) {
+      paymentAmount = paymentAmount[0].sum;
+    } else {
+      paymentAmount = 0;
+    }
+
+    return {
+      payment_amount: paymentAmount,
+    };
+  }
+
   // Utils
   async getActualWorkStatus() {
     const actualWorkAmountPerMonth = await getManager().query(

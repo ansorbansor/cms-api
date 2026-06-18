@@ -134,6 +134,60 @@ export class GraphController {
     );
   }
 
+  // #9
+  @Get('po/submit-amount/sum')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getPOSubmitAmountSum(
+    @Query('status') status: string,
+    @Query('region_id') regionId: string,
+    @Query('month') month: string,
+    @Query('year') year: string, // already string
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: string,
+    @Query('actual_work_status') actualWorkStatus: string,
+  ) {
+    return successResponse(
+      await this.graphService.getPOSubmitAmountSum(
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+        actualWorkStatus,
+      ),
+      'success',
+    );
+  }
+
+  // #10
+  @Get('po/payment-amount/sum')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getPOPaymentAmountSum(
+    @Query('status') status: string,
+    @Query('region_id') regionId: string,
+    @Query('month') month: string,
+    @Query('year') year: string, // already string
+    @Query('line_po_status') linePOStatus: string,
+    @Query('customer_id') customerId: string,
+    @Query('actual_work_status') actualWorkStatus: string,
+  ) {
+    return successResponse(
+      await this.graphService.getPOPaymentAmountSum(
+        status,
+        regionId,
+        month,
+        year,
+        linePOStatus,
+        customerId,
+        actualWorkStatus,
+      ),
+      'success',
+    );
+  }
+
   // #8
   @Get('po/contract-asset/sum')
   @UseGuards(JwtAuthGuard, RolesGuard)

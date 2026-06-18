@@ -1294,7 +1294,12 @@ export class SPKService {
     const existingSPK = await this.spkRepository.findOne(id);
     if (!existingSPK) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
-    } else if (existingSPK.status >= SPKStatus.PAID) {
+    } else if (existingSPK.status < SPKStatus.APPROVED) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK harus diapprove oleh RPM terlebih dahulu!`,
+      );
+    } else if (existingSPK.status >= SPKStatus.APPROVED_OVER_BUDGET) {
       throw failedResponse(
         HttpStatus.BAD_REQUEST,
         `SPK tidak dapat diapprove kembali!`,
@@ -1466,23 +1471,37 @@ export class SPKService {
     }
 
     const requireWorkloadTicket = getFlag('require_workload_ticket');
-    for (const item of itemsToApprove) {
-      if (item.po && requireWorkloadTicket) {
-        if (!item.po.workload_ticket_id && !workload_ticket_id) {
-           throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for SPK ${item.spk_number}`, {
-             requireWorkloadTicket: true,
-             siteId: item.site_id,
-             poId: item.po.id
-           });
-        }
-        if (workload_ticket_id && !item.po.workload_ticket_id) {
-           await getManager().update(PurchaseOrder, item.po.id, { workload_ticket_id });
+    
+    const queryRunner = getManager().connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      for (const item of itemsToApprove) {
+        if (item.po && requireWorkloadTicket) {
+          if (!item.po.workload_ticket_id && !workload_ticket_id) {
+             throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for SPK ${item.spk_number}`, {
+               requireWorkloadTicket: true,
+               siteId: item.site_id,
+               poId: item.po.id
+             });
+          }
+          if (workload_ticket_id && !item.po.workload_ticket_id) {
+             await queryRunner.manager.update(PurchaseOrder, item.po.id, { workload_ticket_id });
+          }
         }
       }
-    }
 
-    // Update only the valid items
-    await this.spkRepository.update(validIds, updatePayload);
+      // Update only the valid items
+      await queryRunner.manager.update(SPK, validIds, updatePayload);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
 
     // Create a log entry
     await this.activityLogService.create({

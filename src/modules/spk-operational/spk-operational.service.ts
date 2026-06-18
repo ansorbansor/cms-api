@@ -881,7 +881,12 @@ export class SPKOperationalService {
     const existingSPK = await this.spkOperationalRepository.findOne(id);
     if (!existingSPK) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK tidak ditemukan!`);
-    } else if (existingSPK.status >= SPKStatus.PAID) {
+    } else if (existingSPK.status < SPKStatus.APPROVED) {
+      throw failedResponse(
+        HttpStatus.BAD_REQUEST,
+        `SPK harus diapprove oleh RPM terlebih dahulu!`,
+      );
+    } else if (existingSPK.status >= SPKStatus.APPROVED_OVER_BUDGET) {
       throw failedResponse(
         HttpStatus.BAD_REQUEST,
         `SPK tidak dapat diapprove kembali!`,
@@ -1017,7 +1022,7 @@ export class SPKOperationalService {
     } else if (roleCode === RoleEnum.PM) {
       // A PM approves items that are already approved by an RPM but are over budget
       queryBuilder.andWhere('spk_operational.status = :status', { status: SPKStatus.APPROVED });
-      queryBuilder.andWhere('spk_operational.cash_advance > :maxBudget', { maxBudget: appConfig().spkOperationMaxBudget });
+      queryBuilder.andWhere('spk_operational.is_over_budget = true');
       
       updatePayload = {
         status: SPKStatus.APPROVED_OVER_BUDGET,

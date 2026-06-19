@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { DocumentStorageEntity } from 'src/entities/document-storage.entity';
 import { IPaginationOptions } from 'src/utils/types';
 
@@ -11,11 +11,14 @@ export class DocumentStorageService {
     private documentStorageRepository: Repository<DocumentStorageEntity>,
   ) {}
 
-  async findAll(paginationOptions: IPaginationOptions) {
+  async findAll(paginationOptions: IPaginationOptions, search?: string) {
     const page = paginationOptions.page || 1;
     const limit = paginationOptions.limit || 10;
     
+    const whereCondition = search ? { title: ILike(`%${search}%`) } : {};
+
     const [data, total] = await this.documentStorageRepository.findAndCount({
+      where: whereCondition,
       relations: ['user'],
       order: {
         created_at: 'DESC',

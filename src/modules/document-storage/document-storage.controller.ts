@@ -18,8 +18,8 @@ export class DocumentStorageController {
   ) {}
 
   @Get()
-  findAll(@Query('page') page: number, @Query('limit') limit: number) {
-    return this.documentStorageService.findAll({ page: page || 1, limit: limit || 10 });
+  findAll(@Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string) {
+    return this.documentStorageService.findAll({ page: page || 1, limit: limit || 10 }, search);
   }
 
   @Post()

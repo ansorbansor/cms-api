@@ -66,10 +66,13 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       this.currentQrCodeUrl = null;
     });
 
-    this.client.on('disconnected', (reason) => {
+    this.client.on('disconnected', async (reason) => {
       this.logger.log('WhatsApp Client was disconnected', reason);
       this.isConnected = false;
       this.currentQrCodeUrl = null;
+      try {
+        await this.client.destroy();
+      } catch (err) {}
       this.client.initialize();
     });
 
@@ -109,6 +112,9 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       this.currentQrCodeUrl = null;
       // Usually logging out crashes/kills the puppeteer instance in whatsapp-web.js, 
       // requiring a re-initialization.
+      try {
+        await this.client.destroy();
+      } catch (err) {}
       this.client.initialize(); 
     }
     return { success: true };

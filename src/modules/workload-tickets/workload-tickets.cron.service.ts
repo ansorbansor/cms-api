@@ -105,19 +105,31 @@ export class WorkloadTicketsCronService {
     this.logger.log(`Triggering daily notifications for Workload Ticket Creators`);
 
     try {
-      // Find all tickets that are not completed, along with milestones, tasks, and creator
+      // Find all tickets that are not confirmed finished, along with milestones, tasks, and creator
       const tickets = await this.ticketRepo.find({
-        where: [{ status: 'Pending' }, { status: 'In Progress' }],
+        where: [{ status: 'Pending' }, { status: 'In Progress' }, { status: 'Completed' }],
         relations: ['created_by_user', 'milestones', 'milestones.tasks']
       });
 
       for (const ticket of tickets) {
-        if (ticket.status === 'Completed') continue;
-
         const creator = ticket.created_by_user;
         if (!creator || !creator.phone) continue;
 
         const ticketName = ticket.ticket_id || 'Unknown';
+
+        // 0. If the whole ticket is completed (all milestones done)
+        if (ticket.status === 'Completed') {
+          const allMilestonesConfirmed = ticket.milestones && ticket.milestones.length > 0 && 
+            ticket.milestones.every(m => m.status === 'Confirmed Finished');
+          
+          if (allMilestonesConfirmed) {
+            const msg = `Hai ${creator.name}, Workload Ticket kamu (${ticketName}) sudah tidak memiliki pending Milestone pastikan semua milestone sudah selesai dan dapat ditagihkn, click Confirm Finished pada detail workload ticket di Smarteye .`;
+            await this.whatsappService.sendMessage(creator.phone, msg);
+            continue; // skip checking individual milestones since all are confirmed
+          }
+          // If not all milestones are confirmed finished, we let the loop continue below
+          // so that it can remind the creator to confirm the remaining 'Completed' milestones!
+        }
 
         // 1. If workload ticket has no milestone
         if (!ticket.milestones || ticket.milestones.length === 0) {
@@ -132,7 +144,7 @@ export class WorkloadTicketsCronService {
 
           // 2. If milestone is completed
           if (milestone.status === 'Completed') {
-            const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya`;
+            const msg = `Hai ${creator.name} Milestone *${milestoneName}* di workload ticket kamu *${ticketName}* sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya, Jika memang sudah selesai masuk ke Workload tikect detail dan tekan *CONFIRM FINISH* pada milestone *${milestoneName}*`;
             await this.whatsappService.sendMessage(creator.phone, msg);
             continue;
           }

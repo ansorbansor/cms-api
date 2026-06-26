@@ -145,6 +145,24 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Patch('milestones/:id/confirm-finish')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async confirmMilestoneFinished(@Param('id') id: string) {
+    return successResponse(
+      await this.ticketsService.confirmMilestoneFinished(+id),
+      'Milestone confirmed finished successfully'
+    );
+  }
+
+  @Patch(':id/confirm-finish')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async confirmTicketFinished(@Param('id') id: string) {
+    return successResponse(
+      await this.ticketsService.confirmTicketFinished(+id),
+      'Ticket confirmed finished successfully'
+    );
+  }
+
   @Delete('milestones/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async deleteMilestone(@Param('id') id: string) {

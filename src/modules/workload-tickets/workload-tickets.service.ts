@@ -285,6 +285,34 @@ export class WorkloadTicketsService {
     return await this.milestoneRepo.save(milestone);
   }
 
+  async confirmMilestoneFinished(id: number): Promise<Milestone> {
+    const milestone = await this.milestoneRepo.findOne(id, { relations: ['workload_ticket'] });
+    if (!milestone) throw failedResponse(HttpStatus.NOT_FOUND, 'Milestone not found');
+    if (milestone.status !== 'Completed') {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Milestone must be Completed to be confirmed.');
+    }
+    
+    milestone.status = 'Confirmed Finished';
+    
+    // Check if there are next milestones, if not mark the ticket as Completed if it wasn't already.
+    // However, the next milestone logic is typically handled in handleNextTaskNotification.
+    // If we mark it Confirmed Finished, the cron job stops reminding about it.
+    
+    return await this.milestoneRepo.save(milestone);
+  }
+
+  async confirmTicketFinished(id: number): Promise<WorkloadTicket> {
+    const ticket = await this.ticketRepo.findOne(id);
+    if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
+    if (ticket.status !== 'Completed') {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'Ticket must be Completed to be confirmed.');
+    }
+    
+    ticket.status = 'Confirmed Finished';
+    
+    return await this.ticketRepo.save(ticket);
+  }
+
   async deleteMilestone(id: number): Promise<void> {
     await this.milestoneRepo.delete(id);
   }
@@ -540,7 +568,7 @@ export class WorkloadTicketsService {
       if (creator && creator.phone) {
         const ticketName = currentMilestone.workload_ticket?.ticket_id || 'Unknown';
         const milestoneName = currentMilestone.name || 'Unknown';
-        const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya`;
+        const msg = `Hai ${creator.name} Milestone *${milestoneName}* di workload ticket kamu *${ticketName}* sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya, Jika memang sudah selesai masuk ke Workload tikect detail dan tekan *CONFIRM FINISH* pada milestone *${milestoneName}*`;
         await this.sendWhatsappNotification(creator.phone, msg);
       }
 

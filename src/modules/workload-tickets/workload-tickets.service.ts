@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getManager, IsNull } from 'typeorm';
+import { Repository, getManager, IsNull, In } from 'typeorm';
 import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
 import { Milestone } from 'src/entities/milestone.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
@@ -314,6 +314,17 @@ export class WorkloadTicketsService {
   }
 
   async deleteMilestone(id: number): Promise<void> {
+    const m = await this.milestoneRepo.findOne(id, { relations: ['tasks'] });
+    if (!m) return;
+    
+    if (m.tasks && m.tasks.length > 0) {
+      const taskIds = m.tasks.map(t => t.id);
+      // Delete task attachments first
+      await this.taskAttachmentRepo.delete({ task_id: In(taskIds) });
+      // Delete tasks
+      await this.taskRepo.delete({ milestone_id: m.id });
+    }
+    
     await this.milestoneRepo.delete(id);
   }
 

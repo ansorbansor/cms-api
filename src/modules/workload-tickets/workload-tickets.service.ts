@@ -315,7 +315,7 @@ export class WorkloadTicketsService {
       if (user && user.phone) {
         const siteText = milestone.workload_ticket?.site ? ` di Site ${milestone.workload_ticket.site.name} (${milestone.workload_ticket.site.code})` : '';
         const deadlineText = savedTask.deadline ? ` sebelum ${moment(savedTask.deadline).format('DD-MM-YYYY')}` : '';
-        await this.sendWhatsappNotification(user.phone, `Hai ${user.name}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.`);
+        await this.sendWhatsappNotification(user.phone, `Hai ${user.name}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
       }
     }
 
@@ -431,7 +431,7 @@ export class WorkloadTicketsService {
     if (task.status === 'In Progress' && newUser && newUser.phone) {
       const siteText = task.milestone?.workload_ticket?.site ? ` di Site ${task.milestone.workload_ticket.site.name} (${task.milestone.workload_ticket.site.code})` : '';
       const deadlineText = task.deadline ? ` sebelum ${moment(task.deadline).format('DD-MM-YYYY')}` : '';
-      await this.sendWhatsappNotification(newUser.phone, `Hai ${newUser.name}! segera selesaikan Tugas anda: ${task.name}${siteText}${deadlineText}.`);
+      await this.sendWhatsappNotification(newUser.phone, `Hai ${newUser.name}! segera selesaikan Tugas anda: ${task.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
     }
 
     return task;
@@ -529,7 +529,7 @@ export class WorkloadTicketsService {
       await this.taskRepo.save(nextTask);
       if (nextTask.assigned_to_user && nextTask.assigned_to_user.phone) {
         const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
-        await this.sendWhatsappNotification(nextTask.assigned_to_user.phone, `Hai ${nextTask.assigned_to_user.name}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.`);
+        await this.sendWhatsappNotification(nextTask.assigned_to_user.phone, `Hai ${nextTask.assigned_to_user.name}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
       }
     } else {
       currentMilestone.status = 'Completed';
@@ -564,7 +564,7 @@ export class WorkloadTicketsService {
           await this.taskRepo.save(firstTask);
           if (firstTask.assigned_to_user && firstTask.assigned_to_user.phone) {
             const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
-            await this.sendWhatsappNotification(firstTask.assigned_to_user.phone, `Hai ${firstTask.assigned_to_user.name}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.`);
+            await this.sendWhatsappNotification(firstTask.assigned_to_user.phone, `Hai ${firstTask.assigned_to_user.name}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
           }
         }
       } else {

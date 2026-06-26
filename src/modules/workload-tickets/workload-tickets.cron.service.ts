@@ -18,7 +18,7 @@ export class WorkloadTicketsCronService {
     @InjectRepository(WorkloadTicket)
     private readonly ticketRepo: Repository<WorkloadTicket>,
     private readonly whatsappService: WhatsappService
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
@@ -31,7 +31,7 @@ export class WorkloadTicketsCronService {
     if (currentTime !== scheduledTime) {
       return;
     }
-    
+
     await this.handleDailyNotifications();
     await this.handleCreatorNotifications();
   }
@@ -54,7 +54,7 @@ export class WorkloadTicketsCronService {
       const tasksByUser: Record<number, WorkloadTask[]> = {};
       for (const task of inProgressTasks) {
         if (!task.assigned_to_user || !task.assigned_to_user.phone) continue;
-        
+
         const userId = task.assigned_to_user.id;
         if (!tasksByUser[userId]) {
           tasksByUser[userId] = [];
@@ -67,34 +67,34 @@ export class WorkloadTicketsCronService {
       for (const [userId, tasks] of Object.entries(tasksByUser)) {
         const user = tasks[0].assigned_to_user;
         const totalTasks = tasks.length;
-        
+
         let headerMessage = `Hai ${user.name}! 🔔\n\nIni adalah pengingat harian. Anda memiliki *${totalTasks} tugas* berstatus In Progress yang belum diselesaikan:\n\n`;
         let currentMessage = headerMessage;
-        
+
         for (let i = 0; i < tasks.length; i++) {
           const t = tasks[i];
           const site = t.milestone?.workload_ticket?.site;
           const siteText = site ? ` di Site ${site.name} (${site.code})` : '';
           const deadlineText = t.deadline ? `\n   ⏳ Deadline: ${moment(t.deadline).format('DD-MM-YYYY')}` : '';
-          
+
           currentMessage += `${i + 1}. *${t.name}*${siteText}${deadlineText}\n`;
-          
+
           if ((i + 1) % CHUNK_SIZE === 0 || i === tasks.length - 1) {
             if (i === tasks.length - 1) {
-               currentMessage += `\nMohon segera diselesaikan tepat waktu. Terima kasih!`;
+              currentMessage += `\nMohon segera diselesaikan tepat waktu. *Jika Pending bukan di kamu masuk ke menu Mytask dan add predecessor task agar bola tidak di kamu dan KPI mu terjaga*. Terima kasih!`;
             } else {
-               currentMessage += `\n*(Berlanjut ke pesan berikutnya...)*`;
+              currentMessage += `\n*(Berlanjut ke pesan berikutnya...)*`;
             }
-            
+
             await this.whatsappService.sendMessage(user.phone, currentMessage);
-            
+
             if (i !== tasks.length - 1) {
-               currentMessage = `*(Lanjutan ${i + 2}-${Math.min(i + 1 + CHUNK_SIZE, tasks.length)} dari ${totalTasks} tugas)*\n\n`;
+              currentMessage = `*(Lanjutan ${i + 2}-${Math.min(i + 1 + CHUNK_SIZE, tasks.length)} dari ${totalTasks} tugas)*\n\n`;
             }
           }
         }
       }
-      
+
       this.logger.log(`Successfully sent daily notifications to ${Object.keys(tasksByUser).length} users.`);
     } catch (error) {
       this.logger.error('Failed to send daily workload notifications', error);
@@ -118,7 +118,7 @@ export class WorkloadTicketsCronService {
         if (!creator || !creator.phone) continue;
 
         const ticketName = ticket.ticket_id || 'Unknown';
-        
+
         // 1. If workload ticket has no milestone
         if (!ticket.milestones || ticket.milestones.length === 0) {
           const msg = `Hai ${creator.name} workload ticket kamu ${ticketName} belum memiliki Milestone apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik`;
@@ -129,7 +129,7 @@ export class WorkloadTicketsCronService {
         // Check milestones
         for (const milestone of ticket.milestones) {
           const milestoneName = milestone.name || 'Unknown';
-          
+
           // 2. If milestone is completed
           if (milestone.status === 'Completed') {
             const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya`;

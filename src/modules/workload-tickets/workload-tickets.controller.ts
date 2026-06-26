@@ -145,6 +145,15 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Get('milestones/:id/tasks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMilestoneTasks(@Param('id') id: string) {
+    return successResponse(
+      await this.ticketsService.getMilestoneTasks(+id),
+      'Success'
+    );
+  }
+
   @Patch('milestones/:id/confirm-finish')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async confirmMilestoneFinished(@Param('id') id: string) {

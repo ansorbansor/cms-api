@@ -285,6 +285,14 @@ export class WorkloadTicketsService {
     return await this.milestoneRepo.save(milestone);
   }
 
+  async getMilestoneTasks(milestoneId: number): Promise<WorkloadTask[]> {
+    return this.taskRepo.find({
+      where: { milestone_id: milestoneId },
+      order: { task_order_index: 'ASC' },
+      relations: ['assigned_to_user']
+    });
+  }
+
   async confirmMilestoneFinished(id: number): Promise<Milestone> {
     const milestone = await this.milestoneRepo.findOne(id, { relations: ['workload_ticket'] });
     if (!milestone) throw failedResponse(HttpStatus.NOT_FOUND, 'Milestone not found');
@@ -319,8 +327,7 @@ export class WorkloadTicketsService {
     
     if (m.tasks && m.tasks.length > 0) {
       const taskIds = m.tasks.map(t => t.id);
-      // Delete task attachments first
-      await this.taskAttachmentRepo.delete({ task_id: In(taskIds) });
+      await this.attachmentRepo.delete({ task_id: In(taskIds) });
       // Delete tasks
       await this.taskRepo.delete({ milestone_id: m.id });
     }
@@ -498,28 +505,60 @@ export class WorkloadTicketsService {
     if (payload.status === 'Completed' || payload.status === 'No Need') {
       await this.handleNextTaskNotification(task);
     } else if (isRevertingToPending) {
-      // Find the previous task and set it back to In Progress
-      const previousTask = await this.taskRepo.findOne({
-        where: {
-          milestone_id: task.milestone_id,
-          task_order_index: task.task_order_index - 1
-        },
-        relations: ['assigned_to_user', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
-      });
+      if (payload.pending_reason_task_id) {
+        const existingTask = await this.taskRepo.findOne(payload.pending_reason_task_id, {
+          relations: ['assigned_to_user', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
+        });
 
-      if (previousTask) {
-        previousTask.status = 'In Progress';
-        previousTask.in_progress_at = new Date();
-        await this.taskRepo.save(previousTask);
+        if (existingTask) {
+          const oldIndex = existingTask.task_order_index;
+          const currentIndex = task.task_order_index;
 
-        // Notify the previous user that the task has been rejected
-        if (previousTask.assigned_to_user && previousTask.assigned_to_user.phone) {
-          const site = task.milestone?.workload_ticket?.site;
-          const sitePrefix = site ? `${site.code}-${site.name}` : '-';
-          const rejecterName = task.assigned_to_user?.name || 'Unknown';
-          const message = `Tugas Anda (${previousTask.name}) pada (${sitePrefix}) telah di reject oleh ${rejecterName}. Harap segera ditindaklanjuti dan hubungi ${rejecterName} untuk detail rejection!!`;
-          await this.sendWhatsappNotification(previousTask.assigned_to_user.phone, message);
+          if (oldIndex < currentIndex - 1) {
+            // Shift tasks between oldIndex (exclusive) and currentIndex (exclusive) DOWN by 1
+            await this.taskRepo.createQueryBuilder()
+              .update(WorkloadTask)
+              .set({ task_order_index: () => 'task_order_index - 1' })
+              .where('milestone_id = :milestoneId AND task_order_index > :oldIndex AND task_order_index < :currentIndex', {
+                milestoneId: task.milestone_id,
+                oldIndex,
+                currentIndex
+              })
+              .execute();
+
+            existingTask.task_order_index = currentIndex - 1;
+          } else if (oldIndex > currentIndex) {
+            // Shift tasks between currentIndex (inclusive) and oldIndex (exclusive) UP by 1
+            await this.taskRepo.createQueryBuilder()
+              .update(WorkloadTask)
+              .set({ task_order_index: () => 'task_order_index + 1' })
+              .where('milestone_id = :milestoneId AND task_order_index >= :currentIndex AND task_order_index < :oldIndex', {
+                milestoneId: task.milestone_id,
+                currentIndex,
+                oldIndex
+              })
+              .execute();
+
+            existingTask.task_order_index = currentIndex;
+            // The current task was shifted to currentIndex + 1
+            task.task_order_index = currentIndex + 1;
+            await this.taskRepo.save(task);
+          }
+
+          existingTask.status = 'In Progress';
+          existingTask.in_progress_at = new Date();
+          await this.taskRepo.save(existingTask);
+
+          if (existingTask.assigned_to_user && existingTask.assigned_to_user.phone) {
+            const site = task.milestone?.workload_ticket?.site;
+            const sitePrefix = site ? `${site.code}-${site.name}` : '-';
+            const rejecterName = task.assigned_to_user?.name || 'Unknown';
+            const message = `Tugas Anda (${existingTask.name}) pada (${sitePrefix}) telah di reject oleh ${rejecterName} (Menunggu Task Anda selesai). Harap segera ditindaklanjuti dan hubungi ${rejecterName} untuk detail rejection!!`;
+            await this.sendWhatsappNotification(existingTask.assigned_to_user.phone, message);
+          }
         }
+      } else {
+        throw failedResponse(HttpStatus.BAD_REQUEST, 'A pending_reason_task_id is required when changing status to Pending');
       }
     }
     return { success: true };

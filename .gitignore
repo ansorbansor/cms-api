@@ -131,3 +131,4 @@ ormconfig.json
 
 .wwebjs_auth/
 .wwebjs_cache/
+files/

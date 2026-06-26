@@ -503,8 +503,16 @@ export class WorkloadTicketsService {
     await this.attachmentRepo.remove(attachment);
   }
 
+  async removeTaskEvidence(taskId: number): Promise<void> {
+    const task = await this.taskRepo.findOne(taskId);
+    if (!task) throw failedResponse(HttpStatus.NOT_FOUND, 'Task not found');
+    
+    task.evidence_file_id = null as any;
+    await this.taskRepo.save(task);
+  }
+
   private async handleNextTaskNotification(currentTask: WorkloadTask) {
-    const currentMilestone = await this.milestoneRepo.findOne(currentTask.milestone_id, { relations: ['workload_ticket', 'workload_ticket.site'] });
+    const currentMilestone = await this.milestoneRepo.findOne(currentTask.milestone_id, { relations: ['workload_ticket', 'workload_ticket.site', 'workload_ticket.created_by_user'] });
     const siteText = currentMilestone.workload_ticket?.site ? ` di Site ${currentMilestone.workload_ticket.site.name} (${currentMilestone.workload_ticket.site.code})` : '';
 
     const nextTask = await this.taskRepo.findOne({
@@ -526,6 +534,15 @@ export class WorkloadTicketsService {
     } else {
       currentMilestone.status = 'Completed';
       await this.milestoneRepo.save(currentMilestone);
+
+      // Notify the creator that this milestone is completed
+      const creator = currentMilestone.workload_ticket?.created_by_user;
+      if (creator && creator.phone) {
+        const ticketName = currentMilestone.workload_ticket?.ticket_id || 'Unknown';
+        const milestoneName = currentMilestone.name || 'Unknown';
+        const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya`;
+        await this.sendWhatsappNotification(creator.phone, msg);
+      }
 
       const nextMilestone = await this.milestoneRepo.findOne({
         where: {

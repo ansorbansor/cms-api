@@ -13,6 +13,11 @@ export class UpdateTakeDataTemplateItemDto {
     @IsString()
     type?: string;
 
+    @ApiProperty({ example: 'Must be bright and clear', required: false })
+    @IsOptional()
+    @IsString()
+    image_criteria?: string;
+
     @ApiProperty({ example: 1, required: false })
     @IsOptional()
     @Type(() => Number)

@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
+import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
 import { getFlag } from 'src/utils/feature-flags.util';
 import { WhatsappService } from 'src/modules/whatsapp/whatsapp.service';
 import moment from 'moment';
@@ -14,11 +15,13 @@ export class WorkloadTicketsCronService {
   constructor(
     @InjectRepository(WorkloadTask)
     private readonly taskRepo: Repository<WorkloadTask>,
+    @InjectRepository(WorkloadTicket)
+    private readonly ticketRepo: Repository<WorkloadTicket>,
     private readonly whatsappService: WhatsappService
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async handleDailyNotifications() {
+  async handleCron() {
     const isEnabled = getFlag('enable_daily_reminder', true);
     if (!isEnabled) return;
 
@@ -28,8 +31,13 @@ export class WorkloadTicketsCronService {
     if (currentTime !== scheduledTime) {
       return;
     }
+    
+    await this.handleDailyNotifications();
+    await this.handleCreatorNotifications();
+  }
 
-    this.logger.log(`Triggering daily notifications for Workload Tasks at ${currentTime}`);
+  async handleDailyNotifications() {
+    this.logger.log(`Triggering daily notifications for Workload Tasks`);
 
     try {
       // Find all tasks that are 'In Progress' with their assigned user
@@ -90,6 +98,57 @@ export class WorkloadTicketsCronService {
       this.logger.log(`Successfully sent daily notifications to ${Object.keys(tasksByUser).length} users.`);
     } catch (error) {
       this.logger.error('Failed to send daily workload notifications', error);
+    }
+  }
+
+  async handleCreatorNotifications() {
+    this.logger.log(`Triggering daily notifications for Workload Ticket Creators`);
+
+    try {
+      // Find all tickets that are not completed, along with milestones, tasks, and creator
+      const tickets = await this.ticketRepo.find({
+        where: [{ status: 'Pending' }, { status: 'In Progress' }],
+        relations: ['created_by_user', 'milestones', 'milestones.tasks']
+      });
+
+      for (const ticket of tickets) {
+        if (ticket.status === 'Completed') continue;
+
+        const creator = ticket.created_by_user;
+        if (!creator || !creator.phone) continue;
+
+        const ticketName = ticket.ticket_id || 'Unknown';
+        
+        // 1. If workload ticket has no milestone
+        if (!ticket.milestones || ticket.milestones.length === 0) {
+          const msg = `Hai ${creator.name} workload ticket kamu ${ticketName} belum memiliki Milestone apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik`;
+          await this.whatsappService.sendMessage(creator.phone, msg);
+          continue;
+        }
+
+        // Check milestones
+        for (const milestone of ticket.milestones) {
+          const milestoneName = milestone.name || 'Unknown';
+          
+          // 2. If milestone is completed
+          if (milestone.status === 'Completed') {
+            const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya`;
+            await this.whatsappService.sendMessage(creator.phone, msg);
+            continue;
+          }
+
+          // 3. If milestone has no task (and it's not completed)
+          if (!milestone.tasks || milestone.tasks.length === 0) {
+            const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) belum memiliki task apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik`;
+            await this.whatsappService.sendMessage(creator.phone, msg);
+            continue;
+          }
+        }
+      }
+
+      this.logger.log(`Successfully processed creator notifications.`);
+    } catch (error) {
+      this.logger.error('Failed to send creator workload notifications', error);
     }
   }
 }

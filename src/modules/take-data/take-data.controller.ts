@@ -157,6 +157,18 @@ export class TakeDataController {
         return successResponse(result, 'Assignment reviewed successfully');
     }
 
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Post('assignments/:id/items/:itemId/ai-review')
+    async aiReviewItem(
+        @Param('id') id: number,
+        @Param('itemId') itemId: number,
+        @Request() request
+    ) {
+        const result = await this.takeDataService.aiReviewItem(id, itemId, request.user.id);
+        return successResponse(result, 'Item reviewed by AI successfully');
+    }
+
     // Android
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))

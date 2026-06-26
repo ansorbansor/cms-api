@@ -18,6 +18,7 @@ export const UserResource = (user: User): any => {
     position: {
       id: user.employeePosition ? user.employeePosition.id : null,
       name: user.employeePosition ? user.employeePosition.name : null,
+      code: user.employeePosition ? user.employeePosition.code : null,
       grant_all_access: user.employeePosition ? user.employeePosition.grant_all_access : false,
     },
     region: user.region,

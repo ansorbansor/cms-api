@@ -9,6 +9,10 @@ const DEFAULT_FLAGS = {
   daily_reminder_time: '08:00',
   show_workload_menu: true,
   show_kpi_dashboard: true,
+  litellm_url: 'http://109.123.237.113:4000/v1/chat/completions',
+  litellm_model: 'vertex_ai/gemini-3.5-flash',
+  litellm_api_key: 'sk-aJfYrGgKsgjq0OTPtstj5w',
+  ai_system_message: 'You are a strict, objective Quality Assurance (QA) visual inspector. Your sole job is to evaluate whether the provided image(s) perfectly match the user\'s criteria. You must always reply in strict JSON format without any markdown wrappers.',
 };
 
 export function readFeatureFlags(): Record<string, any> {

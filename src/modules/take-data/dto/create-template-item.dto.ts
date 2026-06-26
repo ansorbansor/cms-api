@@ -19,6 +19,11 @@ export class CreateTakeDataTemplateItemDto {
     @IsString()
     type?: string;
 
+    @ApiProperty({ example: 'Must be bright and clear', required: false })
+    @IsOptional()
+    @IsString()
+    image_criteria?: string;
+
     @ApiProperty({ example: 1 })
     @IsOptional()
     @Type(() => Number)

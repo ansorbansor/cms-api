@@ -275,6 +275,194 @@ export class TakeDataService {
         return { message: 'Assignment deleted successfully' };
     }
 
+    async aiReviewItem(assignmentId: number, itemId: number, userId: number) {
+        const assignment = await this.assignmentRepository.findOne({
+            where: { id: assignmentId },
+            relations: ['template', 'template.items']
+        });
+
+        if (!assignment) {
+            throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+        }
+
+        const templateItem = assignment.template?.items?.find(i => i.id == itemId);
+        if (!templateItem || !templateItem.image_criteria) {
+             throw new HttpException('Item not found or has no AI criteria', HttpStatus.BAD_REQUEST);
+        }
+
+        // Check if already reviewed (resume functionality)
+        let itemReviews: any = {};
+        try {
+            if (assignment.item_reviews) {
+                 itemReviews = JSON.parse(assignment.item_reviews);
+            }
+        } catch(e) {}
+
+        if (itemReviews[itemId] && itemReviews[itemId].status) {
+            return { message: 'Already reviewed', status: itemReviews[itemId].status };
+        }
+
+        // Fetch submissions
+        const submissions = await this.submissionRepository
+            .createQueryBuilder('sub')
+            .leftJoinAndSelect('sub.photo', 'photo')
+            .where('sub.assignment_id = :aid AND sub.template_item_id = :tid', { aid: assignmentId, tid: itemId })
+            .getMany();
+
+        if (submissions.length === 0) {
+            throw new HttpException('No submissions found for this item', HttpStatus.BAD_REQUEST);
+        }
+
+        // Gather valid image paths
+        const imagePaths = [];
+        for (const sub of submissions) {
+             if (sub.photo && sub.photo.path) {
+                 const physicalName = sub.photo.path.split('/').pop();
+                 if (physicalName) {
+                     const photoPath = path.join(process.cwd(), 'files', physicalName);
+                     if (fs.existsSync(photoPath)) {
+                         imagePaths.push(photoPath);
+                     }
+                 }
+             }
+        }
+
+        if (imagePaths.length === 0) {
+            throw new HttpException('No physical photos found', HttpStatus.BAD_REQUEST);
+        }
+
+        // Stitch images with Jimp
+        const { Jimp } = require('jimp');
+        let finalBase64 = '';
+        try {
+             if (imagePaths.length === 1) {
+                  // Just read as base64
+                  const ext = path.extname(imagePaths[0]).substring(1).toLowerCase();
+                  const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+                  const buffer = fs.readFileSync(imagePaths[0]);
+                  finalBase64 = `data:${mime};base64,${buffer.toString('base64')}`;
+             } else {
+                  // Stitch images horizontally
+                  const images = await Promise.all(imagePaths.map(p => Jimp.read(p)));
+                  const totalWidth = images.reduce((sum, img) => sum + img.bitmap.width, 0);
+                  const maxHeight = Math.max(...images.map(img => img.bitmap.height));
+
+                  const newImage = new Jimp({ width: totalWidth, height: maxHeight, color: 0xFFFFFFFF });
+                  let currentX = 0;
+                  for (const img of images) {
+                       newImage.composite(img, currentX, 0);
+                       currentX += img.bitmap.width;
+                  }
+                  
+                  finalBase64 = await newImage.getBase64('image/jpeg');
+             }
+        } catch(e) {
+             console.error('Image processing error:', e);
+             throw new HttpException('Failed to process images for AI', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // Call LiteLLM
+        const { getFlag } = require('../../utils/feature-flags.util');
+        const url = getFlag('litellm_url');
+        const model = getFlag('litellm_model');
+        const apiKey = getFlag('litellm_api_key');
+        const systemMessage = getFlag('ai_system_message');
+
+        const axios = require('axios');
+        let aiResult = { status: 'Rejected', remarks: 'AI evaluation failed' };
+        
+        try {
+            const payload = {
+                model: model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: systemMessage
+                    },
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: `Review this image against the following criteria: "${templateItem.image_criteria}". Does the image meet the criteria? You MUST respond in pure JSON format ONLY: {"status": "Passed" or "Rejected", "remarks": "Berikan alasan penolakan dalam Bahasa Indonesia jika Rejected, atau kosongkan jika Passed"}`
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: finalBase64
+                                }
+                            }
+                        ]
+                    }
+                ],
+                response_format: { type: 'json_object' }
+            };
+
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (apiKey) {
+                headers['Authorization'] = `Bearer ${apiKey}`;
+            }
+
+            const response = await axios.post(url, payload, { headers, timeout: 60000 });
+            const content = response.data.choices[0].message.content;
+            
+            // Clean up backticks if model returns them
+            let jsonString = content.trim();
+            if (jsonString.startsWith('```json')) {
+                jsonString = jsonString.substring(7, jsonString.length - 3).trim();
+            } else if (jsonString.startsWith('```')) {
+                jsonString = jsonString.substring(3, jsonString.length - 3).trim();
+            }
+
+            const parsed = JSON.parse(jsonString);
+            if (parsed.status === 'Passed' || parsed.status === 'Rejected') {
+                 aiResult = parsed;
+            } else {
+                 aiResult.remarks = parsed.remarks || 'Invalid AI response format';
+            }
+        } catch(e) {
+            console.error('LiteLLM Error:', e.response?.data || e.message);
+            if (e.response && e.response.status === 429) {
+                 throw new HttpException('AI Rate limit reached', HttpStatus.TOO_MANY_REQUESTS);
+            }
+            throw new HttpException('AI connection failed', HttpStatus.SERVICE_UNAVAILABLE);
+        }
+
+        // Save review
+        itemReviews[itemId] = {
+             status: aiResult.status,
+             remarks: aiResult.remarks || ''
+        };
+        assignment.item_reviews = JSON.stringify(itemReviews);
+
+        // Check overall status (if all items with image_criteria are reviewed)
+        const targetItems = assignment.template.items.filter(i => i.type !== 'form' && i.image_criteria);
+        let allCompleted = true;
+        let overallStatus = 'Passed by AI';
+
+        for (const target of targetItems) {
+            if (!itemReviews[target.id] || !itemReviews[target.id].status) {
+                allCompleted = false;
+                break;
+            }
+        }
+
+        if (allCompleted) {
+             for (const target of targetItems) {
+                 if (itemReviews[target.id] && itemReviews[target.id].status === 'Rejected') {
+                     overallStatus = 'Rejected by AI';
+                     break;
+                 }
+             }
+             assignment.review_status = overallStatus;
+             assignment.reviewed_by = userId;
+             assignment.reviewed_at = new Date();
+        }
+
+        await this.assignmentRepository.save(assignment);
+        return { message: 'Review saved', result: itemReviews[itemId] };
+    }
+
     // Android API
     async getTemplatesForSite(siteId: number) {
         const assignments = await this.assignmentRepository.find({

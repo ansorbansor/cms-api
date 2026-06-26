@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
 import { WorkloadTicketsService } from './workload-tickets.service';
+import { WorkloadTicketsCronService } from './workload-tickets.cron.service';
 import { UsersService } from '../users/users.service';
 import { HttpException } from '@nestjs/common';
 
@@ -16,7 +17,18 @@ export class WorkloadTicketsController {
   constructor(
     private readonly ticketsService: WorkloadTicketsService,
     private readonly usersService: UsersService,
+    private readonly ticketsCronService: WorkloadTicketsCronService,
   ) { }
+
+  @Post('trigger-notifications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async triggerNotifications(@Request() req) {
+    await this.assertSuperAdmin(req);
+    // Since we removed the time check from the individual methods, calling them directly will execute them.
+    await this.ticketsCronService.handleDailyNotifications();
+    await this.ticketsCronService.handleCreatorNotifications();
+    return successResponse(null, 'Notifications triggered successfully');
+  }
 
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -197,6 +209,13 @@ export class WorkloadTicketsController {
   async removeTaskAttachment(@Param('taskId') taskId: string, @Param('attachmentId') attachmentId: string) {
     await this.ticketsService.removeTaskAttachment(+taskId, +attachmentId);
     return successResponse(null, 'Attachment removed successfully');
+  }
+
+  @Delete('tasks/:taskId/evidence')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async removeTaskEvidence(@Param('taskId') taskId: string) {
+    await this.ticketsService.removeTaskEvidence(+taskId);
+    return successResponse(null, 'Evidence file removed successfully');
   }
 
   @Delete(':id')

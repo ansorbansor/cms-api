@@ -14,7 +14,10 @@ import { SyncDistanceTrackingDto } from './dto/sync-distance-tracking.dto';
 
 @ApiBearerAuth()
 @ApiTags('Distance Tracking')
-@Controller('api/distance-tracking')
+@Controller({
+  path: 'distance-tracking',
+  version: '1',
+})
 export class DistanceTrackingController {
   constructor(private readonly distanceTrackingService: DistanceTrackingService) {}
 

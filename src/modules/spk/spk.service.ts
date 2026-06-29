@@ -330,12 +330,17 @@ export class SPKService {
 
     const cashAdvance = Number(updateSPKDTO.cash_advance);
 
-    if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
-      updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
-      updateSPKDTO.is_over_budget = true;
+    if (exists.status < SPKStatus.APPROVED) {
+      if (maxBudgetBySite < totalSPKAmount + cashAdvance) {
+        updateSPKDTO.status = SPKStatus.CREATED_OVER_BUDGET;
+        updateSPKDTO.is_over_budget = true;
+      } else {
+        updateSPKDTO.status = SPKStatus.CREATED;
+        updateSPKDTO.is_over_budget = false;
+      }
     } else {
-      updateSPKDTO.status = SPKStatus.CREATED;
-      updateSPKDTO.is_over_budget = false;
+      // Preserve existing budget flag if it's already approved to prevent ghost states
+      updateSPKDTO.is_over_budget = maxBudgetBySite < totalSPKAmount + cashAdvance;
     }
 
     if (currentUser.employeePosition?.grant_all_access === false) {
@@ -1363,7 +1368,10 @@ export class SPKService {
     }
 
     const requireWorkloadTicket = getFlag('require_workload_ticket');
-    if (existingSPK.po && requireWorkloadTicket) {
+    const cutoffDate = new Date('2026-06-28T00:00:00Z');
+    const isLegacySpk = existingSPK.created_at && new Date(existingSPK.created_at) < cutoffDate;
+    
+    if (existingSPK.po && requireWorkloadTicket && !isLegacySpk) {
       if (!existingSPK.po.workload_ticket_id && !workload_ticket_id) {
         throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for this PO`);
       }
@@ -1471,6 +1479,7 @@ export class SPKService {
     }
 
     const requireWorkloadTicket = getFlag('require_workload_ticket');
+    const cutoffDate = new Date('2026-06-28T00:00:00Z');
     
     const queryRunner = getManager().connection.createQueryRunner();
     await queryRunner.connect();
@@ -1478,7 +1487,8 @@ export class SPKService {
 
     try {
       for (const item of itemsToApprove) {
-        if (item.po && requireWorkloadTicket) {
+        const isLegacySpk = item.created_at && new Date(item.created_at) < cutoffDate;
+        if (item.po && requireWorkloadTicket && !isLegacySpk) {
           if (!item.po.workload_ticket_id && !workload_ticket_id) {
              throw failedResponse(HttpStatus.BAD_REQUEST, `Workload ticket required for SPK ${item.spk_number}`, {
                requireWorkloadTicket: true,

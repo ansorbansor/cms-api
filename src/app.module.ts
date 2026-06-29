@@ -52,6 +52,7 @@ import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-presets.module';
 import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
+import { DistanceTrackingModule } from './modules/distance-tracking/distance-tracking.module';
 
 @Module({
   imports: [
@@ -121,6 +122,7 @@ import { DocumentStorageModule } from './modules/document-storage/document-stora
     FeatureFlagsModule,
     TaskNamePresetsModule,
     DocumentStorageModule,
+    DistanceTrackingModule,
   ],
   providers: [
     {

@@ -98,11 +98,13 @@ export class WorkloadTicketsService {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const search = query.search || '';
+    const customer_id = query.customer_id;
 
     const qb = this.ticketRepo.createQueryBuilder('wt')
       .leftJoinAndSelect('wt.site', 'site')
       .leftJoinAndSelect('wt.created_by_user', 'created_by_user')
       .leftJoinAndSelect('wt.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.customer', 'customer')
       .leftJoinAndSelect('wt.milestones', 'milestones')
       .leftJoinAndSelect('milestones.tasks', 'tasks')
       .leftJoinAndSelect('tasks.assigned_to_user', 'assigned_to_user')
@@ -115,6 +117,10 @@ export class WorkloadTicketsService {
 
     if (search) {
       qb.where('wt.ticket_id ILIKE :search', { search: `%${search}%` });
+    }
+
+    if (customer_id) {
+      qb.andWhere('customer.id = :customerId', { customerId: customer_id });
     }
 
     const [data, total] = await qb.getManyAndCount();
@@ -197,6 +203,7 @@ export class WorkloadTicketsService {
       relations: [
         'site',
         'purchase_orders',
+        'purchase_orders.customer',
         'milestones',
         'milestones.tasks',
         'milestones.tasks.assigned_to_user',

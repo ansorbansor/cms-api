@@ -118,6 +118,14 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Post(':id/copy-milestones')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async copyMilestones(@Param('id') id: string, @Body() body: { source_ticket_id: number }) {
+    await this.ticketsService.copyMilestones(+id, body.source_ticket_id);
+    return successResponse(null, 'Milestones successfully copied from template');
+  }
+
   @Post(':id/milestones')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async addMilestone(@Param('id') ticketId: string, @Body() body: { name: string }) {

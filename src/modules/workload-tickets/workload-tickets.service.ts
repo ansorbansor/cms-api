@@ -856,6 +856,68 @@ export class WorkloadTicketsService {
     })).sort((a, b) => b.completion_rate - a.completion_rate);
   }
 
+  async copyMilestones(targetTicketId: number, sourceTicketId: number): Promise<void> {
+    const targetTicket = await this.ticketRepo.findOne(targetTicketId);
+    if (!targetTicket) throw failedResponse(HttpStatus.NOT_FOUND, 'Target ticket not found');
+
+    const sourceTicket = await this.ticketRepo.findOne(sourceTicketId, {
+      relations: ['milestones', 'milestones.tasks', 'milestones.tasks.assigned_multiple'],
+    });
+    if (!sourceTicket) throw failedResponse(HttpStatus.NOT_FOUND, 'Source ticket not found');
+    if (!sourceTicket.milestones || sourceTicket.milestones.length === 0) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Source ticket has no milestones to copy');
+    }
+
+    // Sort source milestones by their original creation/id to preserve order conceptually
+    sourceTicket.milestones.sort((a, b) => a.id - b.id);
+
+    let nextMilestoneOrderIndex = await this.milestoneRepo.count({ where: { workload_ticket_id: targetTicketId } });
+
+    const newDeadline = moment().add(7, 'days').toDate();
+
+    for (const sMilestone of sourceTicket.milestones) {
+      // Create clone milestone
+      const newMilestone = this.milestoneRepo.create({
+        workload_ticket_id: targetTicketId,
+        name: sMilestone.name,
+        status: 'Active',
+        milestone_order_index: ++nextMilestoneOrderIndex,
+      });
+      const savedMilestone = await this.milestoneRepo.save(newMilestone);
+
+      if (sMilestone.tasks && sMilestone.tasks.length > 0) {
+        // Sort tasks by task_order_index to preserve order
+        sMilestone.tasks.sort((a, b) => (a.task_order_index || 0) - (b.task_order_index || 0));
+
+        let taskIndex = 1;
+        for (const sTask of sMilestone.tasks) {
+          const newTask = this.taskRepo.create({
+            milestone_id: savedMilestone.id,
+            name: sTask.name,
+            assigned_to: sTask.assigned_to,
+            status: 'In Progress', // Force all to In Progress, dropping previous_task_id
+            task_order_index: taskIndex++,
+            deadline: newDeadline,
+            in_progress_at: new Date()
+          });
+
+          let savedTask = await this.taskRepo.save(newTask);
+
+          if (sTask.assigned_multiple && sTask.assigned_multiple.length > 0) {
+            savedTask.assigned_multiple = sTask.assigned_multiple;
+            await this.taskRepo.save(savedTask);
+          }
+        }
+      }
+    }
+
+    // Rollback target ticket to In Progress if it was completed
+    if (targetTicket.status === 'Completed' || targetTicket.status === 'Confirmed Finished') {
+      targetTicket.status = 'In Progress';
+      await this.ticketRepo.save(targetTicket);
+    }
+  }
+
   private async sendWhatsappNotification(phoneNumber: string, message: string) {
     try {
       await this.whatsappService.sendMessage(phoneNumber, message);

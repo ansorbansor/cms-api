@@ -534,13 +534,20 @@ export class WorkloadTicketsService {
     task.pic_history.push(historyItem);
     task.assigned_to = userId;
 
+    const newUser = await getManager().getRepository(User).findOne(userId);
+    task.assigned_to_user = newUser;
+    
+    // Clear old multiple PICs and set to the new single PIC so frontend doesn't render stale data
+    if (newUser) {
+      task.assigned_multiple = [newUser];
+    } else {
+      task.assigned_multiple = [];
+    }
+
     // If reassigned while In Progress, reset the timer for the new PIC
     if (task.status === 'In Progress') {
       task.in_progress_at = now;
     }
-
-    const newUser = await getManager().getRepository(User).findOne(userId);
-    task.assigned_to_user = newUser;
 
     await this.taskRepo.save(task);
 

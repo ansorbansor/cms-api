@@ -99,12 +99,14 @@ export class WorkloadTicketsService {
     const limit = Number(query.limit) || 10;
     const search = query.search || '';
     const customer_id = query.customer_id;
+    const project_id = query.project_id;
 
     const qb = this.ticketRepo.createQueryBuilder('wt')
       .leftJoinAndSelect('wt.site', 'site')
       .leftJoinAndSelect('wt.created_by_user', 'created_by_user')
       .leftJoinAndSelect('wt.purchase_orders', 'purchase_orders')
       .leftJoinAndSelect('purchase_orders.customer', 'customer')
+      .leftJoinAndSelect('purchase_orders.project', 'project')
       .leftJoinAndSelect('wt.milestones', 'milestones')
       .leftJoinAndSelect('milestones.tasks', 'tasks')
       .leftJoinAndSelect('tasks.assigned_to_user', 'assigned_to_user')
@@ -122,6 +124,10 @@ export class WorkloadTicketsService {
 
     if (customer_id) {
       qb.andWhere('customer.id = :customerId', { customerId: customer_id });
+    }
+
+    if (project_id) {
+      qb.andWhere('project.id = :projectId', { projectId: project_id });
     }
 
     const [data, total] = await qb.getManyAndCount();

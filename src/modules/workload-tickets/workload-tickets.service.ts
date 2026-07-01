@@ -881,7 +881,7 @@ export class WorkloadTicketsService {
         workload_ticket_id: targetTicketId,
         name: sMilestone.name,
         status: 'Active',
-        milestone_order_index: ++nextMilestoneOrderIndex,
+        order_index: ++nextMilestoneOrderIndex,
       });
       const savedMilestone = await this.milestoneRepo.save(newMilestone);
 

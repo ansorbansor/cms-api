@@ -157,6 +157,7 @@ export class WorkloadTicketsService {
     const qb = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
       .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
+      .leftJoinAndSelect('workload_ticket.purchase_orders', 'purchase_orders')
       .leftJoinAndSelect('workload_ticket.site', 'site')
       .leftJoinAndSelect('task.evidence_file', 'evidence_file')
       .leftJoinAndSelect('task.attachments', 'attachments')

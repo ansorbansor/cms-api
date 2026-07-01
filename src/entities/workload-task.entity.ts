@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Milestone } from './milestone.entity';
 import { User } from './user.entity';
@@ -51,4 +51,8 @@ export class WorkloadTask extends EntityHelper {
 
   @OneToMany(() => WorkloadTaskAttachment, (a) => a.task)
   attachments: WorkloadTaskAttachment[];
+
+  @ManyToMany(() => User)
+  @JoinTable({ name: 'workload_task_multiple_pics' })
+  assigned_multiple: User[];
 }

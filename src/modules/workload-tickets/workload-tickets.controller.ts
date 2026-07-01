@@ -206,9 +206,9 @@ export class WorkloadTicketsController {
 
   @Patch('tasks/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async updateTaskStatus(@Param('id') taskId: string, @Body() body: any) {
+  async updateTaskStatus(@Param('id') taskId: string, @Body() body: any, @Request() req) {
     return successResponse(
-      await this.ticketsService.updateTaskStatus(+taskId, body),
+      await this.ticketsService.updateTaskStatus(+taskId, body, req.user.id),
       'Task status updated successfully'
     );
   }

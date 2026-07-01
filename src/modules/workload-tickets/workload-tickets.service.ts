@@ -111,6 +111,7 @@ export class WorkloadTicketsService {
       .leftJoinAndSelect('tasks.evidence_file', 'evidence_file')
       .leftJoinAndSelect('tasks.attachments', 'attachments')
       .leftJoinAndSelect('attachments.file', 'att_file')
+      .leftJoinAndSelect('tasks.assigned_multiple', 'assigned_multiple')
       .orderBy('wt.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -154,7 +155,9 @@ export class WorkloadTicketsService {
       .leftJoinAndSelect('task.evidence_file', 'evidence_file')
       .leftJoinAndSelect('task.attachments', 'attachments')
       .leftJoinAndSelect('attachments.file', 'att_file')
-      .where('task.assigned_to = :userId', { userId })
+      .leftJoinAndSelect('task.assigned_multiple', 'assigned_multiple')
+      .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
       .orderBy('task.created_at', 'ASC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -199,19 +202,19 @@ export class WorkloadTicketsService {
   }
 
   async findOne(id: number): Promise<WorkloadTicket> {
-    const ticket = await this.ticketRepo.findOne(id, {
-      relations: [
-        'site',
-        'purchase_orders',
-        'purchase_orders.customer',
-        'milestones',
-        'milestones.tasks',
-        'milestones.tasks.assigned_to_user',
-        'milestones.tasks.evidence_file',
-        'milestones.tasks.attachments',
-        'milestones.tasks.attachments.file'
-      ]
-    });
+    const ticket = await this.ticketRepo.createQueryBuilder('wt')
+      .leftJoinAndSelect('wt.site', 'site')
+      .leftJoinAndSelect('wt.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.customer', 'customer')
+      .leftJoinAndSelect('wt.milestones', 'milestones')
+      .leftJoinAndSelect('milestones.tasks', 'tasks')
+      .leftJoinAndSelect('tasks.assigned_to_user', 'assigned_to_user')
+      .leftJoinAndSelect('tasks.evidence_file', 'evidence_file')
+      .leftJoinAndSelect('tasks.attachments', 'attachments')
+      .leftJoinAndSelect('attachments.file', 'att_file')
+      .leftJoinAndSelect('tasks.assigned_multiple', 'assigned_multiple')
+      .where('wt.id = :id', { id })
+      .getOne();
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
 
     if (ticket.milestones) {
@@ -270,13 +273,32 @@ export class WorkloadTicketsService {
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Ticket not found');
 
     const count = ticket.milestones ? ticket.milestones.length : 0;
+    
+    let isAllPreviousCompleted = true;
+    if (ticket.milestones) {
+      for (const m of ticket.milestones) {
+        if (m.status !== 'Completed' && m.status !== 'Confirmed Finished') {
+          isAllPreviousCompleted = false;
+          break;
+        }
+      }
+    }
+
     const milestone = this.milestoneRepo.create({
       workload_ticket_id: ticketId,
       name,
       order_index: count + 1,
-      status: count === 0 ? 'Active' : 'Pending',
+      status: isAllPreviousCompleted ? 'Active' : 'Pending',
     });
-    return await this.milestoneRepo.save(milestone);
+    
+    const savedMilestone = await this.milestoneRepo.save(milestone);
+
+    if (ticket.status === 'Completed' || ticket.status === 'Confirmed Finished') {
+      ticket.status = 'In Progress';
+      await this.ticketRepo.save(ticket);
+    }
+
+    return savedMilestone;
   }
 
   async reorderMilestones(ticketId: number, orderIds: number[]): Promise<void> {
@@ -347,28 +369,62 @@ export class WorkloadTicketsService {
     if (!milestone) throw failedResponse(HttpStatus.NOT_FOUND, 'Milestone not found');
 
     const count = milestone.tasks ? milestone.tasks.length : 0;
-    const isFirstActiveTask = (count === 0 && milestone.status === 'Active');
+    
+    let isAllPreviousCompleted = true;
+    if (milestone.tasks) {
+      for (const t of milestone.tasks) {
+        if (t.status !== 'Completed') {
+          isAllPreviousCompleted = false;
+          break;
+        }
+      }
+    }
+
+    const isFirstActiveTask = (count === 0 && milestone.status === 'Active') || (count > 0 && isAllPreviousCompleted && (milestone.status === 'Completed' || milestone.status === 'Active'));
+
+    const assignedIds = Array.isArray(payload.assigned_to) ? payload.assigned_to : [payload.assigned_to];
+    const primaryId = assignedIds[0] || null;
 
     const task = this.taskRepo.create({
       milestone_id: milestoneId,
       name: payload.name,
-      assigned_to: payload.assigned_to,
+      assigned_to: primaryId,
       deadline: payload.deadline,
       status: isFirstActiveTask ? 'In Progress' : 'Pending',
       task_order_index: count + 1,
     });
-    const savedTask = await this.taskRepo.save(task);
+    let savedTask = await this.taskRepo.save(task);
+
+    if (milestone.status === 'Completed' || milestone.status === 'Confirmed Finished') {
+      milestone.status = 'Active';
+      await this.milestoneRepo.save(milestone);
+    }
+
+    if (milestone.workload_ticket && (milestone.workload_ticket.status === 'Completed' || milestone.workload_ticket.status === 'Confirmed Finished')) {
+      milestone.workload_ticket.status = 'In Progress';
+      await this.ticketRepo.save(milestone.workload_ticket);
+    }
+
+    let users = [];
+    if (assignedIds.length > 0) {
+      users = await getManager().getRepository(User).findByIds(assignedIds);
+      savedTask.assigned_multiple = users;
+      savedTask = await this.taskRepo.save(savedTask);
+    }
 
     // Stamp in_progress_at if this task immediately becomes In Progress (first task in active milestone)
     if (isFirstActiveTask) {
       savedTask.in_progress_at = new Date();
       await this.taskRepo.save(savedTask);
 
-      const user = await getManager().getRepository(User).findOne(payload.assigned_to);
-      if (user && user.phone) {
-        const siteText = milestone.workload_ticket?.site ? ` di Site ${milestone.workload_ticket.site.name} (${milestone.workload_ticket.site.code})` : '';
-        const deadlineText = savedTask.deadline ? ` sebelum ${moment(savedTask.deadline).format('DD-MM-YYYY')}` : '';
-        await this.sendWhatsappNotification(user.phone, `Hai ${user.name}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+      const siteText = milestone.workload_ticket?.site ? ` di Site ${milestone.workload_ticket.site.name} (${milestone.workload_ticket.site.code})` : '';
+      const deadlineText = savedTask.deadline ? ` sebelum ${moment(savedTask.deadline).format('DD-MM-YYYY')}` : '';
+      
+      const allNames = users.map(u => u.name).join(', ');
+      for (const user of users) {
+        if (user.phone) {
+          await this.sendWhatsappNotification(user.phone, `Hai ${allNames}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+        }
       }
     }
 
@@ -490,7 +546,7 @@ export class WorkloadTicketsService {
     return task;
   }
 
-  async updateTaskStatus(taskId: number, payload: any): Promise<any> {
+  async updateTaskStatus(taskId: number, payload: any, userId?: number): Promise<any> {
     const task = await this.taskRepo.findOne(taskId, { relations: ['milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site', 'assigned_to_user'] });
     if (!task) throw failedResponse(HttpStatus.NOT_FOUND, 'Task not found');
 
@@ -506,6 +562,12 @@ export class WorkloadTicketsService {
     if (payload.status) task.status = payload.status;
     if (payload.evidence_file_id) task.evidence_file_id = payload.evidence_file_id;
     if (payload.watermark_notes) task.watermark_notes = payload.watermark_notes;
+
+    if (userId && task.assigned_to !== userId) {
+      task.assigned_to = userId;
+      task.assigned_to_user = { id: userId } as any;
+      task.assigned_multiple = [];
+    }
 
     await this.taskRepo.save(task);
 
@@ -605,16 +667,28 @@ export class WorkloadTicketsService {
         milestone_id: currentTask.milestone_id,
         task_order_index: currentTask.task_order_index + 1
       },
-      relations: ['assigned_to_user']
+      relations: ['assigned_to_user', 'assigned_multiple']
     });
 
     if (nextTask) {
       nextTask.status = 'In Progress';
       nextTask.in_progress_at = new Date();
       await this.taskRepo.save(nextTask);
-      if (nextTask.assigned_to_user && nextTask.assigned_to_user.phone) {
-        const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
-        await this.sendWhatsappNotification(nextTask.assigned_to_user.phone, `Hai ${nextTask.assigned_to_user.name}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+
+      const usersToNotify = [];
+      if (nextTask.assigned_to_user) usersToNotify.push(nextTask.assigned_to_user);
+      if (nextTask.assigned_multiple) {
+        nextTask.assigned_multiple.forEach(u => {
+          if (!usersToNotify.find(existing => existing.id === u.id)) usersToNotify.push(u);
+        });
+      }
+
+      const allNames = usersToNotify.map(u => u.name).join(', ');
+      for (const u of usersToNotify) {
+        if (u.phone) {
+          const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
+          await this.sendWhatsappNotification(u.phone, `Hai ${allNames}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+        }
       }
     } else {
       currentMilestone.status = 'Completed';
@@ -642,14 +716,26 @@ export class WorkloadTicketsService {
 
         const firstTask = await this.taskRepo.findOne({
           where: { milestone_id: nextMilestone.id, task_order_index: 1 },
-          relations: ['assigned_to_user']
+          relations: ['assigned_to_user', 'assigned_multiple']
         });
         if (firstTask) {
           firstTask.status = 'In Progress';
           await this.taskRepo.save(firstTask);
-          if (firstTask.assigned_to_user && firstTask.assigned_to_user.phone) {
-            const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
-            await this.sendWhatsappNotification(firstTask.assigned_to_user.phone, `Hai ${firstTask.assigned_to_user.name}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+
+          const usersToNotify2 = [];
+          if (firstTask.assigned_to_user) usersToNotify2.push(firstTask.assigned_to_user);
+          if (firstTask.assigned_multiple) {
+            firstTask.assigned_multiple.forEach(u => {
+              if (!usersToNotify2.find(existing => existing.id === u.id)) usersToNotify2.push(u);
+            });
+          }
+
+          const allNames2 = usersToNotify2.map(u => u.name).join(', ');
+          for (const u of usersToNotify2) {
+            if (u.phone) {
+              const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
+              await this.sendWhatsappNotification(u.phone, `Hai ${allNames2}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+            }
           }
         }
       } else {

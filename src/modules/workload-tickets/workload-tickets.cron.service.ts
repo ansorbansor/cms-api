@@ -43,7 +43,7 @@ export class WorkloadTicketsCronService {
       // Find all tasks that are 'In Progress' with their assigned user
       const inProgressTasks = await this.taskRepo.find({
         where: { status: 'In Progress' },
-        relations: ['assigned_to_user', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
+        relations: ['assigned_to_user', 'assigned_multiple', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
       });
 
       if (inProgressTasks.length === 0) {
@@ -51,21 +51,30 @@ export class WorkloadTicketsCronService {
       }
 
       // Group by user ID
-      const tasksByUser: Record<number, WorkloadTask[]> = {};
+      const tasksByUser: Record<number, { user: any, tasks: WorkloadTask[] }> = {};
       for (const task of inProgressTasks) {
-        if (!task.assigned_to_user || !task.assigned_to_user.phone) continue;
-
-        const userId = task.assigned_to_user.id;
-        if (!tasksByUser[userId]) {
-          tasksByUser[userId] = [];
+        const users = [];
+        if (task.assigned_to_user) users.push(task.assigned_to_user);
+        if (task.assigned_multiple && task.assigned_multiple.length > 0) {
+          task.assigned_multiple.forEach(u => {
+             if (!users.find(existing => existing.id === u.id)) users.push(u);
+          });
         }
-        tasksByUser[userId].push(task);
+
+        for (const u of users) {
+          if (!u || !u.phone) continue;
+          const userId = u.id;
+          if (!tasksByUser[userId]) {
+            tasksByUser[userId] = { user: u, tasks: [] };
+          }
+          tasksByUser[userId].tasks.push(task);
+        }
       }
 
       // Send a WhatsApp message for each group
       const CHUNK_SIZE = 10;
-      for (const [userId, tasks] of Object.entries(tasksByUser)) {
-        const user = tasks[0].assigned_to_user;
+      for (const [userId, group] of Object.entries(tasksByUser)) {
+        const { user, tasks } = group;
         const totalTasks = tasks.length;
 
         let headerMessage = `Hai ${user.name}! 🔔\n\nIni adalah pengingat harian. Anda memiliki *${totalTasks} tugas* berstatus In Progress yang belum diselesaikan:\n\n`;
@@ -77,7 +86,21 @@ export class WorkloadTicketsCronService {
           const siteText = site ? ` di Site ${site.name} (${site.code})` : '';
           const deadlineText = t.deadline ? `\n   ⏳ Deadline: ${moment(t.deadline).format('DD-MM-YYYY')}` : '';
 
-          currentMessage += `${i + 1}. *${t.name}*${siteText}${deadlineText}\n`;
+          let picNames = '';
+          const taskUsers = [];
+          if (t.assigned_to_user) taskUsers.push(t.assigned_to_user);
+          if (t.assigned_multiple) {
+             t.assigned_multiple.forEach(u => {
+                if (!taskUsers.find(existing => existing.id === u.id)) taskUsers.push(u);
+             });
+          }
+          if (taskUsers.length > 1) {
+             picNames = `\n   👥 PIC: ${taskUsers.map(u => u.name).join(', ')}`;
+          } else if (taskUsers.length === 1) {
+             picNames = `\n   👤 PIC: ${taskUsers[0].name}`;
+          }
+
+          currentMessage += `${i + 1}. *${t.name}*${siteText}${picNames}${deadlineText}\n`;
 
           if ((i + 1) % CHUNK_SIZE === 0 || i === tasks.length - 1) {
             if (i === tasks.length - 1) {

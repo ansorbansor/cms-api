@@ -14,6 +14,11 @@ export const SPKResource = (spk: SPK): any => {
     po_number: spk.po && spk.po.po_number ? spk.po.po_number : '-',
     project_name: spk.po?.project?.name || '-',
     cash_advance: spk.cash_advance,
+    total_cash_advance: spk.total_cash_advance ? Number(spk.total_cash_advance) : 0,
+    total_cashback: spk.total_cashback ? Number(spk.total_cashback) : 0,
+    total_cashout: spk.total_cashout ? Number(spk.total_cashout) : 0,
+    is_over_budget: spk.is_over_budget,
+    po: spk.po ? { total_unit_price: spk.total_po_unit_price ? Number(spk.total_po_unit_price) : 0 } : null,
     spk_status:
       spk.status != null && spk.status != undefined
         ? {

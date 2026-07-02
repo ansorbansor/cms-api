@@ -107,6 +107,13 @@ export class WorkloadTicketsController {
     return successResponse(data, 'KPI data retrieved successfully');
   }
 
+  @Post('kpi/notify/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async notifyKpiUser(@Param('userId') userId: string) {
+    await this.ticketsCronService.handleDailyNotifications(+userId);
+    return successResponse(null, 'Notification sent successfully');
+  }
+
   @Get('tasks/unique-names')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getUniqueTaskNames() {

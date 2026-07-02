@@ -129,8 +129,8 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       time: new Date(),
     };
     
-    // Keep max 50 logs
-    if (this.messageLogs.length >= 50) this.messageLogs.shift();
+    // Keep max 500 logs
+    if (this.messageLogs.length >= 500) this.messageLogs.shift();
     this.messageLogs.push(logEntry);
 
     if (!this.isConnected) {

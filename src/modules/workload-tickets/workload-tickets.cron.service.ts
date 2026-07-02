@@ -36,15 +36,19 @@ export class WorkloadTicketsCronService {
     await this.handleCreatorNotifications();
   }
 
-  async handleDailyNotifications() {
-    this.logger.log(`Triggering daily notifications for Workload Tasks`);
+  async handleDailyNotifications(targetUserId?: number) {
+    this.logger.log(`Triggering daily notifications for Workload Tasks${targetUserId ? ` for user ${targetUserId}` : ''}`);
 
     try {
       // Find all tasks that are 'In Progress' with their assigned user
-      const inProgressTasks = await this.taskRepo.find({
-        where: { status: 'In Progress' },
-        relations: ['assigned_to_user', 'assigned_multiple', 'milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site']
-      });
+      const inProgressTasks = await this.taskRepo.createQueryBuilder('task')
+        .leftJoinAndSelect('task.assigned_to_user', 'assigned_to_user')
+        .leftJoinAndSelect('task.assigned_multiple', 'assigned_multiple')
+        .leftJoinAndSelect('task.milestone', 'milestone')
+        .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
+        .leftJoinAndSelect('workload_ticket.site', 'site')
+        .where('task.status = :status', { status: 'In Progress' })
+        .getMany();
 
       if (inProgressTasks.length === 0) {
         return;
@@ -62,7 +66,11 @@ export class WorkloadTicketsCronService {
         }
 
         for (const u of users) {
-          if (!u || !u.phone) continue;
+          if (targetUserId && u.id !== targetUserId) continue;
+          if (!u || !u.phone) {
+            this.logger.warn(`User ${u?.name || u?.id} has no phone number, skipping daily reminder.`);
+            continue;
+          }
           const userId = u.id;
           if (!tasksByUser[userId]) {
             tasksByUser[userId] = { user: u, tasks: [] };

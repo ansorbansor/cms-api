@@ -76,6 +76,13 @@ export class WorkloadTicketsController {
     };
   }
 
+  @Get('my-tasks/names')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMyTaskNames(@Request() req) {
+    const result = await this.ticketsService.getMyTaskNames(req.user.id);
+    return successResponse(result, 'Success');
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findAll(@Query() query: any) {

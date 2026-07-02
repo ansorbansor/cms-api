@@ -149,10 +149,22 @@ export class WorkloadTicketsService {
     });
   }
 
+  async getMyTaskNames(userId: number): Promise<string[]> {
+    const qb = this.taskRepo.createQueryBuilder('task')
+      .select('DISTINCT task.name', 'name')
+      .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .orderBy('name', 'ASC');
+
+    const result = await qb.getRawMany();
+    return result.map(r => r.name).filter(Boolean);
+  }
+
   async getMyTasks(userId: number, query: any = {}): Promise<{ data: WorkloadTask[], total: number }> {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const search = query.search || '';
+    const taskName = query.taskName || '';
 
     const qb = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
@@ -171,6 +183,10 @@ export class WorkloadTicketsService {
 
     if (search) {
       qb.andWhere('workload_ticket.ticket_id ILIKE :search', { search: `%${search}%` });
+    }
+
+    if (taskName) {
+      qb.andWhere('task.name = :taskName', { taskName });
     }
 
     const [data, total] = await qb.getManyAndCount();

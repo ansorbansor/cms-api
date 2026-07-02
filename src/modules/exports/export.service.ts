@@ -20,6 +20,7 @@ import { ExportSPKOperationalResource } from './resources/export-spk-operational
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import * as async from 'async';
 import { ExportJob } from 'src/entities/export-job.entity';
+import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
 
 @Injectable()
 export class ExportService {
@@ -36,6 +37,8 @@ export class ExportService {
     private spkOperationalRepository: Repository<SPKOperational>,
     @InjectRepository(ExportJob)
     private exportJobRepository: Repository<ExportJob>,
+    @InjectRepository(SiteTakeDataAssignment)
+    private siteTakeDataAssignmentRepository: Repository<SiteTakeDataAssignment>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
   ) {
@@ -135,6 +138,13 @@ export class ExportService {
           payload.ip,
           payload.startDate,
           payload.endDate,
+          payload.search,
+          payload.status,
+        ) as string;
+      } else if (job.type === 'TAKE_DATA') {
+        filePath = await this._generateTakeDataFile(
+          user,
+          payload.ip,
           payload.search,
           payload.status,
         ) as string;
@@ -864,6 +874,100 @@ export class ExportService {
     await this.activityLogService.create({
       user_id: user.id,
       description: `Export Data SPK`,
+      ip: ip,
+    });
+
+    return filePath;
+  }
+
+  async exportTakeData(
+    user: User,
+    ip: string,
+    search: string,
+    status: string,
+  ) {
+    const job = this.exportJobRepository.create({
+      user_id: user.id,
+      type: 'TAKE_DATA',
+      status: 'PENDING',
+      payload: JSON.stringify({ ip, search, status }),
+    });
+
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  private async _generateTakeDataFile(
+    user: User,
+    ip: string,
+    search: string,
+    status: string,
+  ) {
+    const query = this.siteTakeDataAssignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect('assignment.site', 'site')
+      .leftJoinAndSelect('assignment.template', 'template')
+      .leftJoinAndSelect('assignment.reviewer', 'reviewer')
+      .orderBy('assignment.created_at', 'DESC');
+
+    if (search) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('site.code ILIKE :search', { search: `%${search}%` })
+            .orWhere('site.name ILIKE :search', { search: `%${search}%` })
+            .orWhere('template.name ILIKE :search', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+         query.andWhere(
+           '(assignment.review_status IS NULL OR assignment.review_status = :status)',
+           { status },
+         );
+      } else {
+         query.andWhere('assignment.review_status = :status', { status });
+      }
+    }
+
+    const data = await query.getMany();
+
+    const rows = [];
+    data.forEach((d) => {
+      rows.push({
+        'Site Code': d.site?.code || '-',
+        'Site Name': d.site?.name || '-',
+        Template: d.template?.name || '-',
+        Watermark: d.custom_watermark || '-',
+        'Assigned At': d.created_at ? moment(d.created_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+        'Last Update': d.updated_at ? moment(d.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+        'Review Status': d.review_status || 'pending',
+        'Reviewer Name': d.reviewer?.name || '-',
+      });
+    });
+
+    const XLSX = xlsx;
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Take Data');
+
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
+
+    const fileName = `TakeData-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Data Take-Data`,
       ip: ip,
     });
 

@@ -11,6 +11,8 @@ import { UsersModule } from '../users/users.module';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { ExportJob } from 'src/entities/export-job.entity';
 
+import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -20,6 +22,7 @@ import { ExportJob } from 'src/entities/export-job.entity';
       Absence,
       SPKOperational,
       ExportJob,
+      SiteTakeDataAssignment,
     ]),
     ActivityLogModule,
     UsersModule,

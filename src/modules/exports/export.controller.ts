@@ -223,4 +223,31 @@ export class ExportController {
       throw error;
     }
   }
+
+  @Get('take-data')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportTakeData(
+    @Res() res: Response,
+    @Request() req,
+    @Query('search') search: string,
+    @Query('status') status: string,
+  ) {
+    try {
+      const job = await this.exportService.exportTakeData(
+        req.user,
+        req.ip,
+        search,
+        status,
+      );
+
+      return res.status(HttpStatus.OK).json({
+        meta: { status: 200, message: 'Export queued', success: true },
+        data: job,
+      });
+    } catch (error) {
+      console.error('Error in exportTakeData:', error);
+      throw error;
+    }
+  }
 }

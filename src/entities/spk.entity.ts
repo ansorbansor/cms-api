@@ -244,6 +244,12 @@ export class SPK extends EntityHelper {
   total_cash_advance: number;
 
   @Column({ select: false, insert: false, readonly: true, nullable: true })
+  total_cashback: number;
+
+  @Column({ select: false, insert: false, readonly: true, nullable: true })
+  total_cashout: number;
+
+  @Column({ select: false, insert: false, readonly: true, nullable: true })
   total_po_unit_price: number;
 
   @BeforeInsert()

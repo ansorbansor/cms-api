@@ -117,7 +117,14 @@ export const SPKResourceDetail = (spk: SPK, remarkSuperadmin?: string): any => {
     cash_advance: spk.cash_advance,
     total_cash_advance: spk.total_cash_advance
       ? Number(spk.total_cash_advance)
-      : null,
+      : 0,
+    total_cashback: spk.total_cashback
+      ? Number(spk.total_cashback)
+      : 0,
+    total_cashout: spk.total_cashout
+      ? Number(spk.total_cashout)
+      : 0,
+    is_over_budget: spk.is_over_budget,
     pay_to_user: {
       id: spk.pay_to_user && spk.pay_to_user.id ? spk.pay_to_user.id : null,
       name:

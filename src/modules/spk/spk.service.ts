@@ -420,6 +420,71 @@ export class SPKService {
       )
       .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
 
+    // Add total spk cash advance for over-budget calculation in UI (for all roles)
+    data.addSelect(
+      'total_cash_advance.total_cash_advance',
+      'spk_total_cash_advance',
+    );
+    data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
+    data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('s.site_id')
+          .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+          .from(SPK, 's')
+          .where('s.deleted_at IS NULL')
+          .groupBy('s.site_id');
+      },
+      'total_cash_advance',
+      '"total_cash_advance"."s_site_id" = spk.site_id',
+    );
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('s.site_id')
+          .addSelect('SUM(s.cashback)', 'total_cashback')
+          .from(SPK, 's')
+          .where('s.deleted_at IS NULL')
+          .groupBy('s.site_id');
+      },
+      'total_cashback',
+      '"total_cashback"."s_site_id" = spk.site_id',
+    );
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('s.site_id')
+          .addSelect('SUM(s.cashout)', 'total_cashout')
+          .from(SPK, 's')
+          .where('s.deleted_at IS NULL')
+          .groupBy('s.site_id');
+      },
+      'total_cashout',
+      '"total_cashout"."s_site_id" = spk.site_id',
+    );
+
+    // Add total po budget / unit price
+    data.addSelect(
+      'total_unit_price.total_unit_price',
+      'spk_total_po_unit_price',
+    );
+    data.leftJoin(
+      (qb) => {
+        return qb
+          .select('p.site_id')
+          .addSelect(
+            'SUM(p.unit_price * p.budget_percentage / 100)',
+            'total_unit_price',
+          )
+          .from(PurchaseOrder, 'p')
+          .where("p.status NOT ILIKE '%cancel%'")
+          .groupBy('p.site_id');
+      },
+      'total_unit_price',
+      '"total_unit_price"."p_site_id" = spk.site_id',
+    );
+
     const currentUser = await this.userService.findOneFull({ id: user.id });
 
 
@@ -454,67 +519,6 @@ export class SPKService {
       }
 
       if (currentUser.employeePosition?.code == RoleEnum.PM) {
-        //add total spk cash advance
-        data.addSelect(
-          'total_cash_advance.total_cash_advance',
-          'spk_total_cash_advance',
-        );
-        data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
-        data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
-        data.leftJoin(
-          (qb) => {
-            return qb
-              .select('s.site_id')
-              .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
-              .from(SPK, 's')
-              .groupBy('s.site_id');
-          },
-          'total_cash_advance',
-          '"total_cash_advance"."s_site_id" = spk.site_id',
-        );
-        data.leftJoin(
-          (qb) => {
-            return qb
-              .select('s.site_id')
-              .addSelect('SUM(s.cashback)', 'total_cashback')
-              .from(SPK, 's')
-              .groupBy('s.site_id');
-          },
-          'total_cashback',
-          '"total_cashback"."s_site_id" = spk.site_id',
-        );
-        data.leftJoin(
-          (qb) => {
-            return qb
-              .select('s.site_id')
-              .addSelect('SUM(s.cashout)', 'total_cashout')
-              .from(SPK, 's')
-              .groupBy('s.site_id');
-          },
-          'total_cashout',
-          '"total_cashout"."s_site_id" = spk.site_id',
-        );
-
-        //add total po budget / unit price
-        data.addSelect(
-          'total_unit_price.total_unit_price',
-          'spk_total_po_unit_price',
-        );
-        data.leftJoin(
-          (qb) => {
-            return qb
-              .select('p.site_id')
-              .addSelect(
-                'SUM(p.unit_price * p.budget_percentage / 100)',
-                'total_unit_price',
-              )
-              .from(PurchaseOrder, 'p')
-              .where("p.status NOT ILIKE '%cancel%'")
-              .groupBy('p.site_id');
-          },
-          'total_unit_price',
-          '"total_unit_price"."p_site_id" = spk.site_id',
-        );
 
         data.andWhere(
           new Brackets((qb) => {

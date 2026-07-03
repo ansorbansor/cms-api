@@ -577,7 +577,7 @@ export class WorkloadTicketsService {
   }
 
   async updateTaskStatus(taskId: number, payload: any, userId?: number): Promise<any> {
-    const task = await this.taskRepo.findOne(taskId, { relations: ['milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site', 'assigned_to_user'] });
+    const task = await this.taskRepo.findOne(taskId, { relations: ['milestone', 'milestone.workload_ticket', 'milestone.workload_ticket.site', 'assigned_to_user', 'assigned_multiple'] });
     if (!task) throw failedResponse(HttpStatus.NOT_FOUND, 'Task not found');
 
     if (payload.status === 'Completed' && !payload.evidence_file_id) {
@@ -593,9 +593,11 @@ export class WorkloadTicketsService {
     if (payload.evidence_file_id) task.evidence_file_id = payload.evidence_file_id;
     if (payload.watermark_notes) task.watermark_notes = payload.watermark_notes;
 
-    if (userId && task.assigned_to !== userId) {
-      task.assigned_to = userId;
-      task.assigned_to_user = { id: userId } as any;
+    if (userId) {
+      if (task.assigned_to !== userId) {
+        task.assigned_to = userId;
+        task.assigned_to_user = { id: userId } as any;
+      }
       task.assigned_multiple = [];
     }
 
@@ -779,6 +781,8 @@ export class WorkloadTicketsService {
     const tasks = await this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.assigned_to_user', 'user')
       .leftJoinAndSelect('user.employeePosition', 'position')
+      .leftJoinAndSelect('task.assigned_multiple', 'multi_user')
+      .leftJoinAndSelect('multi_user.employeePosition', 'multi_position')
       .leftJoinAndSelect('task.milestone', 'milestone')
       .leftJoinAndSelect('milestone.workload_ticket', 'ticket')
       .leftJoinAndSelect('ticket.site', 'site')
@@ -786,7 +790,6 @@ export class WorkloadTicketsService {
         `COALESCE(task.in_progress_at, task.created_at) >= :from AND COALESCE(task.in_progress_at, task.created_at) <= :to`,
         { from, to }
       )
-      .andWhere('task.assigned_to IS NOT NULL')
       .getMany();
 
     // Group by user
@@ -794,78 +797,91 @@ export class WorkloadTicketsService {
     const now = new Date();
 
     for (const task of tasks) {
-      const user = task.assigned_to_user;
-      if (!user) continue;
-      if (!userMap[user.id]) {
-        userMap[user.id] = {
-          user_id: user.id,
-          name: user.name,
-          position: (user as any).employeePosition?.name || '-',
-          total_assigned: 0,
-          completed: 0,
-          in_progress: 0,
-          pending: 0,
-          issue: 0,
-          no_need: 0,
-          overdue: 0,
-          on_time: 0,
-          rejection_count: 0,
-          total_aging_hours: 0,
-          aging_count: 0,
-          tasks: [], // Store simplified task list for frontend modal
-        };
+      const usersMapForTask = new Map<number, any>();
+      if (task.assigned_to_user) {
+        usersMapForTask.set(task.assigned_to_user.id, task.assigned_to_user);
+      }
+      if (task.assigned_multiple && Array.isArray(task.assigned_multiple)) {
+        for (const mu of task.assigned_multiple) {
+          usersMapForTask.set(mu.id, mu);
+        }
       }
 
-      const entry = userMap[user.id];
-      entry.total_assigned++;
+      const users = Array.from(usersMapForTask.values());
+      if (users.length === 0) continue;
 
-      let isOverdue = false;
-      if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
-        entry.overdue++;
-        isOverdue = true;
-      }
+      for (const user of users) {
+        if (!userMap[user.id]) {
+          userMap[user.id] = {
+            user_id: user.id,
+            name: user.name,
+            position: (user as any).employeePosition?.name || '-',
+            total_assigned: 0,
+            completed: 0,
+            in_progress: 0,
+            pending: 0,
+            issue: 0,
+            no_need: 0,
+            overdue: 0,
+            on_time: 0,
+            rejection_count: 0,
+            total_aging_hours: 0,
+            aging_count: 0,
+            tasks: [], // Store simplified task list for frontend modal
+          };
+        }
 
-      // Add task detail for drill-down
-      entry.tasks.push({
-        id: task.id,
-        name: task.name,
-        status: task.status,
-        deadline: task.deadline,
-        is_overdue: isOverdue,
-        site_code: task.milestone?.workload_ticket?.site?.code || '-',
-        site_name: task.milestone?.workload_ticket?.site?.name || 'Unknown Site',
-        ticket_id: task.milestone?.workload_ticket?.id,
-        in_progress_at: task.in_progress_at || task.created_at,
-        updated_at: task.updated_at,
-      });
+        const entry = userMap[user.id];
+        entry.total_assigned++;
 
-      if (task.status === 'Completed') {
-        entry.completed++;
-        // On-time: completed before or on deadline
-        if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
-      } else if (task.status === 'In Progress') {
-        entry.in_progress++;
-      } else if (task.status === 'Pending') {
-        entry.pending++;
-      } else if (task.status === 'Issue') {
-        entry.issue++;
-      } else if (task.status === 'No Need') {
-        entry.no_need++;
-      }
+        let isOverdue = false;
+        if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
+          entry.overdue++;
+          isOverdue = true;
+        }
 
-      // Aging: hours between in_progress_at and completion (or now if still active)
-      const startTime = task.in_progress_at || task.created_at;
-      if (startTime) {
-        const endTime = task.status === 'Completed' ? task.updated_at : now;
-        const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-        entry.total_aging_hours += hours;
-        entry.aging_count++;
-      }
+        // Add task detail for drill-down
+        entry.tasks.push({
+          id: task.id,
+          name: task.name,
+          status: task.status,
+          deadline: task.deadline,
+          is_overdue: isOverdue,
+          site_code: task.milestone?.workload_ticket?.site?.code || '-',
+          site_name: task.milestone?.workload_ticket?.site?.name || 'Unknown Site',
+          ticket_id: task.milestone?.workload_ticket?.id,
+          in_progress_at: task.in_progress_at || task.created_at,
+          updated_at: task.updated_at,
+        });
 
-      // Rejection count: count pic_history entries where this user appears as a previous holder
-      if (task.pic_history && Array.isArray(task.pic_history)) {
-        for (const h of task.pic_history) {
-          if (h.user_id === user.id) entry.rejection_count++;
+        if (task.status === 'Completed') {
+          entry.completed++;
+          // On-time: completed before or on deadline
+          if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
+        } else if (task.status === 'In Progress') {
+          entry.in_progress++;
+        } else if (task.status === 'Pending') {
+          entry.pending++;
+        } else if (task.status === 'Issue') {
+          entry.issue++;
+        } else if (task.status === 'No Need') {
+          entry.no_need++;
+        }
+
+        // Aging: hours between in_progress_at and completion (or now if still active)
+        const startTime = task.in_progress_at || task.created_at;
+        if (startTime) {
+          const endTime = task.status === 'Completed' ? task.updated_at : now;
+          const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+          entry.total_aging_hours += hours;
+          entry.aging_count++;
+        }
+
+        // Rejection count: count pic_history entries where this user appears as a previous holder
+        if (task.pic_history && Array.isArray(task.pic_history)) {
+          for (const h of task.pic_history) {
+            if (h.user_id === user.id) entry.rejection_count++;
+          }
         }
       }
     }

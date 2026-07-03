@@ -703,23 +703,25 @@ export class WorkloadTicketsService {
     });
 
     if (nextTask) {
-      nextTask.status = 'In Progress';
-      nextTask.in_progress_at = new Date();
-      await this.taskRepo.save(nextTask);
+      if (nextTask.status === 'Pending') {
+        nextTask.status = 'In Progress';
+        nextTask.in_progress_at = new Date();
+        await this.taskRepo.save(nextTask);
 
-      const usersToNotify = [];
-      if (nextTask.assigned_to_user) usersToNotify.push(nextTask.assigned_to_user);
-      if (nextTask.assigned_multiple) {
-        nextTask.assigned_multiple.forEach(u => {
-          if (!usersToNotify.find(existing => existing.id === u.id)) usersToNotify.push(u);
-        });
-      }
+        const usersToNotify = [];
+        if (nextTask.assigned_to_user) usersToNotify.push(nextTask.assigned_to_user);
+        if (nextTask.assigned_multiple) {
+          nextTask.assigned_multiple.forEach(u => {
+            if (!usersToNotify.find(existing => existing.id === u.id)) usersToNotify.push(u);
+          });
+        }
 
-      const allNames = usersToNotify.map(u => u.name).join(', ');
-      for (const u of usersToNotify) {
-        if (u.phone) {
-          const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
-          await this.sendWhatsappNotification(u.phone, `Hai ${allNames}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+        const allNames = usersToNotify.map(u => u.name).join(', ');
+        for (const u of usersToNotify) {
+          if (u.phone) {
+            const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
+            await this.sendWhatsappNotification(u.phone, `Hai ${allNames}! segera selesaikan Tugas anda: ${nextTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+          }
         }
       }
     } else {
@@ -751,22 +753,24 @@ export class WorkloadTicketsService {
           relations: ['assigned_to_user', 'assigned_multiple']
         });
         if (firstTask) {
-          firstTask.status = 'In Progress';
-          await this.taskRepo.save(firstTask);
+          if (firstTask.status === 'Pending') {
+            firstTask.status = 'In Progress';
+            await this.taskRepo.save(firstTask);
 
-          const usersToNotify2 = [];
-          if (firstTask.assigned_to_user) usersToNotify2.push(firstTask.assigned_to_user);
-          if (firstTask.assigned_multiple) {
-            firstTask.assigned_multiple.forEach(u => {
-              if (!usersToNotify2.find(existing => existing.id === u.id)) usersToNotify2.push(u);
-            });
-          }
+            const usersToNotify2 = [];
+            if (firstTask.assigned_to_user) usersToNotify2.push(firstTask.assigned_to_user);
+            if (firstTask.assigned_multiple) {
+              firstTask.assigned_multiple.forEach(u => {
+                if (!usersToNotify2.find(existing => existing.id === u.id)) usersToNotify2.push(u);
+              });
+            }
 
-          const allNames2 = usersToNotify2.map(u => u.name).join(', ');
-          for (const u of usersToNotify2) {
-            if (u.phone) {
-              const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
-              await this.sendWhatsappNotification(u.phone, `Hai ${allNames2}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+            const allNames2 = usersToNotify2.map(u => u.name).join(', ');
+            for (const u of usersToNotify2) {
+              if (u.phone) {
+                const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';
+                await this.sendWhatsappNotification(u.phone, `Hai ${allNames2}! Milestone baru dimulai. segera selesaikan Tugas anda: ${firstTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*`);
+              }
             }
           }
         }

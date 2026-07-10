@@ -11,28 +11,32 @@ export class DistanceTrackingService {
     private distanceTrackingRepository: Repository<DistanceTracking>,
   ) {}
 
-  async sync(userId: number, dto: SyncDistanceTrackingDto): Promise<void> {
-    // Check if entry already exists for this user and date
-    let tracking = await this.distanceTrackingRepository.findOne({
-      where: { userId, date: dto.date },
-    });
+  async sync(userId: number, dtos: SyncDistanceTrackingDto[]): Promise<void> {
+    if (!dtos || dtos.length === 0) return;
 
-    if (tracking) {
-      // Update existing
-      tracking.totalDistance = dto.totalDistance;
-      tracking.mockAttempts = dto.mockAttempts;
-      tracking.maxSpeed = dto.maxSpeed;
-    } else {
-      // Create new
-      tracking = this.distanceTrackingRepository.create({
-        userId,
-        date: dto.date,
-        totalDistance: dto.totalDistance,
-        mockAttempts: dto.mockAttempts,
-        maxSpeed: dto.maxSpeed,
+    for (const dto of dtos) {
+      let tracking = await this.distanceTrackingRepository.findOne({
+        where: { userId, date: dto.date, startTripTime: dto.startTripTime },
       });
-    }
 
-    await this.distanceTrackingRepository.save(tracking);
+      if (tracking) {
+        tracking.totalDistance = dto.totalDistance;
+        tracking.mockAttempts = dto.mockAttempts;
+        tracking.maxSpeed = dto.maxSpeed;
+        tracking.endTripTime = dto.endTripTime;
+      } else {
+        tracking = this.distanceTrackingRepository.create({
+          userId,
+          date: dto.date,
+          startTripTime: dto.startTripTime,
+          endTripTime: dto.endTripTime,
+          totalDistance: dto.totalDistance,
+          mockAttempts: dto.mockAttempts,
+          maxSpeed: dto.maxSpeed,
+        });
+      }
+
+      await this.distanceTrackingRepository.save(tracking);
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   Request,
   HttpStatus,
   HttpCode,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/utils/guards';
@@ -26,9 +27,9 @@ export class DistanceTrackingController {
   @HttpCode(HttpStatus.OK)
   async sync(
     @Request() req,
-    @Body() syncDto: SyncDistanceTrackingDto,
+    @Body(new ParseArrayPipe({ items: SyncDistanceTrackingDto })) syncDtos: SyncDistanceTrackingDto[],
   ) {
-    await this.distanceTrackingService.sync(req.user.id, syncDto);
+    await this.distanceTrackingService.sync(req.user.id, syncDtos);
     return {
       success: true,
       message: 'Distance tracking data synced successfully',

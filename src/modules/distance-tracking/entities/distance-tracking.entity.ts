@@ -20,6 +20,12 @@ export class DistanceTracking {
   @Column({ type: 'float', name: 'max_speed', default: 0 })
   maxSpeed: number;
 
+  @Column({ type: 'bigint', nullable: true, name: 'start_trip_time' })
+  startTripTime: number;
+
+  @Column({ type: 'bigint', nullable: true, name: 'end_trip_time' })
+  endTripTime: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

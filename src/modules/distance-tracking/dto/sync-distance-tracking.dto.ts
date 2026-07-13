@@ -14,6 +14,22 @@ export class SyncDistanceTrackingDto {
   endTripTime?: number;
 
   @IsNumber()
+  @IsOptional()
+  startLat?: number;
+
+  @IsNumber()
+  @IsOptional()
+  startLng?: number;
+
+  @IsNumber()
+  @IsOptional()
+  endLat?: number;
+
+  @IsNumber()
+  @IsOptional()
+  endLng?: number;
+
+  @IsNumber()
   @IsNotEmpty()
   totalDistance: number;
 

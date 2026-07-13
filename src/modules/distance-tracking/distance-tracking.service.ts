@@ -24,12 +24,18 @@ export class DistanceTrackingService {
         tracking.mockAttempts = dto.mockAttempts;
         tracking.maxSpeed = dto.maxSpeed;
         tracking.endTripTime = dto.endTripTime;
+        tracking.endLat = dto.endLat;
+        tracking.endLng = dto.endLng;
       } else {
         tracking = this.distanceTrackingRepository.create({
           userId,
           date: dto.date,
           startTripTime: dto.startTripTime,
           endTripTime: dto.endTripTime,
+          startLat: dto.startLat,
+          startLng: dto.startLng,
+          endLat: dto.endLat,
+          endLng: dto.endLng,
           totalDistance: dto.totalDistance,
           mockAttempts: dto.mockAttempts,
           maxSpeed: dto.maxSpeed,

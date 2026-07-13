@@ -26,6 +26,18 @@ export class DistanceTracking {
   @Column({ type: 'bigint', nullable: true, name: 'end_trip_time' })
   endTripTime: number;
 
+  @Column({ type: 'float', nullable: true, name: 'start_lat' })
+  startLat: number;
+
+  @Column({ type: 'float', nullable: true, name: 'start_lng' })
+  startLng: number;
+
+  @Column({ type: 'float', nullable: true, name: 'end_lat' })
+  endLat: number;
+
+  @Column({ type: 'float', nullable: true, name: 'end_lng' })
+  endLng: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { DistanceTracking } from './entities/distance-tracking.entity';
 import { SyncDistanceTrackingDto } from './dto/sync-distance-tracking.dto';
 
@@ -46,13 +46,22 @@ export class DistanceTrackingService {
     }
   }
 
-  async findAll(date?: string): Promise<DistanceTracking[]> {
+  async findAll(date?: string, searchName?: string): Promise<DistanceTracking[]> {
     const query: any = {};
     if (date) {
       query.date = date;
     }
+    
+    let whereClause: any = query;
+    if (searchName) {
+      whereClause = [
+         { ...query, user: { name: ILike(`%${searchName}%`) } },
+         { ...query, user: { email: ILike(`%${searchName}%`) } }
+      ]
+    }
+
     return this.distanceTrackingRepository.find({
-      where: query,
+      where: whereClause,
       relations: ['user'],
       order: {
         date: 'DESC',

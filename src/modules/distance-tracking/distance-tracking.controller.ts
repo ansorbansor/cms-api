@@ -41,7 +41,8 @@ export class DistanceTrackingController {
   @UseGuards(JwtAuthGuard)
   async findAll(@Request() req) {
     const date = req.query.date;
-    const data = await this.distanceTrackingService.findAll(date);
+    const name = req.query.name;
+    const data = await this.distanceTrackingService.findAll(date, name);
     return {
       success: true,
       data,

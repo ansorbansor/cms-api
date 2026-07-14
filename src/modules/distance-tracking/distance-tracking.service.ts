@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { DistanceTracking } from './entities/distance-tracking.entity';
 import { SyncDistanceTrackingDto } from './dto/sync-distance-tracking.dto';
 
@@ -46,10 +46,14 @@ export class DistanceTrackingService {
     }
   }
 
-  async findAll(date?: string, searchName?: string): Promise<DistanceTracking[]> {
+  async findAll(startDate?: string, endDate?: string, searchName?: string): Promise<DistanceTracking[]> {
     const query: any = {};
-    if (date) {
-      query.date = date;
+    if (startDate && endDate) {
+      query.date = Between(startDate, endDate);
+    } else if (startDate) {
+      query.date = MoreThanOrEqual(startDate);
+    } else if (endDate) {
+      query.date = LessThanOrEqual(endDate);
     }
     
     let whereClause: any = query;

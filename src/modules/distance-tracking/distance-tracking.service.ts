@@ -45,4 +45,19 @@ export class DistanceTrackingService {
       await this.distanceTrackingRepository.save(tracking);
     }
   }
+
+  async findAll(date?: string): Promise<DistanceTracking[]> {
+    const query: any = {};
+    if (date) {
+      query.date = date;
+    }
+    return this.distanceTrackingRepository.find({
+      where: query,
+      relations: ['user'],
+      order: {
+        date: 'DESC',
+        startTripTime: 'DESC',
+      },
+    });
+  }
 }

@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from 'src/entities/user.entity';
 
 @Entity('distance_trackings')
 export class DistanceTracking {
@@ -6,7 +7,11 @@ export class DistanceTracking {
   id: number;
 
   @Column({ name: 'user_id' })
-  userId: number; // Assuming the token contains the user ID and we extract it
+  userId: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @Column({ type: 'date' })
   date: string;

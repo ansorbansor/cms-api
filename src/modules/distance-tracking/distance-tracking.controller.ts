@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   Request,
@@ -33,6 +34,17 @@ export class DistanceTrackingController {
     return {
       success: true,
       message: 'Distance tracking data synced successfully',
+    };
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(@Request() req) {
+    const date = req.query.date;
+    const data = await this.distanceTrackingService.findAll(date);
+    return {
+      success: true,
+      data,
     };
   }
 }

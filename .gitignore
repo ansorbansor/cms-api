@@ -72,6 +72,9 @@ web_modules/
 .env
 .env.test
 
+# Feature Flags
+feature-flags.json
+
 #files
 .files/
 

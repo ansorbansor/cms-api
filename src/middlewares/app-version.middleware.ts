@@ -6,12 +6,16 @@ import { getFlag } from '../utils/feature-flags.util';
 export class AppVersionMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const appVersionStr = req.headers['x-app-version'];
-    
-    // Only check if the header is provided. If it's not an app request (e.g. web CMS), it will pass.
-    if (appVersionStr) {
-      const appVersion = parseInt(appVersionStr as string, 10);
-      const minAppVersion = getFlag('min_app_version', 14);
-      const minTakeDataVersion = getFlag('min_takedata_app_version', 15);
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isAndroidApp = userAgent.includes('okhttp') || userAgent.includes('dalvik');
+
+    const minAppVersion = getFlag('min_app_version', 14);
+    const minTakeDataVersion = getFlag('min_takedata_app_version', 15);
+
+    // Only strictly enforce on Android app requests. Web CMS requests pass through.
+    if (isAndroidApp || appVersionStr) {
+      // If Android app but no version header, assume version 0 (outdated)
+      const appVersion = appVersionStr ? parseInt(appVersionStr as string, 10) : 0;
 
       if (!isNaN(appVersion)) {
         if (appVersion < minAppVersion) {

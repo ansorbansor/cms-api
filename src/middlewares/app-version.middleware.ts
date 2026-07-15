@@ -12,24 +12,34 @@ export class AppVersionMiddleware implements NestMiddleware {
     const minAppVersion = getFlag('min_app_version', 14);
     const minTakeDataVersion = getFlag('min_takedata_app_version', 15);
 
-    // Only strictly enforce on Android app requests. Web CMS requests pass through.
-    if (isAndroidApp || appVersionStr) {
-      // If Android app but no version header, assume version 0 (outdated)
-      const appVersion = appVersionStr ? parseInt(appVersionStr as string, 10) : 0;
-
-      if (!isNaN(appVersion)) {
-        if (appVersion < minAppVersion) {
-          throw new HttpException(
-            'Aplikasi versi ini sudah usang. Silakan update aplikasi Anda ke versi terbaru.',
-            426,
-          );
-        }
-
-        if (req.originalUrl.includes('/take-data') && appVersion < minTakeDataVersion) {
+    if (isAndroidApp) {
+      if (!appVersionStr) {
+        // Legacy APK without version header.
+        // It's older than our header implementation, so strictly block /take-data
+        if (req.originalUrl.includes('/take-data')) {
           throw new HttpException(
             'Fitur Take Data tidak tersedia di versi aplikasi ini. Silakan update ke versi terbaru.',
             426,
           );
+        }
+      } else {
+        const appVersion = parseInt(appVersionStr as string, 10);
+        if (!isNaN(appVersion)) {
+          // 1. Global block check
+          if (appVersion < minAppVersion) {
+            throw new HttpException(
+              'Aplikasi versi ini sudah usang. Silakan update aplikasi Anda ke versi terbaru.',
+              426,
+            );
+          }
+
+          // 2. Take Data specific block check
+          if (req.originalUrl.includes('/take-data') && appVersion < minTakeDataVersion) {
+            throw new HttpException(
+              'Fitur Take Data tidak tersedia di versi aplikasi ini. Silakan update ke versi terbaru.',
+              426,
+            );
+          }
         }
       }
     }

@@ -14,6 +14,7 @@ const DEFAULT_FLAGS = {
   litellm_api_key: 'sk-aJfYrGgKsgjq0OTPtstj5w',
   ai_system_message: 'You are a strict, objective Quality Assurance (QA) visual inspector. Your sole job is to evaluate whether the provided image(s) perfectly match the user\'s criteria. You must always reply in strict JSON format without any markdown wrappers.',
   fuel_efficiency_kml: 12,
+  min_app_version: 14,
 };
 
 export function readFeatureFlags(): Record<string, any> {

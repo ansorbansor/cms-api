@@ -1,5 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -53,6 +53,7 @@ import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module
 import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-presets.module';
 import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
 import { DistanceTrackingModule } from './modules/distance-tracking/distance-tracking.module';
+import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 
 @Module({
   imports: [
@@ -135,4 +136,10 @@ import { DistanceTrackingModule } from './modules/distance-tracking/distance-tra
     },
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AppVersionMiddleware)
+      .forRoutes('*');
+  }
+}

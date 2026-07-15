@@ -15,7 +15,7 @@ export class AppVersionMiddleware implements NestMiddleware {
       if (!isNaN(appVersion) && appVersion < minAppVersion) {
         throw new HttpException(
           'Aplikasi versi ini sudah usang. Silakan update aplikasi Anda ke versi terbaru.',
-          HttpStatus.UPGRADE_REQUIRED,
+          426,
         );
       }
     }

@@ -25,11 +25,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  public async validate(req: Request, payload: JwtPayload) {
-    payload.id = Number(await decryptText(payload.id));
+  public async validate(req: Request, payload: JwtPayload & { appSessionId?: string }) {
+    payload.id = Number(await decryptText(payload.id as any));
 
     if (!payload.id) {
       throw failedResponse(HttpStatus.UNAUTHORIZED, ErrorMessage.FORBIDDEN);
+    }
+
+    if (payload.appSessionId) {
+      const user = await this.authService.me({ id: payload.id } as User);
+      if (user && user.app_session_id !== payload.appSessionId) {
+        throw failedResponse(HttpStatus.UNAUTHORIZED, 'Session anda telah habis karena akun telah login di perangkat lain.');
+      }
     }
 
     return payload;

@@ -71,7 +71,7 @@ export class AuthService {
         ip: ip,
       });
 
-      const token = await this.generateToken(user);
+      const token = await this.generateToken(user, onlyAdmin);
 
       return { token, user: user };
     } else {
@@ -251,10 +251,18 @@ export class AuthService {
     await this.usersService.logout(user, ip);
   }
 
-  async generateToken(user: User) {
+  async generateToken(user: User, onlyAdmin: boolean = false) {
+    let appSessionId = undefined;
+    if (!onlyAdmin) {
+      appSessionId = crypto.randomUUID();
+      user.app_session_id = appSessionId;
+      await user.save();
+    }
+
     //generate token
     const token = this.jwtService.sign({
       id: await encryptText(user.id),
+      appSessionId: appSessionId,
     });
 
     return token;

@@ -113,6 +113,9 @@ export class User extends EntityHelper {
   @Column({ nullable: true })
   bank_account_number: string | null;
 
+  @Column({ nullable: true })
+  app_session_id: string | null;
+
   @OneToOne(() => FileEntity, {
     eager: true,
   })

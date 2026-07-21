@@ -803,16 +803,18 @@ export class WorkloadTicketsService {
     const currentMilestone = await this.milestoneRepo.findOne(currentTask.milestone_id, { relations: ['workload_ticket', 'workload_ticket.site', 'workload_ticket.created_by_user'] });
     const siteText = currentMilestone.workload_ticket?.site ? ` di Site ${currentMilestone.workload_ticket.site.name} (${currentMilestone.workload_ticket.site.code})` : '';
 
-    const nextTask = await this.taskRepo.findOne({
-      where: {
-        milestone_id: currentTask.milestone_id,
-        task_order_index: currentTask.task_order_index + 1
-      },
+    const allTasks = await this.taskRepo.find({
+      where: { milestone_id: currentTask.milestone_id },
       relations: ['assigned_to_user', 'assigned_multiple']
     });
 
-    if (nextTask) {
-      if (nextTask.status === 'Pending') {
+    const pendingTasks = allTasks.filter(t => t.status === 'Pending').sort((a, b) => a.task_order_index - b.task_order_index);
+    const inProgressTasks = allTasks.filter(t => t.status === 'In Progress');
+    const hasUnfinishedTasks = allTasks.some(t => t.status !== 'Completed' && t.status !== 'No Need');
+
+    if (hasUnfinishedTasks) {
+      if (inProgressTasks.length === 0 && pendingTasks.length > 0) {
+        const nextTask = pendingTasks[0];
         nextTask.status = 'In Progress';
         nextTask.in_progress_at = new Date();
         await this.taskRepo.save(nextTask);
@@ -833,9 +835,11 @@ export class WorkloadTicketsService {
           }
         }
       }
-    } else {
-      currentMilestone.status = 'Completed';
-      await this.milestoneRepo.save(currentMilestone);
+      return;
+    }
+
+    currentMilestone.status = 'Completed';
+    await this.milestoneRepo.save(currentMilestone);
 
       // Notify the creator that this milestone is completed
       const creator = currentMilestone.workload_ticket?.created_by_user;
@@ -886,7 +890,6 @@ export class WorkloadTicketsService {
       } else {
         await getManager().update(WorkloadTicket, currentMilestone.workload_ticket_id, { status: 'Completed' });
       }
-    }
   }
 
   async getEmployeeKpi(from: Date, to: Date): Promise<any[]> {

@@ -134,6 +134,115 @@ export class WorkloadTicketsService {
     return { data, total };
   }
 
+  async getSummary(query: any = {}): Promise<any> {
+    const search = query.search || '';
+    const customer_id = query.customer_id;
+    const project_id = query.project_id;
+
+    const buildBaseQb = (alias: string) => {
+      const qb = this.ticketRepo.createQueryBuilder(alias)
+        .leftJoin(`${alias}.purchase_orders`, 'purchase_orders')
+        .leftJoin('purchase_orders.customer', 'customer')
+        .leftJoin('purchase_orders.project', 'project');
+      
+      if (search) {
+        qb.where(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
+      }
+      if (customer_id) {
+        qb.andWhere('customer.id = :customerId', { customerId: customer_id });
+      }
+      if (project_id) {
+        qb.andWhere('project.id = :projectId', { projectId: project_id });
+      }
+      return qb;
+    };
+
+    // 1. Overall ticket counts by status
+    const qbStatus = buildBaseQb('wt')
+      .select('wt.status', 'status')
+      .addSelect('COUNT(DISTINCT wt.id)', 'count')
+      .groupBy('wt.status');
+    const statusCountsRaw = await qbStatus.getRawMany();
+    
+    let totalTickets = 0;
+    let completedTickets = 0;
+    let inProgressTickets = 0;
+    let pendingTickets = 0;
+    
+    statusCountsRaw.forEach(item => {
+      const count = Number(item.count);
+      totalTickets += count;
+      if (item.status === 'Completed' || item.status === 'Confirmed Finished') {
+        completedTickets += count;
+      } else if (item.status === 'In Progress') {
+        inProgressTickets += count;
+      } else {
+        pendingTickets += count;
+      }
+    });
+
+    // 2. Tickets breakdown by creator AND status
+    const qbCreator = buildBaseQb('wt')
+      .leftJoin('wt.created_by_user', 'created_by_user')
+      .select('COALESCE(created_by_user.name, created_by_user.nik, \'System\')', 'creator')
+      .addSelect('wt.status', 'status')
+      .addSelect('COUNT(DISTINCT wt.id)', 'count')
+      .groupBy('created_by_user.name')
+      .addGroupBy('created_by_user.nik')
+      .addGroupBy('wt.status')
+      .orderBy('count', 'DESC');
+    const creatorCountsRaw = await qbCreator.getRawMany();
+    
+    const ticketsByCreator: { name: string, count: number }[] = [];
+    const inProgressByCreator: { name: string, count: number }[] = [];
+    const pendingByCreator: { name: string, count: number }[] = [];
+    const completedByCreator: { name: string, count: number }[] = [];
+
+    const addCount = (arr: { name: string, count: number }[], name: string, count: number) => {
+      let found = arr.find(x => x.name === name);
+      if (found) found.count += count;
+      else arr.push({ name, count });
+    };
+
+    creatorCountsRaw.forEach(item => {
+       const count = Number(item.count);
+       addCount(ticketsByCreator, item.creator, count);
+       if (item.status === 'Completed' || item.status === 'Confirmed Finished') {
+         addCount(completedByCreator, item.creator, count);
+       } else if (item.status === 'In Progress') {
+         addCount(inProgressByCreator, item.creator, count);
+       } else {
+         addCount(pendingByCreator, item.creator, count);
+       }
+    });
+
+    ticketsByCreator.sort((a,b) => b.count - a.count);
+    inProgressByCreator.sort((a,b) => b.count - a.count);
+    pendingByCreator.sort((a,b) => b.count - a.count);
+    completedByCreator.sort((a,b) => b.count - a.count);
+
+    // 3. Total Active Tasks
+    const qbTasks = buildBaseQb('wt')
+      .leftJoin('wt.milestones', 'milestones')
+      .leftJoin('milestones.tasks', 'tasks')
+      .andWhere('tasks.status = :taskStatus', { taskStatus: 'In Progress' })
+      .select('COUNT(DISTINCT tasks.id)', 'count');
+    const tasksCountRaw = await qbTasks.getRawOne();
+    const totalActiveTasks = Number(tasksCountRaw?.count || 0);
+
+    return {
+      totalTickets,
+      completedTickets,
+      inProgressTickets,
+      pendingTickets,
+      ticketsByCreator,
+      inProgressByCreator,
+      pendingByCreator,
+      completedByCreator,
+      totalActiveTasks
+    };
+  }
+
   async getUnassignedPos(siteId: number): Promise<any[]> {
     const pos = await this.poRepo.find({
       where: { site_id: siteId, workload_ticket_id: IsNull() },

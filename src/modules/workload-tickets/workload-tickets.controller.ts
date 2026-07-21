@@ -83,6 +83,13 @@ export class WorkloadTicketsController {
     return successResponse(result, 'Success');
   }
 
+  @Get('summary')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getSummary(@Query() query: any) {
+    const result = await this.ticketsService.getSummary(query);
+    return successResponse(result, 'Summary retrieved successfully');
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findAll(@Query() query: any) {

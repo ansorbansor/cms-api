@@ -30,14 +30,6 @@ export class WorkloadTicketsController {
     return successResponse(null, 'Notifications triggered successfully');
   }
 
-  @Get('fix-milestones')
-  async fixMilestones() {
-    return successResponse(
-      await this.ticketsService.fixMilestones(),
-      'Milestones fixed successfully'
-    );
-  }
-
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[] }, @Request() req) {

@@ -134,6 +134,30 @@ export class WorkloadTicketsService {
     return { data, total };
   }
 
+  async fixMilestones() {
+    const milestones = await this.milestoneRepo.find({
+      where: [{ status: 'Completed' }, { status: 'Confirmed Finished' }],
+      relations: ['tasks', 'workload_ticket']
+    });
+
+    let count = 0;
+    for (const m of milestones) {
+      if (!m.tasks || m.tasks.length === 0) continue;
+      const hasUnfinished = m.tasks.some(t => t.status !== 'Completed' && t.status !== 'No Need');
+      if (hasUnfinished) {
+        m.status = 'Active';
+        await this.milestoneRepo.save(m);
+        
+        if (m.workload_ticket && (m.workload_ticket.status === 'Completed' || m.workload_ticket.status === 'Confirmed Finished')) {
+           m.workload_ticket.status = 'In Progress';
+           await this.ticketRepo.save(m.workload_ticket);
+        }
+        count++;
+      }
+    }
+    return { success: true, fixedCount: count };
+  }
+
   async getSummary(query: any = {}): Promise<any> {
     const search = query.search || '';
     const customer_id = query.customer_id;

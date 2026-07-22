@@ -157,62 +157,76 @@ export class WorkloadTicketsService {
       return qb;
     };
 
-    // 1. Overall ticket counts by status
-    const qbStatus = buildBaseQb('wt')
-      .select('wt.status', 'status')
-      .addSelect('COUNT(DISTINCT wt.id)', 'count')
-      .groupBy('wt.status');
-    const statusCountsRaw = await qbStatus.getRawMany();
-    
-    let totalTickets = 0;
+    const qbCreator = buildBaseQb('wt')
+      .leftJoin('wt.created_by_user', 'created_by_user')
+      .select('wt.id', 'id')
+      .addSelect('wt.ticket_id', 'ticket_id')
+      .addSelect('wt.status', 'status')
+      .addSelect('COALESCE(created_by_user.name, created_by_user.nik, \'System\')', 'creator');
+
+    const rawTickets = await qbCreator.getRawMany();
+
+    const uniqueTicketsMap = new Map();
+    for (const row of rawTickets) {
+      if (!uniqueTicketsMap.has(row.id)) {
+        uniqueTicketsMap.set(row.id, {
+          id: row.id,
+          ticket_id: row.ticket_id,
+          status: row.status,
+          creator: row.creator
+        });
+      }
+    }
+    const uniqueTickets = Array.from(uniqueTicketsMap.values());
+
+    let totalTickets = uniqueTickets.length;
     let completedTickets = 0;
     let inProgressTickets = 0;
     let pendingTickets = 0;
-    
-    statusCountsRaw.forEach(item => {
-      const count = Number(item.count);
-      totalTickets += count;
-      if (item.status === 'Completed' || item.status === 'Confirmed Finished') {
-        completedTickets += count;
-      } else if (item.status === 'In Progress') {
-        inProgressTickets += count;
+
+    const totalTicketsList = [];
+    const completedTicketsList = [];
+    const inProgressTicketsList = [];
+    const pendingTicketsList = [];
+
+    uniqueTickets.forEach(t => {
+      const tItem = { id: t.id, ticket_id: t.ticket_id, creator: t.creator, status: t.status };
+      totalTicketsList.push(tItem);
+      if (t.status === 'Completed' || t.status === 'Confirmed Finished') {
+        completedTickets++;
+        completedTicketsList.push(tItem);
+      } else if (t.status === 'In Progress') {
+        inProgressTickets++;
+        inProgressTicketsList.push(tItem);
       } else {
-        pendingTickets += count;
+        pendingTickets++;
+        pendingTicketsList.push(tItem);
       }
     });
 
-    // 2. Tickets breakdown by creator AND status
-    const qbCreator = buildBaseQb('wt')
-      .leftJoin('wt.created_by_user', 'created_by_user')
-      .select('COALESCE(created_by_user.name, created_by_user.nik, \'System\')', 'creator')
-      .addSelect('wt.status', 'status')
-      .addSelect('COUNT(DISTINCT wt.id)', 'count')
-      .groupBy('created_by_user.name')
-      .addGroupBy('created_by_user.nik')
-      .addGroupBy('wt.status')
-      .orderBy('count', 'DESC');
-    const creatorCountsRaw = await qbCreator.getRawMany();
-    
-    const ticketsByCreator: { name: string, count: number }[] = [];
-    const inProgressByCreator: { name: string, count: number }[] = [];
-    const pendingByCreator: { name: string, count: number }[] = [];
-    const completedByCreator: { name: string, count: number }[] = [];
+    const ticketsByCreator: { name: string, count: number, tickets: any[] }[] = [];
+    const inProgressByCreator: { name: string, count: number, tickets: any[] }[] = [];
+    const pendingByCreator: { name: string, count: number, tickets: any[] }[] = [];
+    const completedByCreator: { name: string, count: number, tickets: any[] }[] = [];
 
-    const addCount = (arr: { name: string, count: number }[], name: string, count: number) => {
-      let found = arr.find(x => x.name === name);
-      if (found) found.count += count;
-      else arr.push({ name, count });
+    const addTicket = (arr: { name: string, count: number, tickets: any[] }[], ticket: any) => {
+      let found = arr.find(x => x.name === ticket.creator);
+      if (found) {
+        found.count++;
+        found.tickets.push({ id: ticket.id, ticket_id: ticket.ticket_id });
+      } else {
+        arr.push({ name: ticket.creator, count: 1, tickets: [{ id: ticket.id, ticket_id: ticket.ticket_id }] });
+      }
     };
 
-    creatorCountsRaw.forEach(item => {
-       const count = Number(item.count);
-       addCount(ticketsByCreator, item.creator, count);
-       if (item.status === 'Completed' || item.status === 'Confirmed Finished') {
-         addCount(completedByCreator, item.creator, count);
-       } else if (item.status === 'In Progress') {
-         addCount(inProgressByCreator, item.creator, count);
+    uniqueTickets.forEach(t => {
+       addTicket(ticketsByCreator, t);
+       if (t.status === 'Completed' || t.status === 'Confirmed Finished') {
+         addTicket(completedByCreator, t);
+       } else if (t.status === 'In Progress') {
+         addTicket(inProgressByCreator, t);
        } else {
-         addCount(pendingByCreator, item.creator, count);
+         addTicket(pendingByCreator, t);
        }
     });
 
@@ -235,6 +249,10 @@ export class WorkloadTicketsService {
       completedTickets,
       inProgressTickets,
       pendingTickets,
+      totalTicketsList,
+      completedTicketsList,
+      inProgressTicketsList,
+      pendingTicketsList,
       ticketsByCreator,
       inProgressByCreator,
       pendingByCreator,

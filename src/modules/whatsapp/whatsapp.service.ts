@@ -154,4 +154,43 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       logEntry.status = `Error: ${error.message}`;
     }
   }
+
+  async sendToGroupByName(groupName: string, message: string): Promise<boolean> {
+    const logEntry = {
+      id: this.logIdCounter++,
+      to: `Group: ${groupName}`,
+      message: message,
+      status: 'Pending',
+      time: new Date(),
+    };
+    
+    if (this.messageLogs.length >= 500) this.messageLogs.shift();
+    this.messageLogs.push(logEntry);
+
+    if (!this.isConnected) {
+      this.logger.warn('Tried to send message to group, but WhatsApp client is not connected.');
+      logEntry.status = 'Failed (Not Connected)';
+      return false;
+    }
+
+    try {
+      const chats = await this.client.getChats();
+      const groupChat = chats.find(c => c.isGroup && c.name === groupName);
+
+      if (!groupChat) {
+        this.logger.error(`Group with name "${groupName}" not found.`);
+        logEntry.status = 'Error: Group not found';
+        return false;
+      }
+
+      await groupChat.sendMessage(message);
+      this.logger.log(`Message sent successfully to group "${groupName}"`);
+      logEntry.status = 'Sent';
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to send message to group "${groupName}"`, error);
+      logEntry.status = `Error: ${error.message}`;
+      return false;
+    }
+  }
 }

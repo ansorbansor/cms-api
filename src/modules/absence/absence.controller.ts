@@ -24,6 +24,8 @@ import { CreateAbsenceDTO } from './dto/create-absence.dto';
 import { AbsenceResourceDetail } from './resources/absence.resources';
 import { ClockOutAbsenceDTO } from './dto/clock-out-absence.dto';
 
+import { AbsenceCronService } from './absence.cron.service';
+
 @ApiBearerAuth()
 @ApiTags('Absence')
 @Controller({
@@ -31,7 +33,10 @@ import { ClockOutAbsenceDTO } from './dto/clock-out-absence.dto';
   version: '1',
 })
 export class AbsenceController {
-  constructor(private readonly absenceService: AbsenceService) {}
+  constructor(
+    private readonly absenceService: AbsenceService,
+    private readonly absenceCronService: AbsenceCronService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -112,6 +117,14 @@ export class AbsenceController {
       await this.absenceService.hasAbsenceToday(req.user.id),
       'success',
     );
+  }
+
+  @Post('trigger-reminder')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async triggerReminder() {
+    await this.absenceCronService.handleDailyAbsenceReminder();
+    return successResponse(null, 'Reminder triggered successfully');
   }
 
   @Get(':id')

@@ -18,7 +18,7 @@ export class AbsenceCronService {
     private readonly whatsappService: WhatsappService
   ) { }
 
-  @Cron('0 10 * * *', { timeZone: 'Asia/Jakarta' })
+  @Cron('0 10 * * 1-5', { timeZone: 'Asia/Jakarta' })
   async handleDailyAbsenceReminder() {
     this.logger.log('Triggering daily absence reminder at 10:00 AM');
 

@@ -187,18 +187,20 @@ export class AbsenceService {
   }
 
   async hasAbsenceToday(userId: number) {
+    // Get the most recent absence for this user, regardless of date
     const data = await this.absenceRepository
       .createQueryBuilder('absence')
       .where('user_id = :userId', {
         userId: userId,
       })
-      .andWhere('clock_in >= now()::date')
+      .orderBy('clock_in', 'DESC')
       .getOne();
 
     const currTime = moment().toDate().getHours();
     const afterOffice = currTime >= 16;
     const lateAbsence = currTime >= 9;
 
+    // If no absence exists at all, they must clock in
     if (!data) {
       return HasAbsenceToday(
         false,
@@ -211,18 +213,37 @@ export class AbsenceService {
       );
     }
 
-    if (afterOffice && !data.clock_out) {
+    // If the latest absence does NOT have a clock_out, they MUST clock out
+    if (!data.clock_out) {
       return HasAbsenceToday(
         true,
         data,
-        false,
-        true,
+        false, // Don't let them clock in
+        true,  // Force them to clock out
         afterOffice,
         lateAbsence,
         data.id,
       );
     }
 
+    // If the latest absence IS closed (has clock_out), check if they clocked in TODAY
+    const clockInDate = moment(data.clock_in).format('YYYY-MM-DD');
+    const todayDate = moment().format('YYYY-MM-DD');
+    
+    if (clockInDate !== todayDate) {
+      // Their last shift was closed, but they haven't clocked in for today yet
+      return HasAbsenceToday(
+        false, // Technically they don't have an absence for *today* yet
+        data,
+        true,  // They need to clock in
+        false,
+        afterOffice,
+        lateAbsence,
+        null,
+      );
+    }
+
+    // They have clocked in and out today. They are done.
     return HasAbsenceToday(
       true,
       data,

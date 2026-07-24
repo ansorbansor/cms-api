@@ -173,8 +173,16 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
 
+    let chats;
     try {
-      const chats = await this.client.getChats();
+      chats = await this.client.getChats();
+    } catch (e) {
+      this.logger.error(`Error during getChats() for group "${groupName}"`, e);
+      logEntry.status = `Error: getChats - ${e.message}`;
+      return false;
+    }
+
+    try {
       const groupChat = chats.find(c => c.isGroup && c.name === groupName);
 
       if (!groupChat) {
@@ -185,17 +193,14 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.log(`Found group "${groupName}" with ID: ${groupChat.id._serialized}`);
 
-      // Try fetching the full chat object to ensure it's fully hydrated before sending
       const hydratedChat = await this.client.getChatById(groupChat.id._serialized);
-      
-      // Send directly via the hydrated chat object
       await hydratedChat.sendMessage(message, { linkPreview: false });
       
       this.logger.log(`Message sent successfully to group "${groupName}"`);
       logEntry.status = 'Sent';
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send message to group "${groupName}"`, error);
+      this.logger.error(`Failed to send message to group "${groupName}" during sendMessage`, error);
       logEntry.status = `Error: ${error.message}`;
       return false;
     }

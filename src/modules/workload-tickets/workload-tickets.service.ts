@@ -14,6 +14,8 @@ import moment from 'moment';
 import axios from 'axios';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { Absence } from 'src/entities/absence.entity';
+import { DistanceTracking } from '../distance-tracking/entities/distance-tracking.entity';
 
 @Injectable()
 export class WorkloadTicketsService {
@@ -32,6 +34,10 @@ export class WorkloadTicketsService {
     private attachmentRepo: Repository<WorkloadTaskAttachment>,
     @InjectRepository(FileEntity)
     private fileRepo: Repository<FileEntity>,
+    @InjectRepository(Absence)
+    private absenceRepo: Repository<Absence>,
+    @InjectRepository(DistanceTracking)
+    private distanceTrackingRepo: Repository<DistanceTracking>,
     private whatsappService: WhatsappService,
   ) { }
 
@@ -1089,6 +1095,168 @@ export class WorkloadTicketsService {
       targetTicket.status = 'In Progress';
       await this.ticketRepo.save(targetTicket);
     }
+  }
+
+  async getDailyProgressReport(date: Date): Promise<any> {
+    // We want the start of the day and end of the day
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // 1. Fetch Target Users
+    const users = await getManager().getRepository(User).createQueryBuilder('user')
+      .leftJoinAndSelect('user.employeePosition', 'position')
+      .where('LOWER(user.level_iresource) = :internal', { internal: 'internal' })
+      .andWhere('(LOWER(user.status_description) = :onboard1 OR LOWER(user.status_description) = :onboard2)', { onboard1: 'on board', onboard2: 'on bord' })
+      .getMany();
+
+    if (!users || users.length === 0) {
+      return { total_users: 0, total_present: 0, on_time: 0, late: 0, total_tasks_completed: 0, users: [] };
+    }
+
+    const userIds = users.map(u => u.id);
+
+    // 2. Fetch Absences for these users on the given date
+    const absences = await this.absenceRepo.createQueryBuilder('absence')
+      .where('absence.user_id IN (:...userIds)', { userIds })
+      .andWhere('absence.clock_in >= :start AND absence.clock_in <= :end', { start: startOfDay, end: endOfDay })
+      .getMany();
+
+    const absenceMap = new Map<number, any>();
+    absences.forEach(a => absenceMap.set(a.user_id, a));
+
+    // 3. Fetch Workload Tasks that were active/completed on this date for these users
+    // A task is relevant if it was completed today, or if it is currently assigned to the user and is In Progress/Pending/Issue/No Need
+    const tasks = await this.taskRepo.createQueryBuilder('task')
+      .leftJoinAndSelect('task.assigned_to_user', 'user')
+      .leftJoinAndSelect('task.assigned_multiple', 'multi_user')
+      .leftJoinAndSelect('task.milestone', 'milestone')
+      .leftJoinAndSelect('milestone.workload_ticket', 'ticket')
+      .leftJoinAndSelect('ticket.site', 'site')
+      .where(
+        `((task.status = 'Completed' AND task.updated_at >= :start AND task.updated_at <= :end) OR
+          (task.status IN ('In Progress', 'Pending', 'Issue', 'No Need')))`,
+        { start: startOfDay, end: endOfDay }
+      )
+      .getMany();
+
+    // Map Tasks to Users
+    const userTasksMap = new Map<number, any[]>();
+    for (const task of tasks) {
+      const assignedUsers = new Set<number>();
+      if (task.assigned_to_user) assignedUsers.add(task.assigned_to_user.id);
+      if (task.assigned_multiple) {
+        task.assigned_multiple.forEach((mu: any) => assignedUsers.add(mu.id));
+      }
+
+      assignedUsers.forEach(uid => {
+        if (!userTasksMap.has(uid)) userTasksMap.set(uid, []);
+        userTasksMap.get(uid).push(task);
+      });
+    }
+
+    // 3.5 Fetch Live Distance Tracking for these users on the given date
+    const dateString = moment(date).format('YYYY-MM-DD');
+    const trackings = await this.distanceTrackingRepo.createQueryBuilder('dt')
+      .where('dt.user_id IN (:...userIds)', { userIds })
+      .andWhere('dt.date = :dateString', { dateString })
+      .orderBy('dt.end_trip_time', 'DESC')
+      .getMany();
+
+    // Map the most recent tracking to each user
+    const trackingMap = new Map<number, DistanceTracking>();
+    trackings.forEach(t => {
+      // Because it's ordered by DESC, the first one we see is the latest for that user if we haven't set it yet
+      if (!trackingMap.has(t.userId)) {
+        trackingMap.set(t.userId, t);
+      }
+    });
+
+    // 4. Merge and format data
+    let totalPresent = 0;
+    let onTime = 0;
+    let late = 0;
+    let totalTasksCompleted = 0;
+
+    const formattedUsers = users.map(user => {
+      const absence = absenceMap.get(user.id);
+      const userTasks = userTasksMap.get(user.id) || [];
+      const tracking = trackingMap.get(user.id);
+
+      let isPresent = false;
+      let isLate = false;
+      let clockInTime = null;
+      let clockOutTime = null;
+
+      if (absence) {
+        isPresent = true;
+        totalPresent++;
+        clockInTime = absence.clock_in;
+        clockOutTime = absence.clock_out;
+        if (absence.late_reason) {
+          isLate = true;
+          late++;
+        } else {
+          onTime++;
+        }
+      }
+
+      let completedTasksCount = 0;
+      let unfinishedTasksCount = 0;
+
+      userTasks.forEach(t => {
+        if (t.status === 'Completed' && new Date(t.updated_at) >= startOfDay && new Date(t.updated_at) <= endOfDay) {
+          completedTasksCount++;
+          totalTasksCompleted++;
+        } else if (['In Progress', 'Pending', 'Issue'].includes(t.status)) {
+          unfinishedTasksCount++;
+        }
+      });
+
+      // We only want to show users who clocked in OR have active/completed tasks today.
+      if (!isPresent && userTasks.length === 0) {
+        return null;
+      }
+
+      return {
+        id: user.id,
+        name: user.name,
+        position: user.employeePosition?.name || '-',
+        is_present: isPresent,
+        is_late: isLate,
+        clock_in: clockInTime,
+        clock_out: clockOutTime,
+        late_reason: absence?.late_reason || null,
+        clock_in_latitude: absence?.clock_in_latitude || null,
+        clock_in_longitude: absence?.clock_in_longitude || null,
+        clock_out_latitude: absence?.clock_out_latitude || null,
+        clock_out_longitude: absence?.clock_out_longitude || null,
+        live_lat: tracking?.endLat || null,
+        live_lng: tracking?.endLng || null,
+        live_time: tracking?.endTripTime || null,
+        activity_plan: absence?.activity_plan || null,
+        activity_result: absence?.activity_result || null,
+        completed_tasks_count: completedTasksCount,
+        unfinished_tasks_count: unfinishedTasksCount,
+        tasks: userTasks.map(t => ({
+          id: t.id,
+          name: t.name,
+          status: t.status,
+          site_code: t.milestone?.workload_ticket?.site?.code || '-',
+          updated_at: t.updated_at
+        }))
+      };
+    }).filter(u => u !== null);
+
+    return {
+      total_users: users.length,
+      total_present: totalPresent,
+      on_time: onTime,
+      late: late,
+      total_tasks_completed: totalTasksCompleted,
+      users: formattedUsers
+    };
   }
 
   private async sendWhatsappNotification(phoneNumber: string, message: string) {

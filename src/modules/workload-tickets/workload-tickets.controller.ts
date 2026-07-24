@@ -114,6 +114,14 @@ export class WorkloadTicketsController {
     return successResponse(data, 'KPI data retrieved successfully');
   }
 
+  @Get('kpi/daily-progress')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getDailyProgress(@Query('date') dateString: string) {
+    const date = dateString ? new Date(dateString) : new Date();
+    const data = await this.ticketsService.getDailyProgressReport(date);
+    return successResponse(data, 'Daily progress report retrieved successfully');
+  }
+
   @Post('kpi/notify/:userId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async notifyKpiUser(@Param('userId') userId: string) {

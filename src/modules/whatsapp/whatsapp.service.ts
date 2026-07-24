@@ -183,7 +183,14 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         return false;
       }
 
-      await this.client.sendMessage(groupChat.id._serialized, message, { linkPreview: false });
+      this.logger.log(`Found group "${groupName}" with ID: ${groupChat.id._serialized}`);
+
+      // Try fetching the full chat object to ensure it's fully hydrated before sending
+      const hydratedChat = await this.client.getChatById(groupChat.id._serialized);
+      
+      // Send directly via the hydrated chat object
+      await hydratedChat.sendMessage(message, { linkPreview: false });
+      
       this.logger.log(`Message sent successfully to group "${groupName}"`);
       logEntry.status = 'Sent';
       return true;

@@ -40,6 +40,19 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`LOADING SCREEN: ${percent}% - ${message}`);
     });
 
+    // --- DEBUG LISTENER FOR GETTING GROUP IDS ---
+    this.client.on('message_create', async (msg) => {
+      // Check if it's a group (either from or to ends with @g.us)
+      if (msg.from.endsWith('@g.us') || msg.to.endsWith('@g.us')) {
+        try {
+          const chat = await msg.getChat();
+          this.logger.log(`\n\n=== INCOMING GROUP MESSAGE ===\nGroup Name: "${chat.name}"\nGroup ID: ${chat.id._serialized}\n==============================\n\n`);
+        } catch (e) {
+          this.logger.error(`Failed to fetch chat details for message`, e);
+        }
+      }
+    });
+
     this.client.on('qr', async (qr) => {
       this.logger.log('QR Code received, waiting to be scanned...');
       this.isConnected = false;

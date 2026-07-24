@@ -183,7 +183,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         return false;
       }
 
-      await groupChat.sendMessage(message);
+      await this.client.sendMessage(groupChat.id._serialized, message);
       this.logger.log(`Message sent successfully to group "${groupName}"`);
       logEntry.status = 'Sent';
       return true;

@@ -62,16 +62,30 @@ export class AbsenceCronService {
         return;
       }
 
-      let message = `⚠️ *DAILY ATTENDANCE ALERT* ⚠️\n\nHi RPM & Supervisors, \nPlease remind your team members to clock in immediately. The following staff have not recorded their attendance for today:\n\n`;
-      
-      for (const u of usersNotAbsence) {
-        const region = u.gm_region ? u.gm_region : 'Unknown Region';
-        message += `👤 *${u.name}* - ${region}\n`;
+      const CHUNK_SIZE = 15;
+      for (let i = 0; i < usersNotAbsence.length; i += CHUNK_SIZE) {
+        const chunk = usersNotAbsence.slice(i, i + CHUNK_SIZE);
+        
+        let message = '';
+        if (i === 0) {
+          message += `⚠️ *DAILY ATTENDANCE ALERT* ⚠️\n\nHi RPM & Supervisors, \nPlease remind your team members to clock in immediately. The following staff have not recorded their attendance for today (Part ${i / CHUNK_SIZE + 1}):\n\n`;
+        } else {
+          message += `⚠️ *DAILY ATTENDANCE ALERT* (Part ${i / CHUNK_SIZE + 1}) ⚠️\n\n`;
+        }
+
+        for (const u of chunk) {
+          const region = u.gm_region ? u.gm_region : 'Unknown Region';
+          message += `👤 *${u.name}* - ${region}\n`;
+        }
+
+        if (i + CHUNK_SIZE >= usersNotAbsence.length) {
+          message += `\n📊 *Monitor Team Progress:*\nhttps://smarteye.ptbiosron.com/kpi-karyawan/daily-progress\n\n📱 *Download SIMPRO App:*\nhttps://play.google.com/store/apps/details?id=biosron.simpro.apps\n\n📞 *Need Assistance?*\nContact Admin: https://wa.me/6281221691180`;
+        }
+
+        await this.whatsappService.sendToGroupByName(groupName, message);
+        // optional delay to prevent rate limit
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
-
-      message += `\n📊 *Monitor Team Progress:*\nhttps://smarteye.ptbiosron.com/kpi-karyawan/daily-progress\n\n📱 *Download SIMPRO App:*\nhttps://play.google.com/store/apps/details?id=biosron.simpro.apps\n\n📞 *Need Assistance?*\nContact Admin: https://wa.me/6281221691180`;
-
-      await this.whatsappService.sendToGroupByName(groupName, message);
 
     } catch (e) {
       this.logger.error('Failed to send daily absence reminder', e);

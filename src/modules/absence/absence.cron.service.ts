@@ -49,7 +49,7 @@ export class AbsenceCronService {
 
         if (!latestAbsence) {
           usersNotAbsence.push(user);
-        } else if (latestAbsence.clock_out !== null) {
+        } else {
           const clockInDate = moment(latestAbsence.clock_in).format('YYYY-MM-DD');
           if (clockInDate !== todayDate) {
             usersNotAbsence.push(user);

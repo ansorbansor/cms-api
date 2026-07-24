@@ -146,7 +146,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
     const targetJid = `${formattedPhone}@c.us`;
 
     try {
-      await this.client.sendMessage(targetJid, message);
+      await this.client.sendMessage(targetJid, message, { linkPreview: false });
       this.logger.log(`Message sent successfully to ${targetJid}`);
       logEntry.status = 'Sent';
     } catch (error) {
@@ -183,7 +183,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         return false;
       }
 
-      await this.client.sendMessage(groupChat.id._serialized, message);
+      await this.client.sendMessage(groupChat.id._serialized, message, { linkPreview: false });
       this.logger.log(`Message sent successfully to group "${groupName}"`);
       logEntry.status = 'Sent';
       return true;

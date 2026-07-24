@@ -82,7 +82,11 @@ export class AbsenceCronService {
           message += `\n📊 *Monitor Team Progress:*\nhttps://smarteye.ptbiosron.com/kpi-karyawan/daily-progress\n\n📱 *Download SIMPRO App:*\nhttps://play.google.com/store/apps/details?id=biosron.simpro.apps\n\n📞 *Need Assistance?*\nContact Admin: https://wa.me/6281221691180`;
         }
 
-        await this.whatsappService.sendToGroupByName(groupName, message);
+        if (groupName.endsWith('@g.us')) {
+          await this.whatsappService.sendToGroupId(groupName, message);
+        } else {
+          await this.whatsappService.sendToGroupByName(groupName, message);
+        }
         // optional delay to prevent rate limit
         await new Promise(resolve => setTimeout(resolve, 1000));
       }

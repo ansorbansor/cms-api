@@ -44,12 +44,8 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
     this.client.on('message_create', async (msg) => {
       // Check if it's a group (either from or to ends with @g.us)
       if (msg.from.endsWith('@g.us') || msg.to.endsWith('@g.us')) {
-        try {
-          const chat = await msg.getChat();
-          this.logger.log(`\n\n=== INCOMING GROUP MESSAGE ===\nGroup Name: "${chat.name}"\nGroup ID: ${chat.id._serialized}\n==============================\n\n`);
-        } catch (e) {
-          this.logger.error(`Failed to fetch chat details for message`, e);
-        }
+        const groupId = msg.from.endsWith('@g.us') ? msg.from : msg.to;
+        this.logger.log(`\n\n=== GROUP MESSAGE DETECTED ===\nGroup ID: ${groupId}\n==============================\n\n`);
       }
     });
 

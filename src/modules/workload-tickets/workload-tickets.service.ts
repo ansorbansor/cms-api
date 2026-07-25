@@ -1244,6 +1244,7 @@ export class WorkloadTicketsService {
           name: t.name,
           status: t.status,
           site_code: t.milestone?.workload_ticket?.site?.code || '-',
+          ticket_id: t.milestone?.workload_ticket?.ticket_id || '-',
           updated_at: t.updated_at
         }))
       };

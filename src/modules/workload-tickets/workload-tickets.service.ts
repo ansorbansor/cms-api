@@ -577,7 +577,7 @@ export class WorkloadTicketsService {
       const deadlineText = savedTask.deadline ? ` sebelum ${moment(savedTask.deadline).format('DD-MM-YYYY')}` : '';
       
       const allNames = users.map(u => u.name).join(', ');
-      const linkText = milestone.workload_ticket?.id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${milestone.workload_ticket.id}` : '';
+      const linkText = milestone.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${milestone.workload_ticket.ticket_id}` : '';
       for (const user of users) {
         if (user.phone) {
           await this.sendWhatsappNotification(user.phone, `Hai ${allNames}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*${linkText}`);
@@ -624,7 +624,7 @@ export class WorkloadTicketsService {
     if (user && user.phone) {
       const siteText = currentTask.milestone?.workload_ticket?.site ? ` di Site ${currentTask.milestone.workload_ticket.site.name} (${currentTask.milestone.workload_ticket.site.code})` : '';
       const deadlineText = savedTask.deadline ? ` sebelum ${moment(savedTask.deadline).format('DD-MM-YYYY')}` : '';
-      const linkText = currentTask.milestone?.workload_ticket?.id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${currentTask.milestone.workload_ticket.id}` : '';
+      const linkText = currentTask.milestone?.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${currentTask.milestone.workload_ticket.ticket_id}` : '';
       await this.sendWhatsappNotification(user.phone, `Hai ${user.name}! segera selesaikan Tugas anda: ${savedTask.name}${siteText}${deadlineText}.${linkText}`);
     }
 
@@ -705,7 +705,7 @@ export class WorkloadTicketsService {
     if (task.status === 'In Progress' && newUser && newUser.phone) {
       const siteText = task.milestone?.workload_ticket?.site ? ` di Site ${task.milestone.workload_ticket.site.name} (${task.milestone.workload_ticket.site.code})` : '';
       const deadlineText = task.deadline ? ` sebelum ${moment(task.deadline).format('DD-MM-YYYY')}` : '';
-      const linkText = task.milestone?.workload_ticket?.id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${task.milestone.workload_ticket.id}` : '';
+      const linkText = task.milestone?.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${task.milestone.workload_ticket.ticket_id}` : '';
       await this.sendWhatsappNotification(newUser.phone, `Hai ${newUser.name}! segera selesaikan Tugas anda: ${task.name}${siteText}${deadlineText}.\nJika Pending Bukan di kamu *segera update di my task agar KPI mu tetap terjaga*${linkText}`);
     }
 
@@ -790,7 +790,7 @@ export class WorkloadTicketsService {
             const site = task.milestone?.workload_ticket?.site;
             const sitePrefix = site ? `${site.code}-${site.name}` : '-';
             const rejecterName = task.assigned_to_user?.name || 'Unknown';
-            const linkText = task.milestone?.workload_ticket?.id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${task.milestone.workload_ticket.id}` : '';
+            const linkText = task.milestone?.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${task.milestone.workload_ticket.ticket_id}` : '';
             const message = `Tugas Anda (${existingTask.name}) pada (${sitePrefix}) telah di reject oleh ${rejecterName} (Menunggu Task Anda selesai). Harap segera ditindaklanjuti dan hubungi ${rejecterName} untuk detail rejection!!${linkText}`;
             await this.sendWhatsappNotification(existingTask.assigned_to_user.phone, message);
           }
@@ -856,7 +856,7 @@ export class WorkloadTicketsService {
         }
 
         const allNames = usersToNotify.map(u => u.name).join(', ');
-        const linkText = currentMilestone.workload_ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${currentMilestone.workload_ticket_id}` : '';
+        const linkText = currentMilestone.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${currentMilestone.workload_ticket.ticket_id}` : '';
         for (const u of usersToNotify) {
           if (u.phone) {
             const deadlineText = nextTask.deadline ? ` sebelum ${moment(nextTask.deadline).format('DD-MM-YYYY')}` : '';
@@ -909,7 +909,7 @@ export class WorkloadTicketsService {
             }
 
             const allNames2 = usersToNotify2.map(u => u.name).join(', ');
-            const linkText = nextMilestone.workload_ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${nextMilestone.workload_ticket_id}` : '';
+            const linkText = nextMilestone.workload_ticket?.ticket_id ? `\n\n🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${nextMilestone.workload_ticket.ticket_id}` : '';
             for (const u of usersToNotify2) {
               if (u.phone) {
                 const deadlineText = firstTask.deadline ? ` sebelum ${moment(firstTask.deadline).format('DD-MM-YYYY')}` : '';

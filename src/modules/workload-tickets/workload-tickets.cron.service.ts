@@ -91,10 +91,10 @@ export class WorkloadTicketsCronService {
         for (let i = 0; i < tasks.length; i++) {
           const t = tasks[i];
           const site = t.milestone?.workload_ticket?.site;
-          const ticketId = t.milestone?.workload_ticket?.id;
+          const ticketId = t.milestone?.workload_ticket?.ticket_id;
           const siteText = site ? ` di Site ${site.name} (${site.code})` : '';
           const deadlineText = t.deadline ? `\n   ⏳ Deadline: ${moment(t.deadline).format('DD-MM-YYYY')}` : '';
-          const linkText = ticketId ? `\n   🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticketId}` : '';
+          const linkText = ticketId ? `\n   🔗 Link: https://smarteye.ptbiosron.com/my-tasks?search=${ticketId}` : '';
 
           let picNames = '';
           const taskUsers = [];

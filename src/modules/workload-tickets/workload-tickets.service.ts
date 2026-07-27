@@ -1214,10 +1214,7 @@ export class WorkloadTicketsService {
         }
       });
 
-      // We only want to show users who clocked in OR have active/completed tasks today.
-      if (!isPresent && userTasks.length === 0) {
-        return null;
-      }
+      // We intentionally return all targeted users (including absent ones) so the frontend can display 'Not Yet Present' statistics.
 
       return {
         id: user.id,

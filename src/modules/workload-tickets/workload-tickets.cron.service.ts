@@ -91,8 +91,10 @@ export class WorkloadTicketsCronService {
         for (let i = 0; i < tasks.length; i++) {
           const t = tasks[i];
           const site = t.milestone?.workload_ticket?.site;
+          const ticketId = t.milestone?.workload_ticket?.id;
           const siteText = site ? ` di Site ${site.name} (${site.code})` : '';
           const deadlineText = t.deadline ? `\n   ⏳ Deadline: ${moment(t.deadline).format('DD-MM-YYYY')}` : '';
+          const linkText = ticketId ? `\n   🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticketId}` : '';
 
           let picNames = '';
           const taskUsers = [];
@@ -108,7 +110,7 @@ export class WorkloadTicketsCronService {
              picNames = `\n   👤 PIC: ${taskUsers[0].name}`;
           }
 
-          currentMessage += `${i + 1}. *${t.name}*${siteText}${picNames}${deadlineText}\n`;
+          currentMessage += `${i + 1}. *${t.name}*${siteText}${picNames}${deadlineText}${linkText}\n`;
 
           if ((i + 1) % CHUNK_SIZE === 0 || i === tasks.length - 1) {
             if (i === tasks.length - 1) {
@@ -154,7 +156,7 @@ export class WorkloadTicketsCronService {
             ticket.milestones.every(m => m.status === 'Confirmed Finished');
           
           if (allMilestonesConfirmed) {
-            const msg = `Hai ${creator.name}, Workload Ticket kamu (${ticketName}) sudah tidak memiliki pending Milestone pastikan semua milestone sudah selesai dan dapat ditagihkn, click Confirm Finished pada detail workload ticket di Smarteye .`;
+            const msg = `Hai ${creator.name}, Workload Ticket kamu (${ticketName}) sudah tidak memiliki pending Milestone pastikan semua milestone sudah selesai dan dapat ditagihkn, click Confirm Finished pada detail workload ticket di Smarteye .\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticket.id}`;
             await this.whatsappService.sendMessage(creator.phone, msg);
             continue; // skip checking individual milestones since all are confirmed
           }
@@ -164,7 +166,7 @@ export class WorkloadTicketsCronService {
 
         // 1. If workload ticket has no milestone
         if (!ticket.milestones || ticket.milestones.length === 0) {
-          const msg = `Hai ${creator.name} workload ticket kamu ${ticketName} belum memiliki Milestone apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik`;
+          const msg = `Hai ${creator.name} workload ticket kamu ${ticketName} belum memiliki Milestone apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticket.id}`;
           await this.whatsappService.sendMessage(creator.phone, msg);
           continue;
         }
@@ -175,14 +177,14 @@ export class WorkloadTicketsCronService {
 
           // 2. If milestone is completed
           if (milestone.status === 'Completed') {
-            const msg = `Hai ${creator.name} Milestone *${milestoneName}* di workload ticket kamu *${ticketName}* sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya, Jika memang sudah selesai masuk ke Workload tikect detail dan tekan *CONFIRM FINISH* pada milestone *${milestoneName}*`;
+            const msg = `Hai ${creator.name} Milestone *${milestoneName}* di workload ticket kamu *${ticketName}* sudah selesai dikerjakan. Aku akan teruskan ini ke team ESAR. pastikan beneran udah bisa ditagih ya, kalau tidak harap tambahkan task baru di milestone nya, Jika memang sudah selesai masuk ke Workload tikect detail dan tekan *CONFIRM FINISH* pada milestone *${milestoneName}*\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticket.id}`;
             await this.whatsappService.sendMessage(creator.phone, msg);
             continue;
           }
 
           // 3. If milestone has no task (and it's not completed)
           if (!milestone.tasks || milestone.tasks.length === 0) {
-            const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) belum memiliki task apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik`;
+            const msg = `Hai ${creator.name} workload ticket kamu (${ticketName} - ${milestoneName}) belum memiliki task apa-apa, segera buatkan milestone dan task nya agar PIC under mu memiliki KPI yang baik\n\n🔗 Link: https://smarteye.ptbiosron.com/workload-tickets/${ticket.id}`;
             await this.whatsappService.sendMessage(creator.phone, msg);
             continue;
           }

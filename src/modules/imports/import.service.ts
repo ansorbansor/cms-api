@@ -2173,15 +2173,38 @@ export class ImportService {
 
   async getSiteByName(name: string, code: string) {
     let site = this.siteData.find((data) => {
-      return data.name.toLowerCase() == name.toLowerCase() && data.code == code;
+      if (code && data.code) {
+        return data.code.trim().toLowerCase() === code.trim().toLowerCase();
+      }
+      return data.name?.trim().toLowerCase() === name?.trim().toLowerCase();
     });
+
+    if (site) {
+      let updated = false;
+      if (name && site.name?.trim().toLowerCase() !== name.trim().toLowerCase()) {
+        site.name = name;
+        updated = true;
+      }
+      if (code && site.code?.trim().toLowerCase() !== code.trim().toLowerCase()) {
+        site.code = code;
+        updated = true;
+      }
+      
+      if (updated) {
+        await this.siteRepository.save(site);
+        const index = this.siteData.findIndex((data) => data.id === site.id);
+        if (index > -1) {
+          this.siteData[index] = site;
+        }
+      }
+    }
 
     if (!site) {
       const newsiteData = new Site();
       newsiteData.name = name;
       newsiteData.code = code;
       site = await this.siteRepository.save(newsiteData);
-      await this.siteData.push(site);
+      this.siteData.push(site);
     }
 
     return site;

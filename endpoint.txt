@@ -1,0 +1,795 @@
+List of Endpoints (Format: [METHOD] /api/v1/BASE_ROUTE/METHOD_ROUTE -> ControllerMethodName (Purpose))
+========================================================================================================
+
+Controller: absence.controller.ts
+----------------------------------------
+- [GET] /api/v1/absence
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/absence/has-absence
+    Purpose: Has Absence Today
+    Handler: hasAbsenceToday
+
+- [POST] /api/v1/absence/trigger-reminder
+    Purpose: Trigger Reminder
+    Handler: triggerReminder
+
+- [GET] /api/v1/absence/:id
+    Purpose: Find One
+    Handler: findOne
+
+
+Controller: activity-log.controller.ts
+----------------------------------------
+- [GET] /api/v1/acl
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/acl/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [POST] /api/v1/acl
+    Purpose: Create
+    Handler: create
+
+
+Controller: area.controller.ts
+----------------------------------------
+- [POST] /api/v1/area
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/area
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/area/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/area/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: auth.controller.ts
+----------------------------------------
+- [POST] /api/v1/auth/email/confirm
+    Purpose: Confirm Email
+    Handler: confirmEmail
+
+- [POST] /api/v1/auth/forgot/password
+    Purpose: Forgot Password
+    Handler: forgotPassword
+
+- [POST] /api/v1/auth/admin/forgot/password
+    Purpose: Admin Forgot Password
+    Handler: adminForgotPassword
+
+- [POST] /api/v1/auth/reset/password
+    Purpose: Reset Password
+    Handler: resetPassword
+
+- [GET] /api/v1/auth/reset/password
+    Purpose: Reset Password Data
+    Handler: resetPasswordData
+
+- [GET] /api/v1/auth/logout
+    Purpose: Logout
+    Handler: logout
+
+
+Controller: bidding-area.controller.ts
+----------------------------------------
+- [POST] /api/v1/bidding-area
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/bidding-area
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/bidding-area/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [PATCH] /api/v1/bidding-area/:id
+    Purpose: Update
+    Handler: update
+
+- [DELETE] /api/v1/bidding-area/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: customer.controller.ts
+----------------------------------------
+- [POST] /api/v1/customer
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/customer
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/customer/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/customer/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: distance-tracking.controller.ts
+----------------------------------------
+- [POST] /api/v1/distance-tracking/sync
+    Purpose: Sync
+    Handler: sync
+
+- [GET] /api/v1/distance-tracking
+    Purpose: Find All
+    Handler: findAll
+
+
+Controller: document-storage.controller.ts
+----------------------------------------
+- [GET] /api/v1/document-storage
+    Purpose: Find All
+    Handler: findAll
+
+- [POST] /api/v1/document-storage
+    Purpose: Create
+    Handler: create
+
+- [DELETE] /api/v1/document-storage/:id
+    Purpose: Delete
+    Handler: delete
+
+
+Controller: employee-position.controller.ts
+----------------------------------------
+- [GET] /api/v1/employee-position
+    Purpose: Find All
+    Handler: findAll
+
+
+Controller: export.controller.ts
+----------------------------------------
+- [GET] /api/v1/export/jobs
+    Purpose: Get Jobs
+    Handler: getJobs
+
+- [GET] /api/v1/export/download/:id
+    Purpose: Download
+    Handler: download
+
+- [GET] /api/v1/export/users
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/export/po
+    Purpose: Export P O
+    Handler: exportPO
+
+- [GET] /api/v1/export/spk
+    Purpose: Export S P K
+    Handler: exportSPK
+
+- [GET] /api/v1/export/absence
+    Purpose: Export Absence
+    Handler: exportAbsence
+
+- [GET] /api/v1/export/spk-operational
+    Purpose: Export S P K Operational
+    Handler: exportSPKOperational
+
+- [GET] /api/v1/export/take-data
+    Purpose: Export Take Data
+    Handler: exportTakeData
+
+
+Controller: files.controller.ts
+----------------------------------------
+- [GET] /api/v1/files/:path
+    Purpose: Download
+    Handler: download
+
+
+Controller: graph.controller.ts
+----------------------------------------
+- [GET] /api/v1/graph/po/count
+    Purpose: Po Count
+    Handler: poCount
+
+- [GET] /api/v1/graph/po/line-amount/sum
+    Purpose: Get P O Line Amount
+    Handler: getPOLineAmount
+
+- [GET] /api/v1/graph/po/count-per-status
+    Purpose: Po Count Per Status
+    Handler: poCountPerStatus
+
+- [GET] /api/v1/graph/po/actual-work-amount/sum
+    Purpose: Get Actual Work Amount Sum
+    Handler: getActualWorkAmountSum
+
+- [GET] /api/v1/graph/po/submit-amount/sum
+    Purpose: Get P O Submit Amount Sum
+    Handler: getPOSubmitAmountSum
+
+- [GET] /api/v1/graph/po/payment-amount/sum
+    Purpose: Get P O Payment Amount Sum
+    Handler: getPOPaymentAmountSum
+
+- [GET] /api/v1/graph/po/contract-asset/sum
+    Purpose: Get Contract Asset Sum
+    Handler: getContractAssetSum
+
+- [GET] /api/v1/graph/po/actual-work-amount/per-month
+    Purpose: Get Actual Work Amount Per Month
+    Handler: getActualWorkAmountPerMonth
+
+- [GET] /api/v1/graph/po/list
+    Purpose: Get Order Log
+    Handler: getOrderLog
+
+- [GET] /api/v1/graph/management/actual-work-amount/per-month
+    Purpose: Get Management Actual Work Amount Per Month
+    Handler: getManagementActualWorkAmountPerMonth
+
+- [GET] /api/v1/graph/management/invoice-performance
+    Purpose: Get Management Invoice Performance
+    Handler: getManagementInvoicePerformance
+
+- [GET] /api/v1/graph/management/current-asset
+    Purpose: Get Management Current Asset
+    Handler: getManagementCurrentAsset
+
+- [GET] /api/v1/graph/management/nett-income
+    Purpose: Get Nett Income
+    Handler: getNettIncome
+
+- [GET] /api/v1/graph/management/liability
+    Purpose: Get Liability
+    Handler: getLiability
+
+- [GET] /api/v1/graph/utils/actual-work-status
+    Purpose: Get Actual Work Status
+    Handler: getActualWorkStatus
+
+
+Controller: import.controller.ts
+----------------------------------------
+- [GET] /api/v1/import/jobs
+    Purpose: Get Jobs
+    Handler: getJobs
+
+
+Controller: inventory.controller.ts
+----------------------------------------
+- [GET] /api/v1/inventory
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/inventory/summary
+    Purpose: Get Summary
+    Handler: getSummary
+
+
+Controller: operator.controller.ts
+----------------------------------------
+- [POST] /api/v1/operator
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/operator
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/operator/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/operator/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: pd.controller.ts
+----------------------------------------
+- [POST] /api/v1/pd
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/pd
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/pd/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/pd/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: pending-type.controller.ts
+----------------------------------------
+- [POST] /api/v1/pending-type
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/pending-type
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/pending-type/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [PATCH] /api/v1/pending-type/:id
+    Purpose: Update
+    Handler: update
+
+- [DELETE] /api/v1/pending-type/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: project.controller.ts
+----------------------------------------
+- [POST] /api/v1/project
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/project
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/project/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [PATCH] /api/v1/project/:id
+    Purpose: Update
+    Handler: update
+
+- [DELETE] /api/v1/project/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: purchase-orders.controller.ts
+----------------------------------------
+- [POST] /api/v1/po
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/po
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/po/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/po/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: region.controller.ts
+----------------------------------------
+- [POST] /api/v1/region
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/region
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/region/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/region/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: remark-project.controller.ts
+----------------------------------------
+- [POST] /api/v1/remark-project
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/remark-project
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/remark-project/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [PATCH] /api/v1/remark-project/:id
+    Purpose: Update
+    Handler: update
+
+- [DELETE] /api/v1/remark-project/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: site.controller.ts
+----------------------------------------
+- [POST] /api/v1/site
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/site
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/site/po/:id
+    Purpose: Get P O By Site
+    Handler: getPOBySite
+
+- [GET] /api/v1/site/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [PATCH] /api/v1/site/:id
+    Purpose: Update
+    Handler: update
+
+- [DELETE] /api/v1/site/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: spk.controller.ts
+----------------------------------------
+- [GET] /api/v1/spk
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/spk/filter-options
+    Purpose: Get Filter Options
+    Handler: getFilterOptions
+
+- [GET] /api/v1/spk/category
+    Purpose: Get All S P K Category
+    Handler: getAllSPKCategory
+
+- [GET] /api/v1/spk/subcategory
+    Purpose: Get All S P K Sub Category
+    Handler: getAllSPKSubCategory
+
+- [GET] /api/v1/spk/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/spk/:id
+    Purpose: Remove
+    Handler: remove
+
+- [GET] /api/v1/spk/approve-over-budget/:id
+    Purpose: Approve Over Budget
+    Handler: approveOverBudget
+
+- [GET] /api/v1/spk/approve/:id
+    Purpose: Approve
+    Handler: approve
+
+- [GET] /api/v1/spk/reject/:id
+    Purpose: Reject
+    Handler: reject
+
+- [GET] /api/v1/spk/reject-over-budget/:id
+    Purpose: Reject Over Budget
+    Handler: rejectOverBudget
+
+- [GET] /api/v1/spk/details-by-site-code/:siteCode
+    Purpose: Find Details By Site Code
+    Handler: findDetailsBySiteCode
+
+
+Controller: spk-operational.controller.ts
+----------------------------------------
+- [GET] /api/v1/spk-operational
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/spk-operational/filter-options
+    Purpose: Get Filter Options
+    Handler: getFilterOptions
+
+- [GET] /api/v1/spk-operational/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/spk-operational/:id
+    Purpose: Remove
+    Handler: remove
+
+- [GET] /api/v1/spk-operational/approve-over-budget/:id
+    Purpose: Approve Over Budget
+    Handler: approveOverBudget
+
+- [GET] /api/v1/spk-operational/approve/:id
+    Purpose: Approve
+    Handler: approve
+
+- [GET] /api/v1/spk-operational/reject/:id
+    Purpose: Reject
+    Handler: reject
+
+- [GET] /api/v1/spk-operational/reject-over-budget/:id
+    Purpose: Reject Over Budget
+    Handler: rejectOverBudget
+
+- [POST] /api/v1/spk-operational/approve-many
+    Purpose: Approve Many
+    Handler: approveMany
+
+
+Controller: spk-operational-category.controller.ts
+----------------------------------------
+- [GET] /api/v1/spk-operation-category
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/spk-operation-subcategory
+    Purpose: Find All Sub
+    Handler: findAllSub
+
+
+Controller: spk-operational-request-type.controller.ts
+----------------------------------------
+- [GET] /api/v1/spk-operation-request-type
+    Purpose: Find All
+    Handler: findAll
+
+
+Controller: status-acceptance.controller.ts
+----------------------------------------
+- [POST] /api/v1/status-acceptance
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/status-acceptance
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/status-acceptance/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/status-acceptance/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: take-data.controller.ts
+----------------------------------------
+- [POST] /api/v1/take-data/templates
+    Purpose: Create Template
+    Handler: createTemplate
+
+- [GET] /api/v1/take-data/templates
+    Purpose: Find All Templates
+    Handler: findAllTemplates
+
+- [PUT] /api/v1/take-data/templates/:id
+    Purpose: Update Template
+    Handler: updateTemplate
+
+- [PATCH] /api/v1/take-data/templates/:id/reorder
+    Purpose: Reorder Items
+    Handler: reorderItems
+
+- [POST] /api/v1/take-data/assign
+    Purpose: Assign Template
+    Handler: assignTemplate
+
+- [GET] /api/v1/take-data/assignments
+    Purpose: Get Assignments
+    Handler: getAssignments
+
+- [GET] /api/v1/take-data/assignments/:id/download
+    Purpose: Download Photos
+    Handler: downloadPhotos
+
+- [DELETE] /api/v1/take-data/assignments/:id
+    Purpose: Delete Assignment
+    Handler: deleteAssignment
+
+- [POST] /api/v1/take-data/assignments/:id/review
+    Purpose: Review Assignment
+    Handler: reviewAssignment
+
+- [POST] /api/v1/take-data/assignments/:id/items/:itemId/ai-review
+    Purpose: Ai Review Item
+    Handler: aiReviewItem
+
+- [GET] /api/v1/take-data/sites/:siteId
+    Purpose: Get Templates For Site
+    Handler: getTemplatesForSite
+
+- [DELETE] /api/v1/take-data/submission/:id
+    Purpose: Delete Submission
+    Handler: deleteSubmission
+
+
+Controller: transportation.controller.ts
+----------------------------------------
+- [POST] /api/v1/transportation
+    Purpose: Create
+    Handler: create
+
+- [GET] /api/v1/transportation
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/transportation/:id
+    Purpose: Find One
+    Handler: findOne
+
+
+Controller: users.controller.ts
+----------------------------------------
+- [GET] /api/v1/users
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/users/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [DELETE] /api/v1/users/:id
+    Purpose: Remove
+    Handler: remove
+
+
+Controller: whatsapp.controller.ts
+----------------------------------------
+- [GET] /api/v1/whatsapp/status
+    Purpose: Get Status
+    Handler: getStatus
+
+- [POST] /api/v1/whatsapp/logout
+    Purpose: Logout
+    Handler: logout
+
+
+Controller: workload-tickets.controller.ts
+----------------------------------------
+- [POST] /api/v1/workload-tickets/trigger-notifications
+    Purpose: Trigger Notifications
+    Handler: triggerNotifications
+
+- [POST] /api/v1/workload-tickets/create/:siteId
+    Purpose: Create
+    Handler: create
+
+- [POST] /api/v1/workload-tickets/:id/purchase-orders
+    Purpose: Add Purchase Orders
+    Handler: addPurchaseOrders
+
+- [DELETE] /api/v1/workload-tickets/:id/purchase-orders/:poId
+    Purpose: Remove Purchase Order
+    Handler: removePurchaseOrder
+
+- [GET] /api/v1/workload-tickets/unassigned-pos/:siteId
+    Purpose: Get Unassigned Pos
+    Handler: getUnassignedPos
+
+- [GET] /api/v1/workload-tickets/my-tasks
+    Purpose: Get My Tasks
+    Handler: getMyTasks
+
+- [GET] /api/v1/workload-tickets/my-tasks/names
+    Purpose: Get My Task Names
+    Handler: getMyTaskNames
+
+- [GET] /api/v1/workload-tickets/summary
+    Purpose: Get Summary
+    Handler: getSummary
+
+- [GET] /api/v1/workload-tickets
+    Purpose: Find All
+    Handler: findAll
+
+- [GET] /api/v1/workload-tickets/kpi/employees
+    Purpose: Get Employee Kpi
+    Handler: getEmployeeKpi
+
+- [GET] /api/v1/workload-tickets/kpi/daily-progress
+    Purpose: Get Daily Progress
+    Handler: getDailyProgress
+
+- [POST] /api/v1/workload-tickets/kpi/notify/:userId
+    Purpose: Notify Kpi User
+    Handler: notifyKpiUser
+
+- [GET] /api/v1/workload-tickets/tasks/unique-names
+    Purpose: Get Unique Task Names
+    Handler: getUniqueTaskNames
+
+- [GET] /api/v1/workload-tickets/:id
+    Purpose: Find One
+    Handler: findOne
+
+- [POST] /api/v1/workload-tickets/:id/copy-milestones
+    Purpose: Copy Milestones
+    Handler: copyMilestones
+
+- [POST] /api/v1/workload-tickets/:id/milestones
+    Purpose: Add Milestone
+    Handler: addMilestone
+
+- [PATCH] /api/v1/workload-tickets/:id/milestones/reorder
+    Purpose: Reorder Milestones
+    Handler: reorderMilestones
+
+- [PATCH] /api/v1/workload-tickets/milestones/:id
+    Purpose: Edit Milestone
+    Handler: editMilestone
+
+- [GET] /api/v1/workload-tickets/milestones/:id/tasks
+    Purpose: Get Milestone Tasks
+    Handler: getMilestoneTasks
+
+- [PATCH] /api/v1/workload-tickets/milestones/:id/confirm-finish
+    Purpose: Confirm Milestone Finished
+    Handler: confirmMilestoneFinished
+
+- [PATCH] /api/v1/workload-tickets/:id/confirm-finish
+    Purpose: Confirm Ticket Finished
+    Handler: confirmTicketFinished
+
+- [DELETE] /api/v1/workload-tickets/milestones/:id
+    Purpose: Delete Milestone
+    Handler: deleteMilestone
+
+- [POST] /api/v1/workload-tickets/milestones/:milestoneId/tasks
+    Purpose: Add Task
+    Handler: addTask
+
+- [DELETE] /api/v1/workload-tickets/tasks/:id
+    Purpose: Delete Task
+    Handler: deleteTask
+
+- [POST] /api/v1/workload-tickets/tasks/:id/predecessor
+    Purpose: Add Predecessor Task
+    Handler: addPredecessorTask
+
+- [PATCH] /api/v1/workload-tickets/tasks/:id
+    Purpose: Update Task Status
+    Handler: updateTaskStatus
+
+- [PATCH] /api/v1/workload-tickets/tasks/:id/assignee
+    Purpose: Update Task Assignee
+    Handler: updateTaskAssignee
+
+- [POST] /api/v1/workload-tickets/tasks/:id/attachments
+    Purpose: Add Task Attachment
+    Handler: addTaskAttachment
+
+- [DELETE] /api/v1/workload-tickets/tasks/:taskId/attachments/:attachmentId
+    Purpose: Remove Task Attachment
+    Handler: removeTaskAttachment
+
+- [DELETE] /api/v1/workload-tickets/tasks/:taskId/evidence
+    Purpose: Remove Task Evidence
+    Handler: removeTaskEvidence
+
+- [DELETE] /api/v1/workload-tickets/:id
+    Purpose: Delete
+    Handler: delete
+
+

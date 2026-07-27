@@ -68,6 +68,9 @@ export class WorkloadTicketsService {
       for (const po of pos) {
         if (po.site_id === siteId) {
           po.workload_ticket_id = savedTicket.id as any;
+          if (!po.actual_work_date) {
+            po.actual_work_date = new Date();
+          }
           await this.poRepo.save(po);
         }
       }
@@ -85,6 +88,9 @@ export class WorkloadTicketsService {
       for (const po of pos) {
         if (po.site_id === ticket.site_id) {
           po.workload_ticket_id = ticket.id as any;
+          if (!po.actual_work_date) {
+            po.actual_work_date = new Date();
+          }
           await this.poRepo.save(po);
         }
       }

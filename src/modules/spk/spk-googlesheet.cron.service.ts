@@ -129,7 +129,7 @@ export class SpkGoogleSheetCronService {
     let updated = false;
 
     const spk = await this.spkRepository.findOne({ where: { spk_number: spkNumber } });
-    if (spk && spk.status !== 4) {
+    if (spk && spk.status < 4) {
       spk.status = 4;
       spk.approved_by = 1113;
       spk.remark_rpm = 'Automated Approved by RPM on googlesheet';
@@ -139,7 +139,7 @@ export class SpkGoogleSheetCronService {
     }
 
     const spko = await this.spkOperationalRepository.findOne({ where: { spk_number: spkNumber } });
-    if (spko && spko.status !== 4) {
+    if (spko && spko.status < 4) {
       spko.status = 4;
       spko.approved_by = 1113;
       spko.remark_rpm = 'Automated Approved by RPM on googlesheet';

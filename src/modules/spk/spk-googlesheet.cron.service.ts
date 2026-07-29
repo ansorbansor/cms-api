@@ -42,7 +42,7 @@ export class SpkGoogleSheetCronService {
 
     try {
       const auth = new google.auth.GoogleAuth({
-        keyFile: path.join(process.cwd(), '..', 'quantum-ether-385618-440b8d3d4086.json'),
+        keyFile: path.join(process.cwd(), 'quantum-ether-385618-440b8d3d4086.json'),
         scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/drive.readonly'],
       });
 

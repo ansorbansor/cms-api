@@ -133,8 +133,8 @@ export class SpkGoogleSheetCronService {
       spk.status = 4;
       if (!spk.approved_by) {
         spk.approved_by = 1113;
+        spk.remark_rpm = 'Automated Approved by RPM on googlesheet';
       }
-      spk.remark_rpm = 'Automated Approved by RPM on googlesheet';
       await this.spkRepository.save(spk);
       this.logger.log(`Updated SPK ${spkNumber}`);
       updated = true;
@@ -145,8 +145,8 @@ export class SpkGoogleSheetCronService {
       spko.status = 4;
       if (!spko.approved_by) {
         spko.approved_by = 1113;
+        spko.remark_rpm = 'Automated Approved by RPM on googlesheet';
       }
-      spko.remark_rpm = 'Automated Approved by RPM on googlesheet';
       await this.spkOperationalRepository.save(spko);
       this.logger.log(`Updated SPK Operational ${spkNumber}`);
       updated = true;

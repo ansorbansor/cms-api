@@ -131,7 +131,9 @@ export class SpkGoogleSheetCronService {
     const spk = await this.spkRepository.findOne({ where: { spk_number: spkNumber } });
     if (spk && spk.status < 4) {
       spk.status = 4;
-      spk.approved_by = 1113;
+      if (!spk.approved_by) {
+        spk.approved_by = 1113;
+      }
       spk.remark_rpm = 'Automated Approved by RPM on googlesheet';
       await this.spkRepository.save(spk);
       this.logger.log(`Updated SPK ${spkNumber}`);
@@ -141,7 +143,9 @@ export class SpkGoogleSheetCronService {
     const spko = await this.spkOperationalRepository.findOne({ where: { spk_number: spkNumber } });
     if (spko && spko.status < 4) {
       spko.status = 4;
-      spko.approved_by = 1113;
+      if (!spko.approved_by) {
+        spko.approved_by = 1113;
+      }
       spko.remark_rpm = 'Automated Approved by RPM on googlesheet';
       await this.spkOperationalRepository.save(spko);
       this.logger.log(`Updated SPK Operational ${spkNumber}`);

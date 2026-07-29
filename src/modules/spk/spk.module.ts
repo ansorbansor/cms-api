@@ -11,6 +11,8 @@ import { SPKCategory } from 'src/entities/spk-category.entity';
 import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
 //new line
 import { Site } from 'src/entities/site.entity';
+import { SPKOperational } from 'src/entities/spk-operationals.entity';
+import { SpkGoogleSheetCronService } from './spk-googlesheet.cron.service';
 
 @Module({
   imports: [
@@ -22,12 +24,13 @@ import { Site } from 'src/entities/site.entity';
       SPKCostEvidence,
       SPKCategory,
       SPKSubCategory,
+      SPKOperational,
     ]),
     ActivityLogModule,
     UsersModule,
   ],
   controllers: [SPKController],
-  providers: [SPKService],
+  providers: [SPKService, SpkGoogleSheetCronService],
   exports: [SPKService],
 })
 export class SPKModule { }

@@ -29,6 +29,7 @@ import { MenuPermission } from 'src/utils/enums';
 import { UpdateSPKSettlementDTO } from './dto/update-spk-settlement.dto';
 import { SPKResourceDetail } from './resources/spk.resources';
 import { GenerateSpkReportDto } from './dto/generate-spk-report.dto';
+import { SpkGoogleSheetCronService } from './spk-googlesheet.cron.service';
 
 @ApiBearerAuth()
 @ApiTags('SPK')
@@ -37,7 +38,20 @@ import { GenerateSpkReportDto } from './dto/generate-spk-report.dto';
   version: '1',
 })
 export class SPKController {
-  constructor(private readonly spkService: SPKService) { }
+  constructor(
+    private readonly spkService: SPKService,
+    private readonly spkGoogleSheetCronService: SpkGoogleSheetCronService,
+  ) { }
+
+  @Post('trigger-googlesheet-bot')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async triggerBot() {
+    return successResponse(
+      await this.spkGoogleSheetCronService.processGoogleSheets(),
+      'Bot executed successfully',
+    );
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

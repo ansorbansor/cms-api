@@ -41,7 +41,7 @@ export class WorkloadTicketsService {
     private whatsappService: WhatsappService,
   ) { }
 
-  async create(siteId: number, userId: number, poIds: number[] = []): Promise<WorkloadTicket> {
+  async create(siteId: number, userId: number, poIds: number[] = [], templateId?: number): Promise<WorkloadTicket> {
     const site = await this.siteRepo.findOne(siteId);
     if (!site) throw failedResponse(HttpStatus.BAD_REQUEST, 'Site not found');
 
@@ -76,7 +76,29 @@ export class WorkloadTicketsService {
       }
     }
 
+    if (templateId) {
+      await this.copyMilestones(savedTicket.id, templateId);
+    }
+
     return savedTicket;
+  }
+
+  async createTemplate(name: string, userId: number): Promise<WorkloadTicket> {
+    const newTemplate = this.ticketRepo.create({
+      template_name: name,
+      is_template: true,
+      created_by: userId,
+      status: 'Pending',
+      created_at: new Date()
+    });
+    return this.ticketRepo.save(newTemplate);
+  }
+
+  async findAllTemplates(): Promise<WorkloadTicket[]> {
+    return this.ticketRepo.find({
+      where: { is_template: true },
+      order: { created_at: 'DESC' }
+    });
   }
 
   async addPurchaseOrders(ticketId: number, poIds: number[]): Promise<void> {
@@ -126,12 +148,13 @@ export class WorkloadTicketsService {
       .leftJoinAndSelect('tasks.attachments', 'attachments')
       .leftJoinAndSelect('attachments.file', 'att_file')
       .leftJoinAndSelect('tasks.assigned_multiple', 'assigned_multiple')
+      .where('wt.is_template = false')
       .orderBy('wt.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
     if (search) {
-      qb.where('wt.ticket_id ILIKE :search', { search: `%${search}%` });
+      qb.andWhere('wt.ticket_id ILIKE :search', { search: `%${search}%` });
     }
 
     if (customer_id) {
@@ -155,10 +178,11 @@ export class WorkloadTicketsService {
       const qb = this.ticketRepo.createQueryBuilder(alias)
         .leftJoin(`${alias}.purchase_orders`, 'purchase_orders')
         .leftJoin('purchase_orders.customer', 'customer')
-        .leftJoin('purchase_orders.project', 'project');
+        .leftJoin('purchase_orders.project', 'project')
+        .where(`${alias}.is_template = false`);
       
       if (search) {
-        qb.where(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
+        qb.andWhere(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
       }
       if (customer_id) {
         qb.andWhere('customer.id = :customerId', { customerId: customer_id });

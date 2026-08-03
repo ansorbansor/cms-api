@@ -10,6 +10,12 @@ export class WorkloadTicket extends EntityHelper {
   @Column({ nullable: true })
   ticket_id: string;
 
+  @Column({ type: 'boolean', default: false })
+  is_template: boolean;
+
+  @Column({ nullable: true })
+  template_name: string;
+
   @Column({ nullable: true })
   site_id: number;
 

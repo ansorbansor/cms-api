@@ -30,11 +30,32 @@ export class WorkloadTicketsController {
     return successResponse(null, 'Notifications triggered successfully');
   }
 
+  @Get('templates')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getTemplates() {
+    return successResponse(
+      await this.ticketsService.findAllTemplates(),
+      'Templates retrieved successfully'
+    );
+  }
+
+  @Post('templates')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async createTemplate(@Body() body: { name: string }, @Request() req) {
+    if (!body.name) {
+      throw new HttpException('Template name is required', HttpStatus.BAD_REQUEST);
+    }
+    return successResponse(
+      await this.ticketsService.createTemplate(body.name, req.user.id),
+      'Template created successfully'
+    );
+  }
+
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[] }, @Request() req) {
+  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId?: number }, @Request() req) {
     return successResponse(
-      await this.ticketsService.create(siteId, req.user.id, body.poIds),
+      await this.ticketsService.create(siteId, req.user.id, body.poIds, body.templateId),
       'Workload ticket created successfully'
     );
   }

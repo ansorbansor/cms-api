@@ -166,6 +166,21 @@ export class WorkloadTicketsService {
     }
 
     const [data, total] = await qb.getManyAndCount();
+
+    if (data && data.length > 0) {
+      data.forEach(ticket => {
+        if (ticket.purchase_orders) {
+          ticket.purchase_orders = ticket.purchase_orders.map(po => {
+            const createdAtStr = (po as any).createdAtParseDate || moment(po.created_at).format('YYYY-MM-DD HH:mm:ss');
+            return {
+              ...po,
+              unique_id: exportUniqueId(po.id, createdAtStr)
+            } as any;
+          });
+        }
+      });
+    }
+
     return { data, total };
   }
 

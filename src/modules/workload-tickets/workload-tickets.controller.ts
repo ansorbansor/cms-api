@@ -53,7 +53,10 @@ export class WorkloadTicketsController {
 
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId?: number }, @Request() req) {
+  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId: number }, @Request() req) {
+    if (!body.templateId) {
+      throw new HttpException('Template ID is required', HttpStatus.BAD_REQUEST);
+    }
     return successResponse(
       await this.ticketsService.create(siteId, req.user.id, body.poIds, body.templateId),
       'Workload ticket created successfully'

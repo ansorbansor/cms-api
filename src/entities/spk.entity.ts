@@ -6,6 +6,7 @@ import {
   JoinColumn,
   OneToMany,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
 import { EntityHelper } from 'src/utils/entity-helper';
 import { Region } from './region.entity';
@@ -144,27 +145,27 @@ export class SPK extends EntityHelper {
   @Column({ nullable: true })
   customer_id?: number;
 
-  @OneToOne(() => Region)
+  @ManyToOne(() => Region)
   @JoinColumn({ name: 'region_id' })
   region: Region;
 
-  @OneToOne(() => Transportation)
+  @ManyToOne(() => Transportation)
   @JoinColumn({ name: 'transportation_id' })
   transportation: Transportation;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'pay_to_user_id' })
   pay_to_user: User;
 
-  @OneToOne(() => Site)
+  @ManyToOne(() => Site)
   @JoinColumn({ name: 'site_id' })
   site: Site;
 
-  @OneToOne(() => Area)
+  @ManyToOne(() => Area)
   @JoinColumn({ name: 'area_id' })
   area: Area;
 
-  @OneToOne(() => PurchaseOrder)
+  @ManyToOne(() => PurchaseOrder)
   @JoinColumn({ name: 'po_id' })
   po: PurchaseOrder;
 
@@ -208,35 +209,35 @@ export class SPK extends EntityHelper {
   @JoinColumn()
   cost_evidences: SPKCostEvidence[];
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
   created_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'approved_by' })
   approved_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'approved_over_budget_by' })
   approved_over_budget_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'paid_by' })
   paid_by_user: User;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'closed_by' })
   closed_by_user: User;
 
-  @OneToOne(() => SPKCategory)
+  @ManyToOne(() => SPKCategory)
   @JoinColumn({ name: 'category_id' })
   category: SPKCategory;
 
-  @OneToOne(() => SPKSubCategory)
+  @ManyToOne(() => SPKSubCategory)
   @JoinColumn({ name: 'subcategory_id' })
   subcategory: SPKSubCategory;
 
-  @OneToOne(() => Customer)
+  @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
 

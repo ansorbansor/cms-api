@@ -316,7 +316,10 @@ export class WorkloadTicketsService {
     const qb = this.taskRepo.createQueryBuilder('task')
       .select('DISTINCT task.name', 'name')
       .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .leftJoin('task.milestone', 'milestone')
+      .leftJoin('milestone.workload_ticket', 'workload_ticket')
       .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .andWhere('workload_ticket.is_template = false')
       .orderBy('name', 'ASC');
 
     const result = await qb.getRawMany();
@@ -340,6 +343,7 @@ export class WorkloadTicketsService {
       .leftJoinAndSelect('task.assigned_multiple', 'assigned_multiple')
       .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
       .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .andWhere('workload_ticket.is_template = false')
       .orderBy('task.created_at', 'ASC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -381,7 +385,10 @@ export class WorkloadTicketsService {
   async getUniqueTaskNames(): Promise<string[]> {
     const results = await this.taskRepo.createQueryBuilder('task')
       .select('DISTINCT(task.name)', 'name')
+      .leftJoin('task.milestone', 'milestone')
+      .leftJoin('milestone.workload_ticket', 'workload_ticket')
       .where('task.name IS NOT NULL')
+      .andWhere('workload_ticket.is_template = false')
       .orderBy('task.name', 'ASC')
       .getRawMany();
     return results.map(r => r.name);

@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getManager, IsNull, In } from 'typeorm';
+import { Repository, getManager, IsNull, In, Brackets } from 'typeorm';
 import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
 import { Milestone } from 'src/entities/milestone.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
@@ -1163,24 +1163,34 @@ export class WorkloadTicketsService {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 1. Fetch Target Users
-    const users = await getManager().getRepository(User).createQueryBuilder('user')
-      .leftJoinAndSelect('user.employeePosition', 'position')
-      .where('LOWER(user.level_iresource) = :internal', { internal: 'internal' })
-      .andWhere('(LOWER(user.status_description) = :onboard1 OR LOWER(user.status_description) = :onboard2)', { onboard1: 'on board', onboard2: 'on bord' })
+    // 1. Fetch Absences for these users on the given date (Fetch ALL for today first)
+    const absences = await this.absenceRepo.createQueryBuilder('absence')
+      .where('absence.clock_in >= :start AND absence.clock_in <= :end', { start: startOfDay, end: endOfDay })
       .getMany();
 
+    const userIdsWithAbsence = absences.map(a => a.user_id);
+
+    // 2. Fetch Target Users (Internal + External with absence)
+    const query = getManager().getRepository(User).createQueryBuilder('user')
+      .leftJoinAndSelect('user.employeePosition', 'position')
+      .where('(LOWER(user.status_description) = :onboard1 OR LOWER(user.status_description) = :onboard2)', { onboard1: 'on board', onboard2: 'on bord' });
+
+    if (userIdsWithAbsence.length > 0) {
+      query.andWhere(new Brackets(qb => {
+        qb.where('LOWER(user.level_iresource) = :internal', { internal: 'internal' })
+          .orWhere('(LOWER(user.level_iresource) = :external AND user.id IN (:...userIdsWithAbsence))', { external: 'external', userIdsWithAbsence });
+      }));
+    } else {
+      query.andWhere('LOWER(user.level_iresource) = :internal', { internal: 'internal' });
+    }
+
+    const users = await query.getMany();
+
     if (!users || users.length === 0) {
-      return { total_users: 0, total_present: 0, on_time: 0, late: 0, total_tasks_completed: 0, users: [] };
+      return { total_users: 0, total_present: 0, external_present: 0, on_time: 0, late: 0, total_tasks_completed: 0, users: [] };
     }
 
     const userIds = users.map(u => u.id);
-
-    // 2. Fetch Absences for these users on the given date
-    const absences = await this.absenceRepo.createQueryBuilder('absence')
-      .where('absence.user_id IN (:...userIds)', { userIds })
-      .andWhere('absence.clock_in >= :start AND absence.clock_in <= :end', { start: startOfDay, end: endOfDay })
-      .getMany();
 
     const absenceMap = new Map<number, any>();
     absences.forEach(a => absenceMap.set(a.user_id, a));
@@ -1233,12 +1243,19 @@ export class WorkloadTicketsService {
     });
 
     // 4. Merge and format data
+    let totalUsers = 0;
     let totalPresent = 0;
+    let externalPresent = 0;
     let onTime = 0;
     let late = 0;
     let totalTasksCompleted = 0;
 
     const formattedUsers = users.map(user => {
+      const isInternal = user.level_iresource?.toLowerCase() === 'internal';
+      if (isInternal) {
+        totalUsers++;
+      }
+
       const absence = absenceMap.get(user.id);
       const userTasks = userTasksMap.get(user.id) || [];
       const tracking = trackingMap.get(user.id);
@@ -1250,7 +1267,11 @@ export class WorkloadTicketsService {
 
       if (absence) {
         isPresent = true;
-        totalPresent++;
+        if (isInternal) {
+          totalPresent++;
+        } else {
+          externalPresent++;
+        }
         clockInTime = absence.clock_in;
         clockOutTime = absence.clock_out;
         if (absence.late_reason) {
@@ -1290,9 +1311,11 @@ export class WorkloadTicketsService {
         }
       }
 
+      const displayName = isInternal ? user.name : `${user.name} (External)`;
+
       return {
         id: user.id,
-        name: user.name,
+        name: displayName,
         position: user.employeePosition?.name || '-',
         is_present: isPresent,
         is_late: isLate,
@@ -1310,6 +1333,7 @@ export class WorkloadTicketsService {
         activity_result: absence?.activity_result || null,
         completed_tasks_count: completedTasksCount,
         unfinished_tasks_count: unfinishedTasksCount,
+        is_internal: isInternal,
         tasks: userTasks.map(t => ({
           id: t.id,
           name: t.name,
@@ -1322,8 +1346,9 @@ export class WorkloadTicketsService {
     }).filter(u => u !== null);
 
     return {
-      total_users: users.length,
+      total_users: totalUsers,
       total_present: totalPresent,
+      external_present: externalPresent,
       on_time: onTime,
       late: late,
       total_tasks_completed: totalTasksCompleted,

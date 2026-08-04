@@ -263,4 +263,12 @@ export class UsersService {
       ip: ip,
     });
   }
+
+  async updateLiveLocation(userId: number, lat: number, lng: number): Promise<void> {
+    await this.usersRepository.update(userId, {
+      live_lat: lat,
+      live_lng: lng,
+      live_updated_at: new Date(),
+    });
+  }
 }

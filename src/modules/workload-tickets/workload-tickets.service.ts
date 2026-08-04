@@ -1275,6 +1275,19 @@ export class WorkloadTicketsService {
 
       // We intentionally return all targeted users (including absent ones) so the frontend can display 'Not Yet Present' statistics.
 
+      let finalLiveLat = tracking?.endLat || null;
+      let finalLiveLng = tracking?.endLng || null;
+      let finalLiveTime = tracking?.endTripTime || null;
+
+      if (user.live_updated_at && user.live_lat && user.live_lng) {
+        const liveUserTime = new Date(user.live_updated_at).getTime();
+        if (!finalLiveTime || liveUserTime > finalLiveTime) {
+          finalLiveLat = user.live_lat;
+          finalLiveLng = user.live_lng;
+          finalLiveTime = liveUserTime;
+        }
+      }
+
       return {
         id: user.id,
         name: user.name,
@@ -1288,9 +1301,9 @@ export class WorkloadTicketsService {
         clock_in_longitude: absence?.clock_in_longitude || null,
         clock_out_latitude: absence?.clock_out_latitude || null,
         clock_out_longitude: absence?.clock_out_longitude || null,
-        live_lat: tracking?.endLat || null,
-        live_lng: tracking?.endLng || null,
-        live_time: tracking?.endTripTime || null,
+        live_lat: finalLiveLat,
+        live_lng: finalLiveLng,
+        live_time: finalLiveTime,
         activity_plan: absence?.activity_plan || null,
         activity_result: absence?.activity_result || null,
         completed_tasks_count: completedTasksCount,

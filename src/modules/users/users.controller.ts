@@ -61,6 +61,17 @@ export class UsersController {
     );
   }
 
+  @Post('users/live-location')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateLiveLocation(
+    @Request() req,
+    @Body() body: { lat: number; lng: number }
+  ) {
+    await this.usersService.updateLiveLocation(req.user.id, body.lat, body.lng);
+    return successResponse(null, 'Live location updated successfully');
+  }
+
   @Get('users')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

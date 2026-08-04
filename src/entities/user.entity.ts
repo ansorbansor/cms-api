@@ -116,6 +116,15 @@ export class User extends EntityHelper {
   @Column({ nullable: true })
   app_session_id: string | null;
 
+  @Column({ type: 'float', nullable: true })
+  live_lat: number | null;
+
+  @Column({ type: 'float', nullable: true })
+  live_lng: number | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  live_updated_at: Date | null;
+
   @OneToOne(() => FileEntity, {
     eager: true,
   })

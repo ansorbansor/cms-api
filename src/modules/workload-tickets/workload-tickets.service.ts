@@ -1281,7 +1281,9 @@ export class WorkloadTicketsService {
 
       if (user.live_updated_at && user.live_lat && user.live_lng) {
         const liveUserTime = new Date(user.live_updated_at).getTime();
-        if (!finalLiveTime || liveUserTime > finalLiveTime) {
+        const trackingTime = finalLiveTime ? Number(finalLiveTime) : 0;
+        
+        if (!finalLiveTime || liveUserTime > trackingTime) {
           finalLiveLat = user.live_lat;
           finalLiveLng = user.live_lng;
           finalLiveTime = liveUserTime;

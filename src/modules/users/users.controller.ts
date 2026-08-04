@@ -21,7 +21,7 @@ import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { UsersService } from 'src/modules/users/users.service';
 import { UpdateUserDto } from 'src/modules/users/dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { successResponse, successResponseList } from 'src/utils/responses';
+import { successResponse, successResponseList, failedResponse } from 'src/utils/responses';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BufferedFile } from 'src/utils/file-helper';
 import { UserResource } from './resources/user.resources';
@@ -68,6 +68,9 @@ export class UsersController {
     @Request() req,
     @Body() body: { lat: number; lng: number }
   ) {
+    if (!body || typeof body.lat !== 'number' || typeof body.lng !== 'number') {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Valid lat and lng are required');
+    }
     await this.usersService.updateLiveLocation(req.user.id, body.lat, body.lng);
     return successResponse(null, 'Live location updated successfully');
   }

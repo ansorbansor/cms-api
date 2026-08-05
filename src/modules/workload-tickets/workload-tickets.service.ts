@@ -1361,6 +1361,7 @@ export class WorkloadTicketsService {
     const taskNames = query.taskNames; // Expecting array or comma-separated string if from GET query
 
     let truncString = 'month';
+    if (period === 'daily') truncString = 'day';
     if (period === 'weekly') truncString = 'week';
     if (period === 'yearly') truncString = 'year';
 

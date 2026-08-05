@@ -1367,16 +1367,29 @@ export class WorkloadTicketsService {
 
     const qb = this.taskRepo.createQueryBuilder('task')
       .select(`DATE_TRUNC('${truncString}', task.updated_at)`, 'date')
-      .addSelect('COUNT(task.id)', 'count')
+      .addSelect('COUNT(DISTINCT task.id)', 'count')
       .addSelect('task.name', 'taskName')
       .innerJoin('task.milestone', 'milestone')
       .innerJoin('milestone.workload_ticket', 'workload_ticket')
+      .leftJoin('workload_ticket.purchase_orders', 'purchase_orders')
+      .leftJoin('purchase_orders.customer', 'customer')
+      .leftJoin('purchase_orders.project', 'project')
       .where('task.status = :status', { status: 'Completed' })
       .andWhere('workload_ticket.is_template = false')
       .andWhere('task.updated_at IS NOT NULL');
 
     const startDate = query.startDate;
     const endDate = query.endDate;
+    const customerId = query.customer_id;
+    const projectId = query.project_id;
+
+    if (customerId) {
+      qb.andWhere('customer.id = :customerId', { customerId });
+    }
+
+    if (projectId) {
+      qb.andWhere('project.id = :projectId', { projectId });
+    }
 
     if (taskNames) {
       const namesArray = Array.isArray(taskNames) ? taskNames : taskNames.split(',');

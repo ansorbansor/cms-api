@@ -1374,11 +1374,24 @@ export class WorkloadTicketsService {
       .andWhere('workload_ticket.is_template = false')
       .andWhere('task.updated_at IS NOT NULL');
 
+    const startDate = query.startDate;
+    const endDate = query.endDate;
+
     if (taskNames) {
       const namesArray = Array.isArray(taskNames) ? taskNames : taskNames.split(',');
       if (namesArray.length > 0) {
         qb.andWhere('task.name IN (:...namesArray)', { namesArray });
       }
+    }
+
+    if (startDate) {
+      qb.andWhere('task.updated_at >= :startDate', { startDate: new Date(startDate) });
+    }
+    
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('task.updated_at <= :endDate', { endDate: end });
     }
 
     qb.groupBy(`DATE_TRUNC('${truncString}', task.updated_at)`)

@@ -114,6 +114,13 @@ export class WorkloadTicketsController {
     return successResponse(result, 'Summary retrieved successfully');
   }
 
+  @Get('trending-tasks')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getTrendingTasks(@Query() query: any) {
+    const result = await this.ticketsService.getTrendingTasks(query);
+    return successResponse(result, 'Trending tasks retrieved successfully');
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findAll(@Query() query: any) {

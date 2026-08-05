@@ -1356,6 +1356,44 @@ export class WorkloadTicketsService {
     };
   }
 
+  async getTrendingTasks(query: any = {}): Promise<any> {
+    const period = query.period || 'monthly';
+    const taskNames = query.taskNames; // Expecting array or comma-separated string if from GET query
+
+    let truncString = 'month';
+    if (period === 'weekly') truncString = 'week';
+    if (period === 'yearly') truncString = 'year';
+
+    const qb = this.taskRepo.createQueryBuilder('task')
+      .select(`DATE_TRUNC('${truncString}', task.updated_at)`, 'date')
+      .addSelect('COUNT(task.id)', 'count')
+      .addSelect('task.name', 'taskName')
+      .innerJoin('task.milestone', 'milestone')
+      .innerJoin('milestone.workload_ticket', 'workload_ticket')
+      .where('task.status = :status', { status: 'Completed' })
+      .andWhere('workload_ticket.is_template = false')
+      .andWhere('task.updated_at IS NOT NULL');
+
+    if (taskNames) {
+      const namesArray = Array.isArray(taskNames) ? taskNames : taskNames.split(',');
+      if (namesArray.length > 0) {
+        qb.andWhere('task.name IN (:...namesArray)', { namesArray });
+      }
+    }
+
+    qb.groupBy(`DATE_TRUNC('${truncString}', task.updated_at)`)
+      .addGroupBy('task.name')
+      .orderBy(`DATE_TRUNC('${truncString}', task.updated_at)`, 'ASC');
+
+    const result = await qb.getRawMany();
+
+    return result.map(r => ({
+      date: r.date,
+      count: Number(r.count),
+      taskName: r.taskName
+    }));
+  }
+
   private async sendWhatsappNotification(phoneNumber: string, message: string) {
     try {
       await this.whatsappService.sendMessage(phoneNumber, message);

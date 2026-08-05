@@ -20,7 +20,7 @@ export class WorkloadTask extends EntityHelper {
   deadline: Date;
 
   @Column({ nullable: true })
-  status: string; // Pending, In Progress, Completed, Issue, No Need
+  status: string; // Pending, In Progress, Review Customer, Completed, Issue, No Need
 
   @Column({ type: 'timestamp', nullable: true })
   in_progress_at: Date;

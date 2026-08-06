@@ -781,7 +781,7 @@ export class WorkloadTicketsService {
     if (payload.evidence_file_id) task.evidence_file_id = payload.evidence_file_id;
     if (payload.watermark_notes) task.watermark_notes = payload.watermark_notes;
 
-    if (userId) {
+    if (userId && !payload.preserve_owner) {
       if (task.assigned_to !== userId) {
         task.assigned_to = userId;
         task.assigned_to_user = { id: userId } as any;

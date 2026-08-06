@@ -851,6 +851,11 @@ export class WorkloadTicketsService {
         throw failedResponse(HttpStatus.BAD_REQUEST, 'A pending_reason_task_id is required when changing status to Pending');
       }
     }
+
+    if (payload.override_date) {
+      await this.taskRepo.query(`UPDATE workload_tasks SET updated_at = $1 WHERE id = $2`, [new Date(payload.override_date), task.id]);
+    }
+
     return { success: true };
   }
 

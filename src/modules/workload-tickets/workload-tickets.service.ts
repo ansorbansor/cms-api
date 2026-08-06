@@ -989,6 +989,7 @@ export class WorkloadTicketsService {
         `COALESCE(task.in_progress_at, task.created_at) >= :from AND COALESCE(task.in_progress_at, task.created_at) <= :to`,
         { from, to }
       )
+      .andWhere('ticket.is_template = false')
       .getMany();
 
     // Group by user
@@ -1208,6 +1209,7 @@ export class WorkloadTicketsService {
           (task.status IN ('In Progress', 'Pending', 'Issue', 'No Need')))`,
         { start: startOfDay, end: endOfDay }
       )
+      .andWhere('ticket.is_template = false')
       .getMany();
 
     // Map Tasks to Users

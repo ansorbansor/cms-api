@@ -34,16 +34,16 @@ export class AbsenceService {
     if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) return null;
 
     try {
-      // 2000ms strict delay for Nominatim (Limit is 1 request per second)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 500ms delay to be polite to the free API
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const res = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pLat}&lon=${pLng}`,
-        { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0 (admin@biosron.com)' } }
+        `https://photon.komoot.io/reverse?lon=${pLng}&lat=${pLat}`
       );
-      if (res.data && res.data.address) {
-        const locality = res.data.address.city_district || res.data.address.suburb || res.data.address.village || res.data.address.town || res.data.address.county || '';
-        const city = res.data.address.city || res.data.address.state || '';
+      if (res.data && res.data.features && res.data.features.length > 0) {
+        const props = res.data.features[0].properties;
+        const locality = props.district || props.county || props.locality || props.name || '';
+        const city = props.city || props.state || '';
         
         if (locality && city && locality !== city) {
           return `${locality} - ${city}`;

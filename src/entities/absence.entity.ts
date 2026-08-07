@@ -44,6 +44,12 @@ export class Absence extends EntityHelper {
   @Column()
   late_reason?: string;
 
+  @Column({ nullable: true })
+  clock_in_kecamatan?: string;
+
+  @Column({ nullable: true })
+  clock_out_kecamatan?: string;
+
 @Column({ type: 'text', nullable: true })
 activity_plan?: string;
 

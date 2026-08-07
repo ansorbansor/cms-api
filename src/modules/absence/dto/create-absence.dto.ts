@@ -18,6 +18,10 @@ export class CreateAbsenceDTO {
   @IsOptional()
   activity_plan: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  clock_in_kecamatan: string;
+
   @ApiProperty({ example: 123, required: false }) // Added ApiProperty
   @IsOptional()
   clock_in_photo: number;

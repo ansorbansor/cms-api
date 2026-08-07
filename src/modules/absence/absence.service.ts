@@ -1,4 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import axios from 'axios';
+import { getFlag } from 'src/utils/feature-flags.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
 import { Repository } from 'typeorm';
@@ -25,6 +27,162 @@ export class AbsenceService {
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
   ) { }
+
+  private async getKecamatan(lat: number, lng: number): Promise<string> {
+    if (!lat || !lng) return null;
+    try {
+      const res = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0' } }
+      );
+      if (res.data && res.data.address) {
+        return res.data.address.city_district || res.data.address.suburb || res.data.address.village || res.data.address.town || res.data.address.county || null;
+      }
+    } catch (e) {
+      console.error('[Nominatim] Error fetching kecamatan:', e.message);
+    }
+    return null;
+  }
+
+  private getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 999999;
+    const R = 6371; // Radius of the earth in km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return (R * c) * 1000; // Distance in meters
+  }
+
+  private deg2rad(deg: number) {
+    return deg * (Math.PI / 180);
+  }
+
+  async getMonthlySummary(month: string) {
+    // month format YYYY-MM
+    const startOfMonth = moment(`${month}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
+    const endOfMonth = moment(`${month}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss');
+
+    const absences = await this.absenceRepository
+      .createQueryBuilder('absence')
+      .leftJoinAndSelect('absence.user', 'user')
+      .leftJoinAndSelect('user.employeePosition', 'position')
+      .where('absence.clock_in >= :startOfMonth', { startOfMonth })
+      .andWhere('absence.clock_in <= :endOfMonth', { endOfMonth })
+      .getMany();
+
+    // Parse office locations
+    const rawOffices = getFlag('office_locations', '');
+    const offices = [];
+    if (rawOffices) {
+      rawOffices.split('\\n').forEach(line => {
+        const parts = line.split('|').map(p => p.trim());
+        if (parts.length === 3) {
+          offices.push({ name: parts[0], lat: parseFloat(parts[1]), lng: parseFloat(parts[2]) });
+        }
+      });
+    }
+
+    const summaryMap = new Map<number, any>();
+
+    for (const absence of absences) {
+      const u = absence.user;
+      if (!u) continue;
+      
+      if (!summaryMap.has(u.id)) {
+        summaryMap.set(u.id, {
+          user_id: u.id,
+          name: u.name,
+          role: u.employeePosition?.name || 'Employee',
+          total_present: 0,
+          total_absent: 0, // usually handled differently, we just put 0 here
+          late_count: 0,
+          late_reasons: [],
+          total_work_minutes: 0,
+          office_counts: {},
+          remote_counts: {}
+        });
+      }
+      
+      const sum = summaryMap.get(u.id);
+      sum.total_present += 1;
+
+      // Late calculation
+      if (absence.late_reason) {
+        sum.late_count += 1;
+        sum.late_reasons.push(absence.late_reason);
+      } else {
+        const clockInTime = moment(absence.clock_in);
+        if (clockInTime.hours() > 8 || (clockInTime.hours() === 8 && clockInTime.minutes() > 30)) {
+          sum.late_count += 1;
+        }
+      }
+
+      // Work hours calculation
+      if (absence.clock_in && absence.clock_out) {
+        const diffMinutes = moment(absence.clock_out).diff(moment(absence.clock_in), 'minutes');
+        sum.total_work_minutes += diffMinutes;
+      }
+
+      // Location classification
+      let foundOffice = null;
+      let minDistance = 999999;
+      for (const off of offices) {
+        const dist = this.getDistanceFromLatLonInMeters(absence.clock_in_latitude, absence.clock_in_longitude, off.lat, off.lng);
+        if (dist < minDistance) {
+          minDistance = dist;
+          if (dist <= 500) {
+            foundOffice = off.name;
+          }
+        }
+      }
+
+      if (foundOffice) {
+        sum.office_counts[foundOffice] = (sum.office_counts[foundOffice] || 0) + 1;
+      } else {
+        // Reverse geocoding on the fly if needed
+        let kec = absence.clock_in_kecamatan;
+        if (!kec) {
+          kec = await this.getKecamatan(absence.clock_in_latitude, absence.clock_in_longitude);
+          if (kec) {
+            // save it back silently so next time it's faster
+            await this.absenceRepository.update(absence.id, { clock_in_kecamatan: kec });
+            absence.clock_in_kecamatan = kec;
+          } else {
+            kec = 'Unknown Location';
+          }
+        }
+        sum.remote_counts[kec] = (sum.remote_counts[kec] || 0) + 1;
+      }
+    }
+
+    // Format final results
+    const results = [];
+    for (const sum of summaryMap.values()) {
+      const avg_minutes = sum.total_present > 0 ? sum.total_work_minutes / sum.total_present : 0;
+      const avg_hours = Math.floor(avg_minutes / 60);
+      const avg_mins = Math.floor(avg_minutes % 60);
+      
+      const late_reasons_unique = [...new Set(sum.late_reasons)].filter(r => r).join(', ');
+
+      results.push({
+        name: sum.name,
+        role: sum.role,
+        total_present: sum.total_present,
+        total_absent: sum.total_absent,
+        late_count: sum.late_count,
+        late_reasons: late_reasons_unique,
+        avg_hours_formatted: `${avg_hours}h ${avg_mins}m`,
+        office_counts: sum.office_counts,
+        remote_counts: sum.remote_counts
+      });
+    }
+
+    return results;
+  }
 
   async create(
     createAbsenceDTO: CreateAbsenceDTO,
@@ -54,6 +212,8 @@ export class AbsenceService {
 
     createAbsenceDTO.user_id = user_id;
     createAbsenceDTO.clock_in = moment().toDate();
+    
+    createAbsenceDTO.clock_in_kecamatan = await this.getKecamatan(createAbsenceDTO.clock_in_latitude, createAbsenceDTO.clock_in_longitude);
 
     const absence = await this.absenceRepository.save(
       this.absenceRepository.create(createAbsenceDTO),
@@ -104,6 +264,7 @@ export class AbsenceService {
 
     clockOutAbsence.clock_out_photo = uploadedPhoto.id;
     clockOutAbsence.clock_out = moment().toDate();
+    clockOutAbsence.clock_out_kecamatan = await this.getKecamatan(clockOutAbsence.clock_out_latitude, clockOutAbsence.clock_out_longitude);
 
     await this.absenceRepository.update(id, {
       ...clockOutAbsence,

@@ -15,6 +15,7 @@ const DEFAULT_FLAGS = {
   ai_system_message: 'You are a strict, objective Quality Assurance (QA) visual inspector. Your sole job is to evaluate whether the provided image(s) perfectly match the user\'s criteria. You must always reply in strict JSON format without any markdown wrappers.',
   fuel_efficiency_kml: 12,
   min_app_version: 14,
+  office_locations: 'Biosron EJBN Office|-7.362382|112.711600\nBiosron Medan Office|3.5344794|98.6168001\nBiosron Palembang Office|-2.9391259|104.7977115\nBiosron West Java Office|-6.9005171|107.5835439\nXLSmart Jakarta|-6.1852275|106.8212323',
 };
 
 export function readFeatureFlags(): Record<string, any> {

@@ -19,4 +19,8 @@ export class ClockOutAbsenceDTO {
   @ApiProperty({ example: 123, required: false }) // Added ApiProperty
   @IsOptional() // Marked optional
   clock_out_photo: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  clock_out_kecamatan: string;
 }

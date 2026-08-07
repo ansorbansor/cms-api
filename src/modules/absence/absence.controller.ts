@@ -109,6 +109,16 @@ export class AbsenceController {
     );
   }
 
+  @Get('monthly-summary')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getMonthlySummary(@Query('month') month: string) {
+    return successResponse(
+      await this.absenceService.getMonthlySummary(month),
+      'success',
+    );
+  }
+
   @Get('has-absence')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)

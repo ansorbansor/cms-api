@@ -32,14 +32,15 @@ export class AbsenceService {
     if (!lat || !lng) return null;
     try {
       const res = await axios.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`,
         { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0' } }
       );
-      if (res.data && res.data.address) {
-        return res.data.address.city_district || res.data.address.suburb || res.data.address.village || res.data.address.town || res.data.address.county || null;
+      if (res.data) {
+        // BigDataCloud provides locality, city, principalSubdivision
+        return res.data.locality || res.data.city || res.data.principalSubdivision || null;
       }
     } catch (e) {
-      console.error('[Nominatim] Error fetching kecamatan:', e.message);
+      console.error('[Geocoding] Error fetching kecamatan:', e.message);
     }
     return null;
   }

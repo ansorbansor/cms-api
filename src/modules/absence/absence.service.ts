@@ -180,7 +180,8 @@ export class AbsenceService {
       } else {
         if (!absence.clock_in_kecamatan && absence.clock_in_latitude && absence.clock_in_longitude) {
           if (geocodeLimit > 0) {
-            absence.clock_in_kecamatan = await this.getKecamatan(absence.clock_in_latitude, absence.clock_in_longitude);
+            const fetchedLocation = await this.getKecamatan(absence.clock_in_latitude, absence.clock_in_longitude);
+            absence.clock_in_kecamatan = fetchedLocation || 'Unknown Location';
             await this.absenceRepository.save(absence);
             geocodeLimit--;
           }

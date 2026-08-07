@@ -28,11 +28,17 @@ export class AbsenceService {
     private fileService: FilesService,
   ) { }
 
-  private async getKecamatan(lat: number, lng: number): Promise<string> {
-    if (!lat || !lng) return null;
+  private async getKecamatan(lat: any, lng: any): Promise<string> {
+    const pLat = parseFloat(lat);
+    const pLng = parseFloat(lng);
+    if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) return null;
+
     try {
+      // 500ms delay to prevent any rate limit spikes
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const res = await axios.get(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=id`,
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pLat}&longitude=${pLng}&localityLanguage=id`,
         { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0' } }
       );
       if (res.data) {
@@ -46,7 +52,7 @@ export class AbsenceService {
         return locality || city || null;
       }
     } catch (e) {
-      console.error('[Geocoding] Error fetching kecamatan:', e.message);
+      console.error(`[Geocoding] Error fetching kecamatan for ${pLat}, ${pLng}:`, e.message);
     }
     return null;
   }

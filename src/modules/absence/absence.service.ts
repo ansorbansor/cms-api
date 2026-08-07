@@ -37,7 +37,13 @@ export class AbsenceService {
       );
       if (res.data) {
         // BigDataCloud provides locality, city, principalSubdivision
-        return res.data.locality || res.data.city || res.data.principalSubdivision || null;
+        const locality = res.data.locality || '';
+        const city = res.data.city || res.data.principalSubdivision || '';
+        
+        if (locality && city && locality !== city) {
+          return `${locality} - ${city}`;
+        }
+        return locality || city || null;
       }
     } catch (e) {
       console.error('[Geocoding] Error fetching kecamatan:', e.message);

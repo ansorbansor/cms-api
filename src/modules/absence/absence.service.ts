@@ -133,11 +133,6 @@ export class AbsenceService {
       if (absence.late_reason) {
         sum.late_count += 1;
         sum.late_reasons.push(absence.late_reason);
-      } else {
-        const clockInTime = moment(absence.clock_in);
-        if (clockInTime.hours() > 8 || (clockInTime.hours() === 8 && clockInTime.minutes() > 30)) {
-          sum.late_count += 1;
-        }
       }
 
       // Work hours calculation

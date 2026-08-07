@@ -3,7 +3,7 @@ import axios from 'axios';
 import { getFlag } from 'src/utils/feature-flags.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityCondition, IPaginationOptions } from 'src/utils/types';
-import { Repository } from 'typeorm';
+import { Repository, getManager, Brackets } from 'typeorm';
 import { failedResponse, infinityPagination } from 'src/utils/responses';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { User } from 'src/entities/user.entity';
@@ -89,26 +89,44 @@ export class AbsenceService {
 
     const summaryMap = new Map<number, any>();
 
+    const userIdsWithAbsence = [...new Set(absences.map(a => a.user_id))];
+
+    // Fetch Target Users (Internal + External with absence)
+    const query = getManager().getRepository(User).createQueryBuilder('user')
+      .leftJoinAndSelect('user.employeePosition', 'position')
+      .where('(LOWER(user.status_description) = :onboard1 OR LOWER(user.status_description) = :onboard2)', { onboard1: 'on board', onboard2: 'on bord' });
+
+    if (userIdsWithAbsence.length > 0) {
+      query.andWhere(new Brackets(qb => {
+        qb.where('LOWER(user.level_iresource) = :internal', { internal: 'internal' })
+          .orWhere('(LOWER(user.level_iresource) = :external AND user.id IN (:...userIdsWithAbsence))', { external: 'external', userIdsWithAbsence });
+      }));
+    } else {
+      query.andWhere('LOWER(user.level_iresource) = :internal', { internal: 'internal' });
+    }
+
+    const targetUsers = await query.getMany();
+
+    // Initialize all target users
+    for (const u of targetUsers) {
+      summaryMap.set(u.id, {
+        user_id: u.id,
+        name: u.name,
+        role: u.employeePosition?.name || 'Employee',
+        total_present: 0,
+        total_absent: 0, 
+        late_count: 0,
+        late_reasons: [],
+        total_work_minutes: 0,
+        office_counts: {},
+        remote_counts: {}
+      });
+    }
+
     for (const absence of absences) {
-      const u = absence.user;
-      if (!u) continue;
+      if (!summaryMap.has(absence.user_id)) continue;
       
-      if (!summaryMap.has(u.id)) {
-        summaryMap.set(u.id, {
-          user_id: u.id,
-          name: u.name,
-          role: u.employeePosition?.name || 'Employee',
-          total_present: 0,
-          total_absent: 0, // usually handled differently, we just put 0 here
-          late_count: 0,
-          late_reasons: [],
-          total_work_minutes: 0,
-          office_counts: {},
-          remote_counts: {}
-        });
-      }
-      
-      const sum = summaryMap.get(u.id);
+      const sum = summaryMap.get(absence.user_id);
       sum.total_present += 1;
 
       // Late calculation
@@ -160,16 +178,15 @@ export class AbsenceService {
       }
     }
 
-    // Format final results
-    const results = [];
-    for (const sum of summaryMap.values()) {
+    // Format final results and sort alphabetically
+    const results = Array.from(summaryMap.values()).map(sum => {
       const avg_minutes = sum.total_present > 0 ? sum.total_work_minutes / sum.total_present : 0;
       const avg_hours = Math.floor(avg_minutes / 60);
       const avg_mins = Math.floor(avg_minutes % 60);
       
       const late_reasons_unique = [...new Set(sum.late_reasons)].filter(r => r).join(', ');
 
-      results.push({
+      return {
         name: sum.name,
         role: sum.role,
         total_present: sum.total_present,
@@ -179,8 +196,11 @@ export class AbsenceService {
         avg_hours_formatted: `${avg_hours}h ${avg_mins}m`,
         office_counts: sum.office_counts,
         remote_counts: sum.remote_counts
-      });
-    }
+      };
+    });
+
+    // Sort by name alphabetically
+    results.sort((a, b) => a.name.localeCompare(b.name));
 
     return results;
   }

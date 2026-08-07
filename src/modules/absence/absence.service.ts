@@ -34,17 +34,16 @@ export class AbsenceService {
     if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) return null;
 
     try {
-      // 500ms delay to prevent any rate limit spikes
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 1500ms strict delay for Nominatim (Limit is 1 request per second)
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       const res = await axios.get(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pLat}&longitude=${pLng}&localityLanguage=id`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pLat}&lon=${pLng}`,
         { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0' } }
       );
-      if (res.data) {
-        // BigDataCloud provides locality, city, principalSubdivision
-        const locality = res.data.locality || '';
-        const city = res.data.city || res.data.principalSubdivision || '';
+      if (res.data && res.data.address) {
+        const locality = res.data.address.city_district || res.data.address.suburb || res.data.address.village || res.data.address.town || res.data.address.county || '';
+        const city = res.data.address.city || res.data.address.state || '';
         
         if (locality && city && locality !== city) {
           return `${locality} - ${city}`;

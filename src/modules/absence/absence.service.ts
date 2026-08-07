@@ -85,7 +85,7 @@ export class AbsenceService {
     const rawOffices = getFlag('office_locations', '');
     const offices = [];
     if (rawOffices) {
-      rawOffices.split('\\n').forEach(line => {
+      rawOffices.split('\n').forEach(line => {
         const parts = line.split('|').map(p => p.trim());
         if (parts.length === 3) {
           offices.push({ name: parts[0], lat: parseFloat(parts[1]), lng: parseFloat(parts[2]) });

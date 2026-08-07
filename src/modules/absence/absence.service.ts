@@ -34,12 +34,12 @@ export class AbsenceService {
     if (isNaN(pLat) || isNaN(pLng) || (pLat === 0 && pLng === 0)) return null;
 
     try {
-      // 1500ms strict delay for Nominatim (Limit is 1 request per second)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 2000ms strict delay for Nominatim (Limit is 1 request per second)
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       const res = await axios.get(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pLat}&lon=${pLng}`,
-        { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0' } }
+        { headers: { 'User-Agent': 'PTBiosronSIMPRO/1.0 (admin@biosron.com)' } }
       );
       if (res.data && res.data.address) {
         const locality = res.data.address.city_district || res.data.address.suburb || res.data.address.village || res.data.address.town || res.data.address.county || '';
@@ -134,6 +134,8 @@ export class AbsenceService {
       });
     }
 
+    let geocodeLimit = 15; // Max 15 API requests per report generation to avoid timeouts/bans
+
     for (const absence of absences) {
       if (!summaryMap.has(absence.user_id)) continue;
       
@@ -158,34 +160,34 @@ export class AbsenceService {
       }
 
       // Location classification
-      let foundOffice = null;
+      let isOffice = false;
+      let matchedOfficeName = '';
       let minDistance = 999999;
+      
       for (const off of offices) {
         const dist = this.getDistanceFromLatLonInMeters(absence.clock_in_latitude, absence.clock_in_longitude, off.lat, off.lng);
         if (dist < minDistance) {
           minDistance = dist;
           if (dist <= 500) {
-            foundOffice = off.name;
+            isOffice = true;
+            matchedOfficeName = off.name;
           }
         }
       }
 
-      if (foundOffice) {
-        sum.office_counts[foundOffice] = (sum.office_counts[foundOffice] || 0) + 1;
+      if (isOffice) {
+        sum.office_counts[matchedOfficeName] = (sum.office_counts[matchedOfficeName] || 0) + 1;
       } else {
-        // Reverse geocoding on the fly if needed
-        let kec = absence.clock_in_kecamatan;
-        if (!kec) {
-          kec = await this.getKecamatan(absence.clock_in_latitude, absence.clock_in_longitude);
-          if (kec) {
-            // save it back silently so next time it's faster
-            await this.absenceRepository.update(absence.id, { clock_in_kecamatan: kec });
-            absence.clock_in_kecamatan = kec;
-          } else {
-            kec = 'Unknown Location';
+        if (!absence.clock_in_kecamatan && absence.clock_in_latitude && absence.clock_in_longitude) {
+          if (geocodeLimit > 0) {
+            absence.clock_in_kecamatan = await this.getKecamatan(absence.clock_in_latitude, absence.clock_in_longitude);
+            await this.absenceRepository.save(absence);
+            geocodeLimit--;
           }
         }
-        sum.remote_counts[kec] = (sum.remote_counts[kec] || 0) + 1;
+        
+        const loc = absence.clock_in_kecamatan || 'Loading Location... (Refresh later)';
+        sum.remote_counts[loc] = (sum.remote_counts[loc] || 0) + 1;
       }
     }
 

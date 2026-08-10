@@ -378,6 +378,7 @@ export class WorkloadTicketsService {
       if (task.status === 'Pending' && task.milestone?.workload_ticket_id) {
         const prevTask = await this.taskRepo.createQueryBuilder('ptask')
           .leftJoinAndSelect('ptask.assigned_to_user', 'user')
+          .leftJoinAndSelect('ptask.assigned_multiple', 'p_assigned_multiple')
           .leftJoin('ptask.milestone', 'pmilestone')
           .where('pmilestone.workload_ticket_id = :ticketId', { ticketId: task.milestone.workload_ticket_id })
           .andWhere('(pmilestone.order_index < :mIndex OR (pmilestone.order_index = :mIndex AND ptask.task_order_index < :tIndex))', {
@@ -526,7 +527,7 @@ export class WorkloadTicketsService {
     return this.taskRepo.find({
       where: { milestone_id: milestoneId },
       order: { task_order_index: 'ASC' },
-      relations: ['assigned_to_user']
+      relations: ['assigned_to_user', 'assigned_multiple']
     });
   }
 

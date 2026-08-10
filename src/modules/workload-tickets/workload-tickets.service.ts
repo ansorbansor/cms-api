@@ -1379,6 +1379,7 @@ export class WorkloadTicketsService {
       .select(`DATE_TRUNC('${truncString}', task.updated_at)`, 'date')
       .addSelect('COUNT(DISTINCT task.id)', 'count')
       .addSelect('task.name', 'taskName')
+      .addSelect('COALESCE(SUM(purchase_orders.unit_price), 0)', 'totalUnitPrice')
       .addSelect('ARRAY_AGG(DISTINCT project.name)', 'projectNames')
       .innerJoin('task.milestone', 'milestone')
       .innerJoin('milestone.workload_ticket', 'workload_ticket')
@@ -1436,6 +1437,7 @@ export class WorkloadTicketsService {
         date: r.date,
         count: Number(r.count),
         taskName: r.taskName,
+        totalUnitPrice: Number(r.totalUnitPrice || 0),
         projectNames: parsedNames.filter(n => n && n !== 'NULL' && n !== 'null')
       };
     });

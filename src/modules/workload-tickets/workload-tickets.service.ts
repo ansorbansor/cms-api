@@ -1392,11 +1392,11 @@ export class WorkloadTicketsService {
     const projectId = query.project_id;
 
     if (customerId) {
-      qb.andWhere('customer.id = :customerId', { customerId });
+      qb.andWhere('purchase_orders.customer_id = :customerId', { customerId });
     }
 
     if (projectId) {
-      qb.andWhere('project.id = :projectId', { projectId });
+      qb.andWhere('purchase_orders.project_id = :projectId', { projectId });
     }
 
     if (taskNames) {

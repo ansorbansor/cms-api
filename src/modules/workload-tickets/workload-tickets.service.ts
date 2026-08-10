@@ -159,12 +159,12 @@ export class WorkloadTicketsService {
 
     if (customer_id) {
       qb.andWhere('purchase_orders.id IS NOT NULL')
-        .andWhere('customer.id = :customerId', { customerId: customer_id });
+        .andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId: customer_id });
     }
 
     if (project_id) {
       qb.andWhere('purchase_orders.id IS NOT NULL')
-        .andWhere('project.id = :projectId', { projectId: project_id });
+        .andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
     }
 
     const [data, total] = await qb.getManyAndCount();
@@ -202,10 +202,10 @@ export class WorkloadTicketsService {
         qb.andWhere(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
       }
       if (customer_id) {
-        qb.andWhere('customer.id = :customerId', { customerId: customer_id });
+        qb.andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId: customer_id });
       }
       if (project_id) {
-        qb.andWhere('project.id = :projectId', { projectId: project_id });
+        qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
       }
       return qb;
     };
@@ -1394,11 +1394,11 @@ export class WorkloadTicketsService {
     const projectId = query.project_id;
 
     if (customerId) {
-      qb.andWhere('customer.id = :customerId', { customerId });
+      qb.andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId });
     }
 
     if (projectId) {
-      qb.andWhere('project.id = :projectId', { projectId });
+      qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId });
     }
 
     if (taskNames) {

@@ -1379,6 +1379,7 @@ export class WorkloadTicketsService {
       .select(`DATE_TRUNC('${truncString}', task.updated_at)`, 'date')
       .addSelect('COUNT(DISTINCT task.id)', 'count')
       .addSelect('task.name', 'taskName')
+      .addSelect('ARRAY_AGG(DISTINCT project.name)', 'projectNames')
       .innerJoin('task.milestone', 'milestone')
       .innerJoin('milestone.workload_ticket', 'workload_ticket')
       .leftJoin('workload_ticket.purchase_orders', 'purchase_orders')
@@ -1424,11 +1425,20 @@ export class WorkloadTicketsService {
 
     const result = await qb.getRawMany();
 
-    return result.map(r => ({
-      date: r.date,
-      count: Number(r.count),
-      taskName: r.taskName
-    }));
+    return result.map(r => {
+      let parsedNames = [];
+      if (Array.isArray(r.projectNames)) {
+         parsedNames = r.projectNames;
+      } else if (typeof r.projectNames === 'string') {
+         parsedNames = r.projectNames.replace(/^\{|\}$/g, '').split(',').map(s => s.replace(/^"|"$/g, '').trim());
+      }
+      return {
+        date: r.date,
+        count: Number(r.count),
+        taskName: r.taskName,
+        projectNames: parsedNames.filter(n => n && n !== 'NULL' && n !== 'null')
+      };
+    });
   }
 
   private async sendWhatsappNotification(phoneNumber: string, message: string) {

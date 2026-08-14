@@ -17,6 +17,9 @@ export class WorkloadTicket extends EntityHelper {
   template_name: string;
 
   @Column({ nullable: true })
+  job_category: string;
+
+  @Column({ nullable: true })
   site_id: number;
 
   @Column({ nullable: true })

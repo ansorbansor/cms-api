@@ -53,12 +53,12 @@ export class WorkloadTicketsController {
 
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId: number }, @Request() req) {
+  async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId: number, jobCategory?: string }, @Request() req) {
     if (!body.templateId) {
       throw new HttpException('Template ID is required', HttpStatus.BAD_REQUEST);
     }
     return successResponse(
-      await this.ticketsService.create(siteId, req.user.id, body.poIds, body.templateId),
+      await this.ticketsService.create(siteId, req.user.id, body.poIds, body.templateId, body.jobCategory),
       'Workload ticket created successfully'
     );
   }
@@ -119,6 +119,20 @@ export class WorkloadTicketsController {
   async getTrendingTasks(@Query() query: any) {
     const result = await this.ticketsService.getTrendingTasks(query);
     return successResponse(result, 'Trending tasks retrieved successfully');
+  }
+
+  @Get('trending-expenses')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getTrendingExpenses(@Query() query: any) {
+    const result = await this.ticketsService.getTrendingExpenses(query);
+    return successResponse(result, 'Trending expenses retrieved successfully');
+  }
+
+  @Post('ai-summary')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getAiSummary(@Body() body: any) {
+    const result = await this.ticketsService.generateAiSummary(body);
+    return successResponse(result, 'AI Summary generated successfully');
   }
 
   @Get()

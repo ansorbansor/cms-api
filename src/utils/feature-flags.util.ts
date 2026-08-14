@@ -9,13 +9,15 @@ const DEFAULT_FLAGS = {
   daily_reminder_time: '08:00',
   show_workload_menu: true,
   show_kpi_dashboard: true,
-  litellm_url: 'http://109.123.237.113:4000/v1/chat/completions',
-  litellm_model: 'vertex_ai/gemini-3.5-flash',
-  litellm_api_key: 'sk-aJfYrGgKsgjq0OTPtstj5w',
+  openai_base_url: 'https://api.openai.com/v1/chat/completions',
+  openai_model: 'gpt-4o',
+  openai_api_key: '',
   ai_system_message: 'You are a strict, objective Quality Assurance (QA) visual inspector. Your sole job is to evaluate whether the provided image(s) perfectly match the user\'s criteria. You must always reply in strict JSON format without any markdown wrappers.',
+  ai_summarization_prompt: 'Anda adalah seorang Business Analyst ahli di bidang infrastruktur proyek telekomunikasi. Tugas Anda adalah menganalisis data JSON tren penyelesaian tugas dan nilai persentase Purchase Order (PO) yang diberikan oleh pengguna. Anda HARUS memberikan jawaban dalam Bahasa Indonesia. Pahami kosakata industri berikut: ATP (Acceptance Test Procedure) dan RFS (Ready for Service). Berikan ringkasan profesional yang menyoroti pencapaian tertinggi, wawasan operasional, dan potensi pendapatan (revenue) berdasarkan persentase PO. SANGAT PENTING: Anda HANYA boleh menggunakan angka, nama tugas, dan persentase PO yang secara eksplisit terdapat di dalam data JSON yang diberikan. DILARANG KERAS mengarang, menebak, atau menyebutkan data yang tidak ada di dalam JSON.',
   fuel_efficiency_kml: 12,
   min_app_version: 14,
   office_locations: 'Biosron EJBN Office|-7.362382|112.711600\nBiosron Medan Office|3.5344794|98.6168001\nBiosron Palembang Office|-2.9391259|104.7977115\nBiosron West Java Office|-6.9005171|107.5835439\nXLSmart Jakarta|-6.1852275|106.8212323',
+  workload_job_categories: 'Microwave New Link, Microwave Dismantle, Microwave Swap, Microwave Swap Reroute',
 };
 
 export function readFeatureFlags(): Record<string, any> {

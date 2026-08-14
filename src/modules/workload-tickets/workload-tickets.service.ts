@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, HttpException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getManager, IsNull, In, Brackets } from 'typeorm';
 import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
@@ -41,7 +41,7 @@ export class WorkloadTicketsService {
     private whatsappService: WhatsappService,
   ) { }
 
-  async create(siteId: number, userId: number, poIds: number[] = [], templateId?: number): Promise<WorkloadTicket> {
+  async create(siteId: number, userId: number, poIds: number[] = [], templateId?: number, jobCategory?: string): Promise<WorkloadTicket> {
     const site = await this.siteRepo.findOne(siteId);
     if (!site) throw failedResponse(HttpStatus.BAD_REQUEST, 'Site not found');
 
@@ -58,6 +58,7 @@ export class WorkloadTicketsService {
       created_by: userId,
       status: 'Pending',
       ticket_id: ticket_id,
+      job_category: jobCategory,
       created_at: new Date()
     });
 
@@ -1443,11 +1444,148 @@ export class WorkloadTicketsService {
     });
   }
 
+  async getTrendingExpenses(query: any = {}): Promise<any> {
+    const period = query.period || 'monthly';
+    let truncString = 'month';
+    if (period === 'daily') truncString = 'day';
+    if (period === 'weekly') truncString = 'week';
+    if (period === 'yearly') truncString = 'year';
+
+    const startDate = query.startDate;
+    const endDate = query.endDate;
+    const customerId = query.customer_id;
+    const projectId = query.project_id;
+    const expenseMode = query.expenseMode || 'all';
+
+    let dateWhere = '';
+    const params: any[] = [];
+    let startDateIdx = -1;
+    let endDateIdx = -1;
+    
+    if (startDate) {
+       params.push(new Date(startDate));
+       startDateIdx = params.length;
+       dateWhere += ` AND updated_at >= $${startDateIdx}`;
+    }
+    if (endDate) {
+       const end = new Date(endDate);
+       end.setHours(23, 59, 59, 999);
+       params.push(end);
+       endDateIdx = params.length;
+       dateWhere += ` AND updated_at <= $${endDateIdx}`;
+    }
+
+    let customerWhere = '';
+    let customerIdx = -1;
+    if (customerId) {
+       params.push(customerId);
+       customerIdx = params.length;
+       customerWhere += ` AND customer_id = $${customerIdx}`;
+    }
+
+    let projectWhereSpk = '';
+    let excludeSpko = false;
+    
+    if (expenseMode === 'projectOnly') {
+       excludeSpko = true;
+       
+       let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;
+       
+       if (startDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at >= $${startDateIdx}`;
+       if (endDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at <= $${endDateIdx}`;
+       if (customerIdx !== -1) poSubqueryWhere += ` AND cust.name = (SELECT name FROM customers WHERE id = $${customerIdx})`;
+       
+       if (projectId) {
+          params.push(projectId);
+          const pIdx = params.length;
+          poSubqueryWhere += ` AND proj.name = (SELECT name FROM projects WHERE id = $${pIdx})`;
+       }
+       
+       if (query.taskNames) {
+          const namesArray = Array.isArray(query.taskNames) ? query.taskNames : query.taskNames.split(',');
+          if (namesArray.length > 0) {
+             const placeholders = namesArray.map(name => {
+                params.push(name);
+                return `$${params.length}`;
+             }).join(',');
+             poSubqueryWhere += ` AND task.name IN (${placeholders})`;
+          }
+       }
+
+       const poSubquery = `
+         SELECT DISTINCT po.id 
+         FROM purchase_orders po
+         INNER JOIN workload_tickets wt ON po.workload_ticket_id = wt.id
+         INNER JOIN milestones m ON m.workload_ticket_id = wt.id
+         INNER JOIN workload_tasks task ON task.milestone_id = m.id
+         LEFT JOIN customers cust ON po.customer_id = cust.id
+         LEFT JOIN projects proj ON po.project_id = proj.id
+         WHERE ${poSubqueryWhere}
+       `;
+
+       projectWhereSpk = ` AND po_id IN (${poSubquery})`;
+    }
+
+    const spkoQuery = excludeSpko ? '' : `UNION ALL SELECT updated_at, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
+
+    const rawQuery = `
+      SELECT DATE_TRUNC('${truncString}', updated_at) as date, SUM(cash_advance) as total_expense
+      FROM (
+        SELECT updated_at, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}
+        ${spkoQuery}
+      ) as combined_expenses
+      WHERE 1=1 ${dateWhere} ${customerWhere}
+      GROUP BY DATE_TRUNC('${truncString}', updated_at)
+      ORDER BY date ASC
+    `;
+
+    // getManager is already imported from typeorm at the top of the file
+    const result = await getManager().query(rawQuery, params);
+    
+    return result.map(r => ({
+      date: r.date,
+      expense: Number(r.total_expense)
+    }));
+  }
+
   private async sendWhatsappNotification(phoneNumber: string, message: string) {
     try {
       await this.whatsappService.sendMessage(phoneNumber, message);
     } catch (e) {
       console.error('Failed to send Whatsapp', e);
+    }
+  }
+
+  async generateAiSummary(payload: any) {
+    const { getFlag } = require('../../utils/feature-flags.util');
+    const url = getFlag('openai_base_url');
+    const model = getFlag('openai_model');
+    const apiKey = getFlag('openai_api_key');
+    const systemMessage = getFlag('ai_summarization_prompt');
+
+    try {
+      const dataPayload = {
+        model: model,
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: JSON.stringify(payload) }
+        ],
+      };
+
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      console.log('\n================ AI PAYLOAD DEBUG ================');
+      console.log(JSON.stringify(dataPayload, null, 2));
+      console.log('==================================================\n');
+
+      const response = await axios.post(url, dataPayload, { headers, timeout: 60000 });
+      return response.data.choices[0].message.content;
+    } catch (e) {
+      console.error('OpenAI API Error:', e.response?.data || e.message);
+      throw new HttpException('AI Summarization failed', HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 }

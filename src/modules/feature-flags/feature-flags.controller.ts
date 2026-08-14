@@ -19,7 +19,8 @@ export class FeatureFlagsController {
     @Patch()
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
-    async updateFlags(@Body() body: Record<string, boolean>, @Request() req) {
+    async updateFlags(@Request() req) {
+        const body = req.body;
         const user = await this.usersService.findOneFull({ id: req.user.id });
         const isSuperAdmin =
             user?.employeePosition?.grant_all_access === true ||

@@ -361,11 +361,11 @@ export class TakeDataService {
              throw new HttpException('Failed to process images for AI', HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // Call LiteLLM
+        // Call OpenAI API
         const { getFlag } = require('../../utils/feature-flags.util');
-        const url = getFlag('litellm_url');
-        const model = getFlag('litellm_model');
-        const apiKey = getFlag('litellm_api_key');
+        const url = getFlag('openai_base_url');
+        const model = getFlag('openai_model');
+        const apiKey = getFlag('openai_api_key');
         const systemMessage = getFlag('ai_system_message');
 
         const axios = require('axios');
@@ -421,7 +421,7 @@ export class TakeDataService {
                  aiResult.remarks = parsed.remarks || 'Invalid AI response format';
             }
         } catch(e) {
-            console.error('LiteLLM Error:', e.response?.data || e.message);
+            console.error('OpenAI API Error:', e.response?.data || e.message);
             if (e.response && e.response.status === 429) {
                  throw new HttpException('AI Rate limit reached', HttpStatus.TOO_MANY_REQUESTS);
             }

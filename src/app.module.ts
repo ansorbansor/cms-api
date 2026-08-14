@@ -51,6 +51,7 @@ import { WorkloadTicketsModule } from './modules/workload-tickets/workload-ticke
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module';
 import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-presets.module';
+import { JobCategoriesModule } from './modules/job-categories/job-categories.module';
 import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
 import { DistanceTrackingModule } from './modules/distance-tracking/distance-tracking.module';
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
@@ -122,6 +123,7 @@ import { AppVersionMiddleware } from './middlewares/app-version.middleware';
     WhatsappModule,
     FeatureFlagsModule,
     TaskNamePresetsModule,
+    JobCategoriesModule,
     DocumentStorageModule,
     DistanceTrackingModule,
   ],

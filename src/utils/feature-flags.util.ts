@@ -17,7 +17,6 @@ const DEFAULT_FLAGS = {
   fuel_efficiency_kml: 12,
   min_app_version: 14,
   office_locations: 'Biosron EJBN Office|-7.362382|112.711600\nBiosron Medan Office|3.5344794|98.6168001\nBiosron Palembang Office|-2.9391259|104.7977115\nBiosron West Java Office|-6.9005171|107.5835439\nXLSmart Jakarta|-6.1852275|106.8212323',
-  workload_job_categories: 'Microwave New Link, Microwave Dismantle, Microwave Swap, Microwave Swap Reroute',
 };
 
 export function readFeatureFlags(): Record<string, any> {

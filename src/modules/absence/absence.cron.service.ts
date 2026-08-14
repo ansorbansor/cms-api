@@ -76,6 +76,14 @@ export class AbsenceCronService {
         for (const u of chunk) {
           const region = u.gm_region ? u.gm_region : 'Unknown Region';
           message += `👤 *${u.name}* - ${region}\n`;
+
+          // Send individual reminder
+          if (u.phone) {
+            const personalMessage = `⚠️ *ATTENDANCE REMINDER* ⚠️\n\nHi ${u.name},\n\nYou have not yet recorded your attendance for today. Please open the SIMPRO app and clock in immediately.\n\n📊 *Monitor Team Progress:*\nhttps://smarteye.ptbiosron.com/kpi-karyawan/daily-progress\n\n📱 *Download SIMPRO App:*\nhttps://play.google.com/store/apps/details?id=biosron.simpro.apps\n\n📞 *Need Assistance?*\nContact Admin: https://wa.me/6281221691180`;
+            await this.whatsappService.sendMessage(u.phone, personalMessage);
+            // optional delay to prevent rate limit for individual messages
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
         }
 
         if (i + CHUNK_SIZE >= usersNotAbsence.length) {

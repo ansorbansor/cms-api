@@ -611,9 +611,56 @@ export class ExportService {
     }
 
     if (status) {
-      query.andWhere('spk.status = :status', {
-        status: status,
-      });
+      const stat = Number(status);
+      if (stat == SPKStatus.APPROVED) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where(
+              new Brackets((qb2) => {
+                qb2
+                  .where('spk.status = :status', {
+                    status: SPKStatus.APPROVED,
+                  })
+                  .andWhere('spk.is_over_budget = false');
+              }),
+            ).orWhere('spk.status = :status3', {
+              status3: SPKStatus.APPROVED_OVER_BUDGET,
+            });
+          }),
+        );
+      } else if (stat == SPKStatus.WAITING_APPROVAL_PM) {
+        query.andWhere('spk.status = :status', {
+          status: SPKStatus.APPROVED,
+        });
+        query.andWhere('spk.is_over_budget = true');
+      } else if (stat == SPKStatus.PAID) {
+        query.andWhere('spk.status = :status', {
+          status: SPKStatus.PAID,
+        });
+        query.andWhere('cost_evidences.id IS NOT NULL');
+      } else if (stat == SPKStatus.PAID_NEED_EVIDENCE) {
+        query.andWhere('spk.status = :status', {
+          status: SPKStatus.PAID,
+        });
+        query.andWhere('cost_evidences.id IS NULL');
+      } else if (
+        stat == SPKStatus.CREATED ||
+        stat == SPKStatus.CREATED_OVER_BUDGET
+      ) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('spk.status = :status', {
+              status: SPKStatus.CREATED,
+            }).orWhere('spk.status = :status3', {
+              status3: SPKStatus.CREATED_OVER_BUDGET,
+            });
+          }),
+        );
+      } else {
+        query.andWhere('spk.status = :status', {
+          status: stat,
+        });
+      }
     }
 
     if (regions) {

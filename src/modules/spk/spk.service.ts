@@ -734,8 +734,10 @@ export class SPKService {
     }
 
     if (paginationOptions.end_date) {
+      const eDate = String(paginationOptions.end_date);
+      const parsedEndDate = eDate.length === 10 ? `${eDate} 23:59:59` : eDate;
       data.andWhere('spk.created_at <= :end_date', {
-        end_date: `${paginationOptions.end_date}`,
+        end_date: parsedEndDate,
       });
     }
 

@@ -131,6 +131,9 @@ export class ExportService {
           payload.endDate,
           payload.search,
           payload.status,
+          payload.regions,
+          payload.projects,
+          payload.payToName,
         ) as string;
       } else if (job.type === 'SPK_OPERATIONAL') {
         filePath = await this._generateSPKOperationalFile(
@@ -476,11 +479,14 @@ export class ExportService {
     endDate: string,
     search: string,
     status: string,
+    regions: string,
+    projects: string,
+    payToName: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'SPK';
-    job.payload = JSON.stringify({ ip, startDate, endDate, search, status });
+    job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regions, projects, payToName });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -496,6 +502,9 @@ export class ExportService {
     endDate: string,
     search: string,
     status: string,
+    regions: string,
+    projects: string,
+    payToName: string,
   ) {
     const query = this.spkRepository
       .createQueryBuilder('spk')
@@ -607,12 +616,38 @@ export class ExportService {
       });
     }
 
+    if (regions) {
+      const regionIds = regions.split(',').map(id => id.trim()).filter(Boolean);
+      if (regionIds.length > 0) {
+        query.andWhere('region.id IN (:...regionIds)', { regionIds });
+      }
+    }
+
+    if (projects) {
+      const pNames = projects.split(',').map(n => n.trim()).filter(Boolean);
+      if (pNames.length > 0) {
+        query.andWhere('project.name IN (:...pNames)', { pNames });
+      }
+    }
+
+    if (payToName) {
+      const names = payToName.split(',').map(n => n.trim()).filter(Boolean);
+      if (names.length === 1) {
+        query.andWhere('pay_to_user.name ILIKE :payToName', {
+          payToName: `%${names[0]}%`,
+        });
+      } else if (names.length > 1) {
+        query.andWhere('pay_to_user.name IN (:...payToNames)', { payToNames: names });
+      }
+    }
+
     if (startDate && endDate) {
+      const parsedEndDate = endDate.length === 10 ? `${endDate} 23:59:59` : endDate;
       query.andWhere(`spk.created_at >= :startDate`, {
         startDate: startDate,
       });
       query.andWhere(`spk.created_at <= :endDate`, {
-        endDate: endDate,
+        endDate: parsedEndDate,
       });
     }
 

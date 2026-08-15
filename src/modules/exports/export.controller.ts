@@ -150,6 +150,9 @@ export class ExportController {
     @Query('end_date') endDate: string,
     @Query('search') search: string,
     @Query('status') status: string,
+    @Query('regions') regions: string,
+    @Query('projects') projects: string,
+    @Query('pay_to_name') payToName: string,
   ) {
     try {
       const job = await this.exportService.exportSPK(
@@ -159,6 +162,9 @@ export class ExportController {
         endDate,
         search,
         status,
+        regions,
+        projects,
+        payToName,
       );
 
       return res.status(HttpStatus.OK).json({

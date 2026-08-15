@@ -1449,40 +1449,46 @@ export class SPKService {
     const currentUser = await this.userService.findOneFull({ id: user.id });
     const roleCode = currentUser.employeePosition?.code?.toLowerCase();
 
-    const queryBuilder = this.spkRepository.createQueryBuilder('spk').whereInIds(ids).leftJoinAndSelect('spk.po', 'po');
+    // Use a simpler query builder first to fetch the selected items, then filter them in code 
+    // to avoid TypeORM parameter binding bugs with whereInIds + andWhere.
+    const itemsToApproveAll = await this.spkRepository.createQueryBuilder('spk')
+      .where('spk.id IN (:...ids)', { ids })
+      .leftJoinAndSelect('spk.po', 'po')
+      .getMany();
 
-    let updatePayload = {};
-
-    // Apply filtering and define the update action based on the user's role
-    if (roleCode === RoleEnum.RPM) {
-      // An RPM approves items that are newly created
-      queryBuilder.andWhere('spk.status IN (:...statuses)', {
-        statuses: [SPKStatus.CREATED, SPKStatus.CREATED_OVER_BUDGET]
-      });
-      updatePayload = {
-        status: SPKStatus.APPROVED,
-        approved_by: user.id
-      };
-    } else if (roleCode === RoleEnum.PM) {
-      // A PM approves items that are already approved by an RPM but are over budget
-      queryBuilder.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
-      queryBuilder.andWhere('spk.is_over_budget = true');
-      updatePayload = {
-        status: SPKStatus.APPROVED_OVER_BUDGET,
-        approved_over_budget_by: user.id
-      };
-    } else {
-      // Block any other roles from using this endpoint
-      throw failedResponse(HttpStatus.FORBIDDEN, 'Your role cannot perform this action.');
+    if (itemsToApproveAll.length === 0) {
+      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'Selected items not found in database.');
     }
 
-    // Find which of the selected items are valid for this user to approve
-    const itemsToApprove = await queryBuilder.getMany();
-    const validIds = itemsToApprove.map(item => item.id);
+    const validItems = [];
+    let isPMApproval = false;
+    let isRPMApproval = false;
 
-    if (validIds.length === 0) {
-      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status.');
+    for (const item of itemsToApproveAll) {
+      const isRPMTarget = item.status === SPKStatus.CREATED || item.status === SPKStatus.CREATED_OVER_BUDGET;
+      const isPMTarget = item.status === SPKStatus.APPROVED && item.is_over_budget === true;
+
+      if ((roleCode === RoleEnum.RPM || roleCode === RoleEnum.SUPERADMIN) && isRPMTarget) {
+        validItems.push(item);
+        isRPMApproval = true;
+      } else if ((roleCode === RoleEnum.PM || roleCode === RoleEnum.SUPERADMIN) && isPMTarget) {
+        validItems.push(item);
+        isPMApproval = true;
+      }
     }
+
+    if (validItems.length === 0) {
+      throw failedResponse(HttpStatus.UNPROCESSABLE_ENTITY, 'None of the selected items can be approved at their current status by your role.');
+    }
+
+    if (isRPMApproval && isPMApproval) {
+      throw failedResponse(HttpStatus.BAD_REQUEST, 'Cannot mix items that require RPM approval and PM approval in a single batch.');
+    }
+
+    const validIds = validItems.map(item => item.id);
+    const updatePayload = isPMApproval
+      ? { status: SPKStatus.APPROVED_OVER_BUDGET, approved_over_budget_by: user.id }
+      : { status: SPKStatus.APPROVED, approved_by: user.id };
 
     const requireWorkloadTicket = getFlag('require_workload_ticket');
     const cutoffDate = new Date('2026-06-28T00:00:00Z');
@@ -1492,7 +1498,7 @@ export class SPKService {
     await queryRunner.startTransaction();
 
     try {
-      for (const item of itemsToApprove) {
+      for (const item of validItems) {
         const isLegacySpk = item.created_at && new Date(item.created_at) < cutoffDate;
         if (item.po && requireWorkloadTicket && !isLegacySpk) {
           if (!item.po.workload_ticket_id && !workload_ticket_id) {

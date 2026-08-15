@@ -1348,7 +1348,7 @@ export class SPKService {
 
     if (
       totalSPKAmount <= maxBudgetBySite &&
-      existingSPK.is_over_budget === false
+      !existingSPK.is_over_budget
     ) {
       throw failedResponse(HttpStatus.BAD_REQUEST, `SPK belum over budget`);
     }
@@ -1447,7 +1447,10 @@ export class SPKService {
     }
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
-    const roleCode = currentUser.employeePosition?.code?.toLowerCase();
+    const menus = currentUser.employeePosition?.roleAccess?.map(ra => ra.menu?.name) || [];
+    const isSuperadmin = currentUser.employeePosition?.grant_all_access === true;
+    const hasRPMMenu = menus.includes('spk_approve');
+    const hasPMMenu = menus.includes('spk_over_budget');
 
     // Use a simpler query builder first to fetch the selected items, then filter them in code 
     // to avoid TypeORM parameter binding bugs with whereInIds + andWhere.
@@ -1466,12 +1469,12 @@ export class SPKService {
 
     for (const item of itemsToApproveAll) {
       const isRPMTarget = item.status === SPKStatus.CREATED || item.status === SPKStatus.CREATED_OVER_BUDGET;
-      const isPMTarget = item.status === SPKStatus.APPROVED && item.is_over_budget === true;
+      const isPMTarget = item.status === SPKStatus.APPROVED && Boolean(item.is_over_budget) === true;
 
-      if ((roleCode === RoleEnum.RPM || roleCode === RoleEnum.SUPERADMIN) && isRPMTarget) {
+      if ((hasRPMMenu || isSuperadmin) && isRPMTarget) {
         validItems.push(item);
         isRPMApproval = true;
-      } else if ((roleCode === RoleEnum.PM || roleCode === RoleEnum.SUPERADMIN) && isPMTarget) {
+      } else if ((hasPMMenu || isSuperadmin) && isPMTarget) {
         validItems.push(item);
         isPMApproval = true;
       }

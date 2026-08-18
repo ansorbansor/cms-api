@@ -1522,8 +1522,11 @@ export class WorkloadTicketsService {
 
     let projectWhereSpk = '';
     let excludeSpko = false;
+    let excludeSpk = false;
     
-    if (expenseMode === 'projectOnly' || projectId || jobCategory || query.taskNames) {
+    if (expenseMode === 'indirectOnly') {
+       excludeSpk = true;
+    } else if (expenseMode === 'projectOnly' || projectId || jobCategory || query.taskNames) {
        excludeSpko = true;
        
        let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;
@@ -1575,13 +1578,24 @@ export class WorkloadTicketsService {
        projectWhereSpk = ` AND po_id IN (${poSubquery})`;
     }
 
-    const spkoQuery = excludeSpko ? '' : `UNION ALL SELECT updated_at, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
+    const spkoQuery = excludeSpko ? '' : `SELECT updated_at, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
+    const spkQuery = excludeSpk ? '' : `SELECT updated_at, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}`;
+
+    let combinedQuery = '';
+    if (!excludeSpk && !excludeSpko) {
+       combinedQuery = `${spkQuery} UNION ALL ${spkoQuery}`;
+    } else if (!excludeSpk) {
+       combinedQuery = spkQuery;
+    } else if (!excludeSpko) {
+       combinedQuery = spkoQuery;
+    } else {
+       return [];
+    }
 
     const rawQuery = `
       SELECT DATE_TRUNC('${truncString}', updated_at) as date, SUM(cash_advance) as total_expense
       FROM (
-        SELECT updated_at, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}
-        ${spkoQuery}
+        ${combinedQuery}
       ) as combined_expenses
       WHERE 1=1 ${dateWhere} ${customerWhere}
       GROUP BY DATE_TRUNC('${truncString}', updated_at)

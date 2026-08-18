@@ -63,6 +63,18 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Patch(':id/job-category')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async updateJobCategory(@Param('id') id: string, @Body() body: { jobCategory: string }) {
+    if (body.jobCategory === undefined) {
+      throw new HttpException('Job category is required', HttpStatus.BAD_REQUEST);
+    }
+    return successResponse(
+      await this.ticketsService.updateJobCategory(+id, body.jobCategory),
+      'Job category updated successfully'
+    );
+  }
+
   @Post(':id/purchase-orders')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }) {

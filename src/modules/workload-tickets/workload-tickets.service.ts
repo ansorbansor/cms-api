@@ -102,6 +102,15 @@ export class WorkloadTicketsService {
     });
   }
 
+  async updateJobCategory(id: number, jobCategory: string): Promise<WorkloadTicket> {
+    const ticket = await this.ticketRepo.findOne({ where: { id } });
+    if (!ticket) {
+      throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');
+    }
+    ticket.job_category = jobCategory;
+    return this.ticketRepo.save(ticket);
+  }
+
   async addPurchaseOrders(ticketId: number, poIds: number[]): Promise<void> {
     const ticket = await this.ticketRepo.findOne(ticketId);
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');

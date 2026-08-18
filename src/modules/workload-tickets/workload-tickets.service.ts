@@ -144,6 +144,7 @@ export class WorkloadTicketsService {
     const search = query.search || '';
     const customer_id = query.customer_id;
     const project_id = query.project_id;
+    const job_category = query.job_category;
 
     const qb = this.ticketRepo.createQueryBuilder('wt')
       .leftJoinAndSelect('wt.site', 'site')
@@ -177,6 +178,10 @@ export class WorkloadTicketsService {
         .andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
     }
 
+    if (job_category) {
+      qb.andWhere('wt.job_category = :jobCategory', { jobCategory: job_category });
+    }
+
     const [data, total] = await qb.getManyAndCount();
 
     if (data && data.length > 0) {
@@ -200,6 +205,7 @@ export class WorkloadTicketsService {
     const search = query.search || '';
     const customer_id = query.customer_id;
     const project_id = query.project_id;
+    const job_category = query.job_category;
 
     const buildBaseQb = (alias: string) => {
       const qb = this.ticketRepo.createQueryBuilder(alias)
@@ -216,6 +222,9 @@ export class WorkloadTicketsService {
       }
       if (project_id) {
         qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
+      }
+      if (job_category) {
+        qb.andWhere(`${alias}.job_category = :jobCategory`, { jobCategory: job_category });
       }
       return qb;
     };
@@ -1404,6 +1413,7 @@ export class WorkloadTicketsService {
     const endDate = query.endDate;
     const customerId = query.customer_id;
     const projectId = query.project_id;
+    const jobCategory = query.job_category;
 
     if (customerId) {
       qb.andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId });
@@ -1411,6 +1421,10 @@ export class WorkloadTicketsService {
 
     if (projectId) {
       qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId });
+    }
+    
+    if (jobCategory) {
+      qb.andWhere('workload_ticket.job_category = :jobCategory', { jobCategory });
     }
 
     if (taskNames) {
@@ -1464,6 +1478,7 @@ export class WorkloadTicketsService {
     const endDate = query.endDate;
     const customerId = query.customer_id;
     const projectId = query.project_id;
+    const jobCategory = query.job_category;
     const expenseMode = query.expenseMode || 'all';
 
     let dateWhere = '';
@@ -1508,6 +1523,12 @@ export class WorkloadTicketsService {
           params.push(projectId);
           const pIdx = params.length;
           poSubqueryWhere += ` AND proj.name = (SELECT name FROM projects WHERE id = $${pIdx})`;
+       }
+       
+       if (jobCategory) {
+          params.push(jobCategory);
+          const jIdx = params.length;
+          poSubqueryWhere += ` AND wt.job_category = $${jIdx}`;
        }
        
        if (query.taskNames) {

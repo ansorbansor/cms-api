@@ -1510,7 +1510,7 @@ export class WorkloadTicketsService {
     let projectWhereSpk = '';
     let excludeSpko = false;
     
-    if (expenseMode === 'projectOnly') {
+    if (expenseMode === 'projectOnly' || projectId || jobCategory || query.taskNames) {
        excludeSpko = true;
        
        let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;

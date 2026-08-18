@@ -169,17 +169,20 @@ export class WorkloadTicketsService {
     }
 
     if (customer_id) {
+      const customers = customer_id.split(',');
       qb.andWhere('purchase_orders.id IS NOT NULL')
-        .andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId: customer_id });
+        .andWhere('customer.name IN (SELECT name FROM customers WHERE id IN (:...customers))', { customers });
     }
 
     if (project_id) {
+      const projects = project_id.split(',');
       qb.andWhere('purchase_orders.id IS NOT NULL')
-        .andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
+        .andWhere('project.name IN (SELECT name FROM projects WHERE id IN (:...projects))', { projects });
     }
 
     if (job_category) {
-      qb.andWhere('wt.job_category = :jobCategory', { jobCategory: job_category });
+      const categories = job_category.split(',');
+      qb.andWhere('wt.job_category IN (:...categories)', { categories });
     }
 
     const [data, total] = await qb.getManyAndCount();
@@ -218,13 +221,16 @@ export class WorkloadTicketsService {
         qb.andWhere(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
       }
       if (customer_id) {
-        qb.andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId: customer_id });
+        const customers = customer_id.split(',');
+        qb.andWhere('customer.name IN (SELECT name FROM customers WHERE id IN (:...customers))', { customers });
       }
       if (project_id) {
-        qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId: project_id });
+        const projects = project_id.split(',');
+        qb.andWhere('project.name IN (SELECT name FROM projects WHERE id IN (:...projects))', { projects });
       }
       if (job_category) {
-        qb.andWhere(`${alias}.job_category = :jobCategory`, { jobCategory: job_category });
+        const categories = job_category.split(',');
+        qb.andWhere(`${alias}.job_category IN (:...categories)`, { categories });
       }
       return qb;
     };
@@ -1416,15 +1422,18 @@ export class WorkloadTicketsService {
     const jobCategory = query.job_category;
 
     if (customerId) {
-      qb.andWhere('customer.name = (SELECT name FROM customers WHERE id = :customerId)', { customerId });
+      const customers = customerId.split(',');
+      qb.andWhere('customer.name IN (SELECT name FROM customers WHERE id IN (:...customers))', { customers });
     }
 
     if (projectId) {
-      qb.andWhere('project.name = (SELECT name FROM projects WHERE id = :projectId)', { projectId });
+      const projects = projectId.split(',');
+      qb.andWhere('project.name IN (SELECT name FROM projects WHERE id IN (:...projects))', { projects });
     }
     
     if (jobCategory) {
-      qb.andWhere('workload_ticket.job_category = :jobCategory', { jobCategory });
+      const categories = jobCategory.split(',');
+      qb.andWhere('workload_ticket.job_category IN (:...categories)', { categories });
     }
 
     if (taskNames) {
@@ -1500,11 +1509,15 @@ export class WorkloadTicketsService {
     }
 
     let customerWhere = '';
-    let customerIdx = -1;
+    let customerParamsStr = '';
     if (customerId) {
-       params.push(customerId);
-       customerIdx = params.length;
-       customerWhere += ` AND customer_id = $${customerIdx}`;
+       const cIds = customerId.split(',');
+       const cParams = cIds.map(c => {
+         params.push(c);
+         return `$${params.length}`;
+       }).join(',');
+       customerWhere += ` AND customer_id IN (${cParams})`;
+       customerParamsStr = cParams;
     }
 
     let projectWhereSpk = '';
@@ -1517,18 +1530,24 @@ export class WorkloadTicketsService {
        
        if (startDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at >= $${startDateIdx}`;
        if (endDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at <= $${endDateIdx}`;
-       if (customerIdx !== -1) poSubqueryWhere += ` AND cust.name = (SELECT name FROM customers WHERE id = $${customerIdx})`;
+       if (customerParamsStr) poSubqueryWhere += ` AND cust.name IN (SELECT name FROM customers WHERE id IN (${customerParamsStr}))`;
        
        if (projectId) {
-          params.push(projectId);
-          const pIdx = params.length;
-          poSubqueryWhere += ` AND proj.name = (SELECT name FROM projects WHERE id = $${pIdx})`;
+          const pIds = projectId.split(',');
+          const pParams = pIds.map(p => {
+             params.push(p);
+             return `$${params.length}`;
+          }).join(',');
+          poSubqueryWhere += ` AND proj.name IN (SELECT name FROM projects WHERE id IN (${pParams}))`;
        }
        
        if (jobCategory) {
-          params.push(jobCategory);
-          const jIdx = params.length;
-          poSubqueryWhere += ` AND wt.job_category = $${jIdx}`;
+          const jIds = jobCategory.split(',');
+          const jParams = jIds.map(j => {
+             params.push(j);
+             return `$${params.length}`;
+          }).join(',');
+          poSubqueryWhere += ` AND wt.job_category IN (${jParams})`;
        }
        
        if (query.taskNames) {

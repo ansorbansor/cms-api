@@ -67,7 +67,7 @@ export class WorkloadTicketsService {
     if (poIds && poIds.length > 0) {
       const pos = await this.poRepo.findByIds(poIds);
       for (const po of pos) {
-        if (po.site_id === siteId) {
+        if (Number(po.site_id) === Number(siteId)) {
           po.workload_ticket_id = savedTicket.id as any;
           if (!po.actual_work_date) {
             po.actual_work_date = new Date();

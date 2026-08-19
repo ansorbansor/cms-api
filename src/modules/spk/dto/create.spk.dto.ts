@@ -107,4 +107,16 @@ export class CreateSPKDTO {
   created_by: number;
   approved_by: number;
   is_over_budget: boolean;
+
+  @ApiProperty({ example: 1 })
+  @IsOptional()
+  workload_template_id: number;
+
+  @ApiProperty({ example: 'PM' })
+  @IsOptional()
+  workload_job_category: string;
+
+  @ApiProperty({ example: true })
+  @IsOptional()
+  create_workload_ticket: boolean | string;
 }

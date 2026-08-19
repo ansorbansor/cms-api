@@ -24,6 +24,7 @@ import { log } from 'console';
 import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
 import { SPKSubCategoryResource } from './resources/spk-subcategory.resources';
 import { getFlag } from 'src/utils/feature-flags.util';
+import { WorkloadTicketsService } from '../workload-tickets/workload-tickets.service';
 
 @Injectable()
 export class SPKService {
@@ -41,6 +42,7 @@ export class SPKService {
     private activityLogService: ActivityLogService,
     private fileService: FilesService,
     private userService: UsersService,
+    private workloadTicketsService: WorkloadTicketsService,
   ) { }
 
   async create(
@@ -68,6 +70,21 @@ export class SPKService {
         HttpStatus.UNPROCESSABLE_ENTITY,
         'Terdapat lebih dari 2 BOP aktif, segera selesaikan BOP tersebut',
       );
+    }
+
+    const requireWorkloadTicket = getFlag('require_workload_ticket');
+    if (requireWorkloadTicket) {
+      if (
+        !createSPKDTO.create_workload_ticket ||
+        String(createSPKDTO.create_workload_ticket) !== 'true' ||
+        !createSPKDTO.workload_template_id ||
+        !createSPKDTO.workload_job_category
+      ) {
+        throw failedResponse(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          'Wajib Membuat Workload Ticket sebelum Membuat BOP',
+        );
+      }
     }
 
     const distanceToSitePhoto = files.find((e) => {
@@ -210,6 +227,22 @@ export class SPKService {
       description: `Melakukan Penambahan BOP dengan nomor ${spk.spk_number}`,
       ip: ip,
     });
+
+    if (createSPKDTO.create_workload_ticket || String(createSPKDTO.create_workload_ticket) === 'true') {
+      const pos = await getManager().query(
+        "SELECT id FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
+        [createSPKDTO.site_id],
+      );
+      const poIds = pos.map((p) => p.id);
+
+      await this.workloadTicketsService.create(
+        createSPKDTO.site_id,
+        user_id,
+        poIds,
+        createSPKDTO.workload_template_id ? Number(createSPKDTO.workload_template_id) : undefined,
+        createSPKDTO.workload_job_category,
+      );
+    }
 
     return spk;
   }
@@ -408,6 +441,7 @@ export class SPKService {
       .createQueryBuilder('spk')
       .withDeleted()
       .leftJoinAndSelect('spk.po', 'po', 'po.deleted_at IS NULL')
+      .leftJoinAndSelect('po.workload_ticket', 'workload_ticket', 'workload_ticket.deleted_at IS NULL')
       .leftJoinAndSelect('po.project', 'project', 'project.deleted_at IS NULL')
       .leftJoinAndSelect('po.customer', 'customer')
       .leftJoinAndSelect('spk.customer', 'spkCustomer')

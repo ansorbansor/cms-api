@@ -13,6 +13,7 @@ import { SPKSubCategory } from 'src/entities/spk-subcategory.entity';
 import { Site } from 'src/entities/site.entity';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { SpkGoogleSheetCronService } from './spk-googlesheet.cron.service';
+import { WorkloadTicketsModule } from '../workload-tickets/workload-tickets.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SpkGoogleSheetCronService } from './spk-googlesheet.cron.service';
     ]),
     ActivityLogModule,
     UsersModule,
+    WorkloadTicketsModule,
   ],
   controllers: [SPKController],
   providers: [SPKService, SpkGoogleSheetCronService],

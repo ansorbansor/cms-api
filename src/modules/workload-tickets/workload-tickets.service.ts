@@ -1488,7 +1488,7 @@ export class WorkloadTicketsService {
     const customerId = query.customer_id;
     const projectId = query.project_id;
     const jobCategory = query.job_category;
-    const expenseMode = query.expenseMode || 'all';
+    const expenseMode = query.expenseMode || 'allFiltered';
 
     let dateWhere = '';
     const params: any[] = [];
@@ -1510,7 +1510,7 @@ export class WorkloadTicketsService {
 
     let customerWhere = '';
     let customerParamsStr = '';
-    if (customerId) {
+    if (customerId && expenseMode !== 'allUnfiltered') {
        const cIds = customerId.split(',');
        const cParams = cIds.map(c => {
          params.push(c);
@@ -1530,7 +1530,7 @@ export class WorkloadTicketsService {
        excludeSpko = true;
     }
     
-    if (!excludeSpk && (projectId || jobCategory || query.taskNames)) {
+    if (!excludeSpk && expenseMode !== 'allUnfiltered' && (projectId || jobCategory || query.taskNames)) {
        let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;
        
        if (customerParamsStr) poSubqueryWhere += ` AND cust.name IN (SELECT name FROM customers WHERE id IN (${customerParamsStr}))`;

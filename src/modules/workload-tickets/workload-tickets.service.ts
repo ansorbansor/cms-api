@@ -1498,14 +1498,14 @@ export class WorkloadTicketsService {
     if (startDate) {
        params.push(new Date(startDate));
        startDateIdx = params.length;
-       dateWhere += ` AND updated_at >= $${startDateIdx}`;
+       dateWhere += ` AND paid_date >= $${startDateIdx}`;
     }
     if (endDate) {
        const end = new Date(endDate);
        end.setHours(23, 59, 59, 999);
        params.push(end);
        endDateIdx = params.length;
-       dateWhere += ` AND updated_at <= $${endDateIdx}`;
+       dateWhere += ` AND paid_date <= $${endDateIdx}`;
     }
 
     let customerWhere = '';
@@ -1533,8 +1533,6 @@ export class WorkloadTicketsService {
     if (!excludeSpk && (projectId || jobCategory || query.taskNames)) {
        let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;
        
-       if (startDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at >= $${startDateIdx}`;
-       if (endDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at <= $${endDateIdx}`;
        if (customerParamsStr) poSubqueryWhere += ` AND cust.name IN (SELECT name FROM customers WHERE id IN (${customerParamsStr}))`;
        
        if (projectId) {
@@ -1580,8 +1578,8 @@ export class WorkloadTicketsService {
        projectWhereSpk = ` AND po_id IN (${poSubquery})`;
     }
 
-    const spkoQuery = excludeSpko ? '' : `SELECT updated_at, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
-    const spkQuery = excludeSpk ? '' : `SELECT updated_at, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}`;
+    const spkoQuery = excludeSpko ? '' : `SELECT paid_date, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
+    const spkQuery = excludeSpk ? '' : `SELECT paid_date, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}`;
 
     let combinedQuery = '';
     if (!excludeSpk && !excludeSpko) {
@@ -1595,12 +1593,12 @@ export class WorkloadTicketsService {
     }
 
     const rawQuery = `
-      SELECT DATE_TRUNC('${truncString}', updated_at) as date, SUM(cash_advance) as total_expense
+      SELECT DATE_TRUNC('${truncString}', paid_date) as date, SUM(cash_advance) as total_expense
       FROM (
         ${combinedQuery}
       ) as combined_expenses
-      WHERE 1=1 ${dateWhere} ${customerWhere}
-      GROUP BY DATE_TRUNC('${truncString}', updated_at)
+      WHERE 1=1 ${dateWhere} ${customerWhere} AND paid_date IS NOT NULL
+      GROUP BY DATE_TRUNC('${truncString}', paid_date)
       ORDER BY date ASC
     `;
 

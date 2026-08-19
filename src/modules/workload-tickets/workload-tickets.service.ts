@@ -1526,9 +1526,11 @@ export class WorkloadTicketsService {
     
     if (expenseMode === 'indirectOnly') {
        excludeSpk = true;
-    } else if (expenseMode === 'projectOnly' || projectId || jobCategory || query.taskNames) {
+    } else if (expenseMode === 'projectOnly') {
        excludeSpko = true;
-       
+    }
+    
+    if (!excludeSpk && (projectId || jobCategory || query.taskNames)) {
        let poSubqueryWhere = `task.status = 'Completed' AND wt.is_template = false AND task.updated_at IS NOT NULL`;
        
        if (startDateIdx !== -1) poSubqueryWhere += ` AND task.updated_at >= $${startDateIdx}`;

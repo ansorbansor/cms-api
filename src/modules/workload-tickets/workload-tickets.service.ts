@@ -1578,8 +1578,8 @@ export class WorkloadTicketsService {
        projectWhereSpk = ` AND po_id IN (${poSubquery})`;
     }
 
-    const spkoQuery = excludeSpko ? '' : `SELECT paid_date, cash_advance, customer_id FROM spk_operationals WHERE status IN (4, 5, 44)`;
-    const spkQuery = excludeSpk ? '' : `SELECT paid_date, cash_advance, customer_id FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}`;
+    const spkoQuery = excludeSpko ? '' : `SELECT paid_date, cash_advance, customer_id, 'spko' as source FROM spk_operationals WHERE status IN (4, 5, 44)`;
+    const spkQuery = excludeSpk ? '' : `SELECT paid_date, cash_advance, customer_id, 'spk' as source FROM spk WHERE status IN (4, 5, 44) ${projectWhereSpk}`;
 
     let combinedQuery = '';
     if (!excludeSpk && !excludeSpko) {
@@ -1593,7 +1593,10 @@ export class WorkloadTicketsService {
     }
 
     const rawQuery = `
-      SELECT DATE_TRUNC('${truncString}', paid_date) as date, SUM(cash_advance) as total_expense
+      SELECT DATE_TRUNC('${truncString}', paid_date) as date, 
+             SUM(cash_advance) as total_expense,
+             SUM(CASE WHEN source = 'spk' THEN cash_advance ELSE 0 END) as direct_expense,
+             SUM(CASE WHEN source = 'spko' THEN cash_advance ELSE 0 END) as indirect_expense
       FROM (
         ${combinedQuery}
       ) as combined_expenses
@@ -1607,7 +1610,9 @@ export class WorkloadTicketsService {
     
     return result.map(r => ({
       date: r.date,
-      expense: Number(r.total_expense)
+      expense: Number(r.total_expense),
+      directExpense: Number(r.direct_expense),
+      indirectExpense: Number(r.indirect_expense)
     }));
   }
 
@@ -1624,15 +1629,34 @@ export class WorkloadTicketsService {
     const url = getFlag('openai_base_url');
     const model = getFlag('openai_model');
     const apiKey = getFlag('openai_api_key');
-    const systemMessage = getFlag('ai_summarization_prompt');
+    const oldSystemMessage = getFlag('ai_summarization_prompt');
+    const rawChatFlag = getFlag('ai_chat_prompt');
+    const chatSystemMessage = (typeof rawChatFlag === 'string' && rawChatFlag.trim() !== '') ? rawChatFlag : "Anda adalah Business Analyst ahli di bidang Infrastruktur Telekomunikasi. Anda SANGAT KRITIS dan TAJAM terhadap kesehatan cashflow serta efisiensi operasional.\\nTUGAS UTAMA: Analisis tabel data tren bulanan yang diberikan. Berikan simulasi/prediksi tajam mengenai masa depan bisnis jika tren ini berlanjut. Deteksi kebocoran pengeluaran atau red flags secara blak-blakan.\\nATURAN TERMIN & BACKLOG: Proyek dibayar bertahap (Termin). Urutan termin dan bobotnya (X%) sudah tertulis dengan jelas di header tabel. Jika suatu site selesai di termin awal, sisa persentasenya tertahan sebagai backlog. Jika mencapai termin terakhir (total genap 100%), site tersebut LUNAS (backlog = 0).\\nATURAN INTERAKTIF: Anda diberikan kebebasan penuh untuk bertanya. Jika Anda ragu tentang arti dari suatu kolom, istilah tertentu, atau melihat anomali data yang aneh di tabel, JANGAN MENEBAK. Anda WAJIB bertanya kepada pengguna di akhir laporan Anda untuk memperluas analisis (contoh: 'Apa yang dimaksud dengan kolom X?' atau 'Mengapa pengeluaran melonjak?').\\nATURAN FORMAT: Wajib berbahasa Indonesia. Gunakan Markdown yang rapi. DILARANG KERAS menggunakan format matematika LaTeX (seperti \\\\text, \\\\frac); tulis rumus dengan teks biasa (contoh: Laba = Pemasukan - Pengeluaran).";
 
     try {
+      let messages = [];
+      if (payload.isChat && Array.isArray(payload.messages)) {
+        let finalSystemMessage = chatSystemMessage;
+        
+        // If the frontend explicitly passed a dataContext, append it to the main system message
+        if (payload.dataContext) {
+           finalSystemMessage += `\n\n${payload.dataContext}`;
+        }
+        
+        messages = [
+          { role: 'system', content: finalSystemMessage },
+          ...payload.messages
+        ];
+      } else {
+        messages = [
+          { role: 'system', content: oldSystemMessage },
+          { role: 'user', content: JSON.stringify(payload) }
+        ];
+      }
+
       const dataPayload = {
         model: model,
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: JSON.stringify(payload) }
-        ],
+        messages: messages,
       };
 
       const headers: any = { 'Content-Type': 'application/json' };
@@ -1644,7 +1668,7 @@ export class WorkloadTicketsService {
       console.log(JSON.stringify(dataPayload, null, 2));
       console.log('==================================================\n');
 
-      const response = await axios.post(url, dataPayload, { headers, timeout: 60000 });
+      const response = await axios.post(url, dataPayload, { headers, timeout: 120000 });
       return response.data.choices[0].message.content;
     } catch (e) {
       console.error('OpenAI API Error:', e.response?.data || e.message);

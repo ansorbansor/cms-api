@@ -931,6 +931,7 @@ export class SPKOperationalService {
       status: SPKStatus.APPROVED_OVER_BUDGET,
       approved_over_budget_by: user.id,
       remark_pm: remark,
+      approved_over_budget_date: new Date(),
     });
 
     return null;
@@ -951,6 +952,7 @@ export class SPKOperationalService {
       status: SPKStatus.APPROVED,
       approved_by: user.id,
       remark_rpm: remark,
+      approved_date: new Date(),
     });
 
     return null;
@@ -968,6 +970,7 @@ export class SPKOperationalService {
         status: SPKStatus.REJECTED,
         approved_by: user.id,
         remark_rpm: remark,
+        approved_date: new Date(),
       });
 
       return null;
@@ -989,6 +992,7 @@ export class SPKOperationalService {
         status: SPKStatus.REJECTED,
         approved_by: user.id,
         remark_rpm: remark,
+        approved_date: new Date(),
       });
 
       return null;
@@ -1017,7 +1021,8 @@ export class SPKOperationalService {
       });
       updatePayload = {
         status: SPKStatus.APPROVED,
-        approved_by: user.id
+        approved_by: user.id,
+        approved_date: new Date()
       };
     } else if (roleCode === RoleEnum.PM) {
       // A PM approves items that are already approved by an RPM but are over budget
@@ -1026,7 +1031,8 @@ export class SPKOperationalService {
       
       updatePayload = {
         status: SPKStatus.APPROVED_OVER_BUDGET,
-        approved_over_budget_by: user.id
+        approved_over_budget_by: user.id,
+        approved_over_budget_date: new Date()
       };
     } else {
       // Block any other roles from using this endpoint

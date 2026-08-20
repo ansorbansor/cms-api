@@ -142,6 +142,14 @@ export class SPKOperational extends EntityHelper {
 
   @ApiProperty({ example: 'Test' })
   @Column({ nullable: true })
+  approved_date?: Date;
+
+  @ApiProperty({ example: 'Test' })
+  @Column({ nullable: true })
+  approved_over_budget_date?: Date;
+
+  @ApiProperty({ example: 'Test' })
+  @Column({ nullable: true })
   transfer_proof_photo?: number;
 
   @Column({ nullable: true })
@@ -218,11 +226,19 @@ export class SPKOperational extends EntityHelper {
   }
 
   paidDateParseDate: string;
+  approvedDateParseDate: string;
+  approvedOverBudgetDateParseDate: string;
 
   @AfterLoad()
-  setEntityName() {
+  setSPKOperationalDates() {
     this.paidDateParseDate = this.paid_date
       ? moment(this.paid_date).format('YYYY-MM-DD HH:mm:ss')
+      : null;
+    this.approvedDateParseDate = this.approved_date
+      ? moment(this.approved_date).format('YYYY-MM-DD HH:mm:ss')
+      : null;
+    this.approvedOverBudgetDateParseDate = this.approved_over_budget_date
+      ? moment(this.approved_over_budget_date).format('YYYY-MM-DD HH:mm:ss')
       : null;
     this.__entity = this.constructor.name;
   }

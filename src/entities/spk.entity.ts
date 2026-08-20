@@ -125,6 +125,12 @@ export class SPK extends EntityHelper {
   closed_by?: number;
 
   @Column({ nullable: true })
+  approved_date?: Date;
+
+  @Column({ nullable: true })
+  approved_over_budget_date?: Date;
+
+  @Column({ nullable: true })
   remark_pm?: string;
 
   @Column({ nullable: true })
@@ -263,11 +269,19 @@ export class SPK extends EntityHelper {
   @Column({ nullable: true })
   paid_date: Date;
   paidDateParseDate: string;
+  approvedDateParseDate: string;
+  approvedOverBudgetDateParseDate: string;
 
   @AfterLoad()
-  setEntityName() {
+  setSPKDates() {
     this.paidDateParseDate = this.paid_date
       ? moment(this.paid_date).format('YYYY-MM-DD HH:mm:ss')
+      : null;
+    this.approvedDateParseDate = this.approved_date
+      ? moment(this.approved_date).format('YYYY-MM-DD HH:mm:ss')
+      : null;
+    this.approvedOverBudgetDateParseDate = this.approved_over_budget_date
+      ? moment(this.approved_over_budget_date).format('YYYY-MM-DD HH:mm:ss')
       : null;
     this.__entity = this.constructor.name;
   }

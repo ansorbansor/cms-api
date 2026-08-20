@@ -177,12 +177,15 @@ export const SPKOperationalResourceDetail = (
       })
       : null,
     created_by: spk.created_by_user ? spk.created_by_user.name : '-',
+    created_at: spk.created_at,
     approved_by: spk.approved_by_user ? spk.approved_by_user.name : '-',
+    approvedDateParseDate: spk.approvedDateParseDate,
     approved_over_budget_by: spk.approved_over_budget_by_user
       ? spk.approved_over_budget_by_user.name
       : '-',
+    approvedOverBudgetDateParseDate: spk.approvedOverBudgetDateParseDate,
     paid_by: spk.paid_by_user ? spk.paid_by_user.name : '-',
-    paid_date: spk.paidDateParseDate,
+    paidDateParseDate: spk.paidDateParseDate,
     closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     transfer_proof_photo: spk.transfer_proof_file
       ? (String(spk.transfer_proof_file.path).startsWith("http") ? spk.transfer_proof_file.path : minioConfig().fullUrl + spk.transfer_proof_file.path)

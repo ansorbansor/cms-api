@@ -1391,6 +1391,7 @@ export class SPKService {
       status: SPKStatus.APPROVED_OVER_BUDGET,
       approved_over_budget_by: user.id,
       remark_pm: remark,
+      approved_over_budget_date: new Date(),
     });
 
     return null;
@@ -1424,6 +1425,7 @@ export class SPKService {
       status: SPKStatus.APPROVED,
       approved_by: user.id,
       remark_rpm: remark,
+      approved_date: new Date(),
     });
 
     return null;
@@ -1441,6 +1443,7 @@ export class SPKService {
         status: SPKStatus.REJECTED,
         approved_by: user.id,
         remark_rpm: remark,
+        approved_date: new Date(),
       });
 
       return null;
@@ -1462,6 +1465,7 @@ export class SPKService {
         status: SPKStatus.REJECTED,
         approved_by: user.id,
         remark_rpm: remark,
+        approved_date: new Date(),
       });
 
       return null;

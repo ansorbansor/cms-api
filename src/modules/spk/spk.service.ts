@@ -73,7 +73,12 @@ export class SPKService {
     }
 
     const requireWorkloadTicket = getFlag('require_workload_ticket');
-    if (requireWorkloadTicket) {
+    
+    // Check if PO already has a workload ticket
+    const po = await getManager().findOne(PurchaseOrder, { id: createSPKDTO.po_id });
+    const hasExistingWorkload = po && po.workload_ticket_id;
+    
+    if (requireWorkloadTicket && !hasExistingWorkload) {
       if (
         !createSPKDTO.create_workload_ticket ||
         String(createSPKDTO.create_workload_ticket) !== 'true' ||
@@ -228,7 +233,7 @@ export class SPKService {
       ip: ip,
     });
 
-    if (createSPKDTO.create_workload_ticket || String(createSPKDTO.create_workload_ticket) === 'true') {
+    if (!hasExistingWorkload && (createSPKDTO.create_workload_ticket || String(createSPKDTO.create_workload_ticket) === 'true')) {
       const pos = await getManager().query(
         "SELECT id FROM purchase_orders WHERE site_id = $1 AND status NOT ILIKE '%cancel%' AND deleted_at IS NULL",
         [createSPKDTO.site_id],

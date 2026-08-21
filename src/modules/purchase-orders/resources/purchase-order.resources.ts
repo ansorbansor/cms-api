@@ -60,6 +60,7 @@ export const PurchaseOrderBySiteResource = (
         po_number: e.po_number,
         item_description: e.item_description,
         project_name: e.project ? e.project.name : '-',
+        workload_ticket_id: e.workload_ticket_id ? e.workload_ticket_id : null,
       };
     }),
   };

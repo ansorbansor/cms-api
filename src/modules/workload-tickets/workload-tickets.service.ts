@@ -1451,7 +1451,7 @@ export class WorkloadTicketsService {
     if (period === 'yearly') truncString = 'year';
 
     const qb = this.taskRepo.createQueryBuilder('task')
-      .select(`DATE_TRUNC('${truncString}', task.updated_at)`, 'date')
+      .select(`TO_CHAR(DATE_TRUNC('${truncString}', task.updated_at), 'YYYY-MM-DD')`, 'date')
       .addSelect('COUNT(DISTINCT task.id)', 'count')
       .addSelect('task.name', 'taskName')
       .addSelect('COALESCE(SUM(purchase_orders.unit_price), 0)', 'totalUnitPrice')
@@ -1643,7 +1643,7 @@ export class WorkloadTicketsService {
     }
 
     const rawQuery = `
-      SELECT DATE_TRUNC('${truncString}', paid_date) as date, 
+      SELECT TO_CHAR(DATE_TRUNC('${truncString}', paid_date), 'YYYY-MM-DD') as date, 
              SUM(cash_advance) as total_expense,
              SUM(CASE WHEN source = 'spk' THEN cash_advance ELSE 0 END) as direct_expense,
              SUM(CASE WHEN source = 'spko' THEN cash_advance ELSE 0 END) as indirect_expense

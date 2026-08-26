@@ -195,6 +195,15 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Get('active-filters')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getActiveFilters(@Query() query: any) {
+    return successResponse(
+      await this.ticketsService.getActiveFilters(query),
+      'Success'
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findOne(@Param('id') id: string) {

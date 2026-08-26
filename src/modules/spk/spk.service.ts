@@ -1189,7 +1189,7 @@ export class SPKService {
     };
 
     if (updateSPKSettlementDTO.status == SPKStatus.PAID) {
-      updateData['paid_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
+      updateData['paid_date'] = updateSPKSettlementDTO.paid_date ? updateSPKSettlementDTO.paid_date : moment().format('YYYY-MM-DD HH:mm:ss');
       updateData.paid_by = user.id;
       updateData.remark_admin = updateSPKSettlementDTO.remarks;
     } else if (updateSPKSettlementDTO.status == SPKStatus.CLOSED) {

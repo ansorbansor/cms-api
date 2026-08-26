@@ -1391,6 +1391,56 @@ export class WorkloadTicketsService {
     };
   }
 
+  async getActiveFilters(query: any = {}): Promise<any> {
+    const startDate = query.startDate;
+    const endDate = query.endDate;
+
+    const qb = this.poRepo.createQueryBuilder('po')
+      .select('DISTINCT customer.id', 'customer_id')
+      .addSelect('customer.name', 'customer_name')
+      .addSelect('project.id', 'project_id')
+      .addSelect('project.name', 'project_name')
+      .innerJoin('po.customer', 'customer')
+      .innerJoin('po.project', 'project')
+      .innerJoin('po.workload_ticket', 'workload_ticket')
+      .leftJoin('workload_ticket.milestones', 'milestone')
+      .leftJoin('milestone.tasks', 'task')
+      .where('workload_ticket.is_template = false')
+      .andWhere('workload_ticket.deleted_at IS NULL');
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('(workload_ticket.created_at BETWEEN :start AND :end OR task.updated_at BETWEEN :start AND :end OR task.created_at BETWEEN :start AND :end)', { start, end });
+    } else if (startDate) {
+      qb.andWhere('(workload_ticket.created_at >= :startDate OR task.updated_at >= :startDate OR task.created_at >= :startDate)', { startDate: new Date(startDate) });
+    } else if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('(workload_ticket.created_at <= :endDate OR task.updated_at <= :endDate OR task.created_at <= :endDate)', { endDate: end });
+    }
+
+    const raw = await qb.getRawMany();
+
+    const uniqueCustomers = new Map();
+    const uniqueProjects = new Map();
+
+    raw.forEach(r => {
+      if (r.customer_id && !uniqueCustomers.has(r.customer_id)) {
+        uniqueCustomers.set(r.customer_id, { id: r.customer_id, name: r.customer_name });
+      }
+      if (r.project_id && !uniqueProjects.has(r.project_id)) {
+        uniqueProjects.set(r.project_id, { id: r.project_id, name: r.project_name });
+      }
+    });
+
+    return {
+      customers: Array.from(uniqueCustomers.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      projects: Array.from(uniqueProjects.values()).sort((a, b) => a.name.localeCompare(b.name))
+    };
+  }
+
   async getTrendingTasks(query: any = {}): Promise<any> {
     const period = query.period || 'monthly';
     const taskNames = query.taskNames; // Expecting array or comma-separated string if from GET query

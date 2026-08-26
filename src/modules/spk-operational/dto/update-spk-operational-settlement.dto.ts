@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
+import { IsDateString, IsNumberString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateSPKOperationalSettlementDTO {
   @ApiProperty({ example: '2022-01-01' })
@@ -19,4 +19,9 @@ export class UpdateSPKOperationalSettlementDTO {
   @ApiProperty({ example: 3 })
   @IsNumberString()
   status: number;
+
+  @ApiProperty({ example: '2022-01-01 10:00:00' })
+  @IsOptional()
+  @IsString()
+  paid_date: string;
 }

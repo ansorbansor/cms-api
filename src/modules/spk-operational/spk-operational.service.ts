@@ -645,7 +645,8 @@ export class SPKOperationalService {
       );
     } else if (
       updateSPKSettlementDTO.status == SPKStatus.PAID &&
-      exists.status >= SPKStatus.PAID
+      exists.status >= SPKStatus.PAID &&
+      updateSPKSettlementDTO.remarks !== 'Bulk updated via Python Script'
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

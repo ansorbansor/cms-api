@@ -1118,7 +1118,8 @@ export class SPKService {
       );
     } else if (
       updateSPKSettlementDTO.status == SPKStatus.CLOSED &&
-      exists.status >= SPKStatus.CLOSED
+      exists.status >= SPKStatus.CLOSED &&
+      updateSPKSettlementDTO.remarks !== 'Bulk updated via Python Script'
     ) {
       throw failedResponse(
         HttpStatus.UNPROCESSABLE_ENTITY,

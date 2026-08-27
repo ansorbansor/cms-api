@@ -1193,11 +1193,15 @@ export class SPKService {
 
     if (updateSPKSettlementDTO.status == SPKStatus.PAID) {
       updateData['paid_date'] = updateSPKSettlementDTO.paid_date ? updateSPKSettlementDTO.paid_date : moment().format('YYYY-MM-DD HH:mm:ss');
-      updateData.paid_by = user.id;
+      if (updateSPKSettlementDTO.remarks !== 'Bulk updated via Python Script' || !exists.paid_by) {
+        updateData.paid_by = user.id;
+      }
       updateData.remark_admin = updateSPKSettlementDTO.remarks;
     } else if (updateSPKSettlementDTO.status == SPKStatus.CLOSED) {
-      updateData['closing_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
-      updateData.closed_by = user.id;
+      if (updateSPKSettlementDTO.remarks !== 'Bulk updated via Python Script') {
+        updateData['closing_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
+        updateData.closed_by = user.id;
+      }
       updateData.remark_verificator = updateSPKSettlementDTO.remarks;
       if (updateSPKSettlementDTO.paid_date) {
         updateData['paid_date'] = updateSPKSettlementDTO.paid_date;

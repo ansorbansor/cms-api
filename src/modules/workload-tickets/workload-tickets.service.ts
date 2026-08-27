@@ -1394,14 +1394,17 @@ export class WorkloadTicketsService {
   async getActiveFilters(query: any = {}): Promise<any> {
     const startDate = query.startDate;
     const endDate = query.endDate;
+    
+    console.log('DEBUG ACTIVE FILTERS CALLED', { startDate, endDate });
 
     const qb = this.poRepo.createQueryBuilder('po')
-      .select('DISTINCT customer.id', 'customer_id')
+      .distinct(true)
+      .select('customer.id', 'customer_id')
       .addSelect('customer.name', 'customer_name')
       .addSelect('project.id', 'project_id')
       .addSelect('project.name', 'project_name')
-      .innerJoin('po.customer', 'customer')
-      .innerJoin('po.project', 'project')
+      .leftJoin('po.customer', 'customer')
+      .leftJoin('po.project', 'project')
       .innerJoin('po.workload_ticket', 'workload_ticket')
       .leftJoin('workload_ticket.milestones', 'milestone')
       .leftJoin('milestone.tasks', 'task')
@@ -1435,10 +1438,12 @@ export class WorkloadTicketsService {
       }
     });
 
-    return {
-      customers: Array.from(uniqueCustomers.values()).sort((a, b) => a.name.localeCompare(b.name)),
-      projects: Array.from(uniqueProjects.values()).sort((a, b) => a.name.localeCompare(b.name))
+    const res = {
+      customers: Array.from(uniqueCustomers.values()).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+      projects: Array.from(uniqueProjects.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     };
+      console.log('DEBUG ACTIVE FILTERS RETURN:', { customers: res.customers.length, projects: res.projects.length });
+    return res;
   }
 
   async getTrendingTasks(query: any = {}): Promise<any> {

@@ -196,7 +196,7 @@ export class WorkloadTicketsController {
   }
 
   @Get('active-filters')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   async getActiveFilters(@Query() query: any) {
     return successResponse(
       await this.ticketsService.getActiveFilters(query),

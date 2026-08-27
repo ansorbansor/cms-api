@@ -735,6 +735,9 @@ export class SPKOperationalService {
       updateData['closing_date'] = moment().format('YYYY-MM-DD HH:mm:ss');
       updateData.closed_by = user.id;
       updateData.remark_verificator = updateSPKSettlementDTO.remarks;
+      if (updateSPKSettlementDTO.paid_date) {
+        updateData['paid_date'] = updateSPKSettlementDTO.paid_date;
+      }
     }
 
     const transferProofFile = files.find((e) => {

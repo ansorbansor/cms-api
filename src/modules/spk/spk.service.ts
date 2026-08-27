@@ -457,7 +457,8 @@ export class SPKService {
         'cost_evidences',
         'cost_evidences.deleted_at IS NULL',
       )
-      .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL');
+      .leftJoinAndSelect('spk.region', 'region', 'region.deleted_at IS NULL')
+      .leftJoinAndSelect('spk.closed_by_user', 'closed_by_user');
 
     // Add total spk cash advance for over-budget calculation in UI (for all roles)
     data.addSelect(

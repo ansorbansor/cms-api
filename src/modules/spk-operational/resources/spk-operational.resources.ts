@@ -46,6 +46,7 @@ export const SPKOperationalResource = (spk: SPKOperational): any => {
           ? spk.pay_to_user.bank_account_number
           : null,
     },
+    closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     is_deleted: spk.deleted_at != null,
     category: {
       id: spk.category ? spk.category.id : null,

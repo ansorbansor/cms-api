@@ -287,7 +287,8 @@ export class SPKOperationalService {
       .leftJoinAndSelect('spk-operational.region', 'region')
       .leftJoinAndSelect('spk-operational.category', 'category')
       .leftJoinAndSelect('spk-operational.subcategory', 'subcategory')
-      .leftJoinAndSelect('spk-operational.request_type', 'request_type');
+      .leftJoinAndSelect('spk-operational.request_type', 'request_type')
+      .leftJoinAndSelect('spk-operational.closed_by_user', 'closed_by_user');
 
     const currentUser = await this.userService.findOneFull({ id: user.id });
     let filterRegion = true;

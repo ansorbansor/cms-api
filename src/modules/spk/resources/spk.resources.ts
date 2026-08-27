@@ -57,6 +57,7 @@ export const SPKResource = (spk: SPK): any => {
           ? spk.pay_to_user.bank_account_number
           : null,
     },
+    closed_by: spk.closed_by_user ? spk.closed_by_user.name : '-',
     site: {
       id: spk.site && spk.site.id ? spk.site.id : null,
       name: spk.site && spk.site.name ? spk.site.name : '-',

@@ -21,6 +21,7 @@ import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import * as async from 'async';
 import { ExportJob } from 'src/entities/export-job.entity';
 import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
+import { WorkloadTask } from 'src/entities/workload-task.entity';
 
 @Injectable()
 export class ExportService {
@@ -39,6 +40,8 @@ export class ExportService {
     private exportJobRepository: Repository<ExportJob>,
     @InjectRepository(SiteTakeDataAssignment)
     private siteTakeDataAssignmentRepository: Repository<SiteTakeDataAssignment>,
+    @InjectRepository(WorkloadTask)
+    private workloadTaskRepository: Repository<WorkloadTask>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
   ) {
@@ -86,6 +89,28 @@ export class ExportService {
     job.user_id = user.id;
     job.type = 'PO';
     job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus, dateFilterBy, projectName });
+    job.status = 'PENDING';
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  async exportWorkloadTicketsTrending(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    customerId: string,
+    projectId: string,
+    jobCategory: string,
+    taskName: string,
+  ) {
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'WORKLOAD_TICKETS_TRENDING';
+    job.payload = JSON.stringify({ ip, startDate, endDate, customerId, projectId, jobCategory, taskName });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -150,6 +175,17 @@ export class ExportService {
           payload.ip,
           payload.search,
           payload.status,
+        ) as string;
+      } else if (job.type === 'WORKLOAD_TICKETS_TRENDING') {
+        filePath = await this._generateWorkloadTicketsTrendingFile(
+          user,
+          payload.ip,
+          payload.startDate,
+          payload.endDate,
+          payload.customerId,
+          payload.projectId,
+          payload.jobCategory,
+          payload.taskName
         ) as string;
       }
 
@@ -1097,6 +1133,100 @@ export class ExportService {
     await this.activityLogService.create({
       user_id: user.id,
       description: `Export Data Take-Data`,
+      ip: ip,
+    });
+
+    return filePath;
+  }
+
+  async _generateWorkloadTicketsTrendingFile(
+    user: User,
+    ip: string,
+    startDate: string,
+    endDate: string,
+    customerId: string,
+    projectId: string,
+    jobCategory: string,
+    taskName: string,
+  ) {
+    const qb = this.workloadTaskRepository.createQueryBuilder('task')
+      .leftJoinAndSelect('task.milestone', 'milestone')
+      .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
+      .leftJoinAndSelect('workload_ticket.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.customer', 'customer')
+      .leftJoinAndSelect('purchase_orders.project', 'project')
+      .leftJoinAndSelect('task.assigned_to_user', 'assigned_to_user')
+      .where('task.status = :status', { status: 'Completed' })
+      .andWhere('workload_ticket.is_template = false')
+      .andWhere('task.updated_at IS NOT NULL');
+
+    if (customerId) {
+      const customers = customerId.split(',');
+      qb.andWhere('customer.name IN (SELECT name FROM customers WHERE id IN (:...customers))', { customers });
+    }
+
+    if (projectId) {
+      const projects = projectId.split(',');
+      qb.andWhere('project.name IN (SELECT name FROM projects WHERE id IN (:...projects))', { projects });
+    }
+
+    if (jobCategory) {
+      const categories = jobCategory.split(',');
+      qb.andWhere('workload_ticket.job_category IN (:...categories)', { categories });
+    }
+
+    if (taskName) {
+      const namesArray = Array.isArray(taskName) ? taskName : taskName.split(',');
+      if (namesArray.length > 0) {
+        qb.andWhere('task.name IN (:...namesArray)', { namesArray });
+      }
+    }
+
+    if (startDate) {
+      qb.andWhere('task.updated_at >= :startDate', { startDate: new Date(startDate) });
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('task.updated_at <= :endDate', { endDate: end });
+    }
+
+    qb.orderBy('task.updated_at', 'DESC');
+
+    const data = await qb.getMany();
+
+    const rows = [];
+    data.forEach((task) => {
+      // Find the first PO's project and customer if available
+      const po = task.milestone?.workload_ticket?.purchase_orders?.[0];
+      rows.push({
+        'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+        'Project Name': po?.project?.name || '-',
+        'Customer': po?.customer?.name || '-',
+        'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+        'PIC Name': task.assigned_to_user?.name || '-'
+      });
+    });
+
+    const XLSX = xlsx;
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Trending Completed Tasks');
+
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
+
+    const fileName = `Trending-Completed-Tasks-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+
+    XLSX.writeFile(wb, filePath, { compression: true });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Trending Completed Tasks`,
       ip: ip,
     });
 

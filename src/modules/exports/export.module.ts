@@ -12,6 +12,7 @@ import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { ExportJob } from 'src/entities/export-job.entity';
 
 import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
+import { WorkloadTask } from 'src/entities/workload-task.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.e
       SPKOperational,
       ExportJob,
       SiteTakeDataAssignment,
+      WorkloadTask,
     ]),
     ActivityLogModule,
     UsersModule,

@@ -256,4 +256,39 @@ export class ExportController {
       throw error;
     }
   }
+
+  @Get('workload-tickets-trending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportWorkloadTicketsTrending(
+    @Res() res: Response,
+    @Request() req,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Query('customer_id') customerId: string,
+    @Query('project_id') projectId: string,
+    @Query('job_category') jobCategory: string,
+    @Query('task_name') taskName: string,
+  ) {
+    try {
+      const job = await this.exportService.exportWorkloadTicketsTrending(
+        req.user,
+        req.ip,
+        startDate,
+        endDate,
+        customerId,
+        projectId,
+        jobCategory,
+        taskName,
+      );
+
+      return res.status(HttpStatus.OK).json({
+        meta: { status: 200, message: 'Export queued', success: true },
+        data: job,
+      });
+    } catch (error) {
+      console.error('Error in exportWorkloadTicketsTrending:', error);
+      throw error;
+    }
+  }
 }

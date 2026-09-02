@@ -54,6 +54,7 @@ import { TaskNamePresetsModule } from './modules/task-name-presets/task-name-pre
 import { JobCategoriesModule } from './modules/job-categories/job-categories.module';
 import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
 import { DistanceTrackingModule } from './modules/distance-tracking/distance-tracking.module';
+import { TargetCardsModule } from './modules/target-cards/target-cards.module';
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 
 @Module({
@@ -126,6 +127,7 @@ import { AppVersionMiddleware } from './middlewares/app-version.middleware';
     JobCategoriesModule,
     DocumentStorageModule,
     DistanceTrackingModule,
+    TargetCardsModule,
   ],
   providers: [
     {

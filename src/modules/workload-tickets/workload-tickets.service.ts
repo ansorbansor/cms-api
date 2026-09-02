@@ -1430,11 +1430,17 @@ export class WorkloadTicketsService {
     const uniqueProjects = new Map();
 
     raw.forEach(r => {
-      if (r.customer_id && !uniqueCustomers.has(r.customer_name)) {
-        uniqueCustomers.set(r.customer_name, { id: r.customer_id, name: r.customer_name });
+      if (r.customer_id) {
+        const cName = (r.customer_name || '').trim();
+        if (!uniqueCustomers.has(cName)) {
+          uniqueCustomers.set(cName, { id: r.customer_id, name: cName });
+        }
       }
-      if (r.project_id && !uniqueProjects.has(r.project_name)) {
-        uniqueProjects.set(r.project_name, { id: r.project_id, name: r.project_name });
+      if (r.project_id) {
+        const pName = (r.project_name || '').trim();
+        if (!uniqueProjects.has(pName)) {
+          uniqueProjects.set(pName, { id: r.project_id, name: pName });
+        }
       }
     });
 

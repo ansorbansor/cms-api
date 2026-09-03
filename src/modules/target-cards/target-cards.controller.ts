@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch } from '@nestjs/common';
 import { TargetCardsService } from './target-cards.service';
 import { JwtAuthGuard, RolesGuard } from '../../utils/guards';
 
@@ -15,6 +15,11 @@ export class TargetCardsController {
   @Get()
   findAll() {
     return this.targetCardsService.findAll();
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateTargetCardDto: any) {
+    return this.targetCardsService.update(+id, updateTargetCardDto);
   }
 
   @Delete(':id')

@@ -40,6 +40,26 @@ export class TargetCardsService {
     }
   }
 
+  async update(id: number, updateTargetCardDto: any) {
+    try {
+      const card = await this.targetCardRepo.findOne({ where: { id } });
+      if (!card) {
+        throw failedResponse(HttpStatus.NOT_FOUND, 'Target card not found');
+      }
+      
+      card.title = updateTargetCardDto.title !== undefined ? updateTargetCardDto.title : card.title;
+      card.items = updateTargetCardDto.items !== undefined ? updateTargetCardDto.items : card.items;
+      card.start_date = updateTargetCardDto.start_date !== undefined ? updateTargetCardDto.start_date : card.start_date;
+      card.end_date = updateTargetCardDto.end_date !== undefined ? updateTargetCardDto.end_date : card.end_date;
+      
+      const saved = await this.targetCardRepo.save(card);
+      return successResponse(saved, 'Successfully updated target card');
+    } catch (err) {
+      console.error(err);
+      throw failedResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to update target card');
+    }
+  }
+
   async remove(id: number) {
     try {
       await this.targetCardRepo.delete(id);

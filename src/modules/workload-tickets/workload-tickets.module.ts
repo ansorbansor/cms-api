@@ -14,9 +14,10 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { UsersModule } from '../users/users.module';
 import { Absence } from 'src/entities/absence.entity';
 import { DistanceTracking } from '../distance-tracking/entities/distance-tracking.entity';
+import { WorkloadTicketPoHistory } from 'src/entities/workload-ticket-po-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WorkloadTicket, Milestone, WorkloadTask, PurchaseOrder, Site, WorkloadTaskAttachment, FileEntity, Absence, DistanceTracking]), WhatsappModule, UsersModule],
+  imports: [TypeOrmModule.forFeature([WorkloadTicket, Milestone, WorkloadTask, PurchaseOrder, Site, WorkloadTaskAttachment, FileEntity, Absence, DistanceTracking, WorkloadTicketPoHistory]), WhatsappModule, UsersModule],
   controllers: [WorkloadTicketsController],
   providers: [WorkloadTicketsService, WorkloadTicketsCronService],
   exports: [WorkloadTicketsService],

@@ -16,6 +16,7 @@ import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import moment from 'moment';
 import { exportUniqueId } from 'src/utils/encryption-helper';
+import { WorkloadTicketPoHistory } from 'src/entities/workload-ticket-po-history.entity';
 
 @Injectable()
 export class PurchaseOrderService {
@@ -26,6 +27,8 @@ export class PurchaseOrderService {
     private purchaseOrderInvoiceRepository: Repository<PurchaseOrderInvoice>,
     @InjectRepository(Site)
     private siteRepository: Repository<Site>,
+    @InjectRepository(WorkloadTicketPoHistory)
+    private poHistoryRepo: Repository<WorkloadTicketPoHistory>,
     private activityLogService: ActivityLogService,
   ) { }
 
@@ -264,6 +267,18 @@ export class PurchaseOrderService {
         updatedDataPO.actual_completion_date = finishProgressDate;
         updatedDataPO.actual_work_status = 'Work Done';
       }
+    }
+
+    // Check for amount changes for workload ticket history
+    if (exists.workload_ticket_id && updatedDataPO.line_amount !== undefined && Number(updatedDataPO.line_amount) !== Number(exists.line_amount)) {
+      await this.poHistoryRepo.save(this.poHistoryRepo.create({
+        workload_ticket_id: exists.workload_ticket_id,
+        po_id: exists.id,
+        action: 'Amount Updated',
+        old_amount: exists.line_amount,
+        new_amount: updatedDataPO.line_amount,
+        created_by: user.id,
+      }));
     }
 
     await this.purchaseOrdersRepository.update(id, {

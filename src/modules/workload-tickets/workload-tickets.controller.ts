@@ -77,16 +77,34 @@ export class WorkloadTicketsController {
 
   @Post(':id/purchase-orders')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }) {
-    await this.ticketsService.addPurchaseOrders(+id, body.poIds);
+  async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }, @Request() req) {
+    await this.ticketsService.addPurchaseOrders(+id, body.poIds, req.user.id);
     return successResponse(null, 'Purchase orders added successfully');
   }
 
   @Delete(':id/purchase-orders/:poId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async removePurchaseOrder(@Param('id') id: string, @Param('poId') poId: string) {
-    await this.ticketsService.removePurchaseOrder(+id, +poId);
+  async removePurchaseOrder(@Param('id') id: string, @Param('poId') poId: string, @Request() req) {
+    await this.ticketsService.removePurchaseOrder(+id, +poId, req.user.id);
     return successResponse(null, 'Purchase order removed successfully');
+  }
+
+  @Get(':id/po-history')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getPoHistory(@Param('id') id: string) {
+    return successResponse(
+      await this.ticketsService.getPoHistory(+id),
+      'PO History retrieved successfully'
+    );
+  }
+
+  @Get('unassigned-global-pos')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getGlobalUnassignedPos() {
+    return successResponse(
+      await this.ticketsService.getGlobalUnassignedPos(),
+      'Success'
+    );
   }
 
   @Get('unassigned-pos/:siteId')

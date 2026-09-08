@@ -16,6 +16,7 @@ import { exportUniqueId } from 'src/utils/encryption-helper';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { Absence } from 'src/entities/absence.entity';
 import { DistanceTracking } from '../distance-tracking/entities/distance-tracking.entity';
+import { WorkloadTicketPoHistory } from 'src/entities/workload-ticket-po-history.entity';
 
 @Injectable()
 export class WorkloadTicketsService {
@@ -38,6 +39,8 @@ export class WorkloadTicketsService {
     private absenceRepo: Repository<Absence>,
     @InjectRepository(DistanceTracking)
     private distanceTrackingRepo: Repository<DistanceTracking>,
+    @InjectRepository(WorkloadTicketPoHistory)
+    private poHistoryRepo: Repository<WorkloadTicketPoHistory>,
     private whatsappService: WhatsappService,
   ) { }
 
@@ -73,6 +76,16 @@ export class WorkloadTicketsService {
             po.actual_work_date = new Date();
           }
           await this.poRepo.save(po);
+
+          // Log History for initial PO
+          await this.poHistoryRepo.save(this.poHistoryRepo.create({
+            workload_ticket_id: savedTicket.id as any,
+            po_id: po.id as any,
+            action: 'Attached',
+            old_amount: 0,
+            new_amount: po.line_amount,
+            created_by: userId,
+          }));
         }
       }
     }
@@ -111,7 +124,7 @@ export class WorkloadTicketsService {
     return this.ticketRepo.save(ticket);
   }
 
-  async addPurchaseOrders(ticketId: number, poIds: number[]): Promise<void> {
+  async addPurchaseOrders(ticketId: number, poIds: number[], userId?: number): Promise<void> {
     const ticket = await this.ticketRepo.findOne(ticketId);
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');
 
@@ -124,18 +137,69 @@ export class WorkloadTicketsService {
             po.actual_work_date = new Date();
           }
           await this.poRepo.save(po);
+
+          // Log History
+          await this.poHistoryRepo.save(this.poHistoryRepo.create({
+            workload_ticket_id: ticket.id as any,
+            po_id: po.id as any,
+            action: 'Attached',
+            old_amount: 0,
+            new_amount: po.line_amount,
+            created_by: userId,
+          }));
         }
       }
     }
   }
 
-  async removePurchaseOrder(ticketId: number, poId: number): Promise<void> {
+  async removePurchaseOrder(ticketId: number, poId: number, userId?: number): Promise<void> {
     const po = await this.poRepo.findOne(poId);
     if (!po) throw failedResponse(HttpStatus.NOT_FOUND, 'Purchase order not found');
     if (po.workload_ticket_id !== ticketId) throw failedResponse(HttpStatus.BAD_REQUEST, 'PO is not attached to this ticket');
 
+    const oldAmount = po.line_amount;
     po.workload_ticket_id = null;
     await this.poRepo.save(po);
+
+    // Log History
+    await this.poHistoryRepo.save(this.poHistoryRepo.create({
+      workload_ticket_id: ticketId,
+      po_id: poId,
+      action: 'Detached',
+      old_amount: oldAmount,
+      new_amount: 0,
+      created_by: userId,
+    }));
+  }
+
+  async getPoHistory(ticketId: number): Promise<any> {
+    const ticket = await this.ticketRepo.findOne(ticketId);
+    if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');
+
+    const history = await this.poHistoryRepo.createQueryBuilder('history')
+      .leftJoinAndSelect('history.purchase_order', 'po')
+      .leftJoinAndSelect('history.created_by_user', 'user')
+      .where('history.workload_ticket_id = :ticketId', { ticketId })
+      .orderBy('history.created_at', 'DESC')
+      .getMany();
+      
+    // Dynamically generate unique_id for POs, exactly like findAll
+    const mappedHistory = history.map(h => {
+      if (h.purchase_order) {
+        const createdAtStr = moment(h.purchase_order.created_at).format('YYYY-MM-DD HH:mm:ss');
+        h.purchase_order = {
+          ...h.purchase_order,
+          unique_id: exportUniqueId(h.purchase_order.id, createdAtStr)
+        } as any;
+      }
+      return h;
+    });
+      
+    // Calculate total currently attached amount
+    const attachedPos = await this.poRepo.find({ where: { workload_ticket_id: ticketId } });
+    const totalAmount = attachedPos.reduce((sum, po) => sum + Number(po.line_amount || 0), 0);
+
+    return { history: mappedHistory, totalAmount };
   }
 
   async findAll(query: any = {}): Promise<{ data: WorkloadTicket[], total: number }> {
@@ -352,6 +416,29 @@ export class WorkloadTicketsService {
         unique_id: exportUniqueId(po.id, createdAtStr)
       };
     });
+  }
+
+  async getGlobalUnassignedPos(): Promise<any[]> {
+    const query = `
+      SELECT 
+          po.id AS po_id,
+          po.po_number,
+          po.unique_id,
+          po.line_amount AS po_amount,
+          wt.id AS workload_ticket_internal_id, 
+          wt.ticket_id AS ticket_code,
+          s.name AS site_name
+      FROM purchase_orders po
+      JOIN workload_tickets wt ON po.site_id = wt.site_id
+      LEFT JOIN sites s ON s.id = wt.site_id
+      WHERE po.workload_ticket_id IS NULL
+      AND po.deleted_at IS NULL
+      AND wt.deleted_at IS NULL
+      AND wt.is_template = false
+      ORDER BY wt.id DESC;
+    `;
+    const pos = await this.poRepo.query(query);
+    return pos;
   }
 
   async getMyTaskNames(userId: number): Promise<string[]> {

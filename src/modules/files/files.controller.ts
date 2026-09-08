@@ -59,10 +59,10 @@ export class FilesController {
   async download(@Param('path') pathParam, @Response() response) {
     let targetPath = pathParam;
 
+    let rootDir = './files';
     try {
       const fs = require('fs');
       const pathMod = require('path');
-      let rootDir = './files';
       let physicalPath = pathMod.join(process.cwd(), 'files', pathParam);
 
       if (!fs.existsSync(physicalPath)) {

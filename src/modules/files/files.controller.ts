@@ -62,7 +62,16 @@ export class FilesController {
     try {
       const fs = require('fs');
       const pathMod = require('path');
-      const physicalPath = pathMod.join(process.cwd(), 'files', pathParam);
+      let rootDir = './files';
+      let physicalPath = pathMod.join(process.cwd(), 'files', pathParam);
+
+      if (!fs.existsSync(physicalPath)) {
+        const uploadPath = pathMod.join(process.cwd(), 'uploads', pathParam);
+        if (fs.existsSync(uploadPath)) {
+          rootDir = './uploads';
+          physicalPath = uploadPath;
+        }
+      }
 
       if (!fs.existsSync(physicalPath)) {
         const fileRecord = await this.filesService.getFiles(pathParam);
@@ -75,7 +84,7 @@ export class FilesController {
       // Ignore if not found in DB
     }
 
-    response.sendFile(targetPath, { root: './files' }, (err) => {
+    response.sendFile(targetPath, { root: rootDir }, (err) => {
       if (err) {
         if (!response.headersSent) {
           response.status(404).send('File not found');

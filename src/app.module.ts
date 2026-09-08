@@ -55,6 +55,7 @@ import { JobCategoriesModule } from './modules/job-categories/job-categories.mod
 import { DocumentStorageModule } from './modules/document-storage/document-storage.module';
 import { DistanceTrackingModule } from './modules/distance-tracking/distance-tracking.module';
 import { TargetCardsModule } from './modules/target-cards/target-cards.module';
+import { PerjalananDinasModule } from './modules/perjalanan-dinas/perjalanan-dinas.module';
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 
 @Module({
@@ -128,6 +129,7 @@ import { AppVersionMiddleware } from './middlewares/app-version.middleware';
     DocumentStorageModule,
     DistanceTrackingModule,
     TargetCardsModule,
+    PerjalananDinasModule,
   ],
   providers: [
     {

@@ -1553,6 +1553,14 @@ export class WorkloadTicketsService {
       .addSelect('COUNT(DISTINCT task.id)', 'count')
       .addSelect('task.name', 'taskName')
       .addSelect('COALESCE(SUM(purchase_orders.unit_price), 0)', 'totalUnitPrice')
+      .addSelect(`
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'status', COALESCE(UPPER(purchase_orders.status), 'UNKNOWN'),
+            'amount', purchase_orders.unit_price
+          )
+        )
+      `, 'revenueDetailsRaw')
       .addSelect('ARRAY_AGG(DISTINCT project.name)', 'projectNames')
       .innerJoin('task.milestone', 'milestone')
       .innerJoin('milestone.workload_ticket', 'workload_ticket')
@@ -1619,6 +1627,7 @@ export class WorkloadTicketsService {
         count: Number(r.count),
         taskName: r.taskName,
         totalUnitPrice: Number(r.totalUnitPrice || 0),
+        revenueDetailsRaw: r.revenueDetailsRaw || [],
         projectNames: parsedNames.filter(n => n && n !== 'NULL' && n !== 'null')
       };
     });

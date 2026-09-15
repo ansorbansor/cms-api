@@ -1152,6 +1152,7 @@ export class ExportService {
     const qb = this.workloadTaskRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
       .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
+      .leftJoinAndSelect('workload_ticket.site', 'site')
       .leftJoinAndSelect('workload_ticket.purchase_orders', 'purchase_orders')
       .leftJoinAndSelect('purchase_orders.customer', 'customer')
       .leftJoinAndSelect('purchase_orders.project', 'project')
@@ -1202,6 +1203,7 @@ export class ExportService {
       const po = task.milestone?.workload_ticket?.purchase_orders?.[0];
       rows.push({
         'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+        'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
         'Project Name': po?.project?.name || '-',
         'Customer': po?.customer?.name || '-',
         'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',

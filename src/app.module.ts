@@ -57,6 +57,7 @@ import { DistanceTrackingModule } from './modules/distance-tracking/distance-tra
 import { TargetCardsModule } from './modules/target-cards/target-cards.module';
 import { PerjalananDinasModule } from './modules/perjalanan-dinas/perjalanan-dinas.module';
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
+import { MaterialsModule } from './modules/materials/materials.module';
 
 @Module({
   imports: [
@@ -130,6 +131,7 @@ import { AppVersionMiddleware } from './middlewares/app-version.middleware';
     DistanceTrackingModule,
     TargetCardsModule,
     PerjalananDinasModule,
+    MaterialsModule,
   ],
   providers: [
     {

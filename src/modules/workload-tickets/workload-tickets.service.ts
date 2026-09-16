@@ -403,7 +403,56 @@ export class WorkloadTicketsService {
     };
   }
 
-  async getUnassignedPos(siteId: number): Promise<any[]> {
+  
+  async getMismatchedPos(): Promise<any[]> {
+    const query = `
+      SELECT 
+        po.id as po_id, 
+        po.po_number, 
+        po.unique_id, 
+        po.item_description as po_name,
+        po.line_amount as po_amount,
+        po.site_id as po_site_id, 
+        po_site.code as po_site_code,
+        wt.site_id as wt_site_id, 
+        wt_site.name as wt_site_name,
+        wt.ticket_id as wt_ticket_id,
+        wt.id as workload_ticket_id
+      FROM purchase_orders po
+      INNER JOIN workload_tickets wt ON po.workload_ticket_id = wt.id
+      LEFT JOIN sites po_site ON po.site_id = po_site.id
+      LEFT JOIN sites wt_site ON wt.site_id = wt_site.id
+      WHERE po.site_id != wt.site_id
+    `;
+    const result = await getManager().query(query);
+    console.log('mismatched-pos query result:', result);
+    return result;
+  }
+
+  async detachMismatchedPos(poIds: number[], userId: number): Promise<void> {
+    for (const poId of poIds) {
+      const po = await this.poRepo.findOne(poId);
+      if (po && po.workload_ticket_id) {
+        const ticketId = po.workload_ticket_id;
+        const oldAmount = po.line_amount || 0;
+        
+        po.workload_ticket_id = null;
+        await this.poRepo.save(po);
+
+        // Log History
+        await this.poHistoryRepo.save(this.poHistoryRepo.create({
+          workload_ticket_id: ticketId,
+          po_id: poId,
+          action: 'Detached',
+          old_amount: oldAmount,
+          new_amount: 0,
+          created_by: userId,
+        }));
+      }
+    }
+  }
+
+async getUnassignedPos(siteId: number): Promise<any[]> {
     const pos = await this.poRepo.find({
       where: { site_id: siteId, workload_ticket_id: IsNull() },
       relations: ['site'],
@@ -427,7 +476,8 @@ export class WorkloadTicketsService {
           po.line_amount AS po_amount,
           wt.id AS workload_ticket_internal_id, 
           wt.ticket_id AS ticket_code,
-          s.name AS site_name
+          s.name AS site_name,
+          s.code AS site_code
       FROM purchase_orders po
       JOIN workload_tickets wt ON po.site_id = wt.site_id
       LEFT JOIN sites s ON s.id = wt.site_id

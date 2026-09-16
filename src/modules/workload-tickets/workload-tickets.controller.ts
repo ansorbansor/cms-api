@@ -98,6 +98,23 @@ export class WorkloadTicketsController {
     );
   }
 
+
+  @Get('mismatched-pos')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMismatchedPos() {
+    return successResponse(
+      await this.ticketsService.getMismatchedPos(),
+      'Success'
+    );
+  }
+
+  @Post('mismatched-pos/detach')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async detachMismatchedPos(@Body() body: { poIds: number[] }, @Request() req) {
+    await this.ticketsService.detachMismatchedPos(body.poIds, req.user.id);
+    return successResponse(null, 'Purchase orders detached successfully');
+  }
+
   @Get('unassigned-global-pos')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getGlobalUnassignedPos() {

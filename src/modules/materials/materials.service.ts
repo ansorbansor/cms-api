@@ -72,6 +72,14 @@ export class MaterialsService {
     return { data, total, page, limit };
   }
 
+  async findBySerial(serial_number: string): Promise<Material> {
+    const material = await this.materialRepository.findOne({ where: { serial_number } });
+    if (!material) {
+      throw new NotFoundException(`Material with serial ${serial_number} not found`);
+    }
+    return material;
+  }
+
   async findOne(id: number): Promise<Material> {
     const material = await this.materialRepository.findOne({ where: { id } });
     if (!material) {

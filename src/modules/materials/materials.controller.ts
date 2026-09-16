@@ -67,6 +67,15 @@ export class MaterialsController {
     );
   }
 
+  @Get('by-serial/:sn')
+  @HttpCode(HttpStatus.OK)
+  async findBySerial(@Param('sn') sn: string) {
+    return successResponse(
+      await this.materialsService.findBySerial(sn),
+      'success',
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -127,7 +136,6 @@ export class MaterialsController {
   }
 
   @Get(':id/history')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async getHistory(@Param() param: IDParamDto) {
     return successResponse(

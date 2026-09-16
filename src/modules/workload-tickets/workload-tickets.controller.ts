@@ -75,6 +75,18 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Patch(':id/site')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async updateSite(@Param('id') id: string, @Body() body: { siteId: number }) {
+    if (body.siteId === undefined) {
+      throw new HttpException('Site ID is required', HttpStatus.BAD_REQUEST);
+    }
+    return successResponse(
+      await this.ticketsService.updateSite(+id, body.siteId),
+      'Site updated successfully'
+    );
+  }
+
   @Post(':id/purchase-orders')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }, @Request() req) {

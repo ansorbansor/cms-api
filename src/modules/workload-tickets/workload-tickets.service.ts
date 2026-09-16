@@ -124,6 +124,15 @@ export class WorkloadTicketsService {
     return this.ticketRepo.save(ticket);
   }
 
+  async updateSite(id: number, siteId: number): Promise<WorkloadTicket> {
+    const ticket = await this.ticketRepo.findOne({ where: { id } });
+    if (!ticket) {
+      throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');
+    }
+    ticket.site_id = siteId;
+    return this.ticketRepo.save(ticket);
+  }
+
   async addPurchaseOrders(ticketId: number, poIds: number[], userId?: number): Promise<void> {
     const ticket = await this.ticketRepo.findOne(ticketId);
     if (!ticket) throw failedResponse(HttpStatus.NOT_FOUND, 'Workload ticket not found');

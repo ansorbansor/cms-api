@@ -274,6 +274,15 @@ export class WorkloadTicketsController {
     );
   }
 
+  @Patch('milestones/:id/tasks/reorder')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async reorderTasks(@Param('id') milestoneId: string, @Body() body: { orderIds: number[] }) {
+    return successResponse(
+      await this.ticketsService.reorderTasks(+milestoneId, body.orderIds),
+      'Tasks reordered successfully'
+    );
+  }
+
   @Patch('milestones/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async editMilestone(@Param('id') id: string, @Body() body: { name: string }) {

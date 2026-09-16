@@ -680,6 +680,12 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
   }
 
+  async reorderTasks(milestoneId: number, orderIds: number[]): Promise<void> {
+    for (let i = 0; i < orderIds.length; i++) {
+      await this.taskRepo.update(orderIds[i], { task_order_index: i + 1 });
+    }
+  }
+
   async editMilestone(id: number, name: string): Promise<Milestone> {
     const milestone = await this.milestoneRepo.findOne(id);
     if (!milestone) throw failedResponse(HttpStatus.NOT_FOUND, 'Milestone not found');

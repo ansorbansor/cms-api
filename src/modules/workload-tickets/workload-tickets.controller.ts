@@ -210,11 +210,11 @@ export class WorkloadTicketsController {
 
   @Get('kpi/employees')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async getEmployeeKpi(@Query('from') from: string, @Query('to') to: string) {
+  async getEmployeeKpi(@Query('from') from: string, @Query('to') to: string, @Query('mode') mode: string) {
     const fromDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const toDate = to ? new Date(to) : new Date();
     toDate.setHours(23, 59, 59, 999);
-    const data = await this.ticketsService.getEmployeeKpi(fromDate, toDate);
+    const data = await this.ticketsService.getEmployeeKpi(fromDate, toDate, mode);
     return successResponse(data, 'KPI data retrieved successfully');
   }
 

@@ -1160,22 +1160,31 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
       }
   }
 
-  async getEmployeeKpi(from: Date, to: Date): Promise<any[]> {
-    // Get all tasks whose in_progress_at falls in the range
-    const tasks = await this.taskRepo.createQueryBuilder('task')
+  async getEmployeeKpi(from: Date, to: Date, mode: string = 'started'): Promise<any[]> {
+    // Get all tasks whose in_progress_at falls in the range (and updated_at for achievement mode)
+    let queryBuilder = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.assigned_to_user', 'user')
       .leftJoinAndSelect('user.employeePosition', 'position')
       .leftJoinAndSelect('task.assigned_multiple', 'multi_user')
       .leftJoinAndSelect('multi_user.employeePosition', 'multi_position')
       .leftJoinAndSelect('task.milestone', 'milestone')
       .leftJoinAndSelect('milestone.workload_ticket', 'ticket')
-      .leftJoinAndSelect('ticket.site', 'site')
-      .where(
+      .leftJoinAndSelect('ticket.site', 'site');
+      
+    if (mode === 'achievement') {
+      queryBuilder = queryBuilder.where(
+        `((COALESCE(task.in_progress_at, task.created_at) >= :from AND COALESCE(task.in_progress_at, task.created_at) <= :to)
+        OR (task.status = 'Completed' AND task.updated_at >= :from AND task.updated_at <= :to))`,
+        { from, to }
+      );
+    } else {
+      queryBuilder = queryBuilder.where(
         `COALESCE(task.in_progress_at, task.created_at) >= :from AND COALESCE(task.in_progress_at, task.created_at) <= :to`,
         { from, to }
-      )
-      .andWhere('ticket.is_template = false')
-      .getMany();
+      );
+    }
+
+    const tasks = await queryBuilder.andWhere('ticket.is_template = false').getMany();
 
     // Group by user
     const userMap: Record<number, any> = {};
@@ -1217,12 +1226,50 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
         }
 
         const entry = userMap[user.id];
-        entry.total_assigned++;
+
+        const taskStart = task.in_progress_at || task.created_at;
+        const startedInRange = taskStart >= from && taskStart <= to;
+        const completedInRange = task.status === 'Completed' && task.updated_at >= from && task.updated_at <= to;
 
         let isOverdue = false;
-        if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
-          entry.overdue++;
-          isOverdue = true;
+
+        if (mode === 'achievement') {
+          if (startedInRange) {
+            entry.total_assigned++;
+            if (task.status === 'In Progress') entry.in_progress++;
+            else if (task.status === 'Pending') entry.pending++;
+            else if (task.status === 'Issue') entry.issue++;
+            else if (task.status === 'No Need') entry.no_need++;
+
+            if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
+              entry.overdue++;
+              isOverdue = true;
+            }
+          }
+          if (completedInRange) {
+            entry.completed++;
+            if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
+          }
+        } else {
+          entry.total_assigned++;
+          if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
+            entry.overdue++;
+            isOverdue = true;
+          }
+
+          if (task.status === 'Completed') {
+            entry.completed++;
+            // On-time: completed before or on deadline
+            if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
+          } else if (task.status === 'In Progress') {
+            entry.in_progress++;
+          } else if (task.status === 'Pending') {
+            entry.pending++;
+          } else if (task.status === 'Issue') {
+            entry.issue++;
+          } else if (task.status === 'No Need') {
+            entry.no_need++;
+          }
         }
 
         // Add task detail for drill-down
@@ -1237,21 +1284,9 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
           ticket_id: task.milestone?.workload_ticket?.id,
           in_progress_at: task.in_progress_at || task.created_at,
           updated_at: task.updated_at,
+          started_in_range: startedInRange,
+          completed_in_range: completedInRange
         });
-
-        if (task.status === 'Completed') {
-          entry.completed++;
-          // On-time: completed before or on deadline
-          if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
-        } else if (task.status === 'In Progress') {
-          entry.in_progress++;
-        } else if (task.status === 'Pending') {
-          entry.pending++;
-        } else if (task.status === 'Issue') {
-          entry.issue++;
-        } else if (task.status === 'No Need') {
-          entry.no_need++;
-        }
 
         // Aging: hours between in_progress_at and completion (or now if still active)
         const startTime = task.in_progress_at || task.created_at;

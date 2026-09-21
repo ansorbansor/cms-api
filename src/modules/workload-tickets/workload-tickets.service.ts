@@ -1174,7 +1174,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     if (mode === 'achievement') {
       queryBuilder = queryBuilder.where(
         `((COALESCE(task.in_progress_at, task.created_at) >= :from AND COALESCE(task.in_progress_at, task.created_at) <= :to)
-        OR (task.status = 'Completed' AND task.updated_at >= :from AND task.updated_at <= :to))`,
+        OR (task.updated_at >= :from AND task.updated_at <= :to))`,
         { from, to }
       );
     } else {
@@ -1215,6 +1215,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
             in_progress: 0,
             pending: 0,
             issue: 0,
+            review_customer: 0,
             no_need: 0,
             overdue: 0,
             on_time: 0,
@@ -1230,26 +1231,30 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
         const taskStart = new Date(task.in_progress_at || task.created_at);
         const taskUpdated = new Date(task.updated_at);
         const startedInRange = taskStart >= from && taskStart <= to;
-        const completedInRange = task.status === 'Completed' && taskUpdated >= from && taskUpdated <= to;
+        const updatedInRange = taskUpdated >= from && taskUpdated <= to;
+        const completedInRange = task.status === 'Completed' && updatedInRange;
 
         let isOverdue = false;
 
         if (mode === 'achievement') {
           if (startedInRange) {
             entry.total_assigned++;
-            if (task.status === 'In Progress') entry.in_progress++;
+          }
+          if (updatedInRange) {
+            if (task.status === 'Completed') {
+              entry.completed++;
+              if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
+            }
+            else if (task.status === 'In Progress') entry.in_progress++;
             else if (task.status === 'Pending') entry.pending++;
             else if (task.status === 'Issue') entry.issue++;
+            else if (task.status === 'Review Customer') entry.review_customer++;
             else if (task.status === 'No Need') entry.no_need++;
 
-            if (['In Progress', 'Pending', 'Issue'].includes(task.status) && task.deadline && task.deadline < now) {
+            if (['In Progress', 'Pending', 'Issue', 'Review Customer'].includes(task.status) && task.deadline && task.deadline < now) {
               entry.overdue++;
               isOverdue = true;
             }
-          }
-          if (completedInRange) {
-            entry.completed++;
-            if (task.deadline && task.updated_at <= task.deadline) entry.on_time++;
           }
         } else {
           entry.total_assigned++;
@@ -1268,6 +1273,8 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
             entry.pending++;
           } else if (task.status === 'Issue') {
             entry.issue++;
+          } else if (task.status === 'Review Customer') {
+            entry.review_customer++;
           } else if (task.status === 'No Need') {
             entry.no_need++;
           }
@@ -1286,7 +1293,8 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
           in_progress_at: task.in_progress_at || task.created_at,
           updated_at: task.updated_at,
           started_in_range: startedInRange,
-          completed_in_range: completedInRange
+          completed_in_range: completedInRange,
+          updated_in_range: updatedInRange
         });
 
         // Aging: hours between in_progress_at and completion (or now if still active)

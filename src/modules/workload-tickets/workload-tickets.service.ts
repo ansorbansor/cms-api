@@ -1227,9 +1227,10 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
         const entry = userMap[user.id];
 
-        const taskStart = task.in_progress_at || task.created_at;
+        const taskStart = new Date(task.in_progress_at || task.created_at);
+        const taskUpdated = new Date(task.updated_at);
         const startedInRange = taskStart >= from && taskStart <= to;
-        const completedInRange = task.status === 'Completed' && task.updated_at >= from && task.updated_at <= to;
+        const completedInRange = task.status === 'Completed' && taskUpdated >= from && taskUpdated <= to;
 
         let isOverdue = false;
 

@@ -1190,6 +1190,35 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     const userMap: Record<number, any> = {};
     const now = new Date();
 
+    // Pre-populate with all internal & on board users, even those with 0 tasks
+    const targetUsers = await getManager().getRepository(User)
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.employeePosition', 'position')
+      .where('LOWER(user.level_iresource) = :level', { level: 'internal' })
+      .andWhere('LOWER(user.status_description) = :status', { status: 'on board' })
+      .getMany();
+
+    for (const user of targetUsers) {
+      userMap[user.id] = {
+        user_id: user.id,
+        name: user.name,
+        position: user.employeePosition?.name || '-',
+        total_assigned: 0,
+        completed: 0,
+        in_progress: 0,
+        pending: 0,
+        issue: 0,
+        review_customer: 0,
+        no_need: 0,
+        overdue: 0,
+        on_time: 0,
+        rejection_count: 0,
+        total_aging_hours: 0,
+        aging_count: 0,
+        tasks: [], // Store simplified task list for frontend modal
+      };
+    }
+
     for (const task of tasks) {
       const usersMapForTask = new Map<number, any>();
       if (task.assigned_to_user) {
@@ -1206,24 +1235,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
       for (const user of users) {
         if (!userMap[user.id]) {
-          userMap[user.id] = {
-            user_id: user.id,
-            name: user.name,
-            position: (user as any).employeePosition?.name || '-',
-            total_assigned: 0,
-            completed: 0,
-            in_progress: 0,
-            pending: 0,
-            issue: 0,
-            review_customer: 0,
-            no_need: 0,
-            overdue: 0,
-            on_time: 0,
-            rejection_count: 0,
-            total_aging_hours: 0,
-            aging_count: 0,
-            tasks: [], // Store simplified task list for frontend modal
-          };
+          continue; // Skip users that do not match the criteria (e.g. external or not on board)
         }
 
         const entry = userMap[user.id];

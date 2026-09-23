@@ -532,7 +532,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
       .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
       .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
       .andWhere('workload_ticket.is_template = false')
-      .orderBy('task.created_at', 'ASC')
+      .orderBy('task.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

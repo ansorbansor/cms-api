@@ -73,17 +73,49 @@ export class AbsenceService {
     return deg * (Math.PI / 180);
   }
 
+  private async getHolidays(year: number): Promise<string[]> {
+    try {
+      const response = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.map(h => h.date);
+      }
+    } catch (e) {
+      console.error(`Error fetching holidays for year ${year}:`, e.message);
+    }
+    return [];
+  }
+
   async getMonthlySummary(month: string) {
     // month format YYYY-MM
-    const startOfMonth = moment(`${month}-01`).startOf('month').format('YYYY-MM-DD HH:mm:ss');
-    const endOfMonth = moment(`${month}-01`).endOf('month').format('YYYY-MM-DD HH:mm:ss');
+    const yearStr = month.split('-')[0];
+    const holidays = await this.getHolidays(parseInt(yearStr, 10));
+
+    const startOfMonth = moment(`${month}-01`).startOf('month');
+    const endOfMonth = moment(`${month}-01`).endOf('month');
+    
+    // Calculate expected working days (Mon-Fri, excluding holidays)
+    let expectedWorkingDays = 0;
+    const currentDay = startOfMonth.clone();
+    while (currentDay.isSameOrBefore(endOfMonth)) {
+      const dayOfWeek = currentDay.day();
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) { // 1=Mon, 5=Fri
+        const dateString = currentDay.format('YYYY-MM-DD');
+        if (!holidays.includes(dateString)) {
+          expectedWorkingDays++;
+        }
+      }
+      currentDay.add(1, 'day');
+    }
+
+    const startOfMonthStr = startOfMonth.format('YYYY-MM-DD HH:mm:ss');
+    const endOfMonthStr = endOfMonth.format('YYYY-MM-DD HH:mm:ss');
 
     const absences = await this.absenceRepository
       .createQueryBuilder('absence')
       .leftJoinAndSelect('absence.user', 'user')
       .leftJoinAndSelect('user.employeePosition', 'position')
-      .where('absence.clock_in >= :startOfMonth', { startOfMonth })
-      .andWhere('absence.clock_in <= :endOfMonth', { endOfMonth })
+      .where('absence.clock_in >= :startOfMonthStr', { startOfMonthStr })
+      .andWhere('absence.clock_in <= :endOfMonthStr', { endOfMonthStr })
       .getMany();
 
     // Parse office locations
@@ -200,11 +232,18 @@ export class AbsenceService {
       
       const late_reasons_unique = [...new Set(sum.late_reasons)].filter(r => r).join(', ');
 
+      let attendance_percentage = 0;
+      if (expectedWorkingDays > 0) {
+        attendance_percentage = parseFloat(((sum.total_present / expectedWorkingDays) * 100).toFixed(1));
+      }
+
       return {
         name: sum.name,
         role: sum.role,
         total_present: sum.total_present,
         total_absent: sum.total_absent,
+        attendance_percentage,
+        expected_working_days: expectedWorkingDays,
         late_count: sum.late_count,
         late_reasons: late_reasons_unique,
         avg_hours_formatted: `${avg_hours}h ${avg_mins}m`,
@@ -216,7 +255,10 @@ export class AbsenceService {
     // Sort by name alphabetically
     results.sort((a, b) => a.name.localeCompare(b.name));
 
-    return results;
+    return {
+      expected_working_days: expectedWorkingDays,
+      data: results
+    };
   }
 
   async create(

@@ -27,9 +27,9 @@ export class ImportController {
   @Get('jobs')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async getJobs(@Request() req, @Query('page') page: string) {
+  async getJobs(@Request() req, @Query('page') page: string, @Query('type') type: string) {
     const pageNum = parseInt(page) || 1;
-    const result = await this.importService.getJobs(req.user, pageNum);
+    const result = await this.importService.getJobs(req.user, pageNum, type || 'IMPORT_PO');
     return {
       meta: { status: 200, message: 'List Data Import Jobs', success: true },
       ...result,

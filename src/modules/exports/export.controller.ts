@@ -30,8 +30,8 @@ export class ExportController {
   @Get('jobs')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async getJobs(@Request() req) {
-    const jobs = await this.exportService.getJobs(req.user);
+  async getJobs(@Request() req, @Query('type') type: string) {
+    const jobs = await this.exportService.getJobs(req.user, type);
     return {
       meta: { status: 200, message: 'List Data Export Jobs', success: true },
       data: jobs,
@@ -255,6 +255,28 @@ export class ExportController {
       console.error('Error in exportTakeData:', error);
       throw error;
     }
+  }
+
+  @Get('materials')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportMaterials(
+    @Request() req,
+    @Query('search') search: string,
+    @Query('category') category: string,
+    @Query('status') status: string,
+  ) {
+    const job = await this.exportService.exportMaterials(
+      req.user,
+      req.ip,
+      search,
+      category,
+      status,
+    );
+    return {
+      meta: { status: 200, message: 'Export Materials Job Queued', success: true },
+      data: job,
+    };
   }
 
   @Get('workload-tickets-trending')

@@ -76,7 +76,7 @@ export class ImportService {
 
   private importQueue: async.QueueObject<any>;
 
-  async getJobs(user: User, page: number = 1) {
+  async getJobs(user: User, page: number = 1, type: string = 'IMPORT_PO') {
     const limitDays = 1;
     const offsetDays = (page - 1) * limitDays;
 
@@ -84,7 +84,7 @@ export class ImportService {
     const distinctDates = await getManager().query(`
       SELECT DISTINCT DATE(created_at) as job_date
       FROM export_jobs
-      WHERE type = 'IMPORT_PO'
+      WHERE type = '${type}'
       ORDER BY job_date DESC
       LIMIT ${limitDays} OFFSET ${offsetDays}
     `);
@@ -113,7 +113,7 @@ export class ImportService {
     // 2. Get jobs for that specific date
     const jobsForDate = await this.exportJobRepository.createQueryBuilder('job')
       .leftJoinAndSelect('job.user', 'user')
-      .where('job.type = :type', { type: 'IMPORT_PO' })
+      .where('job.type = :type', { type })
       .andWhere('DATE(job.created_at) = :targetDate', { targetDate })
       .orderBy('job.created_at', 'DESC')
       .getMany();

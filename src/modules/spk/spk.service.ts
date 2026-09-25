@@ -704,14 +704,6 @@ export class SPKService {
       }
     }
 
-    if (
-      currentUser.employeePosition?.code == RoleEnum.PM &&
-      !paginationOptions.status
-    ) {
-      // Default filter for PM: show items that are 'APPROVED' and 'OVER BUDGET'
-      data.andWhere('spk.status = :status', { status: SPKStatus.APPROVED });
-      data.andWhere('spk.is_over_budget = true');
-    }
 
 
     if (paginationOptions.search) {

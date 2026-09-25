@@ -13,7 +13,10 @@ import {
   HttpStatus,
   HttpCode,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse, successResponseList } from 'src/utils/responses';
@@ -34,9 +37,20 @@ export class MaterialsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createDto: CreateMaterialDTO) {
+  async create(@Body() createDto: CreateMaterialDTO, @Request() req) {
     return successResponse(
-      await this.materialsService.create(createDto),
+      await this.materialsService.create(createDto, req.user.id),
+      'success',
+    );
+  }
+
+  @Post('import')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importExcel(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return successResponse(
+      await this.materialsService.importExcel(file, req.user.id),
       'success',
     );
   }
@@ -92,9 +106,10 @@ export class MaterialsController {
   async update(
     @Param() param: IDParamDto,
     @Body() updateDto: UpdateMaterialDTO,
+    @Request() req,
   ) {
     return successResponse(
-      await this.materialsService.update(+param.id, updateDto),
+      await this.materialsService.update(+param.id, updateDto, req.user.id),
       'success',
     );
   }
@@ -114,9 +129,10 @@ export class MaterialsController {
   async confirmDelivery(
     @Param() param: IDParamDto,
     @Request() req,
+    @Body() body: { site_id?: string },
   ) {
     return successResponse(
-      await this.materialsService.confirmDelivery(+param.id, req.user.id),
+      await this.materialsService.confirmDelivery(+param.id, req.user.id, body?.site_id),
       'success',
     );
   }

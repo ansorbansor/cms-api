@@ -22,6 +22,7 @@ import * as async from 'async';
 import { ExportJob } from 'src/entities/export-job.entity';
 import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
+import { MaterialsService } from '../materials/materials.service';
 
 @Injectable()
 export class ExportService {
@@ -44,6 +45,7 @@ export class ExportService {
     private workloadTaskRepository: Repository<WorkloadTask>,
     private activityLogService: ActivityLogService,
     private userService: UsersService,
+    private materialsService: MaterialsService,
   ) {
     this.exportQueue = async.queue(async (task, callback) => {
       try {
@@ -57,9 +59,13 @@ export class ExportService {
 
   private exportQueue: async.QueueObject<any>;
 
-  async getJobs(user: User) {
+  async getJobs(user: User, type?: string) {
+    const whereClause: any = { user_id: user.id };
+    if (type) {
+      whereClause.type = type;
+    }
     return this.exportJobRepository.find({
-      where: { user_id: user.id },
+      where: whereClause,
       order: { created_at: 'DESC' },
       take: 20
     });
@@ -89,6 +95,20 @@ export class ExportService {
     job.user_id = user.id;
     job.type = 'PO';
     job.payload = JSON.stringify({ ip, startDate, endDate, search, status, regionId, month, year, linePOStatus, customerId, actualWorkStatus, dateFilterBy, projectName });
+    job.status = 'PENDING';
+    await this.exportJobRepository.save(job);
+
+    this.exportQueue.push(job.id);
+
+    return job;
+  }
+
+  async exportMaterials(user: User, ip: string, search: string, category: string, status: string) {
+    const job = new ExportJob();
+    job.user_id = user.id;
+    job.type = 'IMPORT_MATERIALS'; // Use the same type string since the modal will poll with it if we don't separate them. Wait, Export should use EXPORT_MATERIALS. 
+    job.type = 'EXPORT_MATERIALS';
+    job.payload = JSON.stringify({ ip, search, category, status });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -186,6 +206,14 @@ export class ExportService {
           payload.projectId,
           payload.jobCategory,
           payload.taskName
+        ) as string;
+      } else if (job.type === 'EXPORT_MATERIALS') {
+        filePath = await this._generateMaterialsFile(
+          user,
+          payload.ip,
+          payload.search,
+          payload.category,
+          payload.status
         ) as string;
       }
 
@@ -1133,6 +1161,63 @@ export class ExportService {
     await this.activityLogService.create({
       user_id: user.id,
       description: `Export Data Take-Data`,
+      ip: ip,
+    });
+
+    return filePath;
+  }
+  async _generateMaterialsFile(user: User, ip: string, search: string, category: string, status: string) {
+    const { data } = await this.materialsService.findAll(1, 0, search, category, status);
+
+    const rows = [];
+    data.forEach((material: any) => {
+      let siteIdDisplay = material.site_id || '-';
+      let statusDisplay = material.status || '-';
+      
+      if (material.deployments && material.deployments.length > 0) {
+        siteIdDisplay = material.deployments.map((d: any) => `Site ${d.site_id}: Qty ${d.quantity}`).join('\n');
+        statusDisplay = material.deployments.map((d: any) => `Site ${d.site_id}: ${d.status}`).join('\n');
+      } else if (material.status === 'On Delivery' && !material.site_id) {
+        siteIdDisplay = `Warehouse ${material.warehouse_region || '-'}`;
+      } else if (material.status === 'Return Delivery') {
+        siteIdDisplay = `Warehouse ${material.warehouse_region || '-'}`;
+      }
+
+      rows.push({
+        'Material Name': material.material_name,
+        'Category': material.material_category,
+        'Serial Number': material.serial_number,
+        'Brand': material.brand,
+        'Source Type': material.source_type,
+        'Customer / Owner': material.owner_client,
+        'Status': statusDisplay,
+        'Warehouse Region': material.warehouse_region,
+        'Site ID': siteIdDisplay,
+        'Project': material.project_name,
+        'Quantity': material.quantity,
+        'Unit': material.unit,
+        'Delivery Reference': material.delivery_reference,
+        'Condition': material.condition,
+        'Notes': material.notes,
+      });
+    });
+
+    const XLSX = xlsx;
+    const workSheet = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, workSheet, 'Materials');
+
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
+    const fileName = `Materials-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+    XLSX.writeFile(wb, filePath, { compression: true });
+
+    await this.activityLogService.create({
+      user_id: user.id,
+      description: `Export Materials`,
       ip: ip,
     });
 

@@ -10,9 +10,9 @@ import { Absence } from 'src/entities/absence.entity';
 import { UsersModule } from '../users/users.module';
 import { SPKOperational } from 'src/entities/spk-operationals.entity';
 import { ExportJob } from 'src/entities/export-job.entity';
-
 import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
+import { MaterialsModule } from '../materials/materials.module';
 
 @Module({
   imports: [
@@ -28,6 +28,7 @@ import { WorkloadTask } from 'src/entities/workload-task.entity';
     ]),
     ActivityLogModule,
     UsersModule,
+    MaterialsModule,
   ],
   controllers: [ExportController],
   providers: [ExportService],

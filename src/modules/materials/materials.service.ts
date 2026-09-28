@@ -113,19 +113,40 @@ export class MaterialsService {
       for (const row of data) {
         rowIndex++;
         try {
-          const category = row['Category'] || 'Accessories (Clamp, Nut, Screw, etc)';
-          const sourceType = row['Source Type'] || 'Purchased';
-          const status = row['Status'] || 'In Warehouse';
-          const condition = row['Condition'] || 'Tested and Worked';
-          const region = row['Warehouse Region'];
-          const project = row['Project'];
+          let category = row['Category'] ? String(row['Category']) : 'Accessories (Clamp, Nut, Screw, etc)';
+          let sourceType = row['Source Type'] ? String(row['Source Type']) : 'Purchased';
+          let status = row['Status'] ? String(row['Status']) : 'In Warehouse';
+          let condition = row['Condition'] ? String(row['Condition']) : 'Tested and Worked';
+          let region = row['Warehouse Region'] ? String(row['Warehouse Region']) : undefined;
+          let project = row['Project'] ? String(row['Project']) : undefined;
 
-          if (!validCategories.includes(category)) throw new Error(`Invalid Category: "${category}"`);
-          if (!validSourceTypes.includes(sourceType)) throw new Error(`Invalid Source Type: "${sourceType}"`);
-          if (!validStatuses.includes(status)) throw new Error(`Invalid Status: "${status}"`);
-          if (!validConditions.includes(condition)) throw new Error(`Invalid Condition: "${condition}"`);
-          if (region && !validRegions.includes(region)) throw new Error(`Invalid Warehouse Region: "${region}"`);
-          if (project && !validProjects.includes(project)) throw new Error(`Invalid Project: "${project}"`);
+          const matchedCategory = validCategories.find(v => v.toLowerCase() === category.trim().toLowerCase());
+          if (!matchedCategory) throw new Error(`Invalid Category: "${category}"`);
+          category = matchedCategory;
+
+          const matchedSourceType = validSourceTypes.find(v => v.toLowerCase() === sourceType.trim().toLowerCase());
+          if (!matchedSourceType) throw new Error(`Invalid Source Type: "${sourceType}"`);
+          sourceType = matchedSourceType;
+
+          const matchedStatus = validStatuses.find(v => v.toLowerCase() === status.trim().toLowerCase());
+          if (!matchedStatus) throw new Error(`Invalid Status: "${status}"`);
+          status = matchedStatus;
+
+          const matchedCondition = validConditions.find(v => v.toLowerCase() === condition.trim().toLowerCase());
+          if (!matchedCondition) throw new Error(`Invalid Condition: "${condition}"`);
+          condition = matchedCondition;
+
+          if (region) {
+              const matchedRegion = validRegions.find(v => v.toLowerCase() === region.trim().toLowerCase());
+              if (!matchedRegion) throw new Error(`Invalid Warehouse Region: "${region}"`);
+              region = matchedRegion;
+          }
+
+          if (project) {
+              const matchedProject = validProjects.find(v => v.toLowerCase() === project.trim().toLowerCase());
+              if (!matchedProject) throw new Error(`Invalid Project: "${project}"`);
+              project = matchedProject;
+          }
 
           const createDto: CreateMaterialDTO = {
             material_name: row['Material Name'],

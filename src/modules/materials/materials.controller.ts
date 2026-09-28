@@ -64,9 +64,10 @@ export class MaterialsController {
     @Query('search') search: string,
     @Query('category') category: string,
     @Query('status') status: string,
+    @Query('summaryFilter') summaryFilter: string,
   ) {
     return successResponseList(
-      await this.materialsService.findAll(page, limit, search, category, status),
+      await this.materialsService.findAll(page, limit, search, category, status, summaryFilter),
       'success',
     );
   }

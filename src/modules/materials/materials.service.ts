@@ -213,7 +213,7 @@ export class MaterialsService {
     }
   }
 
-  async findAll(page: number, limit: number, search: string, category: string, status: string) {
+  async findAll(page: number, limit: number, search: string, category: string, status: string, summaryFilter?: string) {
     const query = this.materialRepository.createQueryBuilder('material');
 
     if (search) {
@@ -229,6 +229,21 @@ export class MaterialsService {
     
     if (status) {
       query.andWhere('material.status = :status', { status });
+    }
+
+    if (summaryFilter) {
+      if (summaryFilter === 'inWarehouse') {
+        query.andWhere('material.status = :statusFilter', { statusFilter: 'In Warehouse' });
+      } else if (summaryFilter === 'installed') {
+        query.andWhere('material.status = :statusFilter', { statusFilter: 'Delivered' });
+      } else if (summaryFilter === 'onShipping') {
+        query.andWhere('material.status IN (:...shippingStatuses)', { shippingStatuses: ['On Shipping', 'On Delivery', 'Return Delivery'] });
+      } else if (summaryFilter === 'faulty') {
+        query.andWhere('(material.status IN (:...faultyStatuses) OR material.condition = :faultyCondition)', { 
+          faultyStatuses: ['Faulty', 'Faulty / RMA', 'Faulty/RMA'], 
+          faultyCondition: 'Tested and Faulty' 
+        });
+      }
     }
 
     if (limit > 0) {

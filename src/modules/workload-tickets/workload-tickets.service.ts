@@ -1977,8 +1977,8 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     const tasksQuery = `
       SELECT TO_CHAR(DATE_TRUNC('${truncString}', po.actual_work_date), 'YYYY-MM-DD') as date, 
              task.name as task_name,
-             SUM(CASE WHEN task.status = 'Completed' THEN 1 ELSE 0 END) as completed_count,
-             COUNT(task.id) as total_count
+             COUNT(DISTINCT CASE WHEN task.status = 'Completed' THEN task.id END) as completed_count,
+             COUNT(DISTINCT task.id) as total_count
       FROM purchase_orders po
       INNER JOIN workload_tickets wt ON po.workload_ticket_id = wt.id
       INNER JOIN milestones m ON m.workload_ticket_id = wt.id

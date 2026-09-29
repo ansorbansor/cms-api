@@ -1940,32 +1940,16 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
 
     let taskFilterJoin = '';
-    if (jobCategory || query.taskNames) {
+    if (jobCategory) {
        taskFilterJoin = `
          INNER JOIN workload_tickets wt_filter ON po.workload_ticket_id = wt_filter.id
        `;
-       if (jobCategory) {
-          const jIds = jobCategory.split(',');
-          const jParams = jIds.map(j => {
-             params.push(j);
-             return `$${params.length}`;
-          }).join(',');
-          poWhere += ` AND wt_filter.job_category IN (${jParams})`;
-       }
-       if (query.taskNames) {
-          const namesArray = Array.isArray(query.taskNames) ? query.taskNames : query.taskNames.split(',');
-          if (namesArray.length > 0) {
-             const placeholders = namesArray.map(name => {
-                params.push(name);
-                return `$${params.length}`;
-             }).join(',');
-             taskFilterJoin += `
-               INNER JOIN milestones m_filter ON m_filter.workload_ticket_id = wt_filter.id
-               INNER JOIN workload_tasks task_filter ON task_filter.milestone_id = m_filter.id
-             `;
-             poWhere += ` AND task_filter.name IN (${placeholders})`;
-          }
-       }
+       const jIds = jobCategory.split(',');
+       const jParams = jIds.map(j => {
+          params.push(j);
+          return `$${params.length}`;
+       }).join(',');
+       poWhere += ` AND wt_filter.job_category IN (${jParams})`;
     }
 
     const revenueQuery = `

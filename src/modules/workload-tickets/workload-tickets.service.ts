@@ -1940,6 +1940,8 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
 
     let taskFilterJoin = '';
+    let poWhereTasks = poWhere;
+
     if (jobCategory) {
        taskFilterJoin = `
          INNER JOIN workload_tickets wt_filter ON po.workload_ticket_id = wt_filter.id
@@ -1949,14 +1951,13 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
           params.push(j);
           return `$${params.length}`;
        }).join(',');
-       poWhere += ` AND wt_filter.job_category IN (${jParams})`;
+       poWhereTasks += ` AND wt_filter.job_category IN (${jParams})`;
     }
 
     const revenueQuery = `
       WITH distinct_pos AS (
         SELECT DISTINCT po.id, po.actual_work_date, po.actual_work_amount, po.status
         FROM purchase_orders po
-        ${taskFilterJoin}
         WHERE ${poWhere}
       )
       SELECT TO_CHAR(DATE_TRUNC('${truncString}', actual_work_date), 'YYYY-MM-DD') as date, 
@@ -1983,7 +1984,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
       INNER JOIN milestones m ON m.workload_ticket_id = wt.id
       INNER JOIN workload_tasks task ON task.milestone_id = m.id
       ${taskFilterJoin.replace(/_filter/g, '_filter2')}
-      WHERE ${poWhere.replace(/_filter/g, '_filter2')}
+      WHERE ${poWhereTasks.replace(/_filter/g, '_filter2')}
       GROUP BY DATE_TRUNC('${truncString}', po.actual_work_date), task.name
     `;
 

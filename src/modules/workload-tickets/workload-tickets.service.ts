@@ -1969,12 +1969,23 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
 
     const revenueQuery = `
-      SELECT TO_CHAR(DATE_TRUNC('${truncString}', po.actual_work_date), 'YYYY-MM-DD') as date, 
-             SUM(po.actual_work_amount) as total_revenue
-      FROM purchase_orders po
-      ${taskFilterJoin}
-      WHERE ${poWhere}
-      GROUP BY DATE_TRUNC('${truncString}', po.actual_work_date)
+      WITH distinct_pos AS (
+        SELECT DISTINCT po.id, po.actual_work_date, po.actual_work_amount, po.status
+        FROM purchase_orders po
+        ${taskFilterJoin}
+        WHERE ${poWhere}
+      )
+      SELECT TO_CHAR(DATE_TRUNC('${truncString}', actual_work_date), 'YYYY-MM-DD') as date, 
+             SUM(actual_work_amount) as total_revenue,
+             JSON_AGG(
+               JSON_BUILD_OBJECT(
+                 'po_id', id,
+                 'status', COALESCE(UPPER(status), 'UNKNOWN'),
+                 'amount', actual_work_amount
+               )
+             ) as revenue_details_raw
+      FROM distinct_pos
+      GROUP BY DATE_TRUNC('${truncString}', actual_work_date)
       ORDER BY date ASC
     `;
 
@@ -2004,10 +2015,17 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
          completed: Number(tr.completed_count),
          total: Number(tr.total_count)
       }));
+      let detailsRaw = [];
+      try {
+        detailsRaw = typeof r.revenue_details_raw === 'string' ? JSON.parse(r.revenue_details_raw) : r.revenue_details_raw;
+      } catch (e) {
+        detailsRaw = [];
+      }
       return {
         date: r.date,
         totalRevenue: Number(r.total_revenue),
-        tasksBreakdown: dateTasks
+        tasksBreakdown: dateTasks,
+        revenueDetailsRaw: detailsRaw
       };
     });
 

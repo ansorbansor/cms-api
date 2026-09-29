@@ -1907,7 +1907,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     const projectId = query.project_id;
     const jobCategory = query.job_category;
 
-    let poWhere = 'po.actual_work_date IS NOT NULL AND po.actual_work_amount IS NOT NULL';
+    let poWhere = 'po.actual_work_date IS NOT NULL AND po.actual_work_amount IS NOT NULL AND po.deleted_at IS NULL';
     const params: any[] = [];
     
     if (startDate) {
@@ -1927,7 +1927,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
          params.push(c);
          return `$${params.length}`;
        }).join(',');
-       poWhere += ` AND po.customer_id IN (${cParams})`;
+       poWhere += ` AND po.customer_id IN (SELECT id FROM customers WHERE name IN (SELECT name FROM customers WHERE id IN (${cParams})))`;
     }
 
     if (projectId) {
@@ -1936,7 +1936,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
           params.push(p);
           return `$${params.length}`;
        }).join(',');
-       poWhere += ` AND po.project_id IN (${pParams})`;
+       poWhere += ` AND po.project_id IN (SELECT id FROM projects WHERE name IN (SELECT name FROM projects WHERE id IN (${pParams})))`;
     }
 
     let taskFilterJoin = '';

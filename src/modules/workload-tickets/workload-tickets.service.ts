@@ -1894,6 +1894,125 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }));
   }
 
+  async getTrendingRevenue(query: any = {}): Promise<any> {
+    const period = query.period || 'monthly';
+    let truncString = 'month';
+    if (period === 'daily') truncString = 'day';
+    if (period === 'weekly') truncString = 'week';
+    if (period === 'yearly') truncString = 'year';
+
+    const startDate = query.startDate;
+    const endDate = query.endDate;
+    const customerId = query.customer_id;
+    const projectId = query.project_id;
+    const jobCategory = query.job_category;
+
+    let poWhere = 'po.actual_work_date IS NOT NULL AND po.actual_work_amount IS NOT NULL';
+    const params: any[] = [];
+    
+    if (startDate) {
+       params.push(new Date(startDate));
+       poWhere += ` AND po.actual_work_date >= $${params.length}`;
+    }
+    if (endDate) {
+       const end = new Date(endDate);
+       end.setHours(23, 59, 59, 999);
+       params.push(end);
+       poWhere += ` AND po.actual_work_date <= $${params.length}`;
+    }
+
+    if (customerId) {
+       const cIds = customerId.split(',');
+       const cParams = cIds.map(c => {
+         params.push(c);
+         return `$${params.length}`;
+       }).join(',');
+       poWhere += ` AND po.customer_id IN (${cParams})`;
+    }
+
+    if (projectId) {
+       const pIds = projectId.split(',');
+       const pParams = pIds.map(p => {
+          params.push(p);
+          return `$${params.length}`;
+       }).join(',');
+       poWhere += ` AND po.project_id IN (${pParams})`;
+    }
+
+    let taskFilterJoin = '';
+    if (jobCategory || query.taskNames) {
+       taskFilterJoin = `
+         INNER JOIN workload_tickets wt_filter ON po.workload_ticket_id = wt_filter.id
+       `;
+       if (jobCategory) {
+          const jIds = jobCategory.split(',');
+          const jParams = jIds.map(j => {
+             params.push(j);
+             return `$${params.length}`;
+          }).join(',');
+          poWhere += ` AND wt_filter.job_category IN (${jParams})`;
+       }
+       if (query.taskNames) {
+          const namesArray = Array.isArray(query.taskNames) ? query.taskNames : query.taskNames.split(',');
+          if (namesArray.length > 0) {
+             const placeholders = namesArray.map(name => {
+                params.push(name);
+                return `$${params.length}`;
+             }).join(',');
+             taskFilterJoin += `
+               INNER JOIN milestones m_filter ON m_filter.workload_ticket_id = wt_filter.id
+               INNER JOIN workload_tasks task_filter ON task_filter.milestone_id = m_filter.id
+             `;
+             poWhere += ` AND task_filter.name IN (${placeholders})`;
+          }
+       }
+    }
+
+    const revenueQuery = `
+      SELECT TO_CHAR(DATE_TRUNC('${truncString}', po.actual_work_date), 'YYYY-MM-DD') as date, 
+             SUM(po.actual_work_amount) as total_revenue
+      FROM purchase_orders po
+      ${taskFilterJoin}
+      WHERE ${poWhere}
+      GROUP BY DATE_TRUNC('${truncString}', po.actual_work_date)
+      ORDER BY date ASC
+    `;
+
+    const tasksQuery = `
+      SELECT TO_CHAR(DATE_TRUNC('${truncString}', po.actual_work_date), 'YYYY-MM-DD') as date, 
+             task.name as task_name,
+             SUM(CASE WHEN task.status = 'Completed' THEN 1 ELSE 0 END) as completed_count,
+             COUNT(task.id) as total_count
+      FROM purchase_orders po
+      INNER JOIN workload_tickets wt ON po.workload_ticket_id = wt.id
+      INNER JOIN milestones m ON m.workload_ticket_id = wt.id
+      INNER JOIN workload_tasks task ON task.milestone_id = m.id
+      ${taskFilterJoin.replace(/_filter/g, '_filter2')}
+      WHERE ${poWhere.replace(/_filter/g, '_filter2')}
+      GROUP BY DATE_TRUNC('${truncString}', po.actual_work_date), task.name
+    `;
+
+    const revenueResult = await getManager().query(revenueQuery, params);
+    
+    // We reuse params since it's the exact same placeholders and order for poWhere
+    const paramsTasks = [...params];
+    const tasksResult = await getManager().query(tasksQuery, paramsTasks);
+
+    const mappedResult = revenueResult.map(r => {
+      const dateTasks = tasksResult.filter(tr => tr.date === r.date).map(tr => ({
+         taskName: tr.task_name,
+         completed: Number(tr.completed_count),
+         total: Number(tr.total_count)
+      }));
+      return {
+        date: r.date,
+        totalRevenue: Number(r.total_revenue),
+        tasksBreakdown: dateTasks
+      };
+    });
+
+    return mappedResult;
+  }
   private async sendWhatsappNotification(phoneNumber: string, message: string) {
     try {
       await this.whatsappService.sendMessage(phoneNumber, message);

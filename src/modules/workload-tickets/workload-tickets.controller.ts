@@ -187,6 +187,13 @@ export class WorkloadTicketsController {
     return successResponse(result, 'Trending expenses retrieved successfully');
   }
 
+  @Get('trending-revenue')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getTrendingRevenue(@Query() query: any) {
+    const result = await this.ticketsService.getTrendingRevenue(query);
+    return successResponse(result, 'Trending revenue retrieved successfully');
+  }
+
   @Post('ai-summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getAiSummary(@Body() body: any) {

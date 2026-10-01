@@ -1288,24 +1288,45 @@ export class ExportService {
 
     const rows = [];
     data.forEach((task) => {
-      // Find the first PO's project and customer if available
-      const po = task.milestone?.workload_ticket?.purchase_orders?.[0];
-      const row: any = {
-        'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
-        'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
-        'Project Name': po?.project?.name || '-',
-        'Customer': po?.customer?.name || '-',
-        'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
-        'PIC Name': task.assigned_to_user?.name || '-'
-      };
+      const purchaseOrders = task.milestone?.workload_ticket?.purchase_orders || [];
       
-      if (exportMode === 'revenue') {
-        const createdAtStr = po?.createdAtParseDate ? String(po.createdAtParseDate) : po?.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : '';
-        row['Unique ID'] = po ? exportUniqueId(po.id, createdAtStr) : '-';
-        row['PO amount'] = po?.line_amount || 0;
+      // If there are purchase orders and exportMode is revenue (or in general to show all POs)
+      if (purchaseOrders.length > 0 && exportMode === 'revenue') {
+        purchaseOrders.forEach((po) => {
+          const row: any = {
+            'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+            'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
+            'Project Name': po?.project?.name || '-',
+            'Customer': po?.customer?.name || '-',
+            'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+            'PIC Name': task.assigned_to_user?.name || '-'
+          };
+          
+          const createdAtStr = po?.createdAtParseDate ? String(po.createdAtParseDate) : po?.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : '';
+          row['Unique ID'] = po ? exportUniqueId(po.id, createdAtStr) : '-';
+          row['PO amount'] = po?.line_amount || 0;
+          
+          rows.push(row);
+        });
+      } else {
+        // Fallback for standard mode or when there are no purchase orders
+        const po = purchaseOrders[0];
+        const row: any = {
+          'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+          'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
+          'Project Name': po?.project?.name || '-',
+          'Customer': po?.customer?.name || '-',
+          'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+          'PIC Name': task.assigned_to_user?.name || '-'
+        };
+        
+        if (exportMode === 'revenue') {
+          row['Unique ID'] = '-';
+          row['PO amount'] = 0;
+        }
+        
+        rows.push(row);
       }
-      
-      rows.push(row);
     });
 
     const XLSX = xlsx;

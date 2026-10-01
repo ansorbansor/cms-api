@@ -48,10 +48,12 @@ export const PurchaseOrderBySiteResource = (
   po: PurchaseOrder[],
   currentCashAdvance: number,
   totalCashAdvance: number,
+  bopDetails: any = [],
 ): any => {
   return {
     current_cash_advance: currentCashAdvance,
     total_cash_advance: totalCashAdvance,
+    bop_details: bopDetails,
     purchase_order: po.map((e) => {
       return {
         id: e.id,

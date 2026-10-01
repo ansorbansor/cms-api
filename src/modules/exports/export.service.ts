@@ -23,6 +23,7 @@ import { ExportJob } from 'src/entities/export-job.entity';
 import { SiteTakeDataAssignment } from 'src/entities/site-take-data-assignment.entity';
 import { WorkloadTask } from 'src/entities/workload-task.entity';
 import { MaterialsService } from '../materials/materials.service';
+import { exportUniqueId } from 'src/utils/encryption-helper';
 
 @Injectable()
 export class ExportService {
@@ -126,11 +127,12 @@ export class ExportService {
     projectId: string,
     jobCategory: string,
     taskName: string,
+    exportMode: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'WORKLOAD_TICKETS_TRENDING';
-    job.payload = JSON.stringify({ ip, startDate, endDate, customerId, projectId, jobCategory, taskName });
+    job.payload = JSON.stringify({ ip, startDate, endDate, customerId, projectId, jobCategory, taskName, exportMode });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -205,7 +207,8 @@ export class ExportService {
           payload.customerId,
           payload.projectId,
           payload.jobCategory,
-          payload.taskName
+          payload.taskName,
+          payload.exportMode
         ) as string;
       } else if (job.type === 'EXPORT_MATERIALS') {
         filePath = await this._generateMaterialsFile(
@@ -1233,6 +1236,7 @@ export class ExportService {
     projectId: string,
     jobCategory: string,
     taskName: string,
+    exportMode: string,
   ) {
     const qb = this.workloadTaskRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
@@ -1286,14 +1290,22 @@ export class ExportService {
     data.forEach((task) => {
       // Find the first PO's project and customer if available
       const po = task.milestone?.workload_ticket?.purchase_orders?.[0];
-      rows.push({
+      const row: any = {
         'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
         'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
         'Project Name': po?.project?.name || '-',
         'Customer': po?.customer?.name || '-',
         'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
         'PIC Name': task.assigned_to_user?.name || '-'
-      });
+      };
+      
+      if (exportMode === 'revenue') {
+        const createdAtStr = po?.createdAtParseDate ? String(po.createdAtParseDate) : po?.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : '';
+        row['Unique ID'] = po ? exportUniqueId(po.id, createdAtStr) : '-';
+        row['PO amount'] = po?.line_amount || 0;
+      }
+      
+      rows.push(row);
     });
 
     const XLSX = xlsx;

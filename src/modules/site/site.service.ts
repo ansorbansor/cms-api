@@ -72,9 +72,15 @@ export class SiteService {
     );
     totalCashout = totalCashout[0].sum ? Number(totalCashout[0].sum) : 0;
 
+    let bopDetails = await getManager().query(
+      "SELECT json_agg(json_build_object('spk_number', spk_number, 'cash_advance', cash_advance)) as details FROM spk WHERE site_id = $1 AND deleted_at IS NULL",
+      [siteId],
+    );
+    bopDetails = bopDetails[0].details ? bopDetails[0].details : [];
+
     totalSPKAmount = totalSPKAmount - totalCashback + totalCashout;
 
-    return PurchaseOrderBySiteResource(po, totalSPKAmount, maxBudgetBySite);
+    return PurchaseOrderBySiteResource(po, totalSPKAmount, maxBudgetBySite, bopDetails);
   }
 
   async findManyWithPagination(paginationOptions: IPaginationOptions) {

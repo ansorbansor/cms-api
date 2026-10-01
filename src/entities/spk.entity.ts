@@ -259,6 +259,9 @@ export class SPK extends EntityHelper {
   @Column({ select: false, insert: false, readonly: true, nullable: true })
   total_po_unit_price: number;
 
+  @Column({ select: false, insert: false, readonly: true, nullable: true })
+  bop_details: string;
+
   @BeforeInsert()
   async setSPKNumber() {
     this.spk_number = `SPK-${moment(new Date()).format(

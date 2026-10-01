@@ -465,6 +465,10 @@ export class SPKService {
       'total_cash_advance.total_cash_advance',
       'spk_total_cash_advance',
     );
+    data.addSelect(
+      'total_cash_advance.bop_details',
+      'spk_bop_details',
+    );
     data.addSelect('total_cashback.total_cashback', 'spk_total_cashback');
     data.addSelect('total_cashout.total_cashout', 'spk_total_cashout');
     data.leftJoin(
@@ -472,6 +476,10 @@ export class SPKService {
         return qb
           .select('s.site_id')
           .addSelect('SUM(s.cash_advance)', 'total_cash_advance')
+          .addSelect(
+            "json_agg(json_build_object('spk_number', s.spk_number, 'cash_advance', s.cash_advance))",
+            'bop_details',
+          )
           .from(SPK, 's')
           .where('s.deleted_at IS NULL')
           .groupBy('s.site_id');

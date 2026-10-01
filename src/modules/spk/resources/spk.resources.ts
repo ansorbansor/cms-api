@@ -16,6 +16,7 @@ export const SPKResource = (spk: SPK): any => {
     project_name: spk.po?.project?.name || '-',
     cash_advance: spk.cash_advance,
     total_cash_advance: spk.total_cash_advance ? Number(spk.total_cash_advance) : 0,
+    bop_details: spk.bop_details ? (typeof spk.bop_details === 'string' ? JSON.parse(spk.bop_details) : spk.bop_details) : [],
     total_cashback: spk.total_cashback ? Number(spk.total_cashback) : 0,
     total_cashout: spk.total_cashout ? Number(spk.total_cashout) : 0,
     is_over_budget: spk.is_over_budget,

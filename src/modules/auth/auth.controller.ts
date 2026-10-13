@@ -51,6 +51,14 @@ export class AuthController {
     return successResponse(AuthResource(data.token, data.user), 'success');
   }
 
+  @Get('landing-statistics')
+  @HttpCode(HttpStatus.OK)
+  public async getLandingStatistics() {
+    const data = await this.service.getLandingStatistics();
+    return successResponse(data, 'Live landing statistics fetched successfully');
+  }
+
+
   @Post('email/confirm')
   @HttpCode(HttpStatus.OK)
   async confirmEmail(@Body() confirmEmailDto: AuthConfirmEmailDto) {

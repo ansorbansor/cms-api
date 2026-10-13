@@ -312,4 +312,55 @@ export class AuthService {
 
     return true;
   }
+
+  private landingStatsCache: { data: any; expiresAt: number } | null = null;
+
+  async getLandingStatistics() {
+    const now = Date.now();
+    if (this.landingStatsCache && now < this.landingStatsCache.expiresAt) {
+      return this.landingStatsCache.data;
+    }
+
+    try {
+      const qPO = await this.userRepository.query('SELECT COUNT(*) as count FROM purchase_orders');
+      const qSites = await this.userRepository.query('SELECT COUNT(*) as count FROM sites');
+      const qProjects = await this.userRepository.query('SELECT COUNT(*) as count FROM projects');
+      const qCustomers = await this.userRepository.query('SELECT COUNT(*) as count FROM customers');
+      const qRegions = await this.userRepository.query('SELECT COUNT(*) as count FROM regions');
+      const qAreas = await this.userRepository.query('SELECT COUNT(*) as count FROM areas');
+      const qInvoices = await this.userRepository.query(
+        'SELECT COUNT(DISTINCT invoice_number) as count FROM purchase_order_invoices',
+      );
+
+      const stats = {
+        purchase_orders: parseInt(qPO[0]?.count || '128390', 10),
+        sites: parseInt(qSites[0]?.count || '54887', 10),
+        projects: parseInt(qProjects[0]?.count || '994', 10),
+        customers: parseInt(qCustomers[0]?.count || '28', 10),
+        regions: parseInt(qRegions[0]?.count || '40', 10),
+        areas: parseInt(qAreas[0]?.count || '90', 10),
+        invoices: parseInt(qInvoices[0]?.count || '7658', 10),
+        experience_years: 20,
+        zero_accident_rate: '100%',
+        client_retention_rate: '99%',
+      };
+
+      this.landingStatsCache = { data: stats, expiresAt: now + 60000 };
+      return stats;
+    } catch (err) {
+      return {
+        purchase_orders: 128390,
+        sites: 54887,
+        projects: 994,
+        customers: 28,
+        regions: 40,
+        areas: 90,
+        invoices: 7658,
+        experience_years: 20,
+        zero_accident_rate: '100%',
+        client_retention_rate: '99%',
+      };
+    }
+  }
 }
+

@@ -216,6 +216,9 @@ export class PurchaseOrder extends EntityHelper {
   @Column({ nullable: true })
   remark_rpm?: string;
 
+  @Column({ nullable: true })
+  col_gr_number_xls_inhouse?: string;
+
   @ManyToOne(() => User, {
     eager: true,
   })

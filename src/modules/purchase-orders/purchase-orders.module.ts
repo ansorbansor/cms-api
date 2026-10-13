@@ -7,10 +7,17 @@ import { PurchaseOrderService } from './purchase-orders.service';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
 import { Site } from 'src/entities/site.entity';
 import { WorkloadTicketPoHistory } from 'src/entities/workload-ticket-po-history.entity';
+import { POCustomColumn } from 'src/entities/po-custom-column.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PurchaseOrder, PurchaseOrderInvoice, Site, WorkloadTicketPoHistory]),
+    TypeOrmModule.forFeature([
+      PurchaseOrder,
+      PurchaseOrderInvoice,
+      Site,
+      WorkloadTicketPoHistory,
+      POCustomColumn,
+    ]),
     ActivityLogModule,
   ],
   controllers: [PurchaseOrderController],

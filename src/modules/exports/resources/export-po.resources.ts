@@ -2,8 +2,11 @@ import moment from 'moment';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
-export const ExportPOResource = (po: PurchaseOrder): any => {
-  return {
+export const ExportPOResource = (
+  po: PurchaseOrder,
+  customCols: any[] = [],
+): any => {
+  const res: any = {
     'Unique ID': exportUniqueId(po.id, po.createdAtParseDate),
     CC: po.cc,
     'Line PO Status':
@@ -103,35 +106,63 @@ export const ExportPOResource = (po: PurchaseOrder): any => {
       ? moment(po.done_atp).format('YYYY-MM-DD')
       : null,
     'Actual Cost': po.total_cash_advance ? Number(po.total_cash_advance) : 0,
-    invoices: po.po_invoice
-      ? po.po_invoice.map((e) => {
-        return {
-          invoice_number: e.invoice_number,
-          date: e.invoice_date
-            ? moment(e.invoice_date).format('YYYY-MM-DD')
-            : null,
-          status: e.invoice_status,
-          payment_date: e.payment_date
-            ? moment(e.payment_date).format('YYYY-MM-DD')
-            : null,
-          supplier_tax_number: e.supplier_tax_number,
-          supplier_tax_date: e.supplier_tax_date
-            ? moment(e.supplier_tax_date).format('YYYY-MM-DD')
-            : null,
-          payment_amount: e.payment_amount ? e.payment_amount : 0,
-          deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
-          unit_price: e.unit_price ? e.unit_price : 0,
-          submit_date: e.submit_date
-            ? moment(e.submit_date).format('YYYY-MM-DD')
-            : null,
-          submit_amount: e.submit_amount ? e.submit_amount : 0,
-          approve_date: e.approve_date
-            ? moment(e.approve_date).format('YYYY-MM-DD')
-            : null,
-          approve_amount: e.approve_amount ? e.approve_amount : 0,
-        };
-      })
-      : [],
-    'Delete Data': '',
   };
+
+  if (Array.isArray(customCols)) {
+    customCols.forEach((col) => {
+      const colName = col.column_name || col;
+      const label = col.display_label || colName;
+      const rawVal = (po as any)[colName];
+      let formattedVal: any =
+        rawVal !== undefined && rawVal !== null ? rawVal : '';
+      if (
+        col.data_type === 'boolean' &&
+        rawVal !== null &&
+        rawVal !== undefined &&
+        rawVal !== ''
+      ) {
+        formattedVal =
+          rawVal === true || rawVal === 'true' ? 'True' : 'False';
+      } else if (col.data_type === 'date' && rawVal) {
+        formattedVal = moment(rawVal).isValid()
+          ? moment(rawVal).format('YYYY-MM-DD')
+          : rawVal;
+      }
+      res[label] = formattedVal;
+    });
+  }
+
+  res.invoices = po.po_invoice
+    ? po.po_invoice.map((e) => {
+      return {
+        invoice_number: e.invoice_number,
+        date: e.invoice_date
+          ? moment(e.invoice_date).format('YYYY-MM-DD')
+          : null,
+        status: e.invoice_status,
+        payment_date: e.payment_date
+          ? moment(e.payment_date).format('YYYY-MM-DD')
+          : null,
+        supplier_tax_number: e.supplier_tax_number,
+        supplier_tax_date: e.supplier_tax_date
+          ? moment(e.supplier_tax_date).format('YYYY-MM-DD')
+          : null,
+        payment_amount: e.payment_amount ? e.payment_amount : 0,
+        deduction_amount: e.deduction_amount ? e.deduction_amount : 0,
+        unit_price: e.unit_price ? e.unit_price : 0,
+        submit_date: e.submit_date
+          ? moment(e.submit_date).format('YYYY-MM-DD')
+          : null,
+        submit_amount: e.submit_amount ? e.submit_amount : 0,
+        approve_date: e.approve_date
+          ? moment(e.approve_date).format('YYYY-MM-DD')
+          : null,
+        approve_amount: e.approve_amount ? e.approve_amount : 0,
+      };
+    })
+    : [];
+
+  res['Delete Data'] = '';
+
+  return res;
 };

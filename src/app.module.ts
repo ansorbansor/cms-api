@@ -58,6 +58,7 @@ import { TargetCardsModule } from './modules/target-cards/target-cards.module';
 import { PerjalananDinasModule } from './modules/perjalanan-dinas/perjalanan-dinas.module';
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 import { MaterialsModule } from './modules/materials/materials.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   imports: [
@@ -132,6 +133,7 @@ import { MaterialsModule } from './modules/materials/materials.module';
     TargetCardsModule,
     PerjalananDinasModule,
     MaterialsModule,
+    InvoicesModule,
   ],
   providers: [
     {

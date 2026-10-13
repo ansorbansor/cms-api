@@ -24,6 +24,7 @@ import { CreatePurchaseOrderDTO } from './dto/create-po.dto';
 import { PurchaseOrderResource } from './resources/purchase-order.resources';
 import { IDParamDto } from 'src/utils/id-param.dto';
 import { UpdatePurchaseOrderDTO } from './dto/update-po.dto';
+import { CreatePOColumnDTO } from './dto/create-po-column.dto';
 import { MenuPermission } from 'src/utils/enums';
 import { Menus, Roles } from 'src/utils/decorator';
 
@@ -35,6 +36,81 @@ import { Menus, Roles } from 'src/utils/decorator';
 export class PurchaseOrderController {
   constructor(private readonly poService: PurchaseOrderService) { }
 
+  @Get('po/columns')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getColumns() {
+    return successResponse(
+      await this.poService.listColumns(),
+      'Berhasil mengambil daftar kolom PO',
+    );
+  }
+
+  @Post('po/columns')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Menus(MenuPermission.PO_CREATE)
+  async addColumn(
+    @Body() createPoColumnDto: CreatePOColumnDTO,
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.poService.addColumn(createPoColumnDto, req.user, req.ip),
+      'Kolom baru berhasil ditambahkan ke database',
+    );
+  }
+
+  @Get('po/columns/:columnName/check-safe-delete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async checkSafeDelete(@Param('columnName') columnName: string) {
+    return successResponse(
+      await this.poService.checkSafeDeleteColumn(columnName),
+      'Hasil pengecekan safe delete kolom',
+    );
+  }
+
+  @Delete('po/columns/:columnName')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.PO_CREATE)
+  async deleteColumn(
+    @Param('columnName') columnName: string,
+    @Query('confirm') confirm: string,
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.poService.deleteColumn(
+        columnName,
+        confirm === 'true',
+        req.user,
+        req.ip,
+      ),
+      'Kolom berhasil dihapus dari database',
+    );
+  }
+
+  @Patch('po/:id/column-value')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  @Menus(MenuPermission.PO_CREATE)
+  async updateColumnValue(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { column_name: string; value: any },
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.poService.updateCustomColumnValue(
+        id,
+        body.column_name,
+        body.value,
+        req.user,
+        req.ip,
+      ),
+      'Nilai kolom kustom berhasil diperbarui',
+    );
+  }
+
   @Post('po')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -45,7 +121,12 @@ export class PurchaseOrderController {
   ) {
     return successResponse(
       PurchaseOrderResource(
-        await this.poService.create(createPurchaseOrderDto, req.user.id),
+        await this.poService.create(
+          createPurchaseOrderDto,
+          req.user.id,
+          req.ip,
+          req.body,
+        ),
       ),
       'success',
     );
@@ -109,6 +190,7 @@ export class PurchaseOrderController {
         updatePurchaseOrderDto,
         req.user,
         req.ip,
+        req.body,
       ),
       'success',
     );

@@ -409,6 +409,10 @@ export class ImportService {
       if (worksheet) {
         await this.getExistingMasterData();
 
+        const customCols = await getManager().query(
+          `SELECT id, column_name, display_label, data_type FROM po_custom_columns ORDER BY order_index ASC, id ASC`,
+        );
+
         const poData = await getManager().query(
           `SELECT * FROM purchase_orders WHERE deleted_at IS NULL`,
         );
@@ -756,6 +760,37 @@ export class ImportService {
                 const newPO = await this.poRepository.save(insertPO);
                 totalInsertPO++;
 
+                // Save custom columns for new PO if present in Excel row
+                if (customCols && customCols.length > 0) {
+                  const setClauses: string[] = [];
+                  const setValues: any[] = [];
+                  let pIdx = 1;
+                  for (const c of customCols) {
+                    const labelKey = c.display_label.trim().toLowerCase();
+                    const nameKey = c.column_name.trim().toLowerCase();
+                    const cellVal = value[labelKey] !== undefined ? value[labelKey] : value[nameKey];
+                    if (cellVal !== undefined && cellVal !== null && cellVal !== '') {
+                      let finalVal: any = cellVal;
+                      if (c.data_type === 'numeric') {
+                        finalVal = isNaN(Number(cellVal)) ? null : Number(cellVal);
+                      } else if (c.data_type === 'boolean') {
+                        finalVal = String(cellVal).toLowerCase() === 'true' || String(cellVal).toLowerCase() === 'ya' || cellVal === '1';
+                      } else if (c.data_type === 'date') {
+                        finalVal = moment(cellVal, moment.ISO_8601).isValid() ? moment(cellVal).format('YYYY-MM-DD') : null;
+                      }
+                      setClauses.push(`"${c.column_name}" = $${pIdx++}`);
+                      setValues.push(finalVal);
+                    }
+                  }
+                  if (setClauses.length > 0) {
+                    setValues.push(newPO.id);
+                    await getManager().query(
+                      `UPDATE purchase_orders SET ${setClauses.join(', ')} WHERE id = $${pIdx}`,
+                      setValues,
+                    );
+                  }
+                }
+
                 let totalAcceptance = 0;
 
                 //get list invoice
@@ -882,6 +917,37 @@ export class ImportService {
                   updateDataPO.id = uniqueId;
                   updateDataPOList.push(updateDataPO);
                   totalUpdatePO++;
+                }
+
+                // Update custom columns for existing PO if present in Excel row
+                if (customCols && customCols.length > 0) {
+                  const setClauses: string[] = [];
+                  const setValues: any[] = [];
+                  let pIdx = 1;
+                  for (const c of customCols) {
+                    const labelKey = c.display_label.trim().toLowerCase();
+                    const nameKey = c.column_name.trim().toLowerCase();
+                    const cellVal = value[labelKey] !== undefined ? value[labelKey] : value[nameKey];
+                    if (cellVal !== undefined) {
+                      let finalVal: any = cellVal === '' ? null : cellVal;
+                      if (finalVal !== null && c.data_type === 'numeric') {
+                        finalVal = isNaN(Number(finalVal)) ? null : Number(finalVal);
+                      } else if (finalVal !== null && c.data_type === 'boolean') {
+                        finalVal = String(finalVal).toLowerCase() === 'true' || String(finalVal).toLowerCase() === 'ya' || finalVal === '1';
+                      } else if (finalVal !== null && c.data_type === 'date') {
+                        finalVal = moment(finalVal, moment.ISO_8601).isValid() ? moment(finalVal).format('YYYY-MM-DD') : null;
+                      }
+                      setClauses.push(`"${c.column_name}" = $${pIdx++}`);
+                      setValues.push(finalVal);
+                    }
+                  }
+                  if (setClauses.length > 0) {
+                    setValues.push(uniqueId);
+                    await getManager().query(
+                      `UPDATE purchase_orders SET ${setClauses.join(', ')} WHERE id = $${pIdx}`,
+                      setValues,
+                    );
+                  }
                 }
 
                 //get list invoice

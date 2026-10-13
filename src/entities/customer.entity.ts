@@ -9,6 +9,15 @@ export class Customer extends EntityHelper {
   @Column()
   name?: string;
 
+  @Column({ nullable: true })
+  code?: string;
+
+  @Column({ nullable: true })
+  address?: string;
+
+  @Column({ nullable: true })
+  npwp?: string;
+
   @OneToMany(() => PurchaseOrder, (po) => po.customer)
   @JoinColumn()
   customerPO?: PurchaseOrder[];

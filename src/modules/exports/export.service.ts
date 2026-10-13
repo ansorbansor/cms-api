@@ -442,6 +442,15 @@ export class ExportService {
 
     query.orderBy('po.id', 'DESC');
 
+    const customCols = await getManager().query(
+      `SELECT id, column_name, display_label, data_type FROM po_custom_columns ORDER BY order_index ASC, id ASC`,
+    );
+    if (customCols && customCols.length > 0) {
+      customCols.forEach((col: any) => {
+        query.addSelect(`po."${col.column_name}"`, col.column_name);
+      });
+    }
+
     const perLoop = 1000;
     const loopCount = Math.ceil(count / perLoop);
 
@@ -458,11 +467,26 @@ export class ExportService {
           );
           query.offset(value * perLoop);
 
-          const data = await query.getMany();
-
-          data.forEach((d) => {
-            rows.push(ExportPOResource(d));
-          });
+          if (customCols && customCols.length > 0) {
+            const { entities, raw } = await query.getRawAndEntities();
+            entities.forEach((d, idx) => {
+              const rawItem = raw[idx];
+              if (rawItem) {
+                customCols.forEach((c: any) => {
+                  (d as any)[c.column_name] =
+                    rawItem[c.column_name] !== undefined
+                      ? rawItem[c.column_name]
+                      : rawItem[`po_${c.column_name}`] ?? null;
+                });
+              }
+              rows.push(ExportPOResource(d, customCols));
+            });
+          } else {
+            const data = await query.getMany();
+            data.forEach((d) => {
+              rows.push(ExportPOResource(d, []));
+            });
+          }
         },
         (err) => {
           if (err) console.error(err.message);

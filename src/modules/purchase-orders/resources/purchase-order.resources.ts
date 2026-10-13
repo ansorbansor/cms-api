@@ -2,8 +2,11 @@ import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import moment from 'moment';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 
-export const PurchaseOrderResource = (po: PurchaseOrder): any => {
-  return {
+export const PurchaseOrderResource = (
+  po: PurchaseOrder,
+  customColumns: string[] = [],
+): any => {
+  const result: any = {
     id: po.id,
     unique_id: exportUniqueId(po.id, po.createdAtParseDate),
     cc: po.cc,
@@ -42,6 +45,14 @@ export const PurchaseOrderResource = (po: PurchaseOrder): any => {
       ? moment(po.done_atp).format('YYYY-MM-DD HH:mm:ss')
       : null,
   };
+
+  if (Array.isArray(customColumns)) {
+    customColumns.forEach((col) => {
+      result[col] = (po as any)[col] !== undefined ? (po as any)[col] : null;
+    });
+  }
+
+  return result;
 };
 
 export const PurchaseOrderBySiteResource = (
@@ -68,8 +79,28 @@ export const PurchaseOrderBySiteResource = (
   };
 };
 
-export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
-  return {
+export const PurchaseOrderDetailResource = (
+  po: PurchaseOrder,
+  customCols: any[] = [],
+): any => {
+  const customColsList = [];
+  if (Array.isArray(customCols)) {
+    customCols.forEach((col) => {
+      const colName = col.column_name || col;
+      const displayLabel = col.display_label || colName;
+      const dataType = col.data_type || 'varchar';
+      const val = (po as any)[colName] !== undefined ? (po as any)[colName] : null;
+      customColsList.push({
+        id: col.id,
+        column_name: colName,
+        display_label: displayLabel,
+        data_type: dataType,
+        value: val,
+      });
+    });
+  }
+
+  const result: any = {
     id: Number(po.id),
     unique_id: exportUniqueId(po.id, po.createdAtParseDate),
     cc: po.cc,
@@ -235,5 +266,16 @@ export const PurchaseOrderDetailResource = (po: PurchaseOrder): any => {
       })
       : [],
     budget_percentage: Number(po.budget_percentage),
+    custom_columns: customColsList,
   };
+
+  if (Array.isArray(customCols)) {
+    customCols.forEach((col) => {
+      const colName = col.column_name || col;
+      result[colName] =
+        (po as any)[colName] !== undefined ? (po as any)[colName] : null;
+    });
+  }
+
+  return result;
 };

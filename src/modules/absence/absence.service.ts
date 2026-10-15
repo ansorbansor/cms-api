@@ -85,18 +85,50 @@ export class AbsenceService {
     return [];
   }
 
-  async getMonthlySummary(month: string) {
+  async getMonthlySummary(month: string, until?: string) {
     // month format YYYY-MM
     const yearStr = month.split('-')[0];
     const holidays = await this.getHolidays(parseInt(yearStr, 10));
 
     const startOfMonth = moment(`${month}-01`).startOf('month');
     const endOfMonth = moment(`${month}-01`).endOf('month');
-    
-    // Calculate expected working days (Mon-Fri, excluding holidays)
+    const now = moment();
+
+    // Determine effective cutoff date for the report
+    let cutoffDate = endOfMonth.clone();
+
+    if (until) {
+      const parsedUntil = moment(until);
+      if (parsedUntil.isValid()) {
+        cutoffDate = parsedUntil.clone().endOf('day');
+        // Cap cutoffDate so it does not exceed endOfMonth or precede startOfMonth
+        if (cutoffDate.isAfter(endOfMonth)) {
+          cutoffDate = endOfMonth.clone();
+        }
+        if (cutoffDate.isBefore(startOfMonth)) {
+          cutoffDate = startOfMonth.clone().endOf('day');
+        }
+      }
+    } else {
+      // If no explicit until date is provided:
+      // If querying the current month, calculate expected working days only up to today
+      if (startOfMonth.isSame(now, 'month')) {
+        cutoffDate = now.clone().endOf('day');
+      } else if (startOfMonth.isAfter(now, 'month')) {
+        // Future month: 0 days elapsed
+        cutoffDate = startOfMonth.clone().subtract(1, 'day');
+      } else {
+        // Past month: full month
+        cutoffDate = endOfMonth.clone();
+      }
+    }
+
+    // Calculate expected working days (Mon-Fri, excluding holidays) up to cutoffDate
     let expectedWorkingDays = 0;
-    const currentDay = startOfMonth.clone();
-    while (currentDay.isSameOrBefore(endOfMonth)) {
+    const currentDay = startOfMonth.clone().startOf('day');
+    const effectiveEndDay = cutoffDate.clone().startOf('day');
+
+    while (currentDay.isSameOrBefore(effectiveEndDay)) {
       const dayOfWeek = currentDay.day();
       if (dayOfWeek >= 1 && dayOfWeek <= 5) { // 1=Mon, 5=Fri
         const dateString = currentDay.format('YYYY-MM-DD');
@@ -107,8 +139,8 @@ export class AbsenceService {
       currentDay.add(1, 'day');
     }
 
-    const startOfMonthStr = startOfMonth.format('YYYY-MM-DD HH:mm:ss');
-    const endOfMonthStr = endOfMonth.format('YYYY-MM-DD HH:mm:ss');
+    const startOfMonthStr = startOfMonth.format('YYYY-MM-DD 00:00:00');
+    const endOfMonthStr = cutoffDate.format('YYYY-MM-DD 23:59:59');
 
     const absences = await this.absenceRepository
       .createQueryBuilder('absence')
@@ -156,6 +188,7 @@ export class AbsenceService {
         user_id: u.id,
         name: u.name,
         role: u.employeePosition?.name || 'Employee',
+        present_dates: new Set<string>(),
         total_present: 0,
         total_absent: 0, 
         late_count: 0,
@@ -172,7 +205,12 @@ export class AbsenceService {
       if (!summaryMap.has(absence.user_id)) continue;
       
       const sum = summaryMap.get(absence.user_id);
-      sum.total_present += 1;
+      
+      // Track unique present date
+      if (absence.clock_in) {
+        const dateKey = moment(absence.clock_in).format('YYYY-MM-DD');
+        sum.present_dates.add(dateKey);
+      }
 
       // Late calculation
       if (absence.late_reason) {
@@ -226,7 +264,10 @@ export class AbsenceService {
 
     // Format final results and sort alphabetically
     const results = Array.from(summaryMap.values()).map(sum => {
-      const avg_minutes = sum.total_present > 0 ? sum.total_work_minutes / sum.total_present : 0;
+      const total_present = sum.present_dates.size;
+      const total_absent = Math.max(0, expectedWorkingDays - total_present);
+
+      const avg_minutes = total_present > 0 ? sum.total_work_minutes / total_present : 0;
       const avg_hours = Math.floor(avg_minutes / 60);
       const avg_mins = Math.floor(avg_minutes % 60);
       
@@ -234,14 +275,19 @@ export class AbsenceService {
 
       let attendance_percentage = 0;
       if (expectedWorkingDays > 0) {
-        attendance_percentage = parseFloat(((sum.total_present / expectedWorkingDays) * 100).toFixed(1));
+        attendance_percentage = Math.min(
+          100,
+          parseFloat(((total_present / expectedWorkingDays) * 100).toFixed(1)),
+        );
+      } else if (total_present > 0) {
+        attendance_percentage = 100;
       }
 
       return {
         name: sum.name,
         role: sum.role,
-        total_present: sum.total_present,
-        total_absent: sum.total_absent,
+        total_present: total_present,
+        total_absent: total_absent,
         attendance_percentage,
         expected_working_days: expectedWorkingDays,
         late_count: sum.late_count,
@@ -257,6 +303,10 @@ export class AbsenceService {
 
     return {
       expected_working_days: expectedWorkingDays,
+      cutoff_date: cutoffDate.format('YYYY-MM-DD'),
+      period_start: startOfMonth.format('YYYY-MM-DD'),
+      period_end: cutoffDate.format('YYYY-MM-DD'),
+      is_mid_month: cutoffDate.isBefore(endOfMonth, 'day'),
       data: results
     };
   }

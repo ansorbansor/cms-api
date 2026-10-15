@@ -2255,7 +2255,7 @@ export class ImportService {
         site.code = code;
         updated = true;
       }
-      
+
       if (updated) {
         await this.siteRepository.save(site);
         const index = this.siteData.findIndex((data) => data.id === site.id);

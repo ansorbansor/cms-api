@@ -112,9 +112,12 @@ export class AbsenceController {
   @Get('monthly-summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async getMonthlySummary(@Query('month') month: string) {
+  async getMonthlySummary(
+    @Query('month') month: string,
+    @Query('until') until?: string,
+  ) {
     return successResponse(
-      await this.absenceService.getMonthlySummary(month),
+      await this.absenceService.getMonthlySummary(month, until),
       'success',
     );
   }

@@ -767,10 +767,10 @@ export class PurchaseOrderService {
     let colName = dto.column_name
       ? dto.column_name.toLowerCase().trim()
       : `col_${dto.display_label
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9]+/g, '_')
-          .replace(/^_+|_+$/g, '')}`;
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')}`;
 
     if (!colName.startsWith('col_') && !colName.startsWith('cust_')) {
       colName = `col_${colName}`;
@@ -910,9 +910,8 @@ export class PurchaseOrderService {
     try {
       await this.activityLogService.create({
         user_id: user.id,
-        description: `Menghapus kolom database PO: ${colLower} (Data terhapus: ${
-          check.data_count || 0
-        } baris)`,
+        description: `Menghapus kolom database PO: ${colLower} (Data terhapus: ${check.data_count || 0
+          } baris)`,
         ip: ip,
       });
     } catch (logErr) {

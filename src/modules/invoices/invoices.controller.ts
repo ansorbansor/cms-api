@@ -21,9 +21,26 @@ import { successResponse } from 'src/utils/responses';
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
+  @Get('anchor-columns')
+  async getAnchorColumns() {
+    const data = await this.invoicesService.getAnchorColumns();
+    return successResponse(data, 'Daftar kolom sumber anchor penagihan berhasil dimuat');
+  }
+
+  @Get('gr-columns')
+  async getGrColumns() {
+    const data = await this.invoicesService.getAnchorColumns();
+    return successResponse(data, 'Daftar kolom sumber anchor penagihan berhasil dimuat');
+  }
+
   @Get('eligible-pos')
-  async getEligiblePOs(@Query('search') search?: string) {
-    const data = await this.invoicesService.getEligiblePOs(search);
+  async getEligiblePOs(
+    @Query('search') search?: string,
+    @Query('gr_column') grColumn?: string,
+    @Query('anchor_column') anchorColumn?: string,
+  ) {
+    const col = anchorColumn || grColumn;
+    const data = await this.invoicesService.getEligiblePOs(search, col);
     return successResponse(data, 'Daftar PO yang siap di-invoice berhasil dimuat');
   }
 
@@ -49,12 +66,17 @@ export class InvoicesController {
     @Query('invoice_number') invoiceNumber?: string,
     @Query('milestone_pct') milestonePct?: number,
     @Query('term_label') termLabel?: string,
+    @Query('gr_column') grColumn?: string,
+    @Query('anchor_column') anchorColumn?: string,
   ) {
+    const col = anchorColumn || grColumn;
     const data = await this.invoicesService.getInvoicePreview(poNumber, {
       invoice_date: invoiceDate,
       invoice_number: invoiceNumber,
       milestone_pct: milestonePct ? Number(milestonePct) : undefined,
       term_label: termLabel,
+      anchor_column: col,
+      gr_column: col,
     });
     return successResponse(data, 'Preview invoice berhasil di-generate');
   }
@@ -64,6 +86,8 @@ export class InvoicesController {
     const userId = req.user?.id;
     const data = await this.invoicesService.saveInvoice({
       ...body,
+      anchor_column: body.anchor_column || body.gr_column,
+      gr_column: body.anchor_column || body.gr_column,
       user_id: userId,
     });
     return successResponse(data, 'Invoice berhasil disimpan ke riwayat');

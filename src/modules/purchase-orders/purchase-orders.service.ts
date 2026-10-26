@@ -294,7 +294,21 @@ export class PurchaseOrderService {
       customCols = [];
     }
 
-    const customColNames = customCols.map((c) => c.column_name);
+    // Query physical columns to ensure we only select columns that actually exist in DB
+    let existingDbCols = new Set<string>();
+    try {
+      const dbCols = await this.purchaseOrdersRepository.query(`
+        SELECT column_name FROM information_schema.columns WHERE table_name = 'purchase_orders'
+      `);
+      existingDbCols = new Set(dbCols.map((c: any) => c.column_name.toLowerCase()));
+    } catch (e) {
+      existingDbCols = new Set();
+    }
+
+    const customColNames = customCols
+      .map((c) => c.column_name)
+      .filter((cName) => cName && existingDbCols.has(cName.toLowerCase()));
+
     customColNames.forEach((cName) => {
       data.addSelect(`po."${cName}"`, cName);
     });
@@ -342,7 +356,19 @@ export class PurchaseOrderService {
     const customCols = await this.poCustomColumnRepo.find({
       order: { order_index: 'ASC', id: 'ASC' },
     });
-    const customColNames = customCols.map((c) => c.column_name);
+    let existingDbCols = new Set<string>();
+    try {
+      const dbCols = await this.purchaseOrdersRepository.query(`
+        SELECT column_name FROM information_schema.columns WHERE table_name = 'purchase_orders'
+      `);
+      existingDbCols = new Set(dbCols.map((c: any) => c.column_name.toLowerCase()));
+    } catch (e) {
+      existingDbCols = new Set();
+    }
+
+    const customColNames = customCols
+      .map((c) => c.column_name)
+      .filter((cName) => cName && existingDbCols.has(cName.toLowerCase()));
 
     const qb = this.purchaseOrdersRepository
       .createQueryBuilder('po')

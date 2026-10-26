@@ -3,12 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PurchaseOrder } from 'src/entities/purchase-order.entity';
 import { Customer } from 'src/entities/customer.entity';
 import { PurchaseOrderInvoice } from 'src/entities/purchase-order-invoice.entity';
+import { POCustomColumn } from 'src/entities/po-custom-column.entity';
 import moment from 'moment';
 
 function toRoman(month: number): string {
@@ -49,8 +51,75 @@ export function extractUnitFromDescription(desc: string, currentUnit?: string): 
   return 'each';
 }
 
+export function extractAnchorsFromRow(
+  row: any,
+  targetColumn?: string,
+  customColumnDefs?: Array<{ name: string; label: string }>,
+): Array<{
+  gr_number: string;
+  anchor_value: string;
+  source_column: string;
+  source_label: string;
+}> {
+  const result: Array<{
+    gr_number: string;
+    anchor_value: string;
+    source_column: string;
+    source_label: string;
+  }> = [];
+
+  const defaultDefs = customColumnDefs || [
+    { name: 'col_gr_number_1_xls_inhouse', label: 'GR Number 1 (Term 1)' },
+    { name: 'col_gr_number_2_xls_inhouse', label: 'GR Number 2 (Term 2)' },
+    { name: 'col_gr_number_xls_inhouse', label: 'GR Number (XLS Inhouse)' },
+  ];
+
+  if (targetColumn && targetColumn !== 'all' && targetColumn !== 'all_gr' && targetColumn !== 'all_custom') {
+    const rawVal = row[targetColumn];
+    if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== '') {
+      const parts = String(rawVal).split(/[|,]/);
+      for (const p of parts) {
+        const clean = p.trim();
+        if (clean) {
+          const foundDef = defaultDefs.find((d) => d.name === targetColumn);
+          const lbl = foundDef ? foundDef.label : targetColumn;
+          result.push({
+            gr_number: clean,
+            anchor_value: clean,
+            source_column: targetColumn,
+            source_label: lbl,
+          });
+        }
+      }
+    }
+  } else {
+    // Mode 'all': scan all registered custom columns from PO
+    for (const def of defaultDefs) {
+      const rawVal = row[def.name];
+      if (rawVal !== undefined && rawVal !== null && String(rawVal).trim() !== '') {
+        const parts = String(rawVal).split(/[|,]/);
+        for (const p of parts) {
+          const clean = p.trim();
+          if (clean) {
+            result.push({
+              gr_number: clean,
+              anchor_value: clean,
+              source_column: def.name,
+              source_label: def.label,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+export const extractGrsFromRow = extractAnchorsFromRow;
+
 @Injectable()
-export class InvoicesService {
+export class InvoicesService implements OnModuleInit {
   constructor(
     @InjectRepository(PurchaseOrder)
     private readonly poRepository: Repository<PurchaseOrder>,
@@ -58,12 +127,114 @@ export class InvoicesService {
     private readonly customerRepository: Repository<Customer>,
     @InjectRepository(PurchaseOrderInvoice)
     private readonly invoiceRepository: Repository<PurchaseOrderInvoice>,
+    @InjectRepository(POCustomColumn)
+    private readonly poCustomColumnRepo: Repository<POCustomColumn>,
   ) {}
 
+  async onModuleInit() {
+    // Service initialized safely without modifying database schema
+  }
+
   /**
-   * List POs that are eligible for invoicing (have col_gr_number_xls_inhouse populated)
+   * Helper to query actual existing column names in purchase_orders table from information_schema
    */
-  async getEligiblePOs(search?: string) {
+  async getDbColumnNames(): Promise<Set<string>> {
+    try {
+      const dbColumns: Array<{ column_name: string }> = await this.poRepository.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'purchase_orders';
+      `);
+      return new Set(dbColumns.map((c) => c.column_name.toLowerCase()));
+    } catch (e: any) {
+      return new Set(this.poRepository.metadata.columns.map((c) => c.databaseName.toLowerCase()));
+    }
+  }
+
+  /**
+   * Return exclusively the custom columns created in pages/po/index.js (from po_custom_columns table)
+   * that physically exist in the purchase_orders table.
+   * Internal system columns (site_id, item_code, etc.) are strictly excluded.
+   */
+  async getAnchorColumns() {
+    // 1. Fetch custom columns created in PO management (po_custom_columns)
+    let customCols: POCustomColumn[] = [];
+    try {
+      customCols = await this.poCustomColumnRepo.find({
+        order: { order_index: 'ASC', id: 'ASC' },
+      });
+    } catch (e: any) {
+      console.warn('Failed to query po_custom_columns:', e.message);
+      customCols = [];
+    }
+
+    // 2. Query physically existing columns in PostgreSQL purchase_orders
+    const existingDbCols = await this.getDbColumnNames();
+
+    // 3. Keep only custom columns that physically exist on purchase_orders
+    const validCustomCols = customCols.filter((c) =>
+      c.column_name && existingDbCols.has(c.column_name.toLowerCase().trim()),
+    );
+
+    const columnOptions = [];
+
+    // Provide the composite "all" option at top representing ALL custom PO columns
+    if (validCustomCols.length > 0) {
+      columnOptions.push({
+        key: 'all',
+        column_name: 'all',
+        display_label: '⚡ Semua Kolom Kustom PO (Gabungan / Otomatis)',
+        header_title: 'KOLOM KUSTOM PO',
+        description: 'Menggabungkan data dari seluruh kolom kustom yang dibuat pada Purchase Order',
+        badge: 'ALL CUSTOM',
+        is_gr_based: true,
+        is_default: true,
+        priority: 0,
+        group: 'custom',
+        group_label: '🔧 Kolom Kustom Purchase Orders',
+      });
+    }
+
+    // Build options for each custom column created in po/index.js
+    for (const c of validCustomCols) {
+      const colName = c.column_name.trim();
+      const displayLabel = c.display_label?.trim() || colName;
+      const headerTitle = displayLabel.toUpperCase();
+
+      columnOptions.push({
+        key: colName,
+        column_name: colName,
+        display_label: displayLabel,
+        header_title: headerTitle,
+        description: `Berdasarkan data kolom kustom '${displayLabel}' pada Purchase Order`,
+        badge: 'Custom',
+        is_gr_based: true,
+        is_default: false,
+        priority: 10,
+        group: 'custom',
+        group_label: '🔧 Kolom Kustom Purchase Orders',
+        data_type: c.data_type,
+      });
+    }
+
+    // Sort by priority
+    columnOptions.sort((a, b) => a.priority - b.priority);
+
+    return columnOptions;
+  }
+
+  /**
+   * Alias for backward compatibility
+   */
+  async getGrColumns() {
+    return this.getAnchorColumns();
+  }
+
+  /**
+   * List POs that are eligible for invoicing
+   * Filters POs having non-empty values in the selected anchor column.
+   */
+  async getEligiblePOs(search?: string, anchorColumn?: string) {
     const qb = this.poRepository
       .createQueryBuilder('po')
       .leftJoin('po.customer', 'customer')
@@ -75,9 +246,39 @@ export class InvoicesService {
       .addSelect('MAX(customer.code)', 'customer_code')
       .addSelect('MAX(project.name)', 'project_name')
       .addSelect('COUNT(po.id)', 'total_rows')
-      .addSelect('COUNT(DISTINCT po.line_po_number)', 'total_lines')
-      .where("po.col_gr_number_xls_inhouse IS NOT NULL AND TRIM(po.col_gr_number_xls_inhouse) != ''")
-      .andWhere("po.po_number IS NOT NULL AND TRIM(po.po_number) != ''");
+      .addSelect('COUNT(DISTINCT po.line_po_number)', 'total_lines');
+
+    const col = anchorColumn || 'all';
+    const existingCols = await this.getDbColumnNames();
+
+    let customCols: POCustomColumn[] = [];
+    try {
+      customCols = await this.poCustomColumnRepo.find();
+    } catch (e) {
+      customCols = [];
+    }
+
+    const validCustomColNames = customCols
+      .map((c) => c.column_name)
+      .filter((c) => c && existingCols.has(c.toLowerCase()));
+
+    if (col === 'all' || col === 'all_gr' || col === 'all_custom') {
+      const candidates = validCustomColNames;
+
+      if (candidates.length > 0) {
+        const clauses = candidates.map((c) => `(po."${c}" IS NOT NULL AND TRIM(CAST(po."${c}" AS TEXT)) != '')`);
+        qb.where(`(${clauses.join(' OR ')})`);
+      } else {
+        qb.where('1 = 1');
+      }
+    } else {
+      const safeCol = col.replace(/[^a-zA-Z0-9_]/g, '');
+      if (existingCols.has(safeCol.toLowerCase())) {
+        qb.where(`po."${safeCol}" IS NOT NULL AND TRIM(CAST(po."${safeCol}" AS TEXT)) != ''`);
+      }
+    }
+
+    qb.andWhere("po.po_number IS NOT NULL AND TRIM(po.po_number) != ''");
 
     if (search && search.trim() !== '') {
       qb.andWhere(
@@ -87,6 +288,7 @@ export class InvoicesService {
     }
 
     qb.groupBy('po.po_number').orderBy('MAX(po.publish_date)', 'DESC');
+    qb.limit(100);
 
     const raw = await qb.getRawMany();
     return raw;
@@ -100,25 +302,97 @@ export class InvoicesService {
     invoice_number?: string;
     milestone_pct?: number;
     term_label?: string;
+    gr_column?: string;
+    anchor_column?: string;
   }) {
-    // 1. Fetch all rows of this PO with GR
-    const poRows = await this.poRepository
+    const targetAnchor = options?.anchor_column || options?.gr_column || 'all';
+
+    // Get anchor metadata from getAnchorColumns()
+    const allAnchorCols = await this.getAnchorColumns();
+    const anchorDef = allAnchorCols.find(
+      (c) => c.key === targetAnchor || c.column_name === targetAnchor,
+    ) || {
+      key: targetAnchor,
+      column_name: targetAnchor,
+      display_label: targetAnchor,
+      header_title: targetAnchor.toUpperCase(),
+      is_gr_based: true,
+    };
+
+    const isGrBased = true;
+
+    // Fetch dynamic custom column definitions from po_custom_columns
+    let customCols: POCustomColumn[] = [];
+    try {
+      customCols = await this.poCustomColumnRepo.find();
+    } catch (e) {
+      customCols = [];
+    }
+
+    const previewExistingCols = await this.getDbColumnNames();
+    const validCustomDefs = customCols
+      .filter((c) => c.column_name && previewExistingCols.has(c.column_name.toLowerCase()))
+      .map((c) => ({
+        name: c.column_name,
+        label: c.display_label || c.column_name,
+      }));
+
+    // 1. Fetch all rows of this PO matching the anchor criteria
+    const qb = this.poRepository
       .createQueryBuilder('po')
       .leftJoinAndSelect('po.customer', 'customer')
       .leftJoinAndSelect('po.project', 'project')
-      .where('po.po_number = :poNumber', { poNumber })
-      .andWhere("po.col_gr_number_xls_inhouse IS NOT NULL AND TRIM(po.col_gr_number_xls_inhouse) != ''")
-      .orderBy('CAST(NULLIF(regexp_replace(po.line_po_number, \'\\D\', \'\', \'g\'), \'\') AS INTEGER)', 'ASC')
-      .getMany();
+      .where('po.po_number = :poNumber', { poNumber });
+
+    // Always select all physically existing custom columns from PO management
+    validCustomDefs.forEach((d) => {
+      qb.addSelect(`po."${d.name}"`, d.name);
+    });
+
+    if (targetAnchor === 'all' || targetAnchor === 'all_gr' || targetAnchor === 'all_custom') {
+      const candidates = validCustomDefs.map((d) => d.name);
+      if (candidates.length > 0) {
+        const clauses = candidates.map((c) => `(po."${c}" IS NOT NULL AND TRIM(CAST(po."${c}" AS TEXT)) != '')`);
+        qb.andWhere(`(${clauses.join(' OR ')})`);
+      }
+    } else {
+      const safeCol = targetAnchor.replace(/[^a-zA-Z0-9_]/g, '');
+      if (previewExistingCols.has(safeCol.toLowerCase())) {
+        if (!validCustomDefs.some((d) => d.name === safeCol)) {
+          qb.addSelect(`po."${safeCol}"`, safeCol);
+        }
+        qb.andWhere(`po."${safeCol}" IS NOT NULL AND TRIM(CAST(po."${safeCol}" AS TEXT)) != ''`);
+      }
+    }
+
+    qb.orderBy('CAST(NULLIF(regexp_replace(po.line_po_number, \'\\D\', \'\', \'g\'), \'\') AS INTEGER)', 'ASC');
+
+    let poRows: PurchaseOrder[] = [];
+    const { entities, raw } = await qb.getRawAndEntities();
+    entities.forEach((entity, idx) => {
+      const rawRow = raw[idx];
+      if (rawRow) {
+        validCustomDefs.forEach((d) => {
+          const val = rawRow[d.name] !== undefined ? rawRow[d.name] : (rawRow[`po_${d.name}`] || null);
+          (entity as any)[d.name] = val;
+        });
+        if (targetAnchor !== 'all' && targetAnchor !== 'all_gr' && targetAnchor !== 'all_custom') {
+          const safeCol = targetAnchor.replace(/[^a-zA-Z0-9_]/g, '');
+          if ((entity as any)[safeCol] === undefined) {
+            (entity as any)[safeCol] = rawRow[safeCol] !== undefined ? rawRow[safeCol] : (rawRow[`po_${safeCol}`] || null);
+          }
+        }
+      }
+    });
+    poRows = entities;
 
     if (!poRows || poRows.length === 0) {
-      // Fallback: check if PO exists without GR
       const anyRows = await this.poRepository.find({ where: { po_number: poNumber } });
       if (!anyRows || anyRows.length === 0) {
         throw new NotFoundException(`Purchase Order ${poNumber} tidak ditemukan.`);
       }
       throw new NotFoundException(
-        `Purchase Order ${poNumber} ditemukan, namun belum memiliki Nomor GR (Good Receipt). Silakan lengkapi Nomor GR terlebih dahulu.`,
+        `Purchase Order ${poNumber} ditemukan, namun belum memiliki data untuk anchor "${anchorDef.display_label}". Silakan pilih sumber anchor lain atau lengkapi data PO terlebih dahulu.`,
       );
     }
 
@@ -223,32 +497,65 @@ export class InvoicesService {
       const linePrice = unitPrice * totalQty;
       const lineAmount = Math.round(linePrice * (milestonePct / 100));
 
-      // Collect all distinct GR numbers with their requested_qty
+      // Collect distinct GR numbers with their requested_qty and anchor column tags
       const grSet = new Set<string>();
-      const grItems: Array<{ po_id: number; gr_number: string; requested_qty: number }> = [];
+      const grItems: Array<{
+        po_id: number;
+        gr_number: string;
+        requested_qty: number;
+        source_column: string;
+        source_label: string;
+      }> = [];
       const grQtyMap: Record<string, number> = {};
 
       for (const r of rows) {
-        if (r.col_gr_number_xls_inhouse) {
-          const splitGrs = r.col_gr_number_xls_inhouse.split('|');
-          const rowReqQty = Number(r.requested_qty) || 0;
-          const qtyPerGr = splitGrs.length > 0 ? rowReqQty / splitGrs.length : rowReqQty;
-          for (const g of splitGrs) {
-            const cleanG = g.trim();
-            if (cleanG) {
-              grSet.add(cleanG);
-              const grQty = splitGrs.length === 1 ? rowReqQty : qtyPerGr;
-              grItems.push({
-                po_id: r.id,
-                gr_number: cleanG,
-                requested_qty: grQty,
-              });
-              grQtyMap[cleanG] = (grQtyMap[cleanG] || 0) + grQty;
+        const rowAnchors = extractAnchorsFromRow(r, targetAnchor, validCustomDefs);
+        if (rowAnchors.length > 0) {
+          const seenInRow = new Set<string>();
+          const uniqueRowAnchors: typeof rowAnchors = [];
+          for (const g of rowAnchors) {
+            if (!seenInRow.has(g.gr_number)) {
+              seenInRow.add(g.gr_number);
+              uniqueRowAnchors.push(g);
             }
+          }
+
+          const rowReqQty = Number(r.requested_qty) || 0;
+          const qtyPerAnchor = uniqueRowAnchors.length > 0 ? rowReqQty / uniqueRowAnchors.length : rowReqQty;
+
+          for (const g of uniqueRowAnchors) {
+            grSet.add(g.gr_number);
+            const anchorQty = uniqueRowAnchors.length === 1 ? rowReqQty : qtyPerAnchor;
+            grItems.push({
+              po_id: r.id,
+              gr_number: g.gr_number,
+              requested_qty: anchorQty,
+              source_column: g.source_column,
+              source_label: g.source_label,
+            });
+            grQtyMap[g.gr_number] = (grQtyMap[g.gr_number] || 0) + anchorQty;
           }
         }
       }
       const grString = Array.from(grSet).join('|');
+
+      // Determine Anchor value for this line
+      let anchorValue = grString || '-';
+      if (anchorValue === '-' && targetAnchor !== 'all') {
+        const safeCol = targetAnchor.replace(/[^a-zA-Z0-9_]/g, '');
+        const distinctVals = Array.from(
+          new Set(
+            rows
+              .map((r) => (r as any)[safeCol])
+              .filter((v) => v !== undefined && v !== null && String(v).trim() !== '')
+              .map((v) => {
+                if (v instanceof Date) return moment(v).format('YYYY-MM-DD');
+                return String(v).trim();
+              }),
+          ),
+        );
+        anchorValue = distinctVals.length > 0 ? distinctVals.join(' | ') : String((rep as any)[safeCol] || '-');
+      }
 
       const unit = extractUnitFromDescription(rep.item_description, rep.unit);
 
@@ -267,6 +574,10 @@ export class InvoicesService {
         no_gr: grString,
         gr_items: grItems,
         gr_qty_map: grQtyMap,
+        anchor_title: anchorDef.header_title,
+        anchor_label: anchorDef.display_label,
+        anchor_value: anchorValue,
+        is_gr_based: isGrBased,
         unit_price: unitPrice,
         requested_qty: totalQty,
         qty: totalQty,
@@ -297,6 +608,11 @@ export class InvoicesService {
         po_number: poNumber,
         po_date: poDateFormatted,
         project_name: project?.name || 'SF|Network Service Inhouse',
+        applied_anchor_column: targetAnchor,
+        applied_gr_column: targetAnchor,
+        anchor_title: anchorDef.header_title,
+        anchor_label: anchorDef.display_label,
+        is_gr_based: isGrBased,
       },
       customer_info: {
         id: customer?.id,
@@ -406,6 +722,7 @@ export class InvoicesService {
       active_grs?: string[];
       gr_items?: Array<{ po_id?: number; gr_number: string; requested_qty?: number }>;
     }>;
+    gr_column?: string;
   }) {
     const cleanInvoiceNumber = payload.invoice_number ? payload.invoice_number.trim() : '';
     if (!cleanInvoiceNumber) {
@@ -481,9 +798,10 @@ export class InvoicesService {
       }
     } else {
       // Fallback: auto-create records for lines of this PO that have GR (or all lines if none have GR)
-      const hasAnyGr = poRows.some((r) => !!r.col_gr_number_xls_inhouse);
+      const targetGrCol = payload.gr_column || 'all';
+      const hasAnyGr = poRows.some((r) => extractGrsFromRow(r, targetGrCol).length > 0);
       const eligibleRows = hasAnyGr
-        ? poRows.filter((r) => !!r.col_gr_number_xls_inhouse)
+        ? poRows.filter((r) => extractGrsFromRow(r, targetGrCol).length > 0)
         : poRows;
 
       const fallbackLineMap = new Map<string, typeof poRows>();

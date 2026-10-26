@@ -216,8 +216,10 @@ export class PurchaseOrder extends EntityHelper {
   @Column({ nullable: true })
   remark_rpm?: string;
 
-  @Column({ nullable: true })
+  // Custom columns are dynamic and managed via po_custom_columns (no static @Column)
   col_gr_number_xls_inhouse?: string;
+  col_gr_number_1_xls_inhouse?: string;
+  col_gr_number_2_xls_inhouse?: string;
 
   @ManyToOne(() => User, {
     eager: true,

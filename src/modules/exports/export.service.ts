@@ -1339,7 +1339,11 @@ export class ExportService {
               'Customer': po?.customer?.name || '-',
               'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
               'PIC Name': task.assigned_to_user?.name || '-',
+              'PO Line Amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0,
+              'Actual Work Amount': po?.actual_work_amount !== undefined && po?.actual_work_amount !== null ? Number(po.actual_work_amount) : 0,
               'PO amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : (po?.actual_work_amount ? Number(po.actual_work_amount) : 0),
+              'Actual Work Status': po?.actual_work_status || '-',
+              'Actual Work Date': po?.actual_work_date ? moment(po.actual_work_date).format('YYYY-MM-DD') : '-',
             };
             rows.push(row);
           });
@@ -1363,7 +1367,11 @@ export class ExportService {
           'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
           'PIC Name': task.assigned_to_user?.name || '-',
           'Unique ID': uniqueId,
+          'PO Line Amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0,
+          'Actual Work Amount': po?.actual_work_amount !== undefined && po?.actual_work_amount !== null ? Number(po.actual_work_amount) : 0,
           'PO amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0,
+          'Actual Work Status': po?.actual_work_status || '-',
+          'Actual Work Date': po?.actual_work_date ? moment(po.actual_work_date).format('YYYY-MM-DD') : '-',
         };
         rows.push(row);
       }

@@ -1311,44 +1311,60 @@ export class ExportService {
     const data = await qb.getMany();
 
     const rows = [];
+    const seenPoIds = new Set<number>();
+
     data.forEach((task) => {
       const purchaseOrders = task.milestone?.workload_ticket?.purchase_orders || [];
-      
-      // If there are purchase orders and exportMode is revenue (or in general to show all POs)
-      if (purchaseOrders.length > 0 && exportMode === 'revenue') {
-        purchaseOrders.forEach((po) => {
-          const row: any = {
-            'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
-            'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
-            'Project Name': po?.project?.name || '-',
-            'Customer': po?.customer?.name || '-',
-            'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
-            'PIC Name': task.assigned_to_user?.name || '-'
-          };
-          
-          const createdAtStr = po?.createdAtParseDate ? String(po.createdAtParseDate) : po?.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : '';
-          row['Unique ID'] = po ? exportUniqueId(po.id, createdAtStr) : '-';
-          row['PO amount'] = po?.line_amount || 0;
-          
-          rows.push(row);
-        });
+
+      // If exportMode is revenue (Export Based BSN ID), export each distinct PO with its unique Biosron ID
+      if (exportMode === 'revenue') {
+        if (purchaseOrders.length > 0) {
+          purchaseOrders.forEach((po) => {
+            if (!po || !po.id || seenPoIds.has(po.id)) return;
+            seenPoIds.add(po.id);
+
+            const createdAtStr = po.createdAtParseDate
+              ? String(po.createdAtParseDate)
+              : po.created_at
+              ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss')
+              : moment().format('YYYY-MM-DD HH:mm:ss');
+            const uniqueId = exportUniqueId(po.id, createdAtStr);
+
+            const row: any = {
+              'Unique ID': uniqueId,
+              'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+              'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
+              'Task Name': task.name || '-',
+              'Project Name': po?.project?.name || '-',
+              'Customer': po?.customer?.name || '-',
+              'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
+              'PIC Name': task.assigned_to_user?.name || '-',
+              'PO amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : (po?.actual_work_amount ? Number(po.actual_work_amount) : 0),
+            };
+            rows.push(row);
+          });
+        }
       } else {
-        // Fallback for standard mode or when there are no purchase orders
+        // Standard mode: Export Based Workload Ticket ID
         const po = purchaseOrders[0];
+        const createdAtStr = po?.createdAtParseDate
+          ? String(po.createdAtParseDate)
+          : po?.created_at
+          ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss')
+          : (po ? moment().format('YYYY-MM-DD HH:mm:ss') : null);
+        const uniqueId = po ? exportUniqueId(po.id, createdAtStr) : '-';
+
         const row: any = {
           'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
           'Site ID': task.milestone?.workload_ticket?.site?.code || '-',
+          'Task Name': task.name || '-',
           'Project Name': po?.project?.name || '-',
           'Customer': po?.customer?.name || '-',
           'Date Completed': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-',
-          'PIC Name': task.assigned_to_user?.name || '-'
+          'PIC Name': task.assigned_to_user?.name || '-',
+          'Unique ID': uniqueId,
+          'PO amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0,
         };
-        
-        if (exportMode === 'revenue') {
-          row['Unique ID'] = '-';
-          row['PO amount'] = 0;
-        }
-        
         rows.push(row);
       }
     });

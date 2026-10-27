@@ -1906,8 +1906,12 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     const customerId = query.customer_id;
     const projectId = query.project_id;
     const jobCategory = query.job_category;
+    const revenueSource = query.revenueSource === 'lineAmount' ? 'lineAmount' : 'actualWorkAmount';
 
-    let poWhere = 'po.actual_work_date IS NOT NULL AND po.actual_work_amount IS NOT NULL AND po.deleted_at IS NULL';
+    const amountColumn = revenueSource === 'lineAmount' ? 'po.line_amount' : 'po.actual_work_amount';
+    const amountCondition = revenueSource === 'lineAmount' ? 'po.line_amount IS NOT NULL' : 'po.actual_work_amount IS NOT NULL';
+
+    let poWhere = `po.actual_work_date IS NOT NULL AND ${amountCondition} AND po.deleted_at IS NULL`;
     const params: any[] = [];
     
     if (startDate) {
@@ -1956,17 +1960,17 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
     const revenueQuery = `
       WITH distinct_pos AS (
-        SELECT DISTINCT po.id, po.actual_work_date, po.actual_work_amount, po.status
+        SELECT DISTINCT po.id, po.actual_work_date, ${amountColumn} as amount, po.status
         FROM purchase_orders po
         WHERE ${poWhere}
       )
       SELECT TO_CHAR(DATE_TRUNC('${truncString}', actual_work_date), 'YYYY-MM-DD') as date, 
-             SUM(actual_work_amount) as total_revenue,
+             SUM(amount) as total_revenue,
              JSON_AGG(
                JSON_BUILD_OBJECT(
                  'po_id', id,
                  'status', COALESCE(UPPER(status), 'UNKNOWN'),
-                 'amount', actual_work_amount
+                 'amount', amount
                )
              ) as revenue_details_raw
       FROM distinct_pos

@@ -128,11 +128,12 @@ export class ExportService {
     jobCategory: string,
     taskName: string,
     exportMode: string,
+    revenueSource?: string,
   ) {
     const job = new ExportJob();
     job.user_id = user.id;
     job.type = 'WORKLOAD_TICKETS_TRENDING';
-    job.payload = JSON.stringify({ ip, startDate, endDate, customerId, projectId, jobCategory, taskName, exportMode });
+    job.payload = JSON.stringify({ ip, startDate, endDate, customerId, projectId, jobCategory, taskName, exportMode, revenueSource });
     job.status = 'PENDING';
     await this.exportJobRepository.save(job);
 
@@ -208,7 +209,8 @@ export class ExportService {
           payload.projectId,
           payload.jobCategory,
           payload.taskName,
-          payload.exportMode
+          payload.exportMode,
+          payload.revenueSource
         ) as string;
       } else if (job.type === 'EXPORT_MATERIALS') {
         filePath = await this._generateMaterialsFile(
@@ -1261,6 +1263,7 @@ export class ExportService {
     jobCategory: string,
     taskName: string,
     exportMode: string,
+    revenueSource?: string,
   ) {
     const qb = this.workloadTaskRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
@@ -1330,6 +1333,11 @@ export class ExportService {
               : moment().format('YYYY-MM-DD HH:mm:ss');
             const uniqueId = exportUniqueId(po.id, createdAtStr);
 
+            const isLineAmountSource = revenueSource === 'lineAmount';
+            const primaryPoAmount = isLineAmountSource
+              ? (po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0)
+              : (po?.actual_work_amount !== undefined && po?.actual_work_amount !== null ? Number(po.actual_work_amount) : (po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0));
+
             const row: any = {
               'Unique ID': uniqueId,
               'Workload Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
@@ -1341,7 +1349,7 @@ export class ExportService {
               'PIC Name': task.assigned_to_user?.name || '-',
               'PO Line Amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : 0,
               'Actual Work Amount': po?.actual_work_amount !== undefined && po?.actual_work_amount !== null ? Number(po.actual_work_amount) : 0,
-              'PO amount': po?.line_amount !== undefined && po?.line_amount !== null ? Number(po.line_amount) : (po?.actual_work_amount ? Number(po.actual_work_amount) : 0),
+              'PO amount': primaryPoAmount,
               'Actual Work Status': po?.actual_work_status || '-',
               'Actual Work Date': po?.actual_work_date ? moment(po.actual_work_date).format('YYYY-MM-DD') : '-',
             };

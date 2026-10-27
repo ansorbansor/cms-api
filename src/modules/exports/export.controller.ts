@@ -292,6 +292,7 @@ export class ExportController {
     @Query('job_category') jobCategory: string,
     @Query('task_name') taskName: string,
     @Query('export_mode') exportMode: string,
+    @Query('revenue_source') revenueSource: string,
   ) {
     try {
       const job = await this.exportService.exportWorkloadTicketsTrending(
@@ -304,6 +305,7 @@ export class ExportController {
         jobCategory,
         taskName,
         exportMode,
+        revenueSource,
       );
 
       return res.status(HttpStatus.OK).json({

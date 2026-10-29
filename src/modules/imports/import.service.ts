@@ -947,6 +947,9 @@ export class ImportService {
                       `UPDATE purchase_orders SET ${setClauses.join(', ')} WHERE id = $${pIdx}`,
                       setValues,
                     );
+                    if (Object.keys(updateDataPO).length === 0) {
+                      totalUpdatePO++;
+                    }
                   }
                 }
 

@@ -458,46 +458,35 @@ export class ExportService {
 
     query.limit(perLoop);
 
-    const arr = Array.from(new Array(loopCount), (x, i) => i);
+    for (let i = 0; i < loopCount; i++) {
+      console.log(
+        '[ExportPO] Start Get Data : ' + i + ' of ' + loopCount,
+      );
+      query.offset(i * perLoop);
 
-    await new Promise((resolve, reject) => {
-      async.forEachOf(
-        arr,
-        async (value, key, callback) => {
-          console.log(
-            '[ExportPO] Start Get Data : ' + value + ' of ' + loopCount,
-          );
-          query.offset(value * perLoop);
-
-          if (customCols && customCols.length > 0) {
-            const { entities, raw } = await query.getRawAndEntities();
-            entities.forEach((d, idx) => {
-              const rawItem = raw[idx];
-              if (rawItem) {
-                customCols.forEach((c: any) => {
-                  (d as any)[c.column_name] =
-                    rawItem[c.column_name] !== undefined
-                      ? rawItem[c.column_name]
-                      : rawItem[`po_${c.column_name}`] ?? null;
-                });
-              }
-              rows.push(ExportPOResource(d, customCols));
-            });
-          } else {
-            const data = await query.getMany();
-            data.forEach((d) => {
-              rows.push(ExportPOResource(d, []));
+      if (customCols && customCols.length > 0) {
+        const { entities, raw } = await query.getRawAndEntities();
+        entities.forEach((d, idx) => {
+          const rawItem = raw[idx];
+          if (rawItem) {
+            customCols.forEach((c: any) => {
+              (d as any)[c.column_name] =
+                rawItem[c.column_name] !== undefined
+                  ? rawItem[c.column_name]
+                  : rawItem[`po_${c.column_name}`] ?? null;
             });
           }
-        },
-        (err) => {
-          if (err) console.error(err.message);
-          // configs is now a map of JSON data
-          rows.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-          resolve(1);
-        },
-      );
-    });
+          rows.push(ExportPOResource(d, customCols));
+        });
+      } else {
+        const data = await query.getMany();
+        data.forEach((d) => {
+          rows.push(ExportPOResource(d, []));
+        });
+      }
+    }
+
+    rows.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
     console.log('[ExportPO] Start Loop Invoice ' + rows.length);
     let iid = 0;

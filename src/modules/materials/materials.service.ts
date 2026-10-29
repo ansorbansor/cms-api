@@ -109,6 +109,19 @@ export class MaterialsService {
       const projectsDb = await manager.query('SELECT name FROM projects');
       const validProjects = projectsDb.map((p: any) => p.name);
 
+      const usedSnSet = new Set<string>();
+
+      const generateUniqueSerialNumber = (): string => {
+        let sn = '';
+        do {
+          const timestamp = Date.now().toString().slice(-6);
+          const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+          sn = `SN-${timestamp}-${randomStr}`;
+        } while (usedSnSet.has(sn));
+        usedSnSet.add(sn);
+        return sn;
+      };
+
       let rowIndex = 1;
       for (const row of data) {
         rowIndex++;
@@ -120,7 +133,10 @@ export class MaterialsService {
           let region = row['Warehouse Region'] ? String(row['Warehouse Region']) : undefined;
           let project = row['Project'] ? String(row['Project']) : undefined;
 
-          const matchedCategory = validCategories.find(v => v.toLowerCase() === category.trim().toLowerCase());
+          const matchedCategory = validCategories.find(v => 
+            v.toLowerCase() === category.trim().toLowerCase() ||
+            v.toLowerCase().startsWith(category.trim().toLowerCase())
+          );
           if (!matchedCategory) throw new Error(`Invalid Category: "${category}"`);
           category = matchedCategory;
 
@@ -148,51 +164,74 @@ export class MaterialsService {
               project = matchedProject;
           }
 
-          const createDto: CreateMaterialDTO = {
-            material_name: row['Material Name'],
-            material_category: category,
-            serial_number: row['Serial Number'] ? String(row['Serial Number']) : undefined,
-            brand: row['Brand'],
-            source_type: sourceType,
-            owner_client: row['Customer / Owner'],
-            status: status,
-            warehouse_region: region,
-            site_id: row['Site ID'],
-            project_name: project,
-            quantity: row['Quantity'] ? parseInt(row['Quantity']) : 1,
-            unit: row['Unit'] || 'Units',
-            delivery_reference: row['Delivery Reference'],
-            condition: condition,
-            notes: row['Notes'],
-          };
-          
-          if (!createDto.serial_number) {
-            const timestamp = new Date().getTime().toString().slice(-6);
-            const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
-            createDto.serial_number = `SN-${timestamp}-${randomStr}`;
-          }
-          
-          if (!createDto.material_name || !createDto.brand) {
+          if (!row['Material Name'] || !row['Brand']) {
               failed++;
+              errorDetails.push(`Row ${rowIndex}: Material Name and Brand are required`);
               continue;
           }
 
-          const material = this.materialRepository.create(createDto);
-          const saved = await this.materialRepository.save(material);
-          
+          const rawQty = row['Quantity'] !== undefined && row['Quantity'] !== null ? parseInt(String(row['Quantity']).trim(), 10) : 1;
+          const parsedQty = isNaN(rawQty) || rawQty < 1 ? 1 : rawQty;
+
+          const isConsumables = category.startsWith('Consumables');
+          const countToCreate = isConsumables ? 1 : parsedQty;
+          const itemQuantity = isConsumables ? parsedQty : 1;
+
+          const rawSerial = row['Serial Number'] !== undefined && row['Serial Number'] !== null ? String(row['Serial Number']).trim() : '';
+          const providedSerials = rawSerial ? rawSerial.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean) : [];
+
+          const materialsToSave: Material[] = [];
+          for (let i = 0; i < countToCreate; i++) {
+            let sn = '';
+            if (i < providedSerials.length) {
+              sn = providedSerials[i];
+            } else if (providedSerials.length === 1 && countToCreate > 1) {
+              sn = `${providedSerials[0]}-${i + 1}`;
+            } else if (providedSerials.length === 1 && countToCreate === 1) {
+              sn = providedSerials[0];
+            } else {
+              sn = generateUniqueSerialNumber();
+            }
+            usedSnSet.add(sn);
+
+            const createDto: CreateMaterialDTO = {
+              material_name: row['Material Name'],
+              material_category: category,
+              serial_number: sn,
+              brand: row['Brand'],
+              source_type: sourceType,
+              owner_client: row['Customer / Owner'],
+              status: status,
+              warehouse_region: region,
+              site_id: row['Site ID'],
+              project_name: project,
+              quantity: itemQuantity,
+              unit: row['Unit'] || 'Units',
+              delivery_reference: row['Delivery Reference'],
+              condition: condition,
+              notes: row['Notes'],
+            };
+
+            materialsToSave.push(this.materialRepository.create(createDto));
+          }
+
+          const savedMaterials = await this.materialRepository.save(materialsToSave);
+
           if (job.user_id) {
-              const transaction = this.transactionRepository.create({
+            const transactions = savedMaterials.map((saved) =>
+              this.transactionRepository.create({
                 material_id: saved.id,
                 transaction_type: 'IMPORT',
                 quantity: saved.quantity,
                 site_id: saved.site_id,
                 notes: `Material Imported`,
                 performed_by: job.user_id,
-              });
-              await this.transactionRepository.save(transaction);
+              })
+            );
+            await this.transactionRepository.save(transactions);
           }
 
-          success++;
+          success += savedMaterials.length;
         } catch (error) {
           failed++;
           errorDetails.push(`Row ${rowIndex}: ${error.message}`);
@@ -218,7 +257,7 @@ export class MaterialsService {
 
     if (search) {
       query.andWhere(
-        '(material.material_name ILIKE :search OR material.serial_number ILIKE :search OR material.site_id ILIKE :search)',
+        '(material.material_name ILIKE :search OR material.serial_number ILIKE :search OR material.site_id ILIKE :search OR material.notes ILIKE :search OR material.delivery_reference ILIKE :search)',
         { search: `%${search}%` }
       );
     }

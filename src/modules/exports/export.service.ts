@@ -456,18 +456,26 @@ export class ExportService {
     const perLoop = 1000;
     const loopCount = Math.ceil(count / perLoop);
 
-    query.limit(perLoop);
+    query.take(perLoop);
 
     for (let i = 0; i < loopCount; i++) {
       console.log(
         '[ExportPO] Start Get Data : ' + i + ' of ' + loopCount,
       );
-      query.offset(i * perLoop);
+      query.skip(i * perLoop);
 
       if (customCols && customCols.length > 0) {
         const { entities, raw } = await query.getRawAndEntities();
-        entities.forEach((d, idx) => {
-          const rawItem = raw[idx];
+        const rawMap = new Map<number, any>();
+        raw.forEach((r: any) => {
+          const id = r.po_id || r.id;
+          if (id && !rawMap.has(id)) {
+            rawMap.set(id, r);
+          }
+        });
+
+        entities.forEach((d) => {
+          const rawItem = rawMap.get(d.id);
           if (rawItem) {
             customCols.forEach((c: any) => {
               (d as any)[c.column_name] =

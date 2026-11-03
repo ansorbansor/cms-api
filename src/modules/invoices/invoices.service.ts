@@ -1193,6 +1193,8 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('MAX(project.name)', 'project_name')
       .addSelect('SUM(poi.payment_amount)', 'payment_amount')
       .addSelect('COUNT(poi.id)', 'line_count')
+      .addSelect('MAX(poi.position)', 'position')
+      .addSelect("STRING_AGG(DISTINCT NULLIF(TRIM(poi.invoiced_grs), ''), ', ')", 'invoiced_grs')
       .where("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''");
 
     if (poNumber) {
@@ -1212,6 +1214,8 @@ export class InvoicesService implements OnModuleInit {
       invoice_status: r.invoice_status || 'Generated',
       payment_amount: Number(r.payment_amount) || 0,
       line_count: Number(r.line_count) || 1,
+      position: r.position ? Number(r.position) : 1,
+      invoiced_grs: r.invoiced_grs || '',
       po: {
         po_number: r.po_number,
         customer: { name: r.customer_name },

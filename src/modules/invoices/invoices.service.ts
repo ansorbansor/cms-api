@@ -522,10 +522,10 @@ export class InvoicesService implements OnModuleInit {
     }
 
     let currentTermPosition = 1;
-    if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2') || milestonePct === 40) {
+    if (Number(milestonePct) === 100 || termLabelOpt.includes('100') || termLabelOpt.includes('TERM 1 & 2') || termLabelOpt.includes('TERM - 1 & 2') || termLabelOpt.includes('FULL')) {
+      currentTermPosition = 0; // 100% full invoice includes all terms (Term 1 & Term 2)
+    } else if (Number(milestonePct) === 40 || termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2')) {
       currentTermPosition = 2;
-    } else if (milestonePct === 100) {
-      currentTermPosition = 0; // 100% full invoice includes all terms
     } else {
       currentTermPosition = 1;
     }
@@ -837,8 +837,16 @@ export class InvoicesService implements OnModuleInit {
         total_qty: totalRequestedQty,
         total_price: totalPrice,
         milestone_pct: milestonePct,
-        term_label: options?.term_label || `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
-        payment_term_1_label: `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
+        term_label:
+          options?.term_label ||
+          (currentTermPosition === 0
+            ? 'PAYMENT TERM - 1 & 2 (100%)'
+            : `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`),
+        payment_term_1_label:
+          options?.term_label ||
+          (currentTermPosition === 0
+            ? 'PAYMENT TERM - 1 & 2 (100%)'
+            : `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`),
         payment_amount: paymentAmount,
         vat_pct: vatPct,
         vat_amount: vatAmount,
@@ -974,12 +982,20 @@ export class InvoicesService implements OnModuleInit {
     const userId = payload.user_id ? Number(payload.user_id) : 1;
     const invDate = payload.invoice_date ? new Date(payload.invoice_date) : new Date();
 
-    // Determine target payment term position (1 or 2)
-    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2)
+    // Determine target payment term position (1, 2, or 0 for both Term 1 & 2)
+    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2), 0 = Term 1 & 2 (100%)
     let targetPosition = payload.position;
-    if (!targetPosition) {
+    if (targetPosition === undefined || targetPosition === null) {
       const termStr = (payload.term_label || '').toUpperCase();
-      if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || payload.milestone_pct === 40) {
+      if (
+        Number(payload.milestone_pct) === 100 ||
+        termStr.includes('100') ||
+        termStr.includes('TERM 1 & 2') ||
+        termStr.includes('TERM - 1 & 2') ||
+        termStr.includes('FULL')
+      ) {
+        targetPosition = 0;
+      } else if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || Number(payload.milestone_pct) === 40) {
         targetPosition = 2;
       } else {
         targetPosition = 1;
@@ -1102,72 +1118,100 @@ export class InvoicesService implements OnModuleInit {
         const distinctPoIds = Array.from(poToGrs.keys());
         const splitAmount = distinctPoIds.length > 0 ? Math.round(lineAmount / distinctPoIds.length) : lineAmount;
 
+        const positionsToProcess = targetPosition === 0 ? [1, 2] : [targetPosition];
+
         for (const [targetPoId, grList] of poToGrs.entries()) {
-          const invoicedGrsString = grList.length > 0 ? grList.join(', ') : null;
+          for (const pos of positionsToProcess) {
+            let posAmount = splitAmount;
+            let posGrs = grList;
 
-          // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
-          let targetPoi: PurchaseOrderInvoice | null = null;
-          const oldForTarget = oldInvoiceRecords.find(
-            (r) => !usedOldRecordIds.has(r.id) && String(r.purchase_order_id) === String(targetPoId)
-          );
-          if (oldForTarget) {
-            targetPoi = oldForTarget;
-            usedOldRecordIds.add(targetPoi.id);
-          } else if (oldInvoiceRecords.length > 0) {
-            const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
-            if (anyUnusedOld) {
-              targetPoi = anyUnusedOld;
-              targetPoi.purchase_order_id = String(targetPoId);
+            if (targetPosition === 0) {
+              if (pos === 1) {
+                posAmount = Math.round(splitAmount * 0.6);
+                const filtered = grList.filter((g) => {
+                  const itemMatch = line.gr_items?.find((gi) => gi.gr_number === g);
+                  return itemMatch ? itemMatch.target_term === 1 : true;
+                });
+                posGrs = filtered.length > 0 ? filtered : grList;
+              } else {
+                posAmount = splitAmount - Math.round(splitAmount * 0.6);
+                const filtered = grList.filter((g) => {
+                  const itemMatch = line.gr_items?.find((gi) => gi.gr_number === g);
+                  return itemMatch ? itemMatch.target_term === 2 : true;
+                });
+                posGrs = filtered.length > 0 ? filtered : grList;
+              }
+            }
+
+            const invoicedGrsString = posGrs.length > 0 ? posGrs.join(', ') : null;
+
+            // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
+            let targetPoi: PurchaseOrderInvoice | null = null;
+            const oldForTarget = oldInvoiceRecords.find(
+              (r) =>
+                !usedOldRecordIds.has(r.id) &&
+                String(r.purchase_order_id) === String(targetPoId) &&
+                (targetPosition !== 0 || Number(r.position) === pos)
+            );
+            if (oldForTarget) {
+              targetPoi = oldForTarget;
               usedOldRecordIds.add(targetPoi.id);
+            } else if (oldInvoiceRecords.length > 0) {
+              const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
+              if (anyUnusedOld) {
+                targetPoi = anyUnusedOld;
+                targetPoi.purchase_order_id = String(targetPoId);
+                usedOldRecordIds.add(targetPoi.id);
+              }
             }
-          }
 
-          // 2. If not from old invoice, check if an unbilled slot already exists for targetPoId & targetPosition
-          if (!targetPoi) {
-            const existingPoi = await this.invoiceRepository.findOne({
-              where: {
+            // 2. If not from old invoice, check if an unbilled slot already exists for targetPoId & pos
+            if (!targetPoi) {
+              const existingPoi = await this.invoiceRepository.findOne({
+                where: {
+                  purchase_order_id: String(targetPoId),
+                  position: pos,
+                },
+              });
+
+              if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+                targetPoi = existingPoi;
+              }
+            }
+
+            // 3. Overwrite existing record or insert new record
+            if (targetPoi) {
+              targetPoi.invoice_number = cleanInvoiceNumber;
+              targetPoi.invoice_date = invDate;
+              targetPoi.invoice_status = 'Generated';
+              targetPoi.payment_amount = posAmount;
+              targetPoi.submit_amount = posAmount;
+              targetPoi.unit_price = lineUnitPrice;
+              targetPoi.user_id = userId;
+              targetPoi.submit_date = invDate;
+              targetPoi.position = pos;
+              targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
+              await this.invoiceRepository.save(targetPoi);
+              savedRecordsCount++;
+              recordsProcessed.push(targetPoi);
+            } else {
+              const newEntity = this.invoiceRepository.create({
                 purchase_order_id: String(targetPoId),
-                position: targetPosition,
-              },
-            });
-
-            if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
-              targetPoi = existingPoi;
+                position: pos,
+                invoice_number: cleanInvoiceNumber,
+                invoice_date: invDate,
+                invoice_status: 'Generated',
+                payment_amount: posAmount,
+                submit_amount: posAmount,
+                unit_price: lineUnitPrice,
+                user_id: userId,
+                submit_date: invDate,
+                invoiced_grs: invoicedGrsString,
+              });
+              await this.invoiceRepository.save(newEntity);
+              savedRecordsCount++;
+              recordsProcessed.push(newEntity);
             }
-          }
-
-          // 3. Overwrite existing record or insert new record
-          if (targetPoi) {
-            targetPoi.invoice_number = cleanInvoiceNumber;
-            targetPoi.invoice_date = invDate;
-            targetPoi.invoice_status = 'Generated';
-            targetPoi.payment_amount = splitAmount;
-            targetPoi.submit_amount = splitAmount;
-            targetPoi.unit_price = lineUnitPrice;
-            targetPoi.user_id = userId;
-            targetPoi.submit_date = invDate;
-            targetPoi.position = targetPosition;
-            targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
-            await this.invoiceRepository.save(targetPoi);
-            savedRecordsCount++;
-            recordsProcessed.push(targetPoi);
-          } else {
-            const newEntity = this.invoiceRepository.create({
-              purchase_order_id: String(targetPoId),
-              position: targetPosition,
-              invoice_number: cleanInvoiceNumber,
-              invoice_date: invDate,
-              invoice_status: 'Generated',
-              payment_amount: splitAmount,
-              submit_amount: splitAmount,
-              unit_price: lineUnitPrice,
-              user_id: userId,
-              submit_date: invDate,
-              invoiced_grs: invoicedGrsString,
-            });
-            await this.invoiceRepository.save(newEntity);
-            savedRecordsCount++;
-            recordsProcessed.push(newEntity);
           }
         }
       }

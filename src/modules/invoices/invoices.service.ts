@@ -118,6 +118,28 @@ export function extractAnchorsFromRow(
 
 export const extractGrsFromRow = extractAnchorsFromRow;
 
+/**
+ * Deduce Payment Term Position (1 or 2) from custom column name or label.
+ * Rules:
+ *  - GR 1 / Term 1 -> Position 1 (e.g. 60% RFS / 40% ATP)
+ *  - GR 2 / Term 2 -> Position 2 (e.g. 40% Term 2 / 30% ATP)
+ */
+export function getGrTermPosition(colName?: string, label?: string): number {
+  const str = `${colName || ''} ${label || ''}`.toLowerCase();
+  if (
+    str.includes('gr2') ||
+    str.includes('gr_2') ||
+    str.includes('gr 2') ||
+    str.includes('nomor_gr2') ||
+    str.includes('term 2') ||
+    str.includes('term2') ||
+    str.includes('term - 2')
+  ) {
+    return 2;
+  }
+  return 1;
+}
+
 @Injectable()
 export class InvoicesService implements OnModuleInit {
   constructor(
@@ -486,7 +508,7 @@ export class InvoicesService implements OnModuleInit {
     // Check if the current invoice number already exists in DB
     const invoiceNumberCheck = await this.checkInvoiceNumber(invoiceNumber, poNumber);
 
-    // Determine milestone percentage from payment_terms or default
+    // Determine milestone percentage and term position
     let milestonePct = options?.milestone_pct;
     if (milestonePct === undefined || milestonePct === null) {
       // Try parsing from payment_terms (e.g., '60% RFS/ 40% ATP' -> 40%)
@@ -499,6 +521,84 @@ export class InvoicesService implements OnModuleInit {
         milestonePct = 100;
       } else {
         milestonePct = 40; // Default
+      }
+    }
+
+    const termLabelOpt = (options?.term_label || '').toUpperCase();
+    let currentTermPosition = 1;
+    if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2') || milestonePct === 30) {
+      currentTermPosition = 2;
+    } else if (milestonePct === 100) {
+      currentTermPosition = 0; // 100% full invoice includes all terms
+    } else {
+      currentTermPosition = 1;
+    }
+
+    // Query existing invoices recorded for this PO from purchase_order_invoices
+    const existingPoiQuery = this.invoiceRepository
+      .createQueryBuilder('poi')
+      .innerJoin(PurchaseOrder, 'po', 'po.id = poi.purchase_order_id::integer')
+      .select('poi.id', 'id')
+      .addSelect('poi.purchase_order_id', 'purchase_order_id')
+      .addSelect('poi.invoice_number', 'invoice_number')
+      .addSelect('poi.invoice_date', 'invoice_date')
+      .addSelect('poi.position', 'position')
+      .addSelect('poi.invoiced_grs', 'invoiced_grs')
+      .where('po.po_number = :poNumber', { poNumber })
+      .andWhere("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''");
+
+    validCustomDefs.forEach((d) => {
+      existingPoiQuery.addSelect(`po."${d.name}"`, `po_${d.name}`);
+    });
+
+    const existingInvoices = await existingPoiQuery.getRawMany();
+
+    const invoicedGrMap = new Map<string, {
+      invoice_number: string;
+      invoice_date: string;
+      term_position: number;
+    }>();
+
+    for (const inv of existingInvoices) {
+      const invNum = inv.invoice_number ? String(inv.invoice_number).trim() : '';
+      if (!invNum) continue;
+      const invDate = inv.invoice_date ? moment(inv.invoice_date).format('YYYY-MM-DD') : '';
+      const pos = Number(inv.position) || 1;
+
+      // 1. Check explicit invoiced_grs column
+      if (inv.invoiced_grs) {
+        const parts = String(inv.invoiced_grs).split(/[,|]/);
+        for (const p of parts) {
+          const g = p.trim();
+          if (g) {
+            invoicedGrMap.set(g, {
+              invoice_number: invNum,
+              invoice_date: invDate,
+              term_position: pos,
+            });
+          }
+        }
+      }
+
+      // 2. Check custom columns from linked PO row
+      for (const d of validCustomDefs) {
+        const rawVal = inv[`po_${d.name}`] || inv[d.name];
+        if (rawVal) {
+          const colPos = getGrTermPosition(d.name, d.label);
+          if (colPos === pos || !inv.position) {
+            const parts = String(rawVal).split(/[,|]/);
+            for (const p of parts) {
+              const g = p.trim();
+              if (g && !invoicedGrMap.has(g)) {
+                invoicedGrMap.set(g, {
+                  invoice_number: invNum,
+                  invoice_date: invDate,
+                  term_position: colPos,
+                });
+              }
+            }
+          }
+        }
       }
     }
 
@@ -522,19 +622,18 @@ export class InvoicesService implements OnModuleInit {
     const items = [];
     let totalPrice = 0;
     let totalRequestedQty = 0;
+    let totalAutoExcludedCount = 0;
+    let totalActiveUnbilledCount = 0;
     let itemNo = 1;
 
     for (const lineKey of sortedLineKeys) {
       const rows = lineMap.get(lineKey);
       const rep = rows[0];
 
-      // Sum requested_qty of GR items under this line
-      const totalQty = rows.reduce((acc, r) => acc + (Number(r.requested_qty) || 0), 0);
       const unitPrice = Number(rep.unit_price) || 0;
-      const linePrice = unitPrice * totalQty;
-      const lineAmount = Math.round(linePrice * (milestonePct / 100));
+      const totalQty = rows.reduce((acc, r) => acc + (Number(r.requested_qty) || 0), 0);
 
-      // Collect distinct GR numbers with their requested_qty and anchor column tags
+      // Collect distinct GR numbers with their requested_qty, target term, and invoicing status
       const grSet = new Set<string>();
       const grItems: Array<{
         po_id: number;
@@ -542,8 +641,19 @@ export class InvoicesService implements OnModuleInit {
         requested_qty: number;
         source_column: string;
         source_label: string;
+        target_term: number;
+        is_already_invoiced: boolean;
+        invoiced_in: {
+          invoice_number: string;
+          invoice_date: string;
+          term_position: number;
+        } | null;
+        is_other_term: boolean;
       }> = [];
       const grQtyMap: Record<string, number> = {};
+      const defaultExcludedGrs: string[] = [];
+      const activeUnbilledGrs: string[] = [];
+      const alreadyInvoicedGrs: Array<{ gr_number: string; invoice_number: string; invoice_date: string }> = [];
 
       for (const r of rows) {
         const rowAnchors = extractAnchorsFromRow(r, targetAnchor, validCustomDefs);
@@ -561,16 +671,48 @@ export class InvoicesService implements OnModuleInit {
           const qtyPerAnchor = uniqueRowAnchors.length > 0 ? rowReqQty / uniqueRowAnchors.length : rowReqQty;
 
           for (const g of uniqueRowAnchors) {
+            const targetTerm = getGrTermPosition(g.source_column, g.source_label);
+            const invoicedInfo = invoicedGrMap.get(g.gr_number) || null;
+            const isAlreadyInvoiced = !!invoicedInfo;
+            const isOtherTerm = currentTermPosition !== 0 && targetTerm !== currentTermPosition;
+
             grSet.add(g.gr_number);
             const anchorQty = uniqueRowAnchors.length === 1 ? rowReqQty : qtyPerAnchor;
+
             grItems.push({
               po_id: r.id,
               gr_number: g.gr_number,
               requested_qty: anchorQty,
               source_column: g.source_column,
               source_label: g.source_label,
+              target_term: targetTerm,
+              is_already_invoiced: isAlreadyInvoiced,
+              invoiced_in: invoicedInfo,
+              is_other_term: isOtherTerm,
             });
+
             grQtyMap[g.gr_number] = (grQtyMap[g.gr_number] || 0) + anchorQty;
+
+            if (isAlreadyInvoiced || isOtherTerm) {
+              if (!defaultExcludedGrs.includes(g.gr_number)) {
+                defaultExcludedGrs.push(g.gr_number);
+              }
+              if (isAlreadyInvoiced && invoicedInfo) {
+                if (!alreadyInvoicedGrs.some((x) => x.gr_number === g.gr_number)) {
+                  alreadyInvoicedGrs.push({
+                    gr_number: g.gr_number,
+                    invoice_number: invoicedInfo.invoice_number,
+                    invoice_date: invoicedInfo.invoice_date,
+                  });
+                }
+                totalAutoExcludedCount++;
+              }
+            } else {
+              if (!activeUnbilledGrs.includes(g.gr_number)) {
+                activeUnbilledGrs.push(g.gr_number);
+                totalActiveUnbilledCount++;
+              }
+            }
           }
         }
       }
@@ -600,6 +742,21 @@ export class InvoicesService implements OnModuleInit {
       const itemLinePoNumber = String(rep.line_po_number || lineKey);
       const poLineValue = `${itemPoNumber}-${itemLinePoNumber}`;
 
+      // Calculate initial active qty: ONLY unbilled GRs for the current term!
+      let initialActiveQty = totalQty;
+      if (isGrBased && grItems.length > 0) {
+        initialActiveQty = activeUnbilledGrs.reduce((acc, gr) => acc + (grQtyMap[gr] || 0), 0);
+      }
+
+      const isFullyInvoiced = isGrBased && grItems.length > 0 && activeUnbilledGrs.length === 0;
+      const linePrice = unitPrice * initialActiveQty;
+      const lineAmount = Math.round(linePrice * (milestonePct / 100));
+
+      if (initialActiveQty > 0) {
+        totalPrice += linePrice;
+        totalRequestedQty += initialActiveQty;
+      }
+
       items.push({
         no: itemNo++,
         po_id: rep.id,
@@ -611,21 +768,23 @@ export class InvoicesService implements OnModuleInit {
         no_gr: grString,
         gr_items: grItems,
         gr_qty_map: grQtyMap,
+        default_excluded_grs: defaultExcludedGrs,
+        active_unbilled_grs: activeUnbilledGrs,
+        already_invoiced_grs: alreadyInvoicedGrs,
+        is_fully_invoiced: isFullyInvoiced,
         anchor_title: anchorDef.header_title,
         anchor_label: anchorDef.display_label,
         anchor_value: anchorValue,
         is_gr_based: isGrBased,
         unit_price: unitPrice,
         requested_qty: totalQty,
-        qty: totalQty,
+        active_qty: initialActiveQty,
+        qty: initialActiveQty,
         unit: unit,
         price: linePrice,
         milestone_pct: milestonePct,
         amount: lineAmount,
       });
-
-      totalPrice += linePrice;
-      totalRequestedQty += totalQty;
     }
 
     // Financial calculations
@@ -650,6 +809,10 @@ export class InvoicesService implements OnModuleInit {
         anchor_title: anchorDef.header_title,
         anchor_label: anchorDef.display_label,
         is_gr_based: isGrBased,
+        current_term_position: currentTermPosition,
+        total_invoiced_gr_count: invoicedGrMap.size,
+        auto_excluded_gr_count: totalAutoExcludedCount,
+        active_unbilled_gr_count: totalActiveUnbilledCount,
       },
       customer_info: {
         id: customer?.id,
@@ -676,8 +839,8 @@ export class InvoicesService implements OnModuleInit {
         total_qty: totalRequestedQty,
         total_price: totalPrice,
         milestone_pct: milestonePct,
-        term_label: options?.term_label || `PAYMENT TERM - 1 (${milestonePct}%)`,
-        payment_term_1_label: `PAYMENT TERM - 1 (${milestonePct}%)`,
+        term_label: options?.term_label || `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
+        payment_term_1_label: `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
         payment_amount: paymentAmount,
         vat_pct: vatPct,
         vat_amount: vatAmount,
@@ -747,6 +910,8 @@ export class InvoicesService implements OnModuleInit {
     unit_price?: number;
     user_id?: number;
     milestone_pct?: number;
+    term_label?: string;
+    position?: number;
     lines?: Array<{
       line_po_number: string;
       po_number?: string;
@@ -757,9 +922,17 @@ export class InvoicesService implements OnModuleInit {
       amount?: number;
       price?: number;
       active_grs?: string[];
-      gr_items?: Array<{ po_id?: number; gr_number: string; requested_qty?: number }>;
+      gr_items?: Array<{
+        po_id?: number;
+        gr_number: string;
+        requested_qty?: number;
+        source_column?: string;
+        source_label?: string;
+        target_term?: number;
+      }>;
     }>;
     gr_column?: string;
+    anchor_column?: string;
   }) {
     const cleanInvoiceNumber = payload.invoice_number ? payload.invoice_number.trim() : '';
     if (!cleanInvoiceNumber) {
@@ -781,6 +954,17 @@ export class InvoicesService implements OnModuleInit {
     const userId = payload.user_id ? Number(payload.user_id) : 1;
     const invDate = payload.invoice_date ? new Date(payload.invoice_date) : new Date();
 
+    // Determine target payment term position (1 or 2)
+    let targetPosition = payload.position;
+    if (!targetPosition) {
+      const termStr = (payload.term_label || '').toUpperCase();
+      if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || payload.milestone_pct === 30) {
+        targetPosition = 2;
+      } else {
+        targetPosition = 1;
+      }
+    }
+
     // 1. Fetch all rows of this PO from purchase_orders
     const poRows = await this.poRepository.find({
       where: { po_number: payload.po_number },
@@ -799,46 +983,123 @@ export class InvoicesService implements OnModuleInit {
       rowsByLine.get(lineKey).push(r);
     }
 
-    // 2. Prepare records to insert into purchase_order_invoices for each included line
-    const recordsToInsert = [];
+    // Dynamic custom columns from PO management
+    let customCols: POCustomColumn[] = [];
+    try {
+      customCols = await this.poCustomColumnRepo.find();
+    } catch (e) {
+      customCols = [];
+    }
+    const previewExistingCols = await this.getDbColumnNames();
+    const validCustomDefs = customCols
+      .filter((c) => c.column_name && previewExistingCols.has(c.column_name.toLowerCase()))
+      .map((c) => ({
+        name: c.column_name,
+        label: c.display_label || c.column_name,
+      }));
+
+    let savedRecordsCount = 0;
+    const recordsProcessed = [];
 
     if (payload.lines && payload.lines.length > 0) {
-      // Use active lines sent from generator
+      // Process active lines from Invoice Generator
       for (const line of payload.lines) {
-        let targetPoId = line.po_id;
-        if (!targetPoId) {
-          const matchingRows = rowsByLine.get(String(line.line_po_number)) || [];
-          if (matchingRows.length > 0) {
-            targetPoId = matchingRows[0].id;
-          } else {
-            targetPoId = poRows[0].id;
-          }
-        }
-
+        const lineUnitPrice = line.unit_price !== undefined ? Number(line.unit_price) : 0;
         const lineAmount =
           line.amount !== undefined
             ? Number(line.amount)
-            : Math.round(Number(line.unit_price || 0) * Number(line.qty || 1));
-        const lineUnitPrice = line.unit_price !== undefined ? Number(line.unit_price) : 0;
+            : Math.round(lineUnitPrice * Number(line.qty || 1));
 
-        recordsToInsert.push({
-          invoice_number: payload.invoice_number,
-          invoice_date: invDate,
-          invoice_status: 'Generated',
-          purchase_order_id: String(targetPoId),
-          payment_amount: lineAmount,
-          submit_amount: lineAmount,
-          unit_price: lineUnitPrice,
-          user_id: userId,
-          submit_date: invDate,
-        });
+        // Group active GRs by target purchase_order_id
+        const poToGrs = new Map<number, string[]>();
+
+        if (line.active_grs && line.active_grs.length > 0) {
+          for (const gr of line.active_grs) {
+            let matchPoId: number | null = null;
+            if (line.gr_items && line.gr_items.length > 0) {
+              const matchedItem = line.gr_items.find((gi) => gi.gr_number === gr);
+              if (matchedItem && matchedItem.po_id) {
+                matchPoId = matchedItem.po_id;
+              }
+            }
+            if (!matchPoId) {
+              const foundRow = poRows.find((r) => {
+                for (const d of validCustomDefs) {
+                  const val = (r as any)[d.name];
+                  if (val && String(val).split(/[,|]/).map((s) => s.trim()).includes(gr)) {
+                    return true;
+                  }
+                }
+                return false;
+              });
+              if (foundRow) matchPoId = foundRow.id;
+            }
+            if (!matchPoId) {
+              matchPoId = line.po_id || rowsByLine.get(String(line.line_po_number))?.[0]?.id || poRows[0].id;
+            }
+
+            if (!poToGrs.has(matchPoId)) poToGrs.set(matchPoId, []);
+            poToGrs.get(matchPoId).push(gr);
+          }
+        } else if (Number(line.qty || 0) > 0) {
+          const defaultPoId = line.po_id || rowsByLine.get(String(line.line_po_number))?.[0]?.id || poRows[0].id;
+          poToGrs.set(defaultPoId, []);
+        }
+
+        const distinctPoIds = Array.from(poToGrs.keys());
+        const splitAmount = distinctPoIds.length > 0 ? Math.round(lineAmount / distinctPoIds.length) : lineAmount;
+
+        for (const [targetPoId, grList] of poToGrs.entries()) {
+          const invoicedGrsString = grList.length > 0 ? grList.join(', ') : null;
+
+          // Check if an existing unbilled slot exists in purchase_order_invoices
+          const existingPoi = await this.invoiceRepository.findOne({
+            where: {
+              purchase_order_id: String(targetPoId),
+              position: targetPosition,
+            },
+          });
+
+          if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+            existingPoi.invoice_number = cleanInvoiceNumber;
+            existingPoi.invoice_date = invDate;
+            existingPoi.invoice_status = 'Generated';
+            existingPoi.payment_amount = splitAmount;
+            existingPoi.submit_amount = splitAmount;
+            existingPoi.unit_price = lineUnitPrice;
+            existingPoi.user_id = userId;
+            existingPoi.submit_date = invDate;
+            existingPoi.position = targetPosition;
+            existingPoi.invoiced_grs = invoicedGrsString || existingPoi.invoiced_grs;
+            await this.invoiceRepository.save(existingPoi);
+            savedRecordsCount++;
+            recordsProcessed.push(existingPoi);
+          } else {
+            const newEntity = this.invoiceRepository.create({
+              purchase_order_id: String(targetPoId),
+              position: targetPosition,
+              invoice_number: cleanInvoiceNumber,
+              invoice_date: invDate,
+              invoice_status: 'Generated',
+              payment_amount: splitAmount,
+              submit_amount: splitAmount,
+              unit_price: lineUnitPrice,
+              user_id: userId,
+              submit_date: invDate,
+              invoiced_grs: invoicedGrsString,
+            });
+            await this.invoiceRepository.save(newEntity);
+            savedRecordsCount++;
+            recordsProcessed.push(newEntity);
+          }
+        }
       }
     } else {
-      // Fallback: auto-create records for lines of this PO that have GR (or all lines if none have GR)
+      // Fallback: auto-create records for lines of this PO that have GR
       const targetGrCol = payload.gr_column || 'all';
-      const hasAnyGr = poRows.some((r) => extractGrsFromRow(r, targetGrCol).length > 0);
+      const hasAnyGr = poRows.some((r) => extractGrsFromRow(r, targetGrCol, validCustomDefs).length > 0);
       const eligibleRows = hasAnyGr
-        ? poRows.filter((r) => extractGrsFromRow(r, targetGrCol).length > 0)
+        ? poRows.filter((r) => extractGrsFromRow(r, targetGrCol, validCustomDefs).length > 0)
         : poRows;
 
       const fallbackLineMap = new Map<string, typeof poRows>();
@@ -856,31 +1117,60 @@ export class InvoicesService implements OnModuleInit {
         const linePrice = unitPrice * lineQty;
         const lineAmount = Math.round(linePrice * (msPct / 100));
 
-        recordsToInsert.push({
-          invoice_number: payload.invoice_number,
-          invoice_date: invDate,
-          invoice_status: 'Generated',
-          purchase_order_id: String(rep.id),
-          payment_amount: lineAmount,
-          submit_amount: lineAmount,
-          unit_price: unitPrice,
-          user_id: userId,
-          submit_date: invDate,
+        const targetPoId = rep.id;
+        const lineGrs = extractGrsFromRow(rep, targetGrCol, validCustomDefs)
+          .filter((g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition)
+          .map((g) => g.gr_number);
+        const invoicedGrsString = lineGrs.length > 0 ? lineGrs.join(', ') : null;
+
+        const existingPoi = await this.invoiceRepository.findOne({
+          where: {
+            purchase_order_id: String(targetPoId),
+            position: targetPosition,
+          },
         });
+
+        if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+          existingPoi.invoice_number = cleanInvoiceNumber;
+          existingPoi.invoice_date = invDate;
+          existingPoi.invoice_status = 'Generated';
+          existingPoi.payment_amount = lineAmount;
+          existingPoi.submit_amount = lineAmount;
+          existingPoi.unit_price = unitPrice;
+          existingPoi.user_id = userId;
+          existingPoi.submit_date = invDate;
+          existingPoi.position = targetPosition;
+          existingPoi.invoiced_grs = invoicedGrsString || existingPoi.invoiced_grs;
+          await this.invoiceRepository.save(existingPoi);
+          savedRecordsCount++;
+          recordsProcessed.push(existingPoi);
+        } else {
+          const newEntity = this.invoiceRepository.create({
+            purchase_order_id: String(targetPoId),
+            position: targetPosition,
+            invoice_number: cleanInvoiceNumber,
+            invoice_date: invDate,
+            invoice_status: 'Generated',
+            payment_amount: lineAmount,
+            submit_amount: lineAmount,
+            unit_price: unitPrice,
+            user_id: userId,
+            submit_date: invDate,
+            invoiced_grs: invoicedGrsString,
+          });
+          await this.invoiceRepository.save(newEntity);
+          savedRecordsCount++;
+          recordsProcessed.push(newEntity);
+        }
       }
     }
 
-    // 3. Batch insert all line records
-    if (recordsToInsert.length > 0) {
-      const entities = this.invoiceRepository.create(recordsToInsert);
-      await this.invoiceRepository.save(entities);
-    }
-
     return {
-      message: `Invoice ${payload.invoice_number} berhasil disimpan dengan ${recordsToInsert.length} line PO record`,
+      message: `Invoice ${payload.invoice_number} berhasil disimpan dengan ${savedRecordsCount} record PO (Term ${targetPosition})`,
       invoice_number: payload.invoice_number,
-      total_lines_saved: recordsToInsert.length,
-      records: recordsToInsert,
+      term_position: targetPosition,
+      total_lines_saved: savedRecordsCount,
+      records: recordsProcessed,
     };
   }
 

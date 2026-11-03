@@ -52,6 +52,9 @@ export class PurchaseOrderInvoice extends EntityHelper {
   @Column({ nullable: true })
   position?: number;
 
+  @Column({ type: 'text', nullable: true })
+  invoiced_grs?: string;
+
   @ManyToOne(() => PurchaseOrder, {})
   @JoinColumn({ name: 'purchase_order_id' })
   po?: PurchaseOrder;

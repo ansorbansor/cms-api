@@ -126,16 +126,19 @@ export const extractGrsFromRow = extractAnchorsFromRow;
  */
 export function getGrTermPosition(colName?: string, label?: string): number {
   const str = `${colName || ''} ${label || ''}`.toLowerCase();
+  // Robust check for Term 2 / GR 2 (e.g. col_gr_number_2_..., GR Number 2, Nomor GR 2, Term 2, etc.)
   if (
-    str.includes('gr2') ||
-    str.includes('gr_2') ||
-    str.includes('gr 2') ||
-    str.includes('nomor_gr2') ||
-    str.includes('term 2') ||
-    str.includes('term2') ||
-    str.includes('term - 2')
+    /(?:gr|term|nomor|number|no|pos|ke)[^1-9]*2(?!\d)/i.test(str) ||
+    /(?:^|[_\s-])2(?:[_\s-]|$)/.test(str)
   ) {
     return 2;
+  }
+  // Check for Term 1 / GR 1
+  if (
+    /(?:gr|term|nomor|number|no|pos|ke)[^1-9]*1(?!\d)/i.test(str) ||
+    /(?:^|[_\s-])1(?:[_\s-]|$)/.test(str)
+  ) {
+    return 1;
   }
   return 1;
 }

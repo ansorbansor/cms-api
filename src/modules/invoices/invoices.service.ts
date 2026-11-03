@@ -1024,6 +1024,7 @@ export class InvoicesService implements OnModuleInit {
         .innerJoin('poi.po', 'po')
         .where('po.po_number = :poNumber', { poNumber: payload.po_number })
         .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:revNum))', { revNum: revisedInvoiceNumber })
+        .andWhere('poi.position = :pos', { pos: targetPosition })
         .getMany();
     }
 
@@ -1037,6 +1038,7 @@ export class InvoicesService implements OnModuleInit {
           .innerJoin('poi.po', 'po')
           .where('po.po_number = :poNumber', { poNumber: payload.po_number })
           .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:baseNum))', { baseNum: base })
+          .andWhere('poi.position = :pos', { pos: targetPosition })
           .getMany();
 
         if (baseRecords.length > 0) {
@@ -1142,7 +1144,9 @@ export class InvoicesService implements OnModuleInit {
               targetPoi = oldForTarget;
               usedOldRecordIds.add(targetPoi.id);
             } else if (oldInvoiceRecords.length > 0) {
-              const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
+              const anyUnusedOld = oldInvoiceRecords.find(
+                (r) => !usedOldRecordIds.has(r.id) && Number(r.position) === pos
+              );
               if (anyUnusedOld) {
                 targetPoi = anyUnusedOld;
                 targetPoi.purchase_order_id = String(targetPoId);
@@ -1159,7 +1163,12 @@ export class InvoicesService implements OnModuleInit {
                 },
               });
 
-              if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+              if (
+                existingPoi &&
+                (!existingPoi.invoice_number ||
+                  existingPoi.invoice_number.trim() === '' ||
+                  existingPoi.invoice_number.trim() === cleanInvoiceNumber)
+              ) {
                 targetPoi = existingPoi;
               }
             }
@@ -1203,7 +1212,7 @@ export class InvoicesService implements OnModuleInit {
 
       // Approach #3: Release any records from the old invoice that were NOT included in this revision (e.g. excluded GRs/lines)
       for (const oldRec of oldInvoiceRecords) {
-        if (!usedOldRecordIds.has(oldRec.id)) {
+        if (!usedOldRecordIds.has(oldRec.id) && Number(oldRec.position) === targetPosition) {
           const duplicateSlot = await this.invoiceRepository.findOne({
             where: {
               purchase_order_id: oldRec.purchase_order_id,
@@ -1255,13 +1264,18 @@ export class InvoicesService implements OnModuleInit {
 
         let targetPoi: PurchaseOrderInvoice | null = null;
         const oldForTarget = oldInvoiceRecords.find(
-          (r) => !usedOldRecordIds.has(r.id) && String(r.purchase_order_id) === String(targetPoId)
+          (r) =>
+            !usedOldRecordIds.has(r.id) &&
+            String(r.purchase_order_id) === String(targetPoId) &&
+            Number(r.position) === targetPosition
         );
         if (oldForTarget) {
           targetPoi = oldForTarget;
           usedOldRecordIds.add(targetPoi.id);
         } else if (oldInvoiceRecords.length > 0) {
-          const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
+          const anyUnusedOld = oldInvoiceRecords.find(
+            (r) => !usedOldRecordIds.has(r.id) && Number(r.position) === targetPosition
+          );
           if (anyUnusedOld) {
             targetPoi = anyUnusedOld;
             targetPoi.purchase_order_id = String(targetPoId);
@@ -1277,7 +1291,12 @@ export class InvoicesService implements OnModuleInit {
             },
           });
 
-          if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+          if (
+            existingPoi &&
+            (!existingPoi.invoice_number ||
+              existingPoi.invoice_number.trim() === '' ||
+              existingPoi.invoice_number.trim() === cleanInvoiceNumber)
+          ) {
             targetPoi = existingPoi;
           }
         }
@@ -1318,7 +1337,7 @@ export class InvoicesService implements OnModuleInit {
 
       // Cleanup unused old records in fallback branch
       for (const oldRec of oldInvoiceRecords) {
-        if (!usedOldRecordIds.has(oldRec.id)) {
+        if (!usedOldRecordIds.has(oldRec.id) && Number(oldRec.position) === targetPosition) {
           const duplicateSlot = await this.invoiceRepository.findOne({
             where: {
               purchase_order_id: oldRec.purchase_order_id,
@@ -1380,7 +1399,7 @@ export class InvoicesService implements OnModuleInit {
 
     qb.groupBy('poi.invoice_number')
       .orderBy('MAX(poi.created_at)', 'DESC')
-      .take(50);
+      .take(100);
 
     const rawList = await qb.getRawMany();
 
@@ -1393,6 +1412,9 @@ export class InvoicesService implements OnModuleInit {
       line_count: Number(r.line_count) || 1,
       position: r.position ? Number(r.position) : 1,
       invoiced_grs: r.invoiced_grs || '',
+      po_number: r.po_number,
+      customer_name: r.customer_name,
+      project_name: r.project_name,
       po: {
         po_number: r.po_number,
         customer: { name: r.customer_name },

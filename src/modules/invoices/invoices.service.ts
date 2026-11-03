@@ -664,7 +664,6 @@ export class InvoicesService implements OnModuleInit {
           }
 
           const rowReqQty = Number(r.requested_qty) || 0;
-          const qtyPerAnchor = uniqueRowAnchors.length > 0 ? rowReqQty / uniqueRowAnchors.length : rowReqQty;
 
           for (const g of uniqueRowAnchors) {
             const targetTerm = getGrTermPosition(g.source_column, g.source_label);
@@ -673,7 +672,8 @@ export class InvoicesService implements OnModuleInit {
             const isOtherTerm = currentTermPosition !== 0 && targetTerm !== currentTermPosition;
 
             grSet.add(g.gr_number);
-            const anchorQty = uniqueRowAnchors.length === 1 ? rowReqQty : qtyPerAnchor;
+            // In milestone/term-based invoicing, each GR (Term 1 / Term 2) represents the full requested_qty of the line item
+            const anchorQty = rowReqQty;
 
             grItems.push({
               po_id: r.id,
@@ -687,7 +687,7 @@ export class InvoicesService implements OnModuleInit {
               is_other_term: isOtherTerm,
             });
 
-            grQtyMap[g.gr_number] = (grQtyMap[g.gr_number] || 0) + anchorQty;
+            grQtyMap[g.gr_number] = anchorQty;
 
             if (isAlreadyInvoiced || isOtherTerm) {
               if (!defaultExcludedGrs.includes(g.gr_number)) {
@@ -739,9 +739,11 @@ export class InvoicesService implements OnModuleInit {
       const poLineValue = `${itemPoNumber}-${itemLinePoNumber}`;
 
       // Calculate initial active qty: ONLY unbilled GRs for the current term!
+      // If the line has active unbilled GRs for this term, initialActiveQty is totalQty (requested_qty).
+      // If all GRs for this line are already billed or belong to other terms, initialActiveQty is 0.
       let initialActiveQty = totalQty;
       if (isGrBased && grItems.length > 0) {
-        initialActiveQty = activeUnbilledGrs.reduce((acc, gr) => acc + (grQtyMap[gr] || 0), 0);
+        initialActiveQty = activeUnbilledGrs.length > 0 ? totalQty : 0;
       }
 
       const isFullyInvoiced = isGrBased && grItems.length > 0 && activeUnbilledGrs.length === 0;

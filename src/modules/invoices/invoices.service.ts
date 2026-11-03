@@ -205,15 +205,15 @@ export class InvoicesService implements OnModuleInit {
       columnOptions.push({
         key: 'all',
         column_name: 'all',
-        display_label: '⚡ Semua Kolom Kustom PO (Gabungan / Otomatis)',
-        header_title: 'KOLOM KUSTOM PO',
-        description: 'Menggabungkan data dari seluruh kolom kustom yang dibuat pada Purchase Order',
-        badge: 'ALL CUSTOM',
+        display_label: '⚡ Semua Kolom GR (Gabungan / Otomatis)',
+        header_title: 'NO GR',
+        description: 'Menggabungkan data dari seluruh kolom GR yang dibuat pada Purchase Order',
+        badge: 'ALL GR',
         is_gr_based: true,
         is_default: true,
         priority: 0,
         group: 'custom',
-        group_label: '🔧 Kolom Kustom Purchase Orders',
+        group_label: '🔧 Kolom GR Purchase Orders',
       });
     }
 
@@ -622,6 +622,15 @@ export class InvoicesService implements OnModuleInit {
     let totalActiveUnbilledCount = 0;
     let itemNo = 1;
 
+    let effectiveAnchorTitle = 'NO GR';
+    if (currentTermPosition === 1) {
+      effectiveAnchorTitle = 'NO GR 1';
+    } else if (currentTermPosition === 2) {
+      effectiveAnchorTitle = 'NO GR 2';
+    } else if (currentTermPosition === 0) {
+      effectiveAnchorTitle = 'NO GR 1 & NO GR 2';
+    }
+
     for (const lineKey of sortedLineKeys) {
       const rows = lineMap.get(lineKey);
       const rep = rows[0];
@@ -755,6 +764,11 @@ export class InvoicesService implements OnModuleInit {
         totalRequestedQty += initialActiveQty;
       }
 
+      const gr1Item = grItems.find((gi) => gi.target_term === 1);
+      const gr2Item = grItems.find((gi) => gi.target_term === 2);
+      const noGr1 = gr1Item ? gr1Item.gr_number : '-';
+      const noGr2 = gr2Item ? gr2Item.gr_number : '-';
+
       items.push({
         no: itemNo++,
         po_id: rep.id,
@@ -764,13 +778,15 @@ export class InvoicesService implements OnModuleInit {
         po_line: poLineValue,
         description: rep.item_description || `Item Line ${itemLinePoNumber}`,
         no_gr: grString,
+        no_gr_1: noGr1,
+        no_gr_2: noGr2,
         gr_items: grItems,
         gr_qty_map: grQtyMap,
         default_excluded_grs: defaultExcludedGrs,
         active_unbilled_grs: activeUnbilledGrs,
         already_invoiced_grs: alreadyInvoicedGrs,
         is_fully_invoiced: isFullyInvoiced,
-        anchor_title: anchorDef.header_title,
+        anchor_title: effectiveAnchorTitle,
         anchor_label: anchorDef.display_label,
         anchor_value: anchorValue,
         is_gr_based: isGrBased,
@@ -804,7 +820,7 @@ export class InvoicesService implements OnModuleInit {
         project_name: project?.name || 'SF|Network Service Inhouse',
         applied_anchor_column: targetAnchor,
         applied_gr_column: targetAnchor,
-        anchor_title: anchorDef.header_title,
+        anchor_title: effectiveAnchorTitle,
         anchor_label: anchorDef.display_label,
         is_gr_based: isGrBased,
         current_term_position: currentTermPosition,

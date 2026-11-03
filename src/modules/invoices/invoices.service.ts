@@ -509,25 +509,18 @@ export class InvoicesService implements OnModuleInit {
     const invoiceNumberCheck = await this.checkInvoiceNumber(invoiceNumber, poNumber);
 
     // Determine milestone percentage and term position
-    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2)
+    // Project standard: Strictly 2 Terms: Term 1 = 60% (GR 1) OR Term 2 = 40% (GR 2).
+    // A single invoice document exclusively bills ONE term.
     let milestonePct = options?.milestone_pct;
     const termLabelOpt = (options?.term_label || '').toUpperCase();
 
-    if (milestonePct === undefined || milestonePct === null) {
-      if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2')) {
-        milestonePct = 40;
-      } else {
-        milestonePct = 60; // Standard default Term 1 = 60%
-      }
-    }
-
     let currentTermPosition = 1;
-    if (Number(milestonePct) === 100 || termLabelOpt.includes('100') || termLabelOpt.includes('TERM 1 & 2') || termLabelOpt.includes('TERM - 1 & 2') || termLabelOpt.includes('FULL')) {
-      currentTermPosition = 0; // 100% full invoice includes all terms (Term 1 & Term 2)
-    } else if (Number(milestonePct) === 40 || termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2')) {
+    if (Number(milestonePct) === 40 || termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2')) {
       currentTermPosition = 2;
+      milestonePct = 40;
     } else {
       currentTermPosition = 1;
+      milestonePct = 60;
     }
 
     // Query existing invoices recorded for this PO from purchase_order_invoices
@@ -622,14 +615,7 @@ export class InvoicesService implements OnModuleInit {
     let totalActiveUnbilledCount = 0;
     let itemNo = 1;
 
-    let effectiveAnchorTitle = 'NO GR';
-    if (currentTermPosition === 1) {
-      effectiveAnchorTitle = 'NO GR 1';
-    } else if (currentTermPosition === 2) {
-      effectiveAnchorTitle = 'NO GR 2';
-    } else if (currentTermPosition === 0) {
-      effectiveAnchorTitle = 'NO GR 1 & NO GR 2';
-    }
+    const effectiveAnchorTitle = currentTermPosition === 2 ? 'NO GR 2' : 'NO GR 1';
 
     for (const lineKey of sortedLineKeys) {
       const rows = lineMap.get(lineKey);
@@ -660,6 +646,9 @@ export class InvoicesService implements OnModuleInit {
       const activeUnbilledGrs: string[] = [];
       const alreadyInvoicedGrs: Array<{ gr_number: string; invoice_number: string; invoice_date: string }> = [];
 
+      let rowGr1 = '-';
+      let rowGr2 = '-';
+
       for (const r of rows) {
         const rowAnchors = extractAnchorsFromRow(r, targetAnchor, validCustomDefs);
         if (rowAnchors.length > 0) {
@@ -672,16 +661,28 @@ export class InvoicesService implements OnModuleInit {
             }
           }
 
+          // Populate rowGr1 and rowGr2 for informational cross-term reference
+          for (const g of uniqueRowAnchors) {
+            const pos = getGrTermPosition(g.source_column, g.source_label);
+            if (pos === 1 && rowGr1 === '-') rowGr1 = g.gr_number;
+            if (pos === 2 && rowGr2 === '-') rowGr2 = g.gr_number;
+          }
+
           const rowReqQty = Number(r.requested_qty) || 0;
 
-          for (const g of uniqueRowAnchors) {
-            const targetTerm = getGrTermPosition(g.source_column, g.source_label);
+          // Project Rule: A single invoice document exclusively bills ONE term.
+          // Term 1 exclusively targets GR 1; Term 2 exclusively targets GR 2.
+          const termAnchors = uniqueRowAnchors.filter(
+            (g) => getGrTermPosition(g.source_column, g.source_label) === currentTermPosition
+          );
+
+          for (const g of termAnchors) {
+            const targetTerm = currentTermPosition;
             const invoicedInfo = invoicedGrMap.get(g.gr_number) || null;
             const isAlreadyInvoiced = !!invoicedInfo;
-            const isOtherTerm = currentTermPosition !== 0 && targetTerm !== currentTermPosition;
 
             grSet.add(g.gr_number);
-            // In milestone/term-based invoicing, each GR (Term 1 / Term 2) represents the full requested_qty of the line item
+            // In milestone/term-based invoicing, each GR represents the full requested_qty of the line item
             const anchorQty = rowReqQty;
 
             grItems.push({
@@ -693,25 +694,23 @@ export class InvoicesService implements OnModuleInit {
               target_term: targetTerm,
               is_already_invoiced: isAlreadyInvoiced,
               invoiced_in: invoicedInfo,
-              is_other_term: isOtherTerm,
+              is_other_term: false,
             });
 
             grQtyMap[g.gr_number] = anchorQty;
 
-            if (isAlreadyInvoiced || isOtherTerm) {
+            if (isAlreadyInvoiced) {
               if (!defaultExcludedGrs.includes(g.gr_number)) {
                 defaultExcludedGrs.push(g.gr_number);
               }
-              if (isAlreadyInvoiced && invoicedInfo) {
-                if (!alreadyInvoicedGrs.some((x) => x.gr_number === g.gr_number)) {
-                  alreadyInvoicedGrs.push({
-                    gr_number: g.gr_number,
-                    invoice_number: invoicedInfo.invoice_number,
-                    invoice_date: invoicedInfo.invoice_date,
-                  });
-                }
-                totalAutoExcludedCount++;
+              if (!alreadyInvoicedGrs.some((x) => x.gr_number === g.gr_number)) {
+                alreadyInvoicedGrs.push({
+                  gr_number: g.gr_number,
+                  invoice_number: invoicedInfo.invoice_number,
+                  invoice_date: invoicedInfo.invoice_date,
+                });
               }
+              totalAutoExcludedCount++;
             } else {
               if (!activeUnbilledGrs.includes(g.gr_number)) {
                 activeUnbilledGrs.push(g.gr_number);
@@ -749,14 +748,14 @@ export class InvoicesService implements OnModuleInit {
 
       // Calculate initial active qty: ONLY unbilled GRs for the current term!
       // If the line has active unbilled GRs for this term, initialActiveQty is totalQty (requested_qty).
-      // If all GRs for this line are already billed or belong to other terms, initialActiveQty is 0.
+      // If the line has no GR for this term or all GRs are already billed, initialActiveQty is 0.
       let initialActiveQty = totalQty;
-      if (isGrBased && grItems.length > 0) {
-        initialActiveQty = activeUnbilledGrs.length > 0 ? totalQty : 0;
+      if (isGrBased) {
+        initialActiveQty = grItems.length > 0 && activeUnbilledGrs.length > 0 ? totalQty : 0;
       }
 
-      const isFullyInvoiced = isGrBased && grItems.length > 0 && activeUnbilledGrs.length === 0;
-      const linePrice = unitPrice * initialActiveQty;
+      const isFullyInvoiced = isGrBased && (grItems.length === 0 || activeUnbilledGrs.length === 0);
+      const linePrice = initialActiveQty > 0 ? unitPrice * initialActiveQty : 0;
       const lineAmount = Math.round(linePrice * (milestonePct / 100));
 
       if (initialActiveQty > 0) {
@@ -764,10 +763,8 @@ export class InvoicesService implements OnModuleInit {
         totalRequestedQty += initialActiveQty;
       }
 
-      const gr1Item = grItems.find((gi) => gi.target_term === 1);
-      const gr2Item = grItems.find((gi) => gi.target_term === 2);
-      const noGr1 = gr1Item ? gr1Item.gr_number : '-';
-      const noGr2 = gr2Item ? gr2Item.gr_number : '-';
+      const noGr1 = rowGr1;
+      const noGr2 = rowGr2;
 
       items.push({
         no: itemNo++,
@@ -855,14 +852,10 @@ export class InvoicesService implements OnModuleInit {
         milestone_pct: milestonePct,
         term_label:
           options?.term_label ||
-          (currentTermPosition === 0
-            ? 'PAYMENT TERM - 1 & 2 (100%)'
-            : `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`),
+          `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
         payment_term_1_label:
           options?.term_label ||
-          (currentTermPosition === 0
-            ? 'PAYMENT TERM - 1 & 2 (100%)'
-            : `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`),
+          `PAYMENT TERM - ${currentTermPosition === 2 ? 2 : 1} (${milestonePct}%)`,
         payment_amount: paymentAmount,
         vat_pct: vatPct,
         vat_amount: vatAmount,
@@ -998,20 +991,12 @@ export class InvoicesService implements OnModuleInit {
     const userId = payload.user_id ? Number(payload.user_id) : 1;
     const invDate = payload.invoice_date ? new Date(payload.invoice_date) : new Date();
 
-    // Determine target payment term position (1, 2, or 0 for both Term 1 & 2)
-    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2), 0 = Term 1 & 2 (100%)
+    // Determine target payment term position (strictly 1 or 2)
+    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2)
     let targetPosition = payload.position;
-    if (targetPosition === undefined || targetPosition === null) {
+    if (targetPosition !== 1 && targetPosition !== 2) {
       const termStr = (payload.term_label || '').toUpperCase();
-      if (
-        Number(payload.milestone_pct) === 100 ||
-        termStr.includes('100') ||
-        termStr.includes('TERM 1 & 2') ||
-        termStr.includes('TERM - 1 & 2') ||
-        termStr.includes('FULL')
-      ) {
-        targetPosition = 0;
-      } else if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || Number(payload.milestone_pct) === 40) {
+      if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || Number(payload.milestone_pct) === 40) {
         targetPosition = 2;
       } else {
         targetPosition = 1;
@@ -1134,31 +1119,12 @@ export class InvoicesService implements OnModuleInit {
         const distinctPoIds = Array.from(poToGrs.keys());
         const splitAmount = distinctPoIds.length > 0 ? Math.round(lineAmount / distinctPoIds.length) : lineAmount;
 
-        const positionsToProcess = targetPosition === 0 ? [1, 2] : [targetPosition];
+        const positionsToProcess = [targetPosition];
 
         for (const [targetPoId, grList] of poToGrs.entries()) {
           for (const pos of positionsToProcess) {
-            let posAmount = splitAmount;
-            let posGrs = grList;
-
-            if (targetPosition === 0) {
-              if (pos === 1) {
-                posAmount = Math.round(splitAmount * 0.6);
-                const filtered = grList.filter((g) => {
-                  const itemMatch = line.gr_items?.find((gi) => gi.gr_number === g);
-                  return itemMatch ? itemMatch.target_term === 1 : true;
-                });
-                posGrs = filtered.length > 0 ? filtered : grList;
-              } else {
-                posAmount = splitAmount - Math.round(splitAmount * 0.6);
-                const filtered = grList.filter((g) => {
-                  const itemMatch = line.gr_items?.find((gi) => gi.gr_number === g);
-                  return itemMatch ? itemMatch.target_term === 2 : true;
-                });
-                posGrs = filtered.length > 0 ? filtered : grList;
-              }
-            }
-
+            const posAmount = splitAmount;
+            const posGrs = grList;
             const invoicedGrsString = posGrs.length > 0 ? posGrs.join(', ') : null;
 
             // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
@@ -1167,7 +1133,7 @@ export class InvoicesService implements OnModuleInit {
               (r) =>
                 !usedOldRecordIds.has(r.id) &&
                 String(r.purchase_order_id) === String(targetPoId) &&
-                (targetPosition !== 0 || Number(r.position) === pos)
+                Number(r.position) === pos
             );
             if (oldForTarget) {
               targetPoi = oldForTarget;

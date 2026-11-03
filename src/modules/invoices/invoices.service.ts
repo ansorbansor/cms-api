@@ -262,6 +262,14 @@ export class InvoicesService implements OnModuleInit {
       .map((c) => c.column_name)
       .filter((c) => c && existingCols.has(c.toLowerCase()));
 
+    // Dynamically aggregate custom column values (e.g. GR numbers) per PO
+    validCustomColNames.forEach((c) => {
+      qb.addSelect(
+        `STRING_AGG(DISTINCT NULLIF(TRIM(CAST(po."${c}" AS TEXT)), ''), ', ')`,
+        `custom_${c}`,
+      );
+    });
+
     if (col === 'all' || col === 'all_gr' || col === 'all_custom') {
       const candidates = validCustomColNames;
 
@@ -280,18 +288,47 @@ export class InvoicesService implements OnModuleInit {
 
     qb.andWhere("po.po_number IS NOT NULL AND TRIM(po.po_number) != ''");
 
+    // Search across PO Number, Customer, Project, AND all custom columns (GR 1, GR 2, BAST, etc.)
     if (search && search.trim() !== '') {
-      qb.andWhere(
-        '(LOWER(po.po_number) LIKE :s OR LOWER(customer.name) LIKE :s OR LOWER(project.name) LIKE :s)',
-        { s: `%${search.toLowerCase().trim()}%` },
-      );
+      const sVal = `%${search.toLowerCase().trim()}%`;
+      const searchTerms = [
+        'LOWER(po.po_number) LIKE :s',
+        'LOWER(customer.name) LIKE :s',
+        'LOWER(project.name) LIKE :s',
+      ];
+      validCustomColNames.forEach((c) => {
+        searchTerms.push(`LOWER(CAST(po."${c}" AS TEXT)) LIKE :s`);
+      });
+      qb.andWhere(`(${searchTerms.join(' OR ')})`, { s: sVal });
     }
 
     qb.groupBy('po.po_number').orderBy('MAX(po.publish_date)', 'DESC');
-    qb.limit(100);
+    qb.limit(search ? 30 : 100);
 
     const raw = await qb.getRawMany();
-    return raw;
+
+    const colLabelMap = new Map<string, string>();
+    customCols.forEach((c) => {
+      colLabelMap.set(c.column_name, c.display_label || c.column_name);
+    });
+
+    return raw.map((r) => {
+      const customValues: Array<{ column: string; label: string; value: string }> = [];
+      validCustomColNames.forEach((c) => {
+        const val = r[`custom_${c}`];
+        if (val) {
+          customValues.push({
+            column: c,
+            label: colLabelMap.get(c) || c,
+            value: val,
+          });
+        }
+      });
+      return {
+        ...r,
+        custom_values: customValues,
+      };
+    });
   }
 
   /**

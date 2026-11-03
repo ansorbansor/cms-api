@@ -700,7 +700,7 @@ export class InvoicesService implements OnModuleInit {
               is_other_term: false,
             });
 
-            grQtyMap[g.gr_number] = anchorQty;
+            grQtyMap[g.gr_number] = (grQtyMap[g.gr_number] || 0) + anchorQty;
 
             if (isAlreadyInvoiced) {
               if (!defaultExcludedGrs.includes(g.gr_number)) {
@@ -754,7 +754,14 @@ export class InvoicesService implements OnModuleInit {
       // If the line has no GR for this term or all GRs are already billed, initialActiveQty is 0.
       let initialActiveQty = totalQty;
       if (isGrBased) {
-        initialActiveQty = grItems.length > 0 && activeUnbilledGrs.length > 0 ? totalQty : 0;
+        if (grItems.length === 0 || activeUnbilledGrs.length === 0) {
+          initialActiveQty = 0;
+        } else {
+          initialActiveQty = activeUnbilledGrs.reduce(
+            (sum, g) => sum + (Number(grQtyMap[g]) || 0),
+            0
+          );
+        }
       }
 
       const isFullyInvoiced = isGrBased && (grItems.length === 0 || activeUnbilledGrs.length === 0);

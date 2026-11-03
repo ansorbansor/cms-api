@@ -509,24 +509,20 @@ export class InvoicesService implements OnModuleInit {
     const invoiceNumberCheck = await this.checkInvoiceNumber(invoiceNumber, poNumber);
 
     // Determine milestone percentage and term position
+    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2)
     let milestonePct = options?.milestone_pct;
+    const termLabelOpt = (options?.term_label || '').toUpperCase();
+
     if (milestonePct === undefined || milestonePct === null) {
-      // Try parsing from payment_terms (e.g., '60% RFS/ 40% ATP' -> 40%)
-      const terms = firstRow.payment_terms || '';
-      if (terms.includes('40%')) {
+      if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2')) {
         milestonePct = 40;
-      } else if (terms.includes('60%')) {
-        milestonePct = 60;
-      } else if (terms.includes('100%')) {
-        milestonePct = 100;
       } else {
-        milestonePct = 40; // Default
+        milestonePct = 60; // Standard default Term 1 = 60%
       }
     }
 
-    const termLabelOpt = (options?.term_label || '').toUpperCase();
     let currentTermPosition = 1;
-    if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2') || milestonePct === 30) {
+    if (termLabelOpt.includes('TERM - 2') || termLabelOpt.includes('TERM 2') || milestonePct === 40) {
       currentTermPosition = 2;
     } else if (milestonePct === 100) {
       currentTermPosition = 0; // 100% full invoice includes all terms
@@ -977,10 +973,11 @@ export class InvoicesService implements OnModuleInit {
     const invDate = payload.invoice_date ? new Date(payload.invoice_date) : new Date();
 
     // Determine target payment term position (1 or 2)
+    // Project standard: Term 1 = 60% (GR 1), Term 2 = 40% (GR 2)
     let targetPosition = payload.position;
     if (!targetPosition) {
       const termStr = (payload.term_label || '').toUpperCase();
-      if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || payload.milestone_pct === 30) {
+      if (termStr.includes('TERM - 2') || termStr.includes('TERM 2') || payload.milestone_pct === 40) {
         targetPosition = 2;
       } else {
         targetPosition = 1;
@@ -1211,7 +1208,7 @@ export class InvoicesService implements OnModuleInit {
         fallbackLineMap.get(lineKey).push(r);
       }
 
-      const msPct = payload.milestone_pct || 40;
+      const msPct = payload.milestone_pct || (targetPosition === 2 ? 40 : 60);
       for (const [lineKey, rows] of fallbackLineMap.entries()) {
         const rep = rows[0];
         const lineQty = rows.reduce((acc, r) => acc + (Number(r.requested_qty) || 0), 0);

@@ -1092,127 +1092,211 @@ export class InvoicesService implements OnModuleInit {
             ? Number(line.amount)
             : Math.round(lineUnitPrice * Number(line.qty || 1));
 
-        // Group active GRs by target purchase_order_id
-        const poToGrs = new Map<number, string[]>();
+        // 1. Identify all underlying purchase_orders rows for this line
+        const linePoRows = rowsByLine.get(String(line.line_po_number)) || [];
+        const candidateRows =
+          linePoRows.length > 0
+            ? linePoRows
+            : line.po_ids && line.po_ids.length > 0
+            ? poRows.filter((r) => line.po_ids.includes(r.id))
+            : line.po_id
+            ? poRows.filter((r) => r.id === line.po_id)
+            : [poRows[0]];
 
-        if (line.active_grs && line.active_grs.length > 0) {
-          for (const gr of line.active_grs) {
-            let matchPoId: number | null = null;
-            if (line.gr_items && line.gr_items.length > 0) {
-              const matchedItem = line.gr_items.find((gi) => gi.gr_number === gr);
-              if (matchedItem && matchedItem.po_id) {
-                matchPoId = matchedItem.po_id;
+        // 2. Determine which candidate rows are active and their respective GRs for targetPosition
+        const activeRows: Array<{
+          row: typeof poRows[0];
+          grs: string[];
+          qty: number;
+        }> = [];
+
+        const hasActiveGrsPayload = Array.isArray(line.active_grs) && line.active_grs.length > 0;
+
+        for (const r of candidateRows) {
+          // Extract GRs for this row and target position
+          const grsFromItems = (line.gr_items || [])
+            .filter((gi) => gi.po_id === r.id)
+            .map((gi) => String(gi.gr_number).trim());
+
+          const grsFromRow = extractGrsFromRow(r, 'all', validCustomDefs)
+            .filter((g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition)
+            .map((g) => String(g.gr_number).trim());
+
+          const rowTermGrs = Array.from(new Set([...grsFromItems, ...grsFromRow])).filter(Boolean);
+
+          if (hasActiveGrsPayload) {
+            const matchedActiveGrs = rowTermGrs.filter((gr) => line.active_grs.includes(gr));
+            if (rowTermGrs.length > 0) {
+              if (matchedActiveGrs.length > 0) {
+                activeRows.push({
+                  row: r,
+                  grs: matchedActiveGrs,
+                  qty: Number(r.requested_qty) || 0,
+                });
+              }
+              // Else: row has GRs for this term, but none are in active_grs -> excluded by user
+            } else {
+              // Row has no GRs for this term: check if any other candidate row in this line has GRs
+              const anyCandidateHasGrs = candidateRows.some((cr) => {
+                const cGrs = extractGrsFromRow(cr, 'all', validCustomDefs).filter(
+                  (g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition
+                );
+                return cGrs.length > 0;
+              });
+              if (!anyCandidateHasGrs) {
+                // Line does not use GRs at all (e.g. non-GR item): row is active
+                activeRows.push({
+                  row: r,
+                  grs: [],
+                  qty: Number(r.requested_qty) || 0,
+                });
               }
             }
-            if (!matchPoId) {
-              const foundRow = poRows.find((r) => {
-                for (const d of validCustomDefs) {
-                  const val = (r as any)[d.name];
-                  if (val && String(val).split(/[,|]/).map((s) => s.trim()).includes(gr)) {
-                    return true;
-                  }
-                }
-                return false;
-              });
-              if (foundRow) matchPoId = foundRow.id;
-            }
-            if (!matchPoId) {
-              matchPoId = line.po_id || rowsByLine.get(String(line.line_po_number))?.[0]?.id || poRows[0].id;
-            }
-
-            if (!poToGrs.has(matchPoId)) poToGrs.set(matchPoId, []);
-            poToGrs.get(matchPoId).push(gr);
+          } else if (Number(line.qty || 0) > 0) {
+            activeRows.push({
+              row: r,
+              grs: rowTermGrs,
+              qty: Number(r.requested_qty) || 0,
+            });
           }
-        } else if (Number(line.qty || 0) > 0) {
-          const defaultPoId = line.po_id || rowsByLine.get(String(line.line_po_number))?.[0]?.id || poRows[0].id;
-          poToGrs.set(defaultPoId, []);
         }
 
-        const distinctPoIds = Array.from(poToGrs.keys());
-        const splitAmount = distinctPoIds.length > 0 ? Math.round(lineAmount / distinctPoIds.length) : lineAmount;
-
-        const positionsToProcess = [targetPosition];
-
-        for (const [targetPoId, grList] of poToGrs.entries()) {
-          for (const pos of positionsToProcess) {
-            const posAmount = splitAmount;
-            const posGrs = grList;
-            const invoicedGrsString = posGrs.length > 0 ? posGrs.join(', ') : null;
-
-            // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
-            let targetPoi: PurchaseOrderInvoice | null = null;
-            const oldForTarget = oldInvoiceRecords.find(
-              (r) =>
-                !usedOldRecordIds.has(r.id) &&
-                String(r.purchase_order_id) === String(targetPoId) &&
-                Number(r.position) === pos
-            );
-            if (oldForTarget) {
-              targetPoi = oldForTarget;
-              usedOldRecordIds.add(targetPoi.id);
-            } else if (oldInvoiceRecords.length > 0) {
-              const anyUnusedOld = oldInvoiceRecords.find(
-                (r) => !usedOldRecordIds.has(r.id) && Number(r.position) === pos
-              );
-              if (anyUnusedOld) {
-                targetPoi = anyUnusedOld;
-                targetPoi.purchase_order_id = String(targetPoId);
-                usedOldRecordIds.add(targetPoi.id);
-              }
-            }
-
-            // 2. If not from old invoice, check if an unbilled slot already exists for targetPoId & pos
-            if (!targetPoi) {
-              const existingPoi = await this.invoiceRepository.findOne({
-                where: {
-                  purchase_order_id: String(targetPoId),
-                  position: pos,
-                },
+        // Safety check: ensure every active GR in line.active_grs is covered
+        if (hasActiveGrsPayload) {
+          for (const gr of line.active_grs) {
+            const alreadyCovered = activeRows.some((a) => a.grs.includes(gr));
+            if (!alreadyCovered) {
+              const matchingPoRow = poRows.find((r) => {
+                const grs = extractGrsFromRow(r, 'all', validCustomDefs).map((g) => g.gr_number);
+                return grs.includes(gr);
               });
-
-              if (
-                existingPoi &&
-                (!existingPoi.invoice_number ||
-                  existingPoi.invoice_number.trim() === '' ||
-                  existingPoi.invoice_number.trim() === cleanInvoiceNumber)
-              ) {
-                targetPoi = existingPoi;
+              if (matchingPoRow) {
+                const existingActive = activeRows.find((a) => a.row.id === matchingPoRow.id);
+                if (existingActive) {
+                  if (!existingActive.grs.includes(gr)) existingActive.grs.push(gr);
+                } else {
+                  activeRows.push({
+                    row: matchingPoRow,
+                    grs: [gr],
+                    qty: Number(matchingPoRow.requested_qty) || 0,
+                  });
+                }
+              } else if (activeRows.length > 0) {
+                if (!activeRows[0].grs.includes(gr)) activeRows[0].grs.push(gr);
+              } else if (candidateRows.length > 0) {
+                activeRows.push({
+                  row: candidateRows[0],
+                  grs: [gr],
+                  qty: Number(candidateRows[0].requested_qty) || 0,
+                });
               }
             }
+          }
+        }
 
-            // 3. Overwrite existing record or insert new record
-            if (targetPoi) {
-              targetPoi.invoice_number = cleanInvoiceNumber;
-              targetPoi.invoice_date = invDate;
-              targetPoi.invoice_status = 'Generated';
-              targetPoi.payment_amount = posAmount;
-              targetPoi.submit_amount = posAmount;
-              targetPoi.unit_price = lineUnitPrice;
-              targetPoi.user_id = userId;
-              targetPoi.submit_date = invDate;
-              targetPoi.position = pos;
-              targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
-              await this.invoiceRepository.save(targetPoi);
-              savedRecordsCount++;
-              recordsProcessed.push(targetPoi);
-            } else {
-              const newEntity = this.invoiceRepository.create({
+        // Fallback if activeRows is empty but line has positive qty
+        if (activeRows.length === 0 && Number(line.qty || 0) > 0 && candidateRows.length > 0) {
+          activeRows.push({
+            row: candidateRows[0],
+            grs: [],
+            qty: Number(candidateRows[0].requested_qty) || Number(line.qty) || 0,
+          });
+        }
+
+        if (activeRows.length === 0) {
+          continue;
+        }
+
+        // Proportional payment amount calculation across all active rows of this line
+        const totalActiveQty = activeRows.reduce(
+          (sum, a) => sum + (a.qty > 0 ? a.qty : 1),
+          0
+        );
+
+        let remainingLineAmount = lineAmount;
+
+        for (let i = 0; i < activeRows.length; i++) {
+          const entry = activeRows[i];
+          const targetPoId = entry.row.id;
+          const posGrs = entry.grs;
+          const invoicedGrsString = posGrs.length > 0 ? posGrs.join(', ') : null;
+          const rowQty = entry.qty > 0 ? entry.qty : 1;
+
+          let posAmount: number;
+          if (i === activeRows.length - 1) {
+            posAmount = remainingLineAmount;
+          } else if (totalActiveQty > 0) {
+            posAmount = Math.round(lineAmount * (rowQty / totalActiveQty));
+            remainingLineAmount -= posAmount;
+          } else {
+            posAmount = Math.round(lineAmount / activeRows.length);
+            remainingLineAmount -= posAmount;
+          }
+
+          // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
+          let targetPoi: PurchaseOrderInvoice | null = null;
+          const oldForTarget = oldInvoiceRecords.find(
+            (r) =>
+              !usedOldRecordIds.has(r.id) &&
+              String(r.purchase_order_id) === String(targetPoId) &&
+              Number(r.position) === targetPosition
+          );
+          if (oldForTarget) {
+            targetPoi = oldForTarget;
+            usedOldRecordIds.add(targetPoi.id);
+          }
+
+          // 2. If not from old invoice, check if an unbilled slot already exists for targetPoId & targetPosition
+          if (!targetPoi) {
+            const existingPoi = await this.invoiceRepository.findOne({
+              where: {
                 purchase_order_id: String(targetPoId),
-                position: pos,
-                invoice_number: cleanInvoiceNumber,
-                invoice_date: invDate,
-                invoice_status: 'Generated',
-                payment_amount: posAmount,
-                submit_amount: posAmount,
-                unit_price: lineUnitPrice,
-                user_id: userId,
-                submit_date: invDate,
-                invoiced_grs: invoicedGrsString,
-              });
-              await this.invoiceRepository.save(newEntity);
-              savedRecordsCount++;
-              recordsProcessed.push(newEntity);
+                position: targetPosition,
+              },
+            });
+
+            if (
+              existingPoi &&
+              (!existingPoi.invoice_number ||
+                existingPoi.invoice_number.trim() === '' ||
+                existingPoi.invoice_number.trim() === cleanInvoiceNumber)
+            ) {
+              targetPoi = existingPoi;
             }
+          }
+
+          // 3. Overwrite existing record or insert new record
+          if (targetPoi) {
+            targetPoi.invoice_number = cleanInvoiceNumber;
+            targetPoi.invoice_date = invDate;
+            targetPoi.invoice_status = 'Generated';
+            targetPoi.payment_amount = posAmount;
+            targetPoi.submit_amount = posAmount;
+            targetPoi.unit_price = lineUnitPrice;
+            targetPoi.user_id = userId;
+            targetPoi.submit_date = invDate;
+            targetPoi.position = targetPosition;
+            targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
+            await this.invoiceRepository.save(targetPoi);
+            savedRecordsCount++;
+            recordsProcessed.push(targetPoi);
+          } else {
+            const newEntity = this.invoiceRepository.create({
+              purchase_order_id: String(targetPoId),
+              position: targetPosition,
+              invoice_number: cleanInvoiceNumber,
+              invoice_date: invDate,
+              invoice_status: 'Generated',
+              payment_amount: posAmount,
+              submit_amount: posAmount,
+              unit_price: lineUnitPrice,
+              user_id: userId,
+              submit_date: invDate,
+              invoiced_grs: invoicedGrsString,
+            });
+            await this.invoiceRepository.save(newEntity);
+            savedRecordsCount++;
+            recordsProcessed.push(newEntity);
           }
         }
       }
@@ -1257,88 +1341,91 @@ export class InvoicesService implements OnModuleInit {
 
       const msPct = payload.milestone_pct || (targetPosition === 2 ? 40 : 60);
       for (const [lineKey, rows] of fallbackLineMap.entries()) {
+        const lineQty = rows.reduce((acc, r) => acc + (Number(r.requested_qty) || 0), 0) || 1;
         const rep = rows[0];
-        const lineQty = rows.reduce((acc, r) => acc + (Number(r.requested_qty) || 0), 0);
         const unitPrice = Number(rep.unit_price) || 0;
         const linePrice = unitPrice * lineQty;
         const lineAmount = Math.round(linePrice * (msPct / 100));
 
-        const targetPoId = rep.id;
-        const lineGrs = extractGrsFromRow(rep, targetGrCol, validCustomDefs)
-          .filter((g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition)
-          .map((g) => g.gr_number);
-        const invoicedGrsString = lineGrs.length > 0 ? lineGrs.join(', ') : null;
+        let remainingFallbackAmount = lineAmount;
 
-        let targetPoi: PurchaseOrderInvoice | null = null;
-        const oldForTarget = oldInvoiceRecords.find(
-          (r) =>
-            !usedOldRecordIds.has(r.id) &&
-            String(r.purchase_order_id) === String(targetPoId) &&
-            Number(r.position) === targetPosition
-        );
-        if (oldForTarget) {
-          targetPoi = oldForTarget;
-          usedOldRecordIds.add(targetPoi.id);
-        } else if (oldInvoiceRecords.length > 0) {
-          const anyUnusedOld = oldInvoiceRecords.find(
-            (r) => !usedOldRecordIds.has(r.id) && Number(r.position) === targetPosition
+        for (let i = 0; i < rows.length; i++) {
+          const rowItem = rows[i];
+          const targetPoId = rowItem.id;
+          const rowQty = Number(rowItem.requested_qty) || 1;
+          const posAmount =
+            i === rows.length - 1
+              ? remainingFallbackAmount
+              : Math.round(lineAmount * (rowQty / lineQty));
+          remainingFallbackAmount -= posAmount;
+
+          const lineGrs = extractGrsFromRow(rowItem, targetGrCol, validCustomDefs)
+            .filter((g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition)
+            .map((g) => g.gr_number);
+          const invoicedGrsString = lineGrs.length > 0 ? lineGrs.join(', ') : null;
+
+          let targetPoi: PurchaseOrderInvoice | null = null;
+          const oldForTarget = oldInvoiceRecords.find(
+            (r) =>
+              !usedOldRecordIds.has(r.id) &&
+              String(r.purchase_order_id) === String(targetPoId) &&
+              Number(r.position) === targetPosition
           );
-          if (anyUnusedOld) {
-            targetPoi = anyUnusedOld;
-            targetPoi.purchase_order_id = String(targetPoId);
+          if (oldForTarget) {
+            targetPoi = oldForTarget;
             usedOldRecordIds.add(targetPoi.id);
           }
-        }
 
-        if (!targetPoi) {
-          const existingPoi = await this.invoiceRepository.findOne({
-            where: {
+          if (!targetPoi) {
+            const existingPoi = await this.invoiceRepository.findOne({
+              where: {
+                purchase_order_id: String(targetPoId),
+                position: targetPosition,
+              },
+            });
+
+            if (
+              existingPoi &&
+              (!existingPoi.invoice_number ||
+                existingPoi.invoice_number.trim() === '' ||
+                existingPoi.invoice_number.trim() === cleanInvoiceNumber)
+            ) {
+              targetPoi = existingPoi;
+            }
+          }
+
+          if (targetPoi) {
+            targetPoi.invoice_number = cleanInvoiceNumber;
+            targetPoi.invoice_date = invDate;
+            targetPoi.invoice_status = 'Generated';
+            targetPoi.payment_amount = posAmount;
+            targetPoi.submit_amount = posAmount;
+            targetPoi.unit_price = unitPrice;
+            targetPoi.user_id = userId;
+            targetPoi.submit_date = invDate;
+            targetPoi.position = targetPosition;
+            targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
+            await this.invoiceRepository.save(targetPoi);
+            savedRecordsCount++;
+            recordsProcessed.push(targetPoi);
+          } else {
+            const newEntity = this.invoiceRepository.create({
               purchase_order_id: String(targetPoId),
               position: targetPosition,
-            },
-          });
-
-          if (
-            existingPoi &&
-            (!existingPoi.invoice_number ||
-              existingPoi.invoice_number.trim() === '' ||
-              existingPoi.invoice_number.trim() === cleanInvoiceNumber)
-          ) {
-            targetPoi = existingPoi;
+              invoice_number: cleanInvoiceNumber,
+              invoice_date: invDate,
+              invoice_status: 'Generated',
+              payment_amount: posAmount,
+              submit_amount: posAmount,
+              unit_price: unitPrice,
+              user_id: userId,
+              submit_date: invDate,
+              invoiced_grs: invoicedGrsString,
+            });
+            await this.invoiceRepository.save(newEntity);
+            savedRecordsCount++;
+            recordsProcessed.push(newEntity);
           }
-        }
-
-        if (targetPoi) {
-          targetPoi.invoice_number = cleanInvoiceNumber;
-          targetPoi.invoice_date = invDate;
-          targetPoi.invoice_status = 'Generated';
-          targetPoi.payment_amount = lineAmount;
-          targetPoi.submit_amount = lineAmount;
-          targetPoi.unit_price = unitPrice;
-          targetPoi.user_id = userId;
-          targetPoi.submit_date = invDate;
-          targetPoi.position = targetPosition;
-          targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
-          await this.invoiceRepository.save(targetPoi);
-          savedRecordsCount++;
-          recordsProcessed.push(targetPoi);
-        } else {
-          const newEntity = this.invoiceRepository.create({
-            purchase_order_id: String(targetPoId),
-            position: targetPosition,
-            invoice_number: cleanInvoiceNumber,
-            invoice_date: invDate,
-            invoice_status: 'Generated',
-            payment_amount: lineAmount,
-            submit_amount: lineAmount,
-            unit_price: unitPrice,
-            user_id: userId,
-            submit_date: invDate,
-            invoiced_grs: invoicedGrsString,
-          });
-          await this.invoiceRepository.save(newEntity);
-          savedRecordsCount++;
-          recordsProcessed.push(newEntity);
         }
       }
 

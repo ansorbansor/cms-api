@@ -894,7 +894,10 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('MAX(poi.invoice_status)', 'invoice_status')
       .addSelect('MAX(po.po_number)', 'po_number')
       .addSelect('MAX(customer.name)', 'customer_name')
-      .addSelect('SUM(poi.payment_amount)', 'total_payment')
+      .addSelect(
+        'COALESCE(NULLIF(SUM(poi.payment_amount), 0), SUM(ROUND(COALESCE(poi.unit_price, po.unit_price, 0) * COALESCE(po.requested_qty, 0) * (CASE WHEN poi.position = 2 THEN 0.4 ELSE 0.6 END))), 0)',
+        'total_payment'
+      )
       .addSelect('COUNT(poi.id)', 'line_count')
       .where('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:cleanNumber))', { cleanNumber })
       .groupBy('poi.invoice_number')
@@ -1266,15 +1269,22 @@ export class InvoicesService implements OnModuleInit {
           }
 
           // 3. Overwrite existing record or insert new record
+          // User request: AC Payment Amount dan kolom seterusnya tidak diisi saat generate invoice (akan diisi nanti setelah uang masuk)
           if (targetPoi) {
             targetPoi.invoice_number = cleanInvoiceNumber;
             targetPoi.invoice_date = invDate;
             targetPoi.invoice_status = 'Generated';
-            targetPoi.payment_amount = posAmount;
-            targetPoi.submit_amount = posAmount;
+            targetPoi.payment_amount = null;
+            targetPoi.payment_date = null;
+            targetPoi.submit_amount = null;
+            targetPoi.submit_date = null;
+            targetPoi.deduction_amount = null;
+            targetPoi.supplier_tax_number = null;
+            targetPoi.supplier_tax_date = null;
+            targetPoi.approve_date = null;
+            targetPoi.approve_amount = null;
             targetPoi.unit_price = lineUnitPrice;
             targetPoi.user_id = userId;
-            targetPoi.submit_date = invDate;
             targetPoi.position = targetPosition;
             targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
             await this.invoiceRepository.save(targetPoi);
@@ -1287,11 +1297,17 @@ export class InvoicesService implements OnModuleInit {
               invoice_number: cleanInvoiceNumber,
               invoice_date: invDate,
               invoice_status: 'Generated',
-              payment_amount: posAmount,
-              submit_amount: posAmount,
+              payment_amount: null,
+              payment_date: null,
+              submit_amount: null,
+              submit_date: null,
+              deduction_amount: null,
+              supplier_tax_number: null,
+              supplier_tax_date: null,
+              approve_date: null,
+              approve_amount: null,
               unit_price: lineUnitPrice,
               user_id: userId,
-              submit_date: invDate,
               invoiced_grs: invoicedGrsString,
             });
             await this.invoiceRepository.save(newEntity);
@@ -1398,11 +1414,17 @@ export class InvoicesService implements OnModuleInit {
             targetPoi.invoice_number = cleanInvoiceNumber;
             targetPoi.invoice_date = invDate;
             targetPoi.invoice_status = 'Generated';
-            targetPoi.payment_amount = posAmount;
-            targetPoi.submit_amount = posAmount;
+            targetPoi.payment_amount = null;
+            targetPoi.payment_date = null;
+            targetPoi.submit_amount = null;
+            targetPoi.submit_date = null;
+            targetPoi.deduction_amount = null;
+            targetPoi.supplier_tax_number = null;
+            targetPoi.supplier_tax_date = null;
+            targetPoi.approve_date = null;
+            targetPoi.approve_amount = null;
             targetPoi.unit_price = unitPrice;
             targetPoi.user_id = userId;
-            targetPoi.submit_date = invDate;
             targetPoi.position = targetPosition;
             targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
             await this.invoiceRepository.save(targetPoi);
@@ -1415,11 +1437,17 @@ export class InvoicesService implements OnModuleInit {
               invoice_number: cleanInvoiceNumber,
               invoice_date: invDate,
               invoice_status: 'Generated',
-              payment_amount: posAmount,
-              submit_amount: posAmount,
+              payment_amount: null,
+              payment_date: null,
+              submit_amount: null,
+              submit_date: null,
+              deduction_amount: null,
+              supplier_tax_number: null,
+              supplier_tax_date: null,
+              approve_date: null,
+              approve_amount: null,
               unit_price: unitPrice,
               user_id: userId,
-              submit_date: invDate,
               invoiced_grs: invoicedGrsString,
             });
             await this.invoiceRepository.save(newEntity);
@@ -1481,7 +1509,10 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('MAX(po.po_number)', 'po_number')
       .addSelect('MAX(customer.name)', 'customer_name')
       .addSelect('MAX(project.name)', 'project_name')
-      .addSelect('SUM(poi.payment_amount)', 'payment_amount')
+      .addSelect(
+        'COALESCE(NULLIF(SUM(poi.payment_amount), 0), SUM(ROUND(COALESCE(poi.unit_price, po.unit_price, 0) * COALESCE(po.requested_qty, 0) * (CASE WHEN poi.position = 2 THEN 0.4 ELSE 0.6 END))), 0)',
+        'payment_amount'
+      )
       .addSelect('COUNT(poi.id)', 'line_count')
       .addSelect('MAX(poi.position)', 'position')
       .addSelect("STRING_AGG(DISTINCT NULLIF(TRIM(poi.invoiced_grs), ''), ', ')", 'invoiced_grs')

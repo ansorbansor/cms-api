@@ -905,6 +905,7 @@ export class InvoicesService implements OnModuleInit {
   async saveInvoice(payload: {
     po_number: string;
     invoice_number: string;
+    revised_invoice_number?: string;
     invoice_date: string;
     payment_amount: number;
     unit_price?: number;
@@ -939,10 +940,31 @@ export class InvoicesService implements OnModuleInit {
       throw new BadRequestException('Nomor Invoice Resmi wajib diisi.');
     }
 
+    // Determine if this is a revision of an existing invoice
+    let revisedInvoiceNumber = (payload.revised_invoice_number || '').trim();
+    if (!revisedInvoiceNumber) {
+      const revMatch = cleanInvoiceNumber.match(/^(.+?)[-_\s]Rev\.?\s*(\d+)$/i);
+      if (revMatch) {
+        const base = revMatch[1].trim();
+        const revIndex = parseInt(revMatch[2], 10);
+        if (revIndex === 1) {
+          revisedInvoiceNumber = base;
+        } else if (revIndex > 1) {
+          revisedInvoiceNumber = `${base}-Rev${revIndex - 1}`;
+        }
+      }
+    }
+
     // STRICT CHECK: Reject if this official invoice number already exists in purchase_order_invoices
-    // No invoice number can ever be sent twice, even for different components or different POs!
+    // No invoice number can ever be sent twice, unless it's explicitly overwriting an existing record on the same PO
     const duplicateCheck = await this.checkInvoiceNumber(cleanInvoiceNumber, payload.po_number);
-    if (duplicateCheck.exists) {
+    const isOverwritingExisting =
+      Boolean(revisedInvoiceNumber) &&
+      duplicateCheck.exists &&
+      duplicateCheck.details?.is_same_po &&
+      cleanInvoiceNumber.toLowerCase() === revisedInvoiceNumber.toLowerCase();
+
+    if (duplicateCheck.exists && !isOverwritingExisting) {
       const d = duplicateCheck.details;
       const formattedDate = d?.invoice_date ? moment(d.invoice_date).format('DD-MMM-YYYY') : '';
       const formattedAmount = d?.total_payment ? 'Rp. ' + Number(d.total_payment).toLocaleString('id-ID') : '';
@@ -974,6 +996,38 @@ export class InvoicesService implements OnModuleInit {
     if (!poRows || poRows.length === 0) {
       throw new NotFoundException(`Purchase Order ${payload.po_number} tidak ditemukan.`);
     }
+
+    // Approach #3: Look up existing records belonging to the invoice being revised on this PO
+    let oldInvoiceRecords: PurchaseOrderInvoice[] = [];
+    if (revisedInvoiceNumber) {
+      oldInvoiceRecords = await this.invoiceRepository
+        .createQueryBuilder('poi')
+        .innerJoin('poi.po', 'po')
+        .where('po.po_number = :poNumber', { poNumber: payload.po_number })
+        .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:revNum))', { revNum: revisedInvoiceNumber })
+        .getMany();
+    }
+
+    // Fallback: If deduced revisedInvoiceNumber was not found, check base number directly
+    if (oldInvoiceRecords.length === 0) {
+      const revMatch = cleanInvoiceNumber.match(/^(.+?)[-_\s]Rev\.?\s*(\d+)$/i);
+      if (revMatch) {
+        const base = revMatch[1].trim();
+        const baseRecords = await this.invoiceRepository
+          .createQueryBuilder('poi')
+          .innerJoin('poi.po', 'po')
+          .where('po.po_number = :poNumber', { poNumber: payload.po_number })
+          .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:baseNum))', { baseNum: base })
+          .getMany();
+
+        if (baseRecords.length > 0) {
+          oldInvoiceRecords = baseRecords;
+          revisedInvoiceNumber = base;
+        }
+      }
+    }
+
+    const usedOldRecordIds = new Set<number>();
 
     // Map rows by line_po_number
     const rowsByLine = new Map<string, typeof poRows>();
@@ -1052,28 +1106,52 @@ export class InvoicesService implements OnModuleInit {
         for (const [targetPoId, grList] of poToGrs.entries()) {
           const invoicedGrsString = grList.length > 0 ? grList.join(', ') : null;
 
-          // Check if an existing unbilled slot exists in purchase_order_invoices
-          const existingPoi = await this.invoiceRepository.findOne({
-            where: {
-              purchase_order_id: String(targetPoId),
-              position: targetPosition,
-            },
-          });
+          // 1. Try to reuse/overwrite an old invoice record for this PO line (Approach #3)
+          let targetPoi: PurchaseOrderInvoice | null = null;
+          const oldForTarget = oldInvoiceRecords.find(
+            (r) => !usedOldRecordIds.has(r.id) && String(r.purchase_order_id) === String(targetPoId)
+          );
+          if (oldForTarget) {
+            targetPoi = oldForTarget;
+            usedOldRecordIds.add(targetPoi.id);
+          } else if (oldInvoiceRecords.length > 0) {
+            const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
+            if (anyUnusedOld) {
+              targetPoi = anyUnusedOld;
+              targetPoi.purchase_order_id = String(targetPoId);
+              usedOldRecordIds.add(targetPoi.id);
+            }
+          }
 
-          if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
-            existingPoi.invoice_number = cleanInvoiceNumber;
-            existingPoi.invoice_date = invDate;
-            existingPoi.invoice_status = 'Generated';
-            existingPoi.payment_amount = splitAmount;
-            existingPoi.submit_amount = splitAmount;
-            existingPoi.unit_price = lineUnitPrice;
-            existingPoi.user_id = userId;
-            existingPoi.submit_date = invDate;
-            existingPoi.position = targetPosition;
-            existingPoi.invoiced_grs = invoicedGrsString || existingPoi.invoiced_grs;
-            await this.invoiceRepository.save(existingPoi);
+          // 2. If not from old invoice, check if an unbilled slot already exists for targetPoId & targetPosition
+          if (!targetPoi) {
+            const existingPoi = await this.invoiceRepository.findOne({
+              where: {
+                purchase_order_id: String(targetPoId),
+                position: targetPosition,
+              },
+            });
+
+            if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+              targetPoi = existingPoi;
+            }
+          }
+
+          // 3. Overwrite existing record or insert new record
+          if (targetPoi) {
+            targetPoi.invoice_number = cleanInvoiceNumber;
+            targetPoi.invoice_date = invDate;
+            targetPoi.invoice_status = 'Generated';
+            targetPoi.payment_amount = splitAmount;
+            targetPoi.submit_amount = splitAmount;
+            targetPoi.unit_price = lineUnitPrice;
+            targetPoi.user_id = userId;
+            targetPoi.submit_date = invDate;
+            targetPoi.position = targetPosition;
+            targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
+            await this.invoiceRepository.save(targetPoi);
             savedRecordsCount++;
-            recordsProcessed.push(existingPoi);
+            recordsProcessed.push(targetPoi);
           } else {
             const newEntity = this.invoiceRepository.create({
               purchase_order_id: String(targetPoId),
@@ -1091,6 +1169,30 @@ export class InvoicesService implements OnModuleInit {
             await this.invoiceRepository.save(newEntity);
             savedRecordsCount++;
             recordsProcessed.push(newEntity);
+          }
+        }
+      }
+
+      // Approach #3: Release any records from the old invoice that were NOT included in this revision (e.g. excluded GRs/lines)
+      for (const oldRec of oldInvoiceRecords) {
+        if (!usedOldRecordIds.has(oldRec.id)) {
+          const duplicateSlot = await this.invoiceRepository.findOne({
+            where: {
+              purchase_order_id: oldRec.purchase_order_id,
+              position: oldRec.position,
+              invoice_number: '',
+            },
+          });
+          if (duplicateSlot && duplicateSlot.id !== oldRec.id) {
+            await this.invoiceRepository.remove(oldRec);
+          } else {
+            oldRec.invoice_number = '';
+            oldRec.invoice_date = null;
+            oldRec.invoice_status = null;
+            oldRec.payment_amount = null;
+            oldRec.submit_amount = 0;
+            oldRec.invoiced_grs = null;
+            await this.invoiceRepository.save(oldRec);
           }
         }
       }
@@ -1123,27 +1225,49 @@ export class InvoicesService implements OnModuleInit {
           .map((g) => g.gr_number);
         const invoicedGrsString = lineGrs.length > 0 ? lineGrs.join(', ') : null;
 
-        const existingPoi = await this.invoiceRepository.findOne({
-          where: {
-            purchase_order_id: String(targetPoId),
-            position: targetPosition,
-          },
-        });
+        let targetPoi: PurchaseOrderInvoice | null = null;
+        const oldForTarget = oldInvoiceRecords.find(
+          (r) => !usedOldRecordIds.has(r.id) && String(r.purchase_order_id) === String(targetPoId)
+        );
+        if (oldForTarget) {
+          targetPoi = oldForTarget;
+          usedOldRecordIds.add(targetPoi.id);
+        } else if (oldInvoiceRecords.length > 0) {
+          const anyUnusedOld = oldInvoiceRecords.find((r) => !usedOldRecordIds.has(r.id));
+          if (anyUnusedOld) {
+            targetPoi = anyUnusedOld;
+            targetPoi.purchase_order_id = String(targetPoId);
+            usedOldRecordIds.add(targetPoi.id);
+          }
+        }
 
-        if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
-          existingPoi.invoice_number = cleanInvoiceNumber;
-          existingPoi.invoice_date = invDate;
-          existingPoi.invoice_status = 'Generated';
-          existingPoi.payment_amount = lineAmount;
-          existingPoi.submit_amount = lineAmount;
-          existingPoi.unit_price = unitPrice;
-          existingPoi.user_id = userId;
-          existingPoi.submit_date = invDate;
-          existingPoi.position = targetPosition;
-          existingPoi.invoiced_grs = invoicedGrsString || existingPoi.invoiced_grs;
-          await this.invoiceRepository.save(existingPoi);
+        if (!targetPoi) {
+          const existingPoi = await this.invoiceRepository.findOne({
+            where: {
+              purchase_order_id: String(targetPoId),
+              position: targetPosition,
+            },
+          });
+
+          if (existingPoi && (!existingPoi.invoice_number || existingPoi.invoice_number.trim() === '')) {
+            targetPoi = existingPoi;
+          }
+        }
+
+        if (targetPoi) {
+          targetPoi.invoice_number = cleanInvoiceNumber;
+          targetPoi.invoice_date = invDate;
+          targetPoi.invoice_status = 'Generated';
+          targetPoi.payment_amount = lineAmount;
+          targetPoi.submit_amount = lineAmount;
+          targetPoi.unit_price = unitPrice;
+          targetPoi.user_id = userId;
+          targetPoi.submit_date = invDate;
+          targetPoi.position = targetPosition;
+          targetPoi.invoiced_grs = invoicedGrsString || targetPoi.invoiced_grs;
+          await this.invoiceRepository.save(targetPoi);
           savedRecordsCount++;
-          recordsProcessed.push(existingPoi);
+          recordsProcessed.push(targetPoi);
         } else {
           const newEntity = this.invoiceRepository.create({
             purchase_order_id: String(targetPoId),
@@ -1163,11 +1287,36 @@ export class InvoicesService implements OnModuleInit {
           recordsProcessed.push(newEntity);
         }
       }
+
+      // Cleanup unused old records in fallback branch
+      for (const oldRec of oldInvoiceRecords) {
+        if (!usedOldRecordIds.has(oldRec.id)) {
+          const duplicateSlot = await this.invoiceRepository.findOne({
+            where: {
+              purchase_order_id: oldRec.purchase_order_id,
+              position: oldRec.position,
+              invoice_number: '',
+            },
+          });
+          if (duplicateSlot && duplicateSlot.id !== oldRec.id) {
+            await this.invoiceRepository.remove(oldRec);
+          } else {
+            oldRec.invoice_number = '';
+            oldRec.invoice_date = null;
+            oldRec.invoice_status = null;
+            oldRec.payment_amount = null;
+            oldRec.submit_amount = 0;
+            oldRec.invoiced_grs = null;
+            await this.invoiceRepository.save(oldRec);
+          }
+        }
+      }
     }
 
     return {
-      message: `Invoice ${payload.invoice_number} berhasil disimpan dengan ${savedRecordsCount} record PO (Term ${targetPosition})`,
+      message: `Invoice ${payload.invoice_number} berhasil disimpan dengan ${savedRecordsCount} record PO (Term ${targetPosition})${revisedInvoiceNumber ? ` [Revisi dari ${revisedInvoiceNumber}]` : ''}`,
       invoice_number: payload.invoice_number,
+      revised_invoice_number: revisedInvoiceNumber || null,
       term_position: targetPosition,
       total_lines_saved: savedRecordsCount,
       records: recordsProcessed,

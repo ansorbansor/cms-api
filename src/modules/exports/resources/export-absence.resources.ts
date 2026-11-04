@@ -30,5 +30,8 @@ export const ExportAbsenceResource = (absence: Absence): any => {
         ? 'Terlambat'
         : 'Tepat Waktu',
     'Alasan Keterlambatan': absence.late_reason ? absence.late_reason : '-',
+    'Metode': absence.source === 'fingerspot' ? 'Fingerspot Biometric' : 'Mobile App',
+    'Clock In Source': absence.clock_in_source || 'app',
+    'Clock Out Source': absence.clock_out_source || 'app',
   };
 };

@@ -13,6 +13,7 @@ import {
   Get,
   ParseIntPipe,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
@@ -150,5 +151,18 @@ export class AbsenceController {
       }),
       'success',
     );
+  }
+
+  @Post('machine-event')
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async handleMachineEvent(
+    @Request() req,
+    @Body() body,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Res() res,
+  ) {
+    return this.absenceService.processMachineEvent(req, body, files, res);
   }
 }

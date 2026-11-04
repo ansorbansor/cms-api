@@ -561,4 +561,216 @@ export class AbsenceService {
       ip: ip,
     });
   }
+
+  getOfficeForUser(user: User): { name: string; lat: number; lng: number } {
+    const rawOffices = getFlag('office_locations', '');
+    const offices: Array<{ name: string; lat: number; lng: number }> = [];
+    if (rawOffices) {
+      rawOffices.split('\n').forEach((line) => {
+        const parts = line.split('|').map((p) => p.trim());
+        if (parts.length === 3) {
+          offices.push({
+            name: parts[0],
+            lat: parseFloat(parts[1]),
+            lng: parseFloat(parts[2]),
+          });
+        }
+      });
+    }
+
+    if (offices.length === 0) {
+      return {
+        name: 'Biosron West Java Office',
+        lat: -6.9005171,
+        lng: 107.5835439,
+      };
+    }
+
+    if (user && user.region) {
+      const uRegion = user.region.toLowerCase().trim();
+      const matched = offices.find((o) =>
+        o.name.toLowerCase().includes(uRegion) ||
+        uRegion.includes(o.name.toLowerCase().replace(/office|biosron|xlsmart/g, '').trim()),
+      );
+      if (matched) return matched;
+    }
+
+    const defaultWJ = offices.find((o) => o.name.toLowerCase().includes('west java'));
+    return defaultWJ || offices[0];
+  }
+
+  sendHikvisionAck(req: any, res: any) {
+    const requestUrl = req.originalUrl || req.url || '/';
+    const ackXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ResponseStatus version="1.0" xmlns="http://www.std-cgi.com/ver10/XMLSchema">
+  <requestURL>${requestUrl}</requestURL>
+  <statusCode>1</statusCode>
+  <statusString>OK</statusString>
+  <subStatusCode>ok</subStatusCode>
+</ResponseStatus>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
+    return res.status(HttpStatus.OK).send(ackXml);
+  }
+
+  async processMachineEvent(req: any, body: any, files: Array<Express.Multer.File>, res: any) {
+    try {
+      let eventLog = body?.event_log;
+      if (!eventLog && body?.AccessControllerEvent) {
+        eventLog = body;
+      }
+
+      if (typeof eventLog === 'string') {
+        try {
+          eventLog = JSON.parse(eventLog);
+        } catch (err) {
+          const s = eventLog.indexOf('{');
+          const e = eventLog.lastIndexOf('}');
+          if (s !== -1 && e !== -1) {
+            try {
+              eventLog = JSON.parse(eventLog.substring(s, e + 1));
+            } catch (inner) {}
+          }
+        }
+      }
+
+      // Check if this is an AccessControllerEvent
+      const ace = eventLog?.AccessControllerEvent || eventLog;
+      const nik = ace?.employeeNoString;
+
+      if (!nik) {
+        // Device heartbeat, status notification, or door event without NIK
+        return this.sendHikvisionAck(req, res);
+      }
+
+      const rawEventTime = eventLog?.dateTime;
+      const eventDate = rawEventTime ? moment(rawEventTime) : moment();
+      const eventTime = eventDate.toDate();
+
+      console.log(`[Fingerspot Machine] Processing attendance for NIK: ${nik}, Time: ${eventDate.format('YYYY-MM-DD HH:mm:ss')}`);
+
+      // Find user by NIK (non-deleted, preferring 'On Board' active users)
+      const user = await getManager().getRepository(User).createQueryBuilder('user')
+        .where('user.nik = :nik', { nik: String(nik).trim() })
+        .andWhere('user.deleted_at IS NULL')
+        .orderBy("CASE WHEN LOWER(user.status_description) LIKE '%on board%' THEN 0 ELSE 1 END", 'ASC')
+        .addOrderBy('user.id', 'DESC')
+        .getOne();
+
+      if (!user) {
+        console.warn(`[Fingerspot Machine] User with NIK ${nik} not found in database.`);
+        return this.sendHikvisionAck(req, res);
+      }
+
+      const office = this.getOfficeForUser(user);
+
+      // Check existing absence for this user on this day
+      const startOfDay = eventDate.clone().startOf('day').toDate();
+      const endOfDay = eventDate.clone().endOf('day').toDate();
+
+      const existingAbsence = await this.absenceRepository
+        .createQueryBuilder('absence')
+        .where('absence.user_id = :userId', { userId: user.id })
+        .andWhere('absence.clock_in >= :startOfDay', { startOfDay })
+        .andWhere('absence.clock_in <= :endOfDay', { endOfDay })
+        .orderBy('absence.clock_in', 'DESC')
+        .getOne();
+
+      // Check for attached face photo
+      const pictureFile = Array.isArray(files)
+        ? files.find((f) => f.fieldname === 'Picture' || f.mimetype?.startsWith('image/'))
+        : null;
+
+      if (!existingAbsence) {
+        // ----------------- CLOCK IN -----------------
+        let clockInPhotoId: number | null = null;
+        if (pictureFile) {
+          try {
+            const savedFile = await this.fileService.uploadFile(
+              pictureFile,
+              user.id,
+              FilePath.CLOCK_IN,
+              'Clock In Fingerspot',
+            );
+            clockInPhotoId = savedFile.id;
+          } catch (fileErr) {
+            console.error('[Fingerspot Machine] Failed to save clock-in photo:', fileErr.message);
+          }
+        }
+
+        const isLate = eventDate.hours() > 9 || (eventDate.hours() === 9 && eventDate.minutes() > 0);
+        const lateReason = isLate ? 'Absen Mesin Fingerspot (Terlambat)' : null;
+
+        const newAbsence = this.absenceRepository.create({
+          user_id: user.id,
+          clock_in: eventTime,
+          clock_in_latitude: office.lat,
+          clock_in_longitude: office.lng,
+          clock_in_kecamatan: office.name,
+          clock_in_photo: clockInPhotoId,
+          source: 'fingerspot',
+          clock_in_source: 'fingerspot',
+          late_reason: lateReason,
+        });
+
+        await this.absenceRepository.save(newAbsence);
+
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: `Clock In Fingerspot (${office.name})`,
+          ip: req.ip || '127.0.0.1',
+        });
+
+        console.log(`[Fingerspot Machine] Clock-in recorded successfully for ${user.name} (${user.nik})`);
+      } else {
+        // ----------------- CLOCK OUT -----------------
+        // Prevent immediate duplicate scan within 3 minutes of clock-in
+        const minutesSinceClockIn = eventDate.diff(moment(existingAbsence.clock_in), 'minutes');
+        if (minutesSinceClockIn < 3) {
+          console.log(`[Fingerspot Machine] Ignored scan for ${user.name} - only ${minutesSinceClockIn} min since clock in.`);
+          return this.sendHikvisionAck(req, res);
+        }
+
+        let clockOutPhotoId: number | null = existingAbsence.clock_out_photo;
+        if (pictureFile) {
+          try {
+            const savedFile = await this.fileService.uploadFile(
+              pictureFile,
+              user.id,
+              FilePath.CLOCK_OUT,
+              'Clock Out Fingerspot',
+            );
+            clockOutPhotoId = savedFile.id;
+          } catch (fileErr) {
+            console.error('[Fingerspot Machine] Failed to save clock-out photo:', fileErr.message);
+          }
+        }
+
+        existingAbsence.clock_out = eventTime;
+        existingAbsence.clock_out_source = 'fingerspot';
+        existingAbsence.clock_out_latitude = office.lat;
+        existingAbsence.clock_out_longitude = office.lng;
+        existingAbsence.clock_out_kecamatan = office.name;
+        existingAbsence.clock_out_photo = clockOutPhotoId;
+
+        if (!existingAbsence.source) {
+          existingAbsence.source = 'fingerspot';
+        }
+
+        await this.absenceRepository.save(existingAbsence);
+
+        await this.activityLogService.create({
+          user_id: user.id,
+          description: `Clock Out Fingerspot (${office.name})`,
+          ip: req.ip || '127.0.0.1',
+        });
+
+        console.log(`[Fingerspot Machine] Clock-out recorded successfully for ${user.name} (${user.nik})`);
+      }
+    } catch (err) {
+      console.error('[Fingerspot Machine] Error processing event:', err);
+    }
+
+    return this.sendHikvisionAck(req, res);
+  }
 }

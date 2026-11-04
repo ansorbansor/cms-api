@@ -59,6 +59,7 @@ import { PerjalananDinasModule } from './modules/perjalanan-dinas/perjalanan-din
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 import { MaterialsModule } from './modules/materials/materials.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -135,6 +136,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
     MaterialsModule,
     InvoicesModule,
   ],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

@@ -54,8 +54,16 @@ export class Absence extends EntityHelper {
 activity_plan?: string;
 
 @Column({ type: 'text', nullable: true })
-activity_result?: string;
+  activity_result?: string;
 
+  @Column({ default: 'app', nullable: true })
+  source?: string;
+
+  @Column({ default: 'app', nullable: true })
+  clock_in_source?: string;
+
+  @Column({ default: 'app', nullable: true })
+  clock_out_source?: string;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })

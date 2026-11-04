@@ -18,6 +18,9 @@ export const AbsenceResource = (absence: Absence): any => {
     late_reason: absence.late_reason ? absence.late_reason : '-',
     activity_plan: absence.activity_plan ?? '-',
     activity_result: absence.activity_result ?? '-',
+    source: absence.source ?? 'app',
+    clock_in_source: absence.clock_in_source ?? absence.source ?? 'app',
+    clock_out_source: absence.clock_out_source ?? absence.source ?? 'app',
   };
 };
 
@@ -43,6 +46,9 @@ export const AbsenceResourceDetail = (absence: Absence): any => {
     late_reason: absence.late_reason ? absence.late_reason : '-',
     activity_plan: absence.activity_plan ?? '-',
     activity_result: absence.activity_result ?? '-',
+    source: absence.source ?? 'app',
+    clock_in_source: absence.clock_in_source ?? absence.source ?? 'app',
+    clock_out_source: absence.clock_out_source ?? absence.source ?? 'app',
   };
 };
 

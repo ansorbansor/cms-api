@@ -429,6 +429,9 @@ export class MaterialsService {
         if (dto.site_id) {
             material.warehouse_region = dto.site_id; // Update warehouse destination
         }
+        if (finalReceiverId) {
+          material.recipient_id = finalReceiverId;
+        }
       }
     } else if (dto.transaction_type === 'OUT') {
       material.quantity -= dto.quantity;
@@ -457,10 +460,10 @@ export class MaterialsService {
 
   async getMyPendingDeliveries(userId: number) {
     const materials = await this.materialRepository.find({
-      where: {
-        recipient_id: userId,
-        status: 'On Delivery',
-      },
+      where: [
+        { recipient_id: userId, status: 'On Delivery' },
+        { recipient_id: userId, status: 'Return Delivery' },
+      ],
       relations: ['recipient'],
       order: {
         updated_at: 'DESC',
@@ -473,7 +476,7 @@ export class MaterialsService {
         .createQueryBuilder('tx')
         .leftJoinAndSelect('tx.user', 'sender')
         .where('tx.material_id IN (:...materialIds)', { materialIds })
-        .andWhere('tx.transaction_type = :type', { type: 'OUT' })
+        .andWhere('tx.transaction_type IN (:...types)', { types: ['OUT', 'IN'] })
         .orderBy('tx.created_at', 'DESC')
         .getMany();
 
@@ -506,39 +509,32 @@ export class MaterialsService {
   ) {
     const material = await this.findOne(materialId);
 
-    let isReturn = material.status === 'Return Delivery';
+    if (material.status !== 'On Delivery' && material.status !== 'Return Delivery') {
+      throw new BadRequestException('Material is not currently on delivery or return delivery');
+    }
+
+    const isReturn = material.status === 'Return Delivery';
     let isGoingToWarehouse = isReturn;
     let confirmSiteId = material.site_id;
 
-    if (data?.site_id) {
-        confirmSiteId = data.site_id;
-        isGoingToWarehouse = false;
-        // Don't modify material global status aggressively if it's just for one site
-        if (material.status === 'On Delivery' && material.quantity > 0) {
-            material.status = 'In Warehouse';
-        }
-        material.recipient_id = null;
-        await this.materialRepository.save(material);
+    if (isReturn) {
+      isGoingToWarehouse = true;
+      confirmSiteId = material.warehouse_region || 'Warehouse';
+      material.status = 'In Warehouse';
+      material.site_id = null;
+      material.recipient_id = null;
+      await this.materialRepository.save(material);
     } else {
-        if (material.status !== 'On Delivery' && material.status !== 'Return Delivery') {
-          throw new BadRequestException('Material is not currently on delivery');
-        }
-
-        isGoingToWarehouse = isReturn || !material.site_id;
-
-        // Update material status
-        if (isGoingToWarehouse) {
-          material.status = 'In Warehouse';
-          material.site_id = null;
-        } else if (material.quantity > 0) {
-          // Consumable: still has stock in warehouse, confirm delivery but go back to In Warehouse
-          material.status = 'In Warehouse';
-        } else {
-          material.status = 'Delivered';
-        }
-
-        material.recipient_id = null;
-        await this.materialRepository.save(material);
+      if (data?.site_id) {
+        confirmSiteId = data.site_id;
+      }
+      if (material.quantity > 0 && material.material_category?.startsWith('Consumables')) {
+        material.status = 'In Warehouse';
+      } else {
+        material.status = 'Delivered';
+      }
+      material.recipient_id = null;
+      await this.materialRepository.save(material);
     }
 
     let photoFileId: number | null = null;

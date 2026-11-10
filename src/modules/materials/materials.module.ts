@@ -5,9 +5,13 @@ import { MaterialsController } from './materials.controller';
 import { Material } from '../../entities/material.entity';
 import { MaterialTransaction } from '../../entities/material-transaction.entity';
 import { ExportJob } from '../../entities/export-job.entity';
+import { FilesModule } from '../files/files.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Material, MaterialTransaction, ExportJob])],
+  imports: [
+    TypeOrmModule.forFeature([Material, MaterialTransaction, ExportJob]),
+    FilesModule,
+  ],
   controllers: [MaterialsController],
   providers: [MaterialsService],
   exports: [MaterialsService],

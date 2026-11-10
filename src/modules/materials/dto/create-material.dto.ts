@@ -97,4 +97,9 @@ export class CreateMaterialTransactionDTO {
   @IsOptional()
   @IsString()
   receiver_name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  receiver_id?: number;
 }

@@ -9,6 +9,7 @@ import * as xlsx from 'xlsx';
 import * as async from 'async';
 import * as fs from 'fs';
 import { ExportJob } from '../../entities/export-job.entity';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class MaterialsService {
@@ -21,6 +22,7 @@ export class MaterialsService {
     private readonly transactionRepository: Repository<MaterialTransaction>,
     @InjectRepository(ExportJob)
     private exportJobRepository: Repository<ExportJob>,
+    private readonly filesService: FilesService,
   ) {
     this.importQueue = async.queue(async (task, callback) => {
       try {
@@ -392,6 +394,7 @@ export class MaterialsService {
       site_id: sourceSite,
       notes: dto.notes,
       receiver_name: dto.receiver_name,
+      receiver_id: dto.receiver_id,
       performed_by: userId,
     });
 
@@ -408,6 +411,9 @@ export class MaterialsService {
     } else if (dto.transaction_type === 'OUT') {
       material.quantity -= dto.quantity;
       material.status = 'On Delivery';
+      if (dto.receiver_id) {
+        material.recipient_id = dto.receiver_id;
+      }
       if (dto.site_id) {
         material.site_id = dto.site_id;
       }
@@ -419,28 +425,77 @@ export class MaterialsService {
   }
 
   async getHistory(materialId: number) {
-    const material = await this.findOne(materialId); // ensure it exists
+    await this.findOne(materialId); // ensure it exists
     return await this.transactionRepository.find({
       where: { material_id: materialId },
-      relations: ['user'], // to get 'performed_by' user details
+      relations: ['user', 'receiver', 'photoFile'],
       order: { created_at: 'DESC' }
     });
   }
 
-  async confirmDelivery(materialId: number, userId: number, siteId?: string) {
+  async getMyPendingDeliveries(userId: number) {
+    const materials = await this.materialRepository.find({
+      where: {
+        recipient_id: userId,
+        status: 'On Delivery',
+      },
+      relations: ['recipient'],
+      order: {
+        updated_at: 'DESC',
+      },
+    });
+
+    const materialIds = materials.map((m) => m.id);
+    if (materialIds.length > 0) {
+      const transactions = await this.transactionRepository
+        .createQueryBuilder('tx')
+        .leftJoinAndSelect('tx.user', 'sender')
+        .where('tx.material_id IN (:...materialIds)', { materialIds })
+        .andWhere('tx.transaction_type = :type', { type: 'OUT' })
+        .orderBy('tx.created_at', 'DESC')
+        .getMany();
+
+      const txMap = new Map<number, MaterialTransaction>();
+      for (const tx of transactions) {
+        if (!txMap.has(tx.material_id)) {
+          txMap.set(tx.material_id, tx);
+        }
+      }
+
+      return materials.map((m) => ({
+        ...m,
+        latest_transaction: txMap.get(m.id) || null,
+      }));
+    }
+
+    return materials;
+  }
+
+  async confirmDelivery(
+    materialId: number,
+    userId: number,
+    data?: {
+      site_id?: string;
+      photo?: Express.Multer.File;
+      notes?: string;
+      lat?: number;
+      lng?: number;
+    },
+  ) {
     const material = await this.findOne(materialId);
 
     let isReturn = material.status === 'Return Delivery';
     let isGoingToWarehouse = isReturn;
     let confirmSiteId = material.site_id;
 
-    if (siteId) {
-        confirmSiteId = siteId;
+    if (data?.site_id) {
+        confirmSiteId = data.site_id;
         isGoingToWarehouse = false;
         // Don't modify material global status aggressively if it's just for one site
         if (material.status === 'On Delivery' && material.quantity > 0) {
             material.status = 'In Warehouse';
         }
+        material.recipient_id = null;
         await this.materialRepository.save(material);
     } else {
         if (material.status !== 'On Delivery' && material.status !== 'Return Delivery') {
@@ -460,7 +515,21 @@ export class MaterialsService {
           material.status = 'Delivered';
         }
 
+        material.recipient_id = null;
         await this.materialRepository.save(material);
+    }
+
+    let photoFileId: number | null = null;
+    if (data?.photo) {
+      const uploaded = await this.filesService.uploadFile(
+        data.photo,
+        userId,
+        '/materials',
+        'Material delivery confirmation photo',
+      );
+      if (uploaded && uploaded.id) {
+        photoFileId = uploaded.id;
+      }
     }
 
     // Create confirmation log
@@ -469,8 +538,12 @@ export class MaterialsService {
       transaction_type: isGoingToWarehouse ? 'CONFIRM_RETURN' : 'CONFIRM_DEPLOY',
       quantity: 0, // No quantity change
       site_id: confirmSiteId,
-      notes: `Confirmed arrival ${isGoingToWarehouse ? 'to Warehouse' : 'at Site'}`,
+      notes: data?.notes || `Confirmed arrival ${isGoingToWarehouse ? 'to Warehouse' : 'at Site'}`,
       performed_by: userId,
+      receiver_id: userId,
+      confirmation_photo: photoFileId,
+      lat: data?.lat,
+      lng: data?.lng,
     });
 
     await this.transactionRepository.save(transaction);

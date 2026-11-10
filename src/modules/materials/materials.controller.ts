@@ -82,6 +82,16 @@ export class MaterialsController {
     );
   }
 
+  @Get('my-pending-deliveries')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getMyPendingDeliveries(@Request() req) {
+    return successResponse(
+      await this.materialsService.getMyPendingDeliveries(req.user.id),
+      'success',
+    );
+  }
+
   @Get('by-serial/:sn')
   @HttpCode(HttpStatus.OK)
   async findBySerial(@Param('sn') sn: string) {
@@ -125,15 +135,45 @@ export class MaterialsController {
   }
 
   @Patch(':id/confirm-delivery')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('photo'))
   @HttpCode(HttpStatus.OK)
-  async confirmDelivery(
+  async confirmDeliveryPatch(
     @Param() param: IDParamDto,
     @Request() req,
-    @Body() body: { site_id?: string },
+    @UploadedFile() photo: Express.Multer.File,
+    @Body() body: { site_id?: string; notes?: string; lat?: string | number; lng?: string | number },
   ) {
     return successResponse(
-      await this.materialsService.confirmDelivery(+param.id, req.user.id, body?.site_id),
+      await this.materialsService.confirmDelivery(+param.id, req.user.id, {
+        site_id: body?.site_id,
+        photo,
+        notes: body?.notes,
+        lat: body?.lat !== undefined && body?.lat !== null && body?.lat !== '' ? Number(body.lat) : undefined,
+        lng: body?.lng !== undefined && body?.lng !== null && body?.lng !== '' ? Number(body.lng) : undefined,
+      }),
+      'success',
+    );
+  }
+
+  @Post(':id/confirm-delivery')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('photo'))
+  @HttpCode(HttpStatus.OK)
+  async confirmDeliveryPost(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @UploadedFile() photo: Express.Multer.File,
+    @Body() body: { site_id?: string; notes?: string; lat?: string | number; lng?: string | number },
+  ) {
+    return successResponse(
+      await this.materialsService.confirmDelivery(+param.id, req.user.id, {
+        site_id: body?.site_id,
+        photo,
+        notes: body?.notes,
+        lat: body?.lat !== undefined && body?.lat !== null && body?.lat !== '' ? Number(body.lat) : undefined,
+        lng: body?.lng !== undefined && body?.lng !== null && body?.lng !== '' ? Number(body.lng) : undefined,
+      }),
       'success',
     );
   }

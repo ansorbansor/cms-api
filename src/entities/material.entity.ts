@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { EntityHelper } from 'src/utils/entity-helper';
+import { User } from './user.entity';
 
 @Entity({ name: 'materials' })
 export class Material extends EntityHelper {
@@ -63,4 +64,12 @@ export class Material extends EntityHelper {
   @ApiProperty({ example: 'Additional notes' })
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @ApiProperty({ example: 1 })
+  @Column({ nullable: true })
+  recipient_id: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'recipient_id' })
+  recipient: User;
 }

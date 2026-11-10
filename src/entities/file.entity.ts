@@ -37,8 +37,14 @@ export class FileEntity extends EntityHelper {
   @AfterLoad()
   @AfterInsert()
   updatePath() {
-    if (this.path.indexOf('/') === 0) {
-      this.path = appConfig().backendDomain + this.path;
+    if (this.path && this.path.indexOf('/') === 0) {
+      let domain = (appConfig().backendDomain || '').trim();
+      if (domain.startsWith('https//')) {
+        domain = domain.replace('https//', 'https://');
+      } else if (domain.startsWith('http//')) {
+        domain = domain.replace('http//', 'http://');
+      }
+      this.path = domain + this.path;
     }
   }
 }

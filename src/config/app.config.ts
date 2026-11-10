@@ -6,7 +6,7 @@ export default registerAs('app', () => ({
   workingDirectory: process.env.PWD || process.cwd(),
   frontendDomain: process.env.FRONTEND_DOMAIN,
   cmsDomain: process.env.CMS_DOMAIN,
-  backendDomain: process.env.BACKEND_DOMAIN,
+  backendDomain: (process.env.BACKEND_DOMAIN || '').replace(/^(https?)\/\/([^\/])/i, '$1://$2'),
   apiVersion: process.env.API_VERSION,
   fullBackendDomain: `${process.env.BACKEND_DOMAIN}/${process.env.API_PREFIX}/${process.env.API_VERSION}/`,
   port: parseInt(process.env.APP_PORT || process.env.PORT, 10) || 3000,

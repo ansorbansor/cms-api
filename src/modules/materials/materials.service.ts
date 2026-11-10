@@ -9,6 +9,7 @@ import * as xlsx from 'xlsx';
 import * as async from 'async';
 import * as fs from 'fs';
 import { ExportJob } from '../../entities/export-job.entity';
+import { User } from '../../entities/user.entity';
 import { FilesService } from '../files/files.service';
 
 @Injectable()
@@ -22,6 +23,8 @@ export class MaterialsService {
     private readonly transactionRepository: Repository<MaterialTransaction>,
     @InjectRepository(ExportJob)
     private exportJobRepository: Repository<ExportJob>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly filesService: FilesService,
   ) {
     this.importQueue = async.queue(async (task, callback) => {
@@ -387,14 +390,33 @@ export class MaterialsService {
     const isReturn = dto.transaction_type === 'IN' && material.status === 'Delivered';
     const sourceSite = isReturn ? material.site_id : dto.site_id; // Store the site it came from for returns
 
+    let finalReceiverId = dto.receiver_id;
+    let finalReceiverName = dto.receiver_name;
+
+    // Fallback: If receiver_id is not given, resolve to active non-deleted user by receiver_name
+    if (!finalReceiverId && finalReceiverName) {
+      const activeUser = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.status = true')
+        .andWhere('user.deleted_at IS NULL')
+        .andWhere('LOWER(user.name) = :name', { name: finalReceiverName.trim().toLowerCase() })
+        .orderBy('user.id', 'DESC')
+        .getOne();
+
+      if (activeUser) {
+        finalReceiverId = activeUser.id;
+        finalReceiverName = activeUser.name;
+      }
+    }
+
     const transaction = this.transactionRepository.create({
       material_id: materialId,
       transaction_type: dto.transaction_type,
       quantity: dto.quantity,
       site_id: sourceSite,
       notes: dto.notes,
-      receiver_name: dto.receiver_name,
-      receiver_id: dto.receiver_id,
+      receiver_name: finalReceiverName,
+      receiver_id: finalReceiverId,
       performed_by: userId,
     });
 
@@ -411,8 +433,8 @@ export class MaterialsService {
     } else if (dto.transaction_type === 'OUT') {
       material.quantity -= dto.quantity;
       material.status = 'On Delivery';
-      if (dto.receiver_id) {
-        material.recipient_id = dto.receiver_id;
+      if (finalReceiverId) {
+        material.recipient_id = finalReceiverId;
       }
       if (dto.site_id) {
         material.site_id = dto.site_id;

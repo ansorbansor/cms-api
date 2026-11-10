@@ -83,7 +83,8 @@ export class UsersService {
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.photoFile', 'photoFile')
       .leftJoinAndSelect('user.employeePosition', 'employeePosition')
-      .where('status = true');
+      .where('user.status = true')
+      .andWhere('user.deleted_at IS NULL');
 
     if (paginationOptions.search) {
       data.andWhere(

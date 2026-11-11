@@ -545,6 +545,18 @@ export class InvoicesService implements OnModuleInit {
 
     const existingInvoices = await existingPoiQuery.getRawMany();
 
+    // Build a map of GR number -> term position based on the PO's rows and custom columns
+    const grKnownTermMap = new Map<string, number>();
+    for (const r of poRows) {
+      const anchors = extractAnchorsFromRow(r, 'all', validCustomDefs);
+      for (const a of anchors) {
+        const p = getGrTermPosition(a.source_column, a.source_label);
+        grKnownTermMap.set(a.gr_number, p);
+      }
+    }
+
+    // invoicedGrMap stores `${term_position}:${gr_number}` -> details
+    // Strictly isolates Term 1 (GR 1) and Term 2 (GR 2) to prevent cross-term locking
     const invoicedGrMap = new Map<string, {
       invoice_number: string;
       invoice_date: string;
@@ -555,38 +567,46 @@ export class InvoicesService implements OnModuleInit {
       const invNum = inv.invoice_number ? String(inv.invoice_number).trim() : '';
       if (!invNum) continue;
       const invDate = inv.invoice_date ? moment(inv.invoice_date).format('YYYY-MM-DD') : '';
-      const pos = Number(inv.position) || 1;
+      const invPos = Number(inv.position);
 
-      // 1. Check explicit invoiced_grs column
+      // 1. Check explicit invoiced_grs column (Primary ground truth)
       if (inv.invoiced_grs) {
         const parts = String(inv.invoiced_grs).split(/[,|]/);
         for (const p of parts) {
           const g = p.trim();
-          if (g) {
-            invoicedGrMap.set(g, {
+          if (!g) continue;
+          // Determine the term position: prefer the GR's actual term position from PO columns, or invPos, or 1
+          const effectiveTermPos = grKnownTermMap.get(g) || (invPos === 2 ? 2 : 1);
+          // If invoice explicitly has a position (e.g. 1), it cannot lock a GR belonging to another term (e.g. 2)
+          if (!invPos || invPos === effectiveTermPos) {
+            invoicedGrMap.set(`${effectiveTermPos}:${g}`, {
               invoice_number: invNum,
               invoice_date: invDate,
-              term_position: pos,
+              term_position: effectiveTermPos,
             });
           }
         }
-      }
-
-      // 2. Check custom columns from linked PO row
-      for (const d of validCustomDefs) {
-        const rawVal = inv[`po_${d.name}`] || inv[d.name];
-        if (rawVal) {
-          const colPos = getGrTermPosition(d.name, d.label);
-          if (colPos === pos || !inv.position) {
-            const parts = String(rawVal).split(/[,|]/);
-            for (const p of parts) {
-              const g = p.trim();
-              if (g && !invoicedGrMap.has(g)) {
-                invoicedGrMap.set(g, {
-                  invoice_number: invNum,
-                  invoice_date: invDate,
-                  term_position: colPos,
-                });
+      } else {
+        // 2. Legacy fallback: when invoiced_grs is empty, deduce strictly for this invoice's term
+        const targetPos = invPos === 2 ? 2 : 1;
+        for (const d of validCustomDefs) {
+          const rawVal = inv[`po_${d.name}`] || inv[d.name];
+          if (rawVal) {
+            const colPos = getGrTermPosition(d.name, d.label);
+            if (colPos === targetPos) {
+              const parts = String(rawVal).split(/[,|]/);
+              for (const p of parts) {
+                const g = p.trim();
+                if (g) {
+                  const key = `${targetPos}:${g}`;
+                  if (!invoicedGrMap.has(key)) {
+                    invoicedGrMap.set(key, {
+                      invoice_number: invNum,
+                      invoice_date: invDate,
+                      term_position: targetPos,
+                    });
+                  }
+                }
               }
             }
           }
@@ -681,7 +701,7 @@ export class InvoicesService implements OnModuleInit {
 
           for (const g of termAnchors) {
             const targetTerm = currentTermPosition;
-            const invoicedInfo = invoicedGrMap.get(g.gr_number) || null;
+            const invoicedInfo = invoicedGrMap.get(`${currentTermPosition}:${g.gr_number}`) || null;
             const isAlreadyInvoiced = !!invoicedInfo;
 
             grSet.add(g.gr_number);
@@ -1118,7 +1138,7 @@ export class InvoicesService implements OnModuleInit {
         for (const r of candidateRows) {
           // Extract GRs for this row and target position
           const grsFromItems = (line.gr_items || [])
-            .filter((gi) => gi.po_id === r.id)
+            .filter((gi) => gi.po_id === r.id && (!gi.target_term || gi.target_term === targetPosition))
             .map((gi) => String(gi.gr_number).trim());
 
           const grsFromRow = extractGrsFromRow(r, 'all', validCustomDefs)
@@ -1170,7 +1190,9 @@ export class InvoicesService implements OnModuleInit {
             const alreadyCovered = activeRows.some((a) => a.grs.includes(gr));
             if (!alreadyCovered) {
               const matchingPoRow = poRows.find((r) => {
-                const grs = extractGrsFromRow(r, 'all', validCustomDefs).map((g) => g.gr_number);
+                const grs = extractGrsFromRow(r, 'all', validCustomDefs)
+                  .filter((g) => getGrTermPosition(g.source_column, g.source_label) === targetPosition)
+                  .map((g) => g.gr_number);
                 return grs.includes(gr);
               });
               if (matchingPoRow) {

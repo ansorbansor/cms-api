@@ -1496,7 +1496,7 @@ export class InvoicesService implements OnModuleInit {
    * Get list of saved invoices from purchase_order_invoices
    * Aggregates by invoice_number so each invoice is displayed with its combined total and line count.
    */
-  async getInvoiceHistory(poNumber?: string) {
+  async getInvoiceHistory(poNumber?: string, search?: string) {
     const qb = this.invoiceRepository
       .createQueryBuilder('poi')
       .leftJoin('poi.po', 'po')
@@ -1522,9 +1522,17 @@ export class InvoicesService implements OnModuleInit {
       qb.andWhere('po.po_number = :poNumber', { poNumber });
     }
 
+    if (search && search.trim() !== '') {
+      const q = `%${search.trim().toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(poi.invoice_number) LIKE :search OR LOWER(po.po_number) LIKE :search OR LOWER(customer.name) LIKE :search)',
+        { search: q },
+      );
+    }
+
     qb.groupBy('poi.invoice_number')
       .orderBy('MAX(poi.created_at)', 'DESC')
-      .take(100);
+      .take(500);
 
     const rawList = await qb.getRawMany();
 

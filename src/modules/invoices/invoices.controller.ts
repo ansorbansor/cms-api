@@ -45,8 +45,11 @@ export class InvoicesController {
   }
 
   @Get('history')
-  async getInvoiceHistory(@Query('po_number') poNumber?: string) {
-    const data = await this.invoicesService.getInvoiceHistory(poNumber);
+  async getInvoiceHistory(
+    @Query('po_number') poNumber?: string,
+    @Query('search') search?: string,
+  ) {
+    const data = await this.invoicesService.getInvoiceHistory(poNumber, search);
     return successResponse(data, 'Riwayat invoice berhasil dimuat');
   }
 

@@ -59,6 +59,7 @@ import { PerjalananDinasModule } from './modules/perjalanan-dinas/perjalanan-din
 import { AppVersionMiddleware } from './middlewares/app-version.middleware';
 import { MaterialsModule } from './modules/materials/materials.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
+import { AtpModule } from './modules/atp/atp.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -135,6 +136,7 @@ import { AppController } from './app.controller';
     PerjalananDinasModule,
     MaterialsModule,
     InvoicesModule,
+    AtpModule,
   ],
   controllers: [AppController],
   providers: [

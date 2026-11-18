@@ -49,6 +49,7 @@ export class PerjalananDinasController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit') limit: number,
     @Query('search') search: string,
+    @Query('all') all: string,
     @Request() req,
   ) {
     return successResponseList(
@@ -57,6 +58,7 @@ export class PerjalananDinasController {
         limit,
         total: 0,
         search: search,
+        all: all === 'true' || all === '1',
       }, req.user),
       'success',
     );

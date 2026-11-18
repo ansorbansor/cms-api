@@ -36,7 +36,7 @@ export class PerjalananDinasService {
     return data;
   }
 
-  async findManyWithPagination(paginationOptions: IPaginationOptions, user?: User) {
+  async findManyWithPagination(paginationOptions: IPaginationOptions & { all?: boolean | string }, user?: User) {
     let fullUser = null;
     if (user && user.id) {
       fullUser = await this.perjalananDinasRepository.manager.findOne(User, {
@@ -67,7 +67,16 @@ export class PerjalananDinasService {
       fullUser.employeePosition?.grant_all_access === 1
     );
 
-    if (!isSuperAdmin) {
+    const isRPM = fullUser && (
+      fullUser.employee_position_id == 9 ||
+      fullUser.employeePosition?.id == 9 ||
+      fullUser.employeePosition?.code?.toLowerCase() === 'rpm' ||
+      fullUser.employeePosition?.name === 'RPM'
+    );
+
+    const shouldViewAll = isSuperAdmin || (isRPM && (paginationOptions.all === true || paginationOptions.all === 'true' || paginationOptions.all === '1'));
+
+    if (!shouldViewAll) {
       data.andWhere('pd.user_id = :user_id', { user_id: user?.id });
     }
 

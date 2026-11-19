@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete, Query, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete, Query, HttpStatus, HttpCode, Res } from '@nestjs/common';
+import { Response } from 'express';
+import * as fs from 'fs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
 import { successResponse } from 'src/utils/responses';
@@ -164,6 +166,28 @@ export class WorkloadTicketsController {
   async getMyTaskNames(@Request() req) {
     const result = await this.ticketsService.getMyTaskNames(req.user.id);
     return successResponse(result, 'Success');
+  }
+
+  @Get('my-tasks/regions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMyTaskRegions(@Request() req) {
+    const result = await this.ticketsService.getMyTaskRegions(req.user.id);
+    return successResponse(result, 'Success');
+  }
+
+  @Get('my-tasks/export')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async exportMyTasks(@Request() req, @Res() res: Response, @Query() query: any) {
+    const filePath = await this.ticketsService.exportMyTasks(req.user.id, query);
+    res.download(filePath, `MyTasks_${Date.now()}.xlsx`, (err) => {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (e) {
+        console.error('Failed to unlink export file:', e);
+      }
+    });
   }
 
   @Get('summary')

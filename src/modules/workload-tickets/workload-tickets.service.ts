@@ -12,6 +12,9 @@ import { failedResponse, successResponse } from 'src/utils/responses';
 import { User } from 'src/entities/user.entity';
 import moment from 'moment';
 import axios from 'axios';
+import * as xlsx from 'xlsx';
+import * as fs from 'fs';
+import * as path from 'path';
 import { exportUniqueId } from 'src/utils/encryption-helper';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { Absence } from 'src/entities/absence.entity';
@@ -514,16 +517,37 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     return result.map(r => r.name).filter(Boolean);
   }
 
+  async getMyTaskRegions(userId: number): Promise<string[]> {
+    const qb = this.taskRepo.createQueryBuilder('task')
+      .select('DISTINCT po_region.name', 'name')
+      .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .leftJoin('task.milestone', 'milestone')
+      .leftJoin('milestone.workload_ticket', 'workload_ticket')
+      .leftJoin('workload_ticket.purchase_orders', 'purchase_orders')
+      .leftJoin('purchase_orders.region', 'po_region')
+      .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .andWhere('workload_ticket.is_template = false')
+      .andWhere('po_region.name IS NOT NULL')
+      .andWhere("po_region.name != ''")
+      .andWhere("po_region.name != '-'")
+      .orderBy('name', 'ASC');
+
+    const result = await qb.getRawMany();
+    return result.map(r => r.name).filter(Boolean);
+  }
+
   async getMyTasks(userId: number, query: any = {}): Promise<{ data: WorkloadTask[], total: number }> {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const search = query.search || '';
     const taskName = query.taskName || '';
+    const region = query.region || '';
 
     const qb = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
       .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
       .leftJoinAndSelect('workload_ticket.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.region', 'po_region')
       .leftJoinAndSelect('workload_ticket.site', 'site')
       .leftJoinAndSelect('task.evidence_file', 'evidence_file')
       .leftJoinAndSelect('task.attachments', 'attachments')
@@ -542,6 +566,10 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
     if (taskName) {
       qb.andWhere('task.name = :taskName', { taskName });
+    }
+
+    if (region) {
+      qb.andWhere('(po_region.name = :region OR CAST(po_region.id AS TEXT) = :region)', { region });
     }
 
     const [data, total] = await qb.getManyAndCount();
@@ -569,6 +597,114 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
 
     return { data, total };
+  }
+
+  async exportMyTasks(userId: number, query: any = {}): Promise<string> {
+    const search = query.search || '';
+    const taskName = query.taskName || '';
+    const region = query.region || '';
+
+    const qb = this.taskRepo.createQueryBuilder('task')
+      .leftJoinAndSelect('task.milestone', 'milestone')
+      .leftJoinAndSelect('milestone.workload_ticket', 'workload_ticket')
+      .leftJoinAndSelect('workload_ticket.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.region', 'po_region')
+      .leftJoinAndSelect('workload_ticket.site', 'site')
+      .leftJoinAndSelect('task.evidence_file', 'evidence_file')
+      .leftJoinAndSelect('task.attachments', 'attachments')
+      .leftJoinAndSelect('attachments.file', 'att_file')
+      .leftJoinAndSelect('task.assigned_to_user', 'assigned_user')
+      .leftJoinAndSelect('task.assigned_multiple', 'assigned_multiple')
+      .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .andWhere('workload_ticket.is_template = false')
+      .orderBy('task.created_at', 'DESC');
+
+    if (search) {
+      qb.andWhere('workload_ticket.ticket_id ILIKE :search', { search: `%${search}%` });
+    }
+
+    if (taskName) {
+      qb.andWhere('task.name = :taskName', { taskName });
+    }
+
+    if (region) {
+      qb.andWhere('(po_region.name = :region OR CAST(po_region.id AS TEXT) = :region)', { region });
+    }
+
+    const data = await qb.getMany();
+
+    const rows = data.map((task, idx) => {
+      const pos = task.milestone?.workload_ticket?.purchase_orders || [];
+      const poNumbers = pos.map((p: any) => p.po_number).filter(Boolean).join(', ') || '-';
+      const regions = [...new Set(pos.map((p: any) => p.region?.name).filter(Boolean))].join(', ') || '-';
+
+      let aging = '-';
+      if (task.status === 'In Progress' && task.in_progress_at) {
+        const durationMs = Date.now() - new Date(task.in_progress_at).getTime();
+        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+        if (durationHours < 24) {
+          aging = `${durationHours} jam`;
+        } else {
+          const days = Math.floor(durationHours / 24);
+          const remainingHours = durationHours % 24;
+          aging = `${days}h ${remainingHours}j`;
+        }
+      }
+
+      const attNames = (task.attachments || []).map((a: any) => a.file?.name).filter(Boolean).join(', ');
+
+      return {
+        'No': idx + 1,
+        'Ticket ID': task.milestone?.workload_ticket?.ticket_id || '-',
+        'Region': regions,
+        'PO Numbers': poNumbers,
+        'Task Name': task.name || '-',
+        'Site Name': task.milestone?.workload_ticket?.site?.name || '-',
+        'Site Code': task.milestone?.workload_ticket?.site?.code || '-',
+        'Milestone': task.milestone?.name || '-',
+        'Deadline': task.deadline ? moment(task.deadline).format('YYYY-MM-DD') : '-',
+        'Status': task.status || '-',
+        'Aging': aging,
+        'Notes / Watermark': task.watermark_notes || '-',
+        'Evidence File': task.evidence_file?.name || '-',
+        'Attachments': attNames || '-',
+        'Created At': task.created_at ? moment(task.created_at).format('YYYY-MM-DD HH:mm') : '-',
+      };
+    });
+
+    const workSheet = xlsx.utils.json_to_sheet(rows);
+    workSheet['!cols'] = [
+      { wch: 6 },
+      { wch: 35 },
+      { wch: 22 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 16 },
+      { wch: 12 },
+      { wch: 30 },
+      { wch: 25 },
+      { wch: 30 },
+      { wch: 18 },
+    ];
+
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, workSheet, 'My Tasks');
+
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
+
+    const fileName = `MyTasks-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+    xlsx.writeFile(wb, filePath, { compression: true });
+
+    return filePath;
   }
 
   async getUniqueTaskNames(): Promise<string[]> {

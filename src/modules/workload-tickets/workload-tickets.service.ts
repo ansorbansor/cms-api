@@ -20,9 +20,13 @@ import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { Absence } from 'src/entities/absence.entity';
 import { DistanceTracking } from '../distance-tracking/entities/distance-tracking.entity';
 import { WorkloadTicketPoHistory } from 'src/entities/workload-ticket-po-history.entity';
+import { ExportJob } from 'src/entities/export-job.entity';
+import * as async from 'async';
 
 @Injectable()
 export class WorkloadTicketsService {
+  private exportQueue: async.QueueObject<any>;
+
   constructor(
     @InjectRepository(WorkloadTicket)
     private ticketRepo: Repository<WorkloadTicket>,
@@ -44,8 +48,54 @@ export class WorkloadTicketsService {
     private distanceTrackingRepo: Repository<DistanceTracking>,
     @InjectRepository(WorkloadTicketPoHistory)
     private poHistoryRepo: Repository<WorkloadTicketPoHistory>,
+    @InjectRepository(ExportJob)
+    private exportJobRepo: Repository<ExportJob>,
     private whatsappService: WhatsappService,
-  ) { }
+  ) {
+    this.exportQueue = async.queue(async (jobId: string, callback: any) => {
+      try {
+        await this.processExportJob(jobId);
+        callback();
+      } catch (err) {
+        callback(err);
+      }
+    }, 1);
+  }
+
+  async queueExportWorkloadTickets(user: any, query: any): Promise<ExportJob> {
+    const job = this.exportJobRepo.create({
+      user_id: user?.id,
+      type: 'WORKLOAD_TICKETS',
+      status: 'PENDING',
+      payload: JSON.stringify(query),
+    });
+    await this.exportJobRepo.save(job);
+
+    this.exportQueue.push(job.id);
+    return job;
+  }
+
+  private async processExportJob(jobId: string): Promise<void> {
+    const job = await this.exportJobRepo.findOne(jobId);
+    if (!job) return;
+
+    job.status = 'PROCESSING';
+    await this.exportJobRepo.save(job);
+
+    try {
+      const query = JSON.parse(job.payload || '{}');
+      const filePath = await this.exportWorkloadTickets(query);
+
+      job.status = 'COMPLETED';
+      job.file_path = filePath;
+      await this.exportJobRepo.save(job);
+    } catch (err: any) {
+      console.error(`Error processing export job ${jobId}:`, err);
+      job.status = 'FAILED';
+      job.error_message = err?.message || 'Export failed';
+      await this.exportJobRepo.save(job);
+    }
+  }
 
   async create(siteId: number, userId: number, poIds: number[] = [], templateId?: number, jobCategory?: string): Promise<WorkloadTicket> {
     const site = await this.siteRepo.findOne(siteId);
@@ -241,7 +291,7 @@ export class WorkloadTicketsService {
       .take(limit);
 
     if (search) {
-      qb.andWhere('wt.ticket_id ILIKE :search', { search: `%${search}%` });
+      qb.andWhere('(wt.ticket_id ILIKE :search OR site.name ILIKE :search OR site.code ILIKE :search OR purchase_orders.po_number ILIKE :search)', { search: `%${search}%` });
     }
 
     if (customer_id) {
@@ -288,13 +338,14 @@ export class WorkloadTicketsService {
 
     const buildBaseQb = (alias: string) => {
       const qb = this.ticketRepo.createQueryBuilder(alias)
+        .leftJoin(`${alias}.site`, 'site')
         .leftJoin(`${alias}.purchase_orders`, 'purchase_orders')
         .leftJoin('purchase_orders.customer', 'customer')
         .leftJoin('purchase_orders.project', 'project')
         .where(`${alias}.is_template = false`);
       
       if (search) {
-        qb.andWhere(`${alias}.ticket_id ILIKE :search`, { search: `%${search}%` });
+        qb.andWhere(`(${alias}.ticket_id ILIKE :search OR site.name ILIKE :search OR site.code ILIKE :search OR purchase_orders.po_number ILIKE :search)`, { search: `%${search}%` });
       }
       if (customer_id) {
         const customers = customer_id.split(',');
@@ -536,12 +587,30 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     return result.map(r => r.name).filter(Boolean);
   }
 
+  async getMyTaskStatuses(userId: number): Promise<string[]> {
+    const qb = this.taskRepo.createQueryBuilder('task')
+      .select('DISTINCT task.status', 'status')
+      .leftJoin('task.assigned_multiple', 'assigned_multiple_filter')
+      .leftJoin('task.milestone', 'milestone')
+      .leftJoin('milestone.workload_ticket', 'workload_ticket')
+      .where('(task.assigned_to = :userId OR assigned_multiple_filter.id = :userId)', { userId })
+      .andWhere('workload_ticket.is_template = false')
+      .andWhere('task.status IS NOT NULL')
+      .orderBy('status', 'ASC');
+
+    const result = await qb.getRawMany();
+    const fetched = result.map(r => r.status).filter(Boolean);
+    const standard = ['Pending', 'In Progress', 'Review Customer', 'Completed', 'Issue', 'No Need'];
+    return Array.from(new Set([...standard, ...fetched]));
+  }
+
   async getMyTasks(userId: number, query: any = {}): Promise<{ data: WorkloadTask[], total: number }> {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const search = query.search || '';
     const taskName = query.taskName || '';
     const region = query.region || '';
+    const status = query.status || '';
 
     const qb = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
@@ -570,6 +639,10 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
     if (region) {
       qb.andWhere('(po_region.name = :region OR CAST(po_region.id AS TEXT) = :region)', { region });
+    }
+
+    if (status) {
+      qb.andWhere('task.status = :status', { status });
     }
 
     const [data, total] = await qb.getManyAndCount();
@@ -603,6 +676,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     const search = query.search || '';
     const taskName = query.taskName || '';
     const region = query.region || '';
+    const status = query.status || '';
 
     const qb = this.taskRepo.createQueryBuilder('task')
       .leftJoinAndSelect('task.milestone', 'milestone')
@@ -630,6 +704,10 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
     if (region) {
       qb.andWhere('(po_region.name = :region OR CAST(po_region.id AS TEXT) = :region)', { region });
+    }
+
+    if (status) {
+      qb.andWhere('task.status = :status', { status });
     }
 
     const data = await qb.getMany();
@@ -701,6 +779,188 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
     }
 
     const fileName = `MyTasks-${Date.now()}.xlsx`;
+    const filePath = path.join(exportsDir, fileName);
+    xlsx.writeFile(wb, filePath, { compression: true });
+
+    return filePath;
+  }
+
+  async exportWorkloadTickets(query: any = {}): Promise<string> {
+    const search = query.search || '';
+    const customer_id = query.customer_id;
+    const project_id = query.project_id;
+    const job_category = query.job_category;
+    const task_columns = query.task_columns;
+
+    const qb = this.ticketRepo.createQueryBuilder('wt')
+      .leftJoinAndSelect('wt.site', 'site')
+      .leftJoinAndSelect('wt.created_by_user', 'created_by_user')
+      .leftJoinAndSelect('wt.purchase_orders', 'purchase_orders')
+      .leftJoinAndSelect('purchase_orders.customer', 'customer')
+      .leftJoinAndSelect('purchase_orders.project', 'project')
+      .leftJoinAndSelect('wt.milestones', 'milestones')
+      .leftJoinAndSelect('milestones.tasks', 'tasks')
+      .leftJoinAndSelect('tasks.assigned_to_user', 'assigned_to_user')
+      .leftJoinAndSelect('tasks.assigned_multiple', 'assigned_multiple')
+      .where('wt.is_template = false')
+      .orderBy('wt.created_at', 'DESC');
+
+    if (search) {
+      qb.andWhere('(wt.ticket_id ILIKE :search OR site.name ILIKE :search OR site.code ILIKE :search OR purchase_orders.po_number ILIKE :search)', { search: `%${search}%` });
+    }
+
+    if (customer_id) {
+      const customers = customer_id.split(',');
+      qb.andWhere('purchase_orders.id IS NOT NULL')
+        .andWhere('customer.name IN (SELECT name FROM customers WHERE id IN (:...customers))', { customers });
+    }
+
+    if (project_id) {
+      const projects = project_id.split(',');
+      qb.andWhere('purchase_orders.id IS NOT NULL')
+        .andWhere('project.name IN (SELECT name FROM projects WHERE id IN (:...projects))', { projects });
+    }
+
+    if (job_category) {
+      const categories = job_category.split(',');
+      qb.andWhere('wt.job_category IN (:...categories)', { categories });
+    }
+
+    const data = await qb.getMany();
+
+    const selectedTaskColumns = task_columns
+      ? (Array.isArray(task_columns) ? task_columns : task_columns.split(','))
+          .map((t: string) => t.trim())
+          .filter(Boolean)
+      : [];
+
+    // 1. Gather all unique task names in milestone order
+    const taskOrder: { [key: string]: number } = {};
+    data.forEach((ticket) => {
+      ticket.milestones?.forEach((ms) => {
+        ms.tasks?.forEach((t) => {
+          if (t.name && !(t.name in taskOrder)) {
+            taskOrder[t.name] = (ms.order_index || 0) * 100 + (t.task_order_index || 0);
+          }
+        });
+      });
+    });
+    const sortedTaskNames = Object.keys(taskOrder).sort((a, b) => taskOrder[a] - taskOrder[b]);
+
+    // Use selected task columns if specified, otherwise include all tasks found
+    const columnsToExport = selectedTaskColumns.length > 0 ? selectedTaskColumns : sortedTaskNames;
+
+    // 2. Prepare Sheet 1: Workload Tickets Matrix
+    const ticketRows = data.map((ticket, idx) => {
+      const pos = ticket.purchase_orders || [];
+      const customers = [...new Set(pos.map((p: any) => p.customer?.name).filter(Boolean))].join(', ') || '-';
+      const projects = [...new Set(pos.map((p: any) => p.project?.name).filter(Boolean))].join(', ') || '-';
+      const poNumbers = [...new Set(pos.map((p: any) => p.po_number).filter(Boolean))].join(', ') || '-';
+
+      const uniqueIds = pos.map((po: any) => {
+        const createdAtStr = po.createdAtParseDate || (po.created_at ? moment(po.created_at).format('YYYY-MM-DD HH:mm:ss') : moment().format('YYYY-MM-DD HH:mm:ss'));
+        return exportUniqueId(po.id, createdAtStr);
+      }).filter(Boolean).join(', ') || '-';
+
+      // Flatten all tasks in this ticket
+      const allTasks: WorkloadTask[] = [];
+      ticket.milestones?.forEach((ms) => {
+        if (ms.tasks) allTasks.push(...ms.tasks);
+      });
+
+      const totalTasks = allTasks.length;
+      const completedTasks = allTasks.filter((t) => t.status === 'Completed').length;
+      const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      const row: any = {
+        'No': idx + 1,
+        'Ticket ID': ticket.ticket_id || '-',
+        'Customer': customers,
+        'Project': projects,
+        'Job Category': ticket.job_category || '-',
+        'Site Code': ticket.site?.code || '-',
+        'Site Name': ticket.site?.name || '-',
+        'PO Numbers': poNumbers,
+        'Biosron Unique IDs': uniqueIds,
+        'Status Tiket': ticket.status || '-',
+        'Progress (%)': `${progressPct}%`,
+        'Total Tasks': totalTasks,
+        'Completed Tasks': completedTasks,
+      };
+
+      // Add dynamic task columns (matching visible columns or all)
+      columnsToExport.forEach((taskName) => {
+        const matchingTask = allTasks.find((t) => t.name === taskName);
+        if (matchingTask) {
+          const pic = matchingTask.assigned_to_user?.name || (matchingTask.assigned_multiple && matchingTask.assigned_multiple.length > 0 ? matchingTask.assigned_multiple.map((u: any) => u.name).join(', ') : '-');
+          row[taskName] = `[${matchingTask.status || 'Pending'}] ${pic}`;
+        } else {
+          row[taskName] = '-';
+        }
+      });
+
+      row['Created By'] = ticket.created_by_user?.name || ticket.created_by_user?.nik || 'System';
+      row['Created At'] = ticket.created_at ? moment(ticket.created_at).format('YYYY-MM-DD HH:mm') : '-';
+
+      return row;
+    });
+
+    // 3. Prepare Sheet 2: Task Details Breakdown
+    const taskRows: any[] = [];
+    let taskIdx = 1;
+    data.forEach((ticket) => {
+      const pos = ticket.purchase_orders || [];
+      const customers = [...new Set(pos.map((p: any) => p.customer?.name).filter(Boolean))].join(', ') || '-';
+      const projects = [...new Set(pos.map((p: any) => p.project?.name).filter(Boolean))].join(', ') || '-';
+      const poNumbers = [...new Set(pos.map((p: any) => p.po_number).filter(Boolean))].join(', ') || '-';
+
+      ticket.milestones?.forEach((ms) => {
+        ms.tasks?.forEach((task) => {
+          if (selectedTaskColumns.length > 0 && !selectedTaskColumns.includes(task.name)) {
+            return;
+          }
+
+          const pic = task.assigned_to_user?.name || '-';
+          const multiplePics = (task.assigned_multiple || []).map((u: any) => u.name).filter(Boolean).join(', ') || '-';
+
+          taskRows.push({
+            'No': taskIdx++,
+            'Ticket ID': ticket.ticket_id || '-',
+            'Customer': customers,
+            'Project': projects,
+            'Job Category': ticket.job_category || '-',
+            'Site Code': ticket.site?.code || '-',
+            'Site Name': ticket.site?.name || '-',
+            'PO Numbers': poNumbers,
+            'Milestone': ms.name || '-',
+            'Task Name': task.name || '-',
+            'Task Status': task.status || '-',
+            'PIC (Lead)': pic,
+            'Team / Multiple Assignees': multiplePics,
+            'Deadline': task.deadline ? moment(task.deadline).format('YYYY-MM-DD') : '-',
+            'Notes / Watermark': task.watermark_notes || '-',
+            'Last Updated': task.updated_at ? moment(task.updated_at).format('YYYY-MM-DD HH:mm') : '-',
+          });
+        });
+      });
+    });
+
+    const wb = xlsx.utils.book_new();
+
+    const wsTickets = xlsx.utils.json_to_sheet(ticketRows);
+    xlsx.utils.book_append_sheet(wb, wsTickets, 'Workload Tickets');
+
+    if (taskRows.length > 0) {
+      const wsTasks = xlsx.utils.json_to_sheet(taskRows);
+      xlsx.utils.book_append_sheet(wb, wsTasks, 'Task Breakdown');
+    }
+
+    const exportsDir = path.resolve('./exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir);
+    }
+
+    const fileName = `WorkloadTickets-${Date.now()}.xlsx`;
     const filePath = path.join(exportsDir, fileName);
     xlsx.writeFile(wb, filePath, { compression: true });
 

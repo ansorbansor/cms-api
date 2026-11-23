@@ -175,6 +175,13 @@ export class WorkloadTicketsController {
     return successResponse(result, 'Success');
   }
 
+  @Get('my-tasks/statuses')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getMyTaskStatuses(@Request() req) {
+    const result = await this.ticketsService.getMyTaskStatuses(req.user.id);
+    return successResponse(result, 'Success');
+  }
+
   @Get('my-tasks/export')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async exportMyTasks(@Request() req, @Res() res: Response, @Query() query: any) {
@@ -188,6 +195,14 @@ export class WorkloadTicketsController {
         console.error('Failed to unlink export file:', e);
       }
     });
+  }
+
+  @Get('export')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async exportWorkloadTickets(@Request() req, @Query() query: any) {
+    const job = await this.ticketsService.queueExportWorkloadTickets(req.user, query);
+    return successResponse(job, 'Export queued successfully');
   }
 
   @Get('summary')

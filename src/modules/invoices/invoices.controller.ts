@@ -48,8 +48,10 @@ export class InvoicesController {
   async getInvoiceHistory(
     @Query('po_number') poNumber?: string,
     @Query('search') search?: string,
+    @Query('start_date') startDate?: string,
+    @Query('end_date') endDate?: string,
   ) {
-    const data = await this.invoicesService.getInvoiceHistory(poNumber, search);
+    const data = await this.invoicesService.getInvoiceHistory(poNumber, search, startDate, endDate);
     return successResponse(data, 'Riwayat invoice berhasil dimuat');
   }
 
@@ -93,6 +95,6 @@ export class InvoicesController {
       gr_column: body.anchor_column || body.gr_column,
       user_id: userId,
     });
-    return successResponse(data, 'Invoice berhasil disimpan ke riwayat');
+    return successResponse(data, data?.message || 'Invoice berhasil disimpan ke riwayat');
   }
 }

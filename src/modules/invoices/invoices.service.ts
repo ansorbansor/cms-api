@@ -537,7 +537,8 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('poi.position', 'position')
       .addSelect('poi.invoiced_grs', 'invoiced_grs')
       .where('po.po_number = :poNumber', { poNumber })
-      .andWhere("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''");
+      .andWhere("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''")
+      .andWhere("(poi.invoice_status IS NULL OR poi.invoice_status != 'Draft')");
 
     validCustomDefs.forEach((d) => {
       existingPoiQuery.addSelect(`po."${d.name}"`, `po_${d.name}`);
@@ -953,6 +954,7 @@ export class InvoicesService implements OnModuleInit {
   async saveInvoice(payload: {
     po_number: string;
     invoice_number: string;
+    invoice_status?: string;
     revised_invoice_number?: string;
     invoice_date: string;
     payment_amount: number;
@@ -985,8 +987,10 @@ export class InvoicesService implements OnModuleInit {
   }) {
     const cleanInvoiceNumber = payload.invoice_number ? payload.invoice_number.trim() : '';
     if (!cleanInvoiceNumber) {
-      throw new BadRequestException('Nomor Invoice Resmi wajib diisi.');
+      throw new BadRequestException('Nomor Invoice wajib diisi.');
     }
+
+    const statusToSave = payload.invoice_status === 'Draft' ? 'Draft' : 'Generated';
 
     // Determine if this is a revision of an existing invoice
     let revisedInvoiceNumber = (payload.revised_invoice_number || '').trim();
@@ -1003,21 +1007,28 @@ export class InvoicesService implements OnModuleInit {
       }
     }
 
-    // STRICT CHECK: Reject if this official invoice number already exists in purchase_order_invoices
+    // STRICT CHECK: Reject if this invoice number already exists in purchase_order_invoices
     // No invoice number can ever be sent twice, unless it's explicitly overwriting an existing record on the same PO
+    // (e.g. revision on the same PO or updating/generating an existing Draft on the same PO)
     const duplicateCheck = await this.checkInvoiceNumber(cleanInvoiceNumber, payload.po_number);
-    const isOverwritingExisting =
-      Boolean(revisedInvoiceNumber) &&
+    const isDraftOnSamePo =
       duplicateCheck.exists &&
       duplicateCheck.details?.is_same_po &&
-      cleanInvoiceNumber.toLowerCase() === revisedInvoiceNumber.toLowerCase();
+      duplicateCheck.details?.invoice_status === 'Draft';
+
+    const isOverwritingExisting =
+      (Boolean(revisedInvoiceNumber) &&
+        duplicateCheck.exists &&
+        duplicateCheck.details?.is_same_po &&
+        cleanInvoiceNumber.toLowerCase() === revisedInvoiceNumber.toLowerCase()) ||
+      isDraftOnSamePo;
 
     if (duplicateCheck.exists && !isOverwritingExisting) {
       const d = duplicateCheck.details;
       const formattedDate = d?.invoice_date ? moment(d.invoice_date).format('DD-MMM-YYYY') : '';
       const formattedAmount = d?.total_payment ? 'Rp. ' + Number(d.total_payment).toLocaleString('id-ID') : '';
       throw new ConflictException(
-        `Nomor Invoice Resmi '${cleanInvoiceNumber}' SUDAH PERNAH DIGUNAKAN di sistem SIMPRO (tercatat pada PO: ${d?.po_number || '-'}, Tanggal: ${formattedDate || '-'}, Total: ${formattedAmount || '-'}). Nomor invoice resmi tidak boleh dikirim/disimpan dua kali.`
+        `Nomor Invoice '${cleanInvoiceNumber}' SUDAH PERNAH DIGUNAKAN di sistem SIMPRO (tercatat pada PO: ${d?.po_number || '-'}, Tanggal: ${formattedDate || '-'}, Status: ${d?.invoice_status || 'Generated'}, Total: ${formattedAmount || '-'}). Nomor invoice tidak boleh diduplikasi.`
       );
     }
 
@@ -1046,7 +1057,7 @@ export class InvoicesService implements OnModuleInit {
       throw new NotFoundException(`Purchase Order ${payload.po_number} tidak ditemukan.`);
     }
 
-    // Approach #3: Look up existing records belonging to the invoice being revised on this PO
+    // Approach #3: Look up existing records belonging to the invoice being revised or draft being updated/generated on this PO
     let oldInvoiceRecords: PurchaseOrderInvoice[] = [];
     if (revisedInvoiceNumber) {
       oldInvoiceRecords = await this.invoiceRepository
@@ -1054,6 +1065,14 @@ export class InvoicesService implements OnModuleInit {
         .innerJoin('poi.po', 'po')
         .where('po.po_number = :poNumber', { poNumber: payload.po_number })
         .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:revNum))', { revNum: revisedInvoiceNumber })
+        .andWhere('poi.position = :pos', { pos: targetPosition })
+        .getMany();
+    } else if (isDraftOnSamePo) {
+      oldInvoiceRecords = await this.invoiceRepository
+        .createQueryBuilder('poi')
+        .innerJoin('poi.po', 'po')
+        .where('po.po_number = :poNumber', { poNumber: payload.po_number })
+        .andWhere('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:cleanNum))', { cleanNum: cleanInvoiceNumber })
         .andWhere('poi.position = :pos', { pos: targetPosition })
         .getMany();
     }
@@ -1102,6 +1121,52 @@ export class InvoicesService implements OnModuleInit {
         name: c.column_name,
         label: c.display_label || c.column_name,
       }));
+
+    // Strict Double GR Submit Protection:
+    // Ensure that none of the active GRs being billed are already included in another official Generated invoice on this PO & Term
+    const otherOfficialInvoices = await this.invoiceRepository
+      .createQueryBuilder('poi')
+      .innerJoin('poi.po', 'po')
+      .where('po.po_number = :poNumber', { poNumber: payload.po_number })
+      .andWhere('poi.position = :pos', { pos: targetPosition })
+      .andWhere("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''")
+      .andWhere("LOWER(TRIM(poi.invoice_number)) != LOWER(TRIM(:cleanInv))", { cleanInv: cleanInvoiceNumber })
+      .andWhere(revisedInvoiceNumber ? "LOWER(TRIM(poi.invoice_number)) != LOWER(TRIM(:revNum))" : '1=1', { revNum: revisedInvoiceNumber || '' })
+      .andWhere("(poi.invoice_status IS NULL OR poi.invoice_status != 'Draft')")
+      .getMany();
+
+    const alreadyInvoicedGrsMap = new Map<string, string>();
+    for (const oi of otherOfficialInvoices) {
+      if (oi.invoiced_grs) {
+        const parts = String(oi.invoiced_grs).split(/[,|]/);
+        for (const p of parts) {
+          const g = p.trim();
+          if (g) alreadyInvoicedGrsMap.set(g, oi.invoice_number);
+        }
+      }
+    }
+
+    const conflictingGrs: Array<{ gr: string; invoice: string }> = [];
+    if (payload.lines && payload.lines.length > 0) {
+      for (const line of payload.lines) {
+        if (Array.isArray(line.active_grs)) {
+          for (const gr of line.active_grs) {
+            if (alreadyInvoicedGrsMap.has(gr)) {
+              conflictingGrs.push({ gr, invoice: alreadyInvoicedGrsMap.get(gr) });
+            }
+          }
+        }
+      }
+    }
+
+    if (conflictingGrs.length > 0) {
+      const conflictMsg = conflictingGrs
+        .map((c) => `GR '${c.gr}' (sudah di Invoice resmi '${c.invoice}')`)
+        .join(', ');
+      throw new ConflictException(
+        `Double GR Submit dicegah! Ditemukan ${conflictingGrs.length} GR pada transaksi ini yang sudah resmi diterbitkan pada Invoice lain: ${conflictMsg}. Harap muat ulang preview invoice agar GR yang sudah ditagih otomatis dikecualikan.`
+      );
+    }
 
     let savedRecordsCount = 0;
     const recordsProcessed = [];
@@ -1295,7 +1360,7 @@ export class InvoicesService implements OnModuleInit {
           if (targetPoi) {
             targetPoi.invoice_number = cleanInvoiceNumber;
             targetPoi.invoice_date = invDate;
-            targetPoi.invoice_status = 'Generated';
+            targetPoi.invoice_status = statusToSave;
             targetPoi.payment_amount = null;
             targetPoi.payment_date = null;
             targetPoi.submit_amount = null;
@@ -1318,7 +1383,7 @@ export class InvoicesService implements OnModuleInit {
               position: targetPosition,
               invoice_number: cleanInvoiceNumber,
               invoice_date: invDate,
-              invoice_status: 'Generated',
+              invoice_status: statusToSave,
               payment_amount: null,
               payment_date: null,
               submit_amount: null,
@@ -1435,7 +1500,7 @@ export class InvoicesService implements OnModuleInit {
           if (targetPoi) {
             targetPoi.invoice_number = cleanInvoiceNumber;
             targetPoi.invoice_date = invDate;
-            targetPoi.invoice_status = 'Generated';
+            targetPoi.invoice_status = statusToSave;
             targetPoi.payment_amount = null;
             targetPoi.payment_date = null;
             targetPoi.submit_amount = null;
@@ -1458,7 +1523,7 @@ export class InvoicesService implements OnModuleInit {
               position: targetPosition,
               invoice_number: cleanInvoiceNumber,
               invoice_date: invDate,
-              invoice_status: 'Generated',
+              invoice_status: statusToSave,
               payment_amount: null,
               payment_date: null,
               submit_amount: null,
@@ -1504,9 +1569,11 @@ export class InvoicesService implements OnModuleInit {
       }
     }
 
+    const statusLabel = statusToSave === 'Draft' ? 'Draft Invoice' : 'Invoice';
     return {
-      message: `Invoice ${payload.invoice_number} berhasil disimpan dengan ${savedRecordsCount} record PO (Term ${targetPosition})${revisedInvoiceNumber ? ` [Revisi dari ${revisedInvoiceNumber}]` : ''}`,
+      message: `${statusLabel} ${payload.invoice_number} berhasil disimpan dengan ${savedRecordsCount} record PO (Term ${targetPosition})${revisedInvoiceNumber ? ` [Revisi dari ${revisedInvoiceNumber}]` : ''}`,
       invoice_number: payload.invoice_number,
+      invoice_status: statusToSave,
       revised_invoice_number: revisedInvoiceNumber || null,
       term_position: targetPosition,
       total_lines_saved: savedRecordsCount,
@@ -1518,7 +1585,7 @@ export class InvoicesService implements OnModuleInit {
    * Get list of saved invoices from purchase_order_invoices
    * Aggregates by invoice_number so each invoice is displayed with its combined total and line count.
    */
-  async getInvoiceHistory(poNumber?: string, search?: string) {
+  async getInvoiceHistory(poNumber?: string, search?: string, startDate?: string, endDate?: string) {
     const qb = this.invoiceRepository
       .createQueryBuilder('poi')
       .leftJoin('poi.po', 'po')
@@ -1538,10 +1605,19 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('COUNT(poi.id)', 'line_count')
       .addSelect('MAX(poi.position)', 'position')
       .addSelect("STRING_AGG(DISTINCT NULLIF(TRIM(poi.invoiced_grs), ''), ', ')", 'invoiced_grs')
+      .addSelect("STRING_AGG(DISTINCT NULLIF(TRIM(CAST(po.line_po_number AS TEXT)), ''), ', ')", 'active_lines')
       .where("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''");
 
     if (poNumber) {
       qb.andWhere('po.po_number = :poNumber', { poNumber });
+    }
+
+    if (startDate && startDate.trim() !== '') {
+      qb.andWhere('poi.invoice_date >= :startDate', { startDate: startDate.trim() });
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      qb.andWhere('poi.invoice_date <= :endDate', { endDate: endDate.trim() });
     }
 
     if (search && search.trim() !== '') {
@@ -1567,6 +1643,7 @@ export class InvoicesService implements OnModuleInit {
       line_count: Number(r.line_count) || 1,
       position: r.position ? Number(r.position) : 1,
       invoiced_grs: r.invoiced_grs || '',
+      active_lines: r.active_lines ? String(r.active_lines).split(',').map((s) => s.trim()).filter(Boolean) : [],
       po_number: r.po_number,
       customer_name: r.customer_name,
       project_name: r.project_name,

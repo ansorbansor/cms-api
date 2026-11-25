@@ -11,6 +11,8 @@ import {
   UploadedFiles,
   DefaultValuePipe,
   Get,
+  Patch,
+  Put,
   ParseIntPipe,
   Query,
   Res,
@@ -24,7 +26,10 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { CreateAbsenceDTO } from './dto/create-absence.dto';
 import { AbsenceResourceDetail } from './resources/absence.resources';
 import { ClockOutAbsenceDTO } from './dto/clock-out-absence.dto';
-
+import { RequestLeaveDTO } from './dto/request-leave.dto';
+import { ClarifyUnrecordedDTO } from './dto/clarify-unrecorded.dto';
+import { ReviewAbsenceDTO } from './dto/review-absence.dto';
+import { UpdateLeaveQuotaDTO } from './dto/update-leave-quota.dto';
 import { AbsenceCronService } from './absence.cron.service';
 
 @ApiBearerAuth()
@@ -85,6 +90,90 @@ export class AbsenceController {
     );
   }
 
+  @Post('request-leave')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async requestLeave(
+    @Request() req,
+    @Body() dto: RequestLeaveDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.absenceService.requestLeave(
+        dto,
+        req.user.id,
+        req.ip,
+        files,
+      ),
+      'Pengajuan berhasil dikirimkan!',
+    );
+  }
+
+  @Post('clarify-unrecorded')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async clarifyUnrecorded(
+    @Request() req,
+    @Body() dto: ClarifyUnrecordedDTO,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.absenceService.clarifyUnrecorded(
+        dto,
+        req.user.id,
+        req.ip,
+        files,
+      ),
+      'Klarifikasi hari kosong berhasil dicatat!',
+    );
+  }
+
+  @Post(':id/upload-evidence')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async uploadEvidence(
+    @Param() param: IDParamDto,
+    @Request() req,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return successResponse(
+      await this.absenceService.uploadEvidence(
+        +param.id,
+        req.user.id,
+        req.ip,
+        files,
+      ),
+      'Bukti berhasil diunggah!',
+    );
+  }
+
+  @Patch(':id/review')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async review(
+    @Param() param: IDParamDto,
+    @Body() dto: ReviewAbsenceDTO,
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.absenceService.reviewAbsence(
+        +param.id,
+        dto,
+        req.user,
+        req.ip,
+      ),
+      dto.action === 'APPROVE'
+        ? 'Absensi berhasil disetujui!'
+        : 'Bukti absensi ditolak. Deadline perbaikan telah direset.',
+    );
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
@@ -95,6 +184,9 @@ export class AbsenceController {
     @Query('user_id') userId: number,
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
+    @Query('absence_type') absenceType: string,
+    @Query('status') status: string,
+    @Query('needs_review') needsReview: string,
   ) {
     return successResponseList(
       await this.absenceService.findManyWithPagination({
@@ -105,6 +197,9 @@ export class AbsenceController {
         user_id: userId,
         start_date: startDate,
         end_date: endDate,
+        absence_type: absenceType,
+        status: status,
+        needs_review: needsReview === 'true' || needsReview === '1',
       }),
       'success',
     );
@@ -130,6 +225,73 @@ export class AbsenceController {
     return successResponse(
       await this.absenceService.hasAbsenceToday(req.user.id),
       'success',
+    );
+  }
+
+  @Get('unrecorded-days')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getUnrecordedDays(@Request() req) {
+    return successResponse(
+      await this.absenceService.getUnrecordedDays(req.user.id),
+      'success',
+    );
+  }
+
+  @Get('my-tasks')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getMyTasks(@Request() req) {
+    return successResponse(
+      await this.absenceService.getMyTasks(req.user.id),
+      'success',
+    );
+  }
+
+  @Get('leave-quota')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getMyLeaveQuota(
+    @Request() req,
+    @Query('year') year?: number,
+  ) {
+    return successResponse(
+      await this.absenceService.getLeaveQuota(req.user.id, year),
+      'success',
+    );
+  }
+
+  @Get('leave-quotas')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getLeaveQuotas(
+    @Query('year') year?: number,
+    @Query('search') search?: string,
+  ) {
+    return successResponse(
+      await this.absenceService.getLeaveQuotas(year, search),
+      'success',
+    );
+  }
+
+  @Put('leave-quotas/:userId/:year')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateLeaveQuota(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('year', ParseIntPipe) year: number,
+    @Body() dto: UpdateLeaveQuotaDTO,
+    @Request() req,
+  ) {
+    return successResponse(
+      await this.absenceService.updateLeaveQuota(
+        userId,
+        year,
+        dto,
+        req.user,
+        req.ip,
+      ),
+      'Kuota cuti berhasil diperbarui!',
     );
   }
 

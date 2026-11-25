@@ -4,6 +4,7 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './utils/HttpExceptionFilter';
 import { SerializerInterceptor } from './utils/serializer.interceptor';
@@ -20,7 +21,11 @@ async function bootstrap() {
   // ✅ TEST: Add a log to confirm this new code is running.
   console.log('--- BOOTSTRAP STARTED WITH LATEST CORS FIX ---');
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+
+  // Increase body parser limit to 50MB to handle large invoice payloads, reports, and batch operations
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   const configService = app.get(ConfigService);
 

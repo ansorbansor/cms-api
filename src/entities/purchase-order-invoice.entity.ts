@@ -37,6 +37,9 @@ export class PurchaseOrderInvoice extends EntityHelper {
   @Column({ type: 'float', nullable: true })
   unit_price?: number;
 
+  @Column({ type: 'float', nullable: true })
+  qty?: number;
+
   @Column({ nullable: true })
   submit_date?: Date;
 

@@ -157,7 +157,13 @@ export class InvoicesService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Service initialized safely without modifying database schema
+    try {
+      await this.invoiceRepository.query(
+        'ALTER TABLE purchase_order_invoices ADD COLUMN IF NOT EXISTS qty double precision;',
+      );
+    } catch (err: any) {
+      // Ignore if table does not exist yet or running in testing environment
+    }
   }
 
   /**
@@ -546,6 +552,37 @@ export class InvoicesService implements OnModuleInit {
 
     const existingInvoices = await existingPoiQuery.getRawMany();
 
+    // Query saved custom quantities for this PO and invoice_number (or existing Draft)
+    const savedQtyByLine = new Map<string, number>();
+    const invNumToLook = options?.invoice_number ? options.invoice_number.trim() : null;
+
+    try {
+      const savedRecordsQuery = this.invoiceRepository
+        .createQueryBuilder('poi')
+        .innerJoin(PurchaseOrder, 'po', 'po.id = poi.purchase_order_id::integer')
+        .select('po.line_po_number', 'line_po_number')
+        .addSelect('SUM(COALESCE(poi.qty, poi.submit_amount))', 'saved_qty')
+        .where('po.po_number = :poNumber', { poNumber })
+        .andWhere("poi.invoice_number IS NOT NULL AND TRIM(poi.invoice_number) != ''")
+        .andWhere('COALESCE(poi.qty, poi.submit_amount) IS NOT NULL')
+        .groupBy('po.line_po_number');
+
+      if (invNumToLook) {
+        savedRecordsQuery.andWhere('poi.invoice_number = :invNum', { invNum: invNumToLook });
+      } else {
+        savedRecordsQuery.andWhere("poi.invoice_status = 'Draft'");
+      }
+
+      const savedLines = await savedRecordsQuery.getRawMany();
+      for (const sl of savedLines) {
+        if (sl.line_po_number && sl.saved_qty !== null && sl.saved_qty !== undefined) {
+          savedQtyByLine.set(String(sl.line_po_number), Number(sl.saved_qty));
+        }
+      }
+    } catch (e: any) {
+      // In case qty column does not exist yet or query fails
+    }
+
     // Build a map of GR number -> term position based on the PO's rows and custom columns
     const grKnownTermMap = new Map<string, number>();
     for (const r of poRows) {
@@ -786,12 +823,14 @@ export class InvoicesService implements OnModuleInit {
       }
 
       const isFullyInvoiced = isGrBased && (grItems.length === 0 || activeUnbilledGrs.length === 0);
-      const linePrice = initialActiveQty > 0 ? unitPrice * initialActiveQty : 0;
+      const savedCustomQty = savedQtyByLine.get(itemLinePoNumber);
+      const effectiveQty = savedCustomQty !== undefined ? savedCustomQty : initialActiveQty;
+      const linePrice = effectiveQty > 0 ? unitPrice * effectiveQty : 0;
       const lineAmount = Math.round(linePrice * (milestonePct / 100));
 
-      if (initialActiveQty > 0) {
+      if (effectiveQty > 0) {
         totalPrice += linePrice;
-        totalRequestedQty += initialActiveQty;
+        totalRequestedQty += effectiveQty;
       }
 
       const noGr1 = rowGr1;
@@ -820,8 +859,9 @@ export class InvoicesService implements OnModuleInit {
         is_gr_based: isGrBased,
         unit_price: unitPrice,
         requested_qty: totalQty,
-        active_qty: initialActiveQty,
-        qty: initialActiveQty,
+        saved_qty: savedCustomQty,
+        active_qty: effectiveQty,
+        qty: effectiveQty,
         unit: unit,
         price: linePrice,
         milestone_pct: milestonePct,
@@ -855,6 +895,7 @@ export class InvoicesService implements OnModuleInit {
         total_invoiced_gr_count: invoicedGrMap.size,
         auto_excluded_gr_count: totalAutoExcludedCount,
         active_unbilled_gr_count: totalActiveUnbilledCount,
+        saved_custom_quantities: Object.fromEntries(savedQtyByLine),
       },
       customer_info: {
         id: customer?.id,
@@ -1311,6 +1352,10 @@ export class InvoicesService implements OnModuleInit {
           const posGrs = entry.grs;
           const invoicedGrsString = posGrs.length > 0 ? posGrs.join(', ') : null;
           const rowQty = entry.qty > 0 ? entry.qty : 1;
+          const lineQty = line.qty !== undefined && line.qty !== null && !isNaN(Number(line.qty)) ? Number(line.qty) : undefined;
+          const rowSavedQty = lineQty !== undefined
+            ? (activeRows.length === 1 ? lineQty : (totalActiveQty > 0 ? Math.round((lineQty * (rowQty / totalActiveQty)) * 100) / 100 : lineQty / activeRows.length))
+            : (entry.qty > 0 ? entry.qty : null);
 
           let posAmount: number;
           if (i === activeRows.length - 1) {
@@ -1363,7 +1408,8 @@ export class InvoicesService implements OnModuleInit {
             targetPoi.invoice_status = statusToSave;
             targetPoi.payment_amount = null;
             targetPoi.payment_date = null;
-            targetPoi.submit_amount = null;
+            targetPoi.submit_amount = rowSavedQty;
+            targetPoi.qty = rowSavedQty;
             targetPoi.submit_date = null;
             targetPoi.deduction_amount = null;
             targetPoi.supplier_tax_number = null;
@@ -1386,7 +1432,8 @@ export class InvoicesService implements OnModuleInit {
               invoice_status: statusToSave,
               payment_amount: null,
               payment_date: null,
-              submit_amount: null,
+              submit_amount: rowSavedQty,
+              qty: rowSavedQty,
               submit_date: null,
               deduction_amount: null,
               supplier_tax_number: null,
@@ -1599,7 +1646,7 @@ export class InvoicesService implements OnModuleInit {
       .addSelect('MAX(customer.name)', 'customer_name')
       .addSelect('MAX(project.name)', 'project_name')
       .addSelect(
-        'COALESCE(NULLIF(SUM(poi.payment_amount), 0), SUM(ROUND(COALESCE(poi.unit_price, po.unit_price, 0) * COALESCE(po.requested_qty, 0) * (CASE WHEN poi.position = 2 THEN 0.4 ELSE 0.6 END))), 0)',
+        'COALESCE(NULLIF(SUM(poi.payment_amount), 0), SUM(ROUND(COALESCE(poi.unit_price, po.unit_price, 0) * COALESCE(poi.qty, poi.submit_amount, po.requested_qty, 0) * (CASE WHEN poi.position = 2 THEN 0.4 ELSE 0.6 END))), 0)',
         'payment_amount'
       )
       .addSelect('COUNT(poi.id)', 'line_count')
@@ -1634,6 +1681,37 @@ export class InvoicesService implements OnModuleInit {
 
     const rawList = await qb.getRawMany();
 
+    const invNumbers = rawList.map((r) => r.invoice_number).filter(Boolean);
+    const lineQtyMap = new Map<string, Record<string, number>>();
+
+    if (invNumbers.length > 0) {
+      try {
+        const lineQtyRows = await this.invoiceRepository
+          .createQueryBuilder('poi')
+          .innerJoin(PurchaseOrder, 'po', 'po.id = poi.purchase_order_id::integer')
+          .select('poi.invoice_number', 'invoice_number')
+          .addSelect('po.line_po_number', 'line_po_number')
+          .addSelect('SUM(COALESCE(poi.qty, poi.submit_amount))', 'qty')
+          .where('poi.invoice_number IN (:...invNumbers)', { invNumbers })
+          .andWhere('COALESCE(poi.qty, poi.submit_amount) IS NOT NULL')
+          .groupBy('poi.invoice_number')
+          .addGroupBy('po.line_po_number')
+          .getRawMany();
+
+        for (const lqr of lineQtyRows) {
+          const invNum = lqr.invoice_number;
+          if (!lineQtyMap.has(invNum)) {
+            lineQtyMap.set(invNum, {});
+          }
+          if (lqr.line_po_number && lqr.qty !== null && lqr.qty !== undefined) {
+            lineQtyMap.get(invNum)[String(lqr.line_po_number)] = Number(lqr.qty);
+          }
+        }
+      } catch (e: any) {
+        // Fallback gracefully
+      }
+    }
+
     return rawList.map((r) => ({
       id: r.id,
       invoice_number: r.invoice_number,
@@ -1644,6 +1722,7 @@ export class InvoicesService implements OnModuleInit {
       position: r.position ? Number(r.position) : 1,
       invoiced_grs: r.invoiced_grs || '',
       active_lines: r.active_lines ? String(r.active_lines).split(',').map((s) => s.trim()).filter(Boolean) : [],
+      custom_quantities: lineQtyMap.get(r.invoice_number) || {},
       po_number: r.po_number,
       customer_name: r.customer_name,
       project_name: r.project_name,

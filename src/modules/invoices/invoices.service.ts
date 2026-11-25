@@ -1733,4 +1733,44 @@ export class InvoicesService implements OnModuleInit {
       },
     }));
   }
+
+  /**
+   * Delete a draft invoice by invoice_number
+   * Only invoices with invoice_status === 'Draft' are permitted to be deleted.
+   * Official/Generated invoices cannot be deleted via this endpoint.
+   */
+  async deleteDraft(invoiceNumber: string) {
+    if (!invoiceNumber || invoiceNumber.trim() === '') {
+      throw new BadRequestException('Nomor invoice tidak boleh kosong.');
+    }
+
+    const cleanNumber = invoiceNumber.trim();
+    const records = await this.invoiceRepository
+      .createQueryBuilder('poi')
+      .where('LOWER(TRIM(poi.invoice_number)) = LOWER(TRIM(:cleanNumber))', { cleanNumber })
+      .getMany();
+
+    if (!records || records.length === 0) {
+      throw new NotFoundException(`Draft invoice '${cleanNumber}' tidak ditemukan.`);
+    }
+
+    // Safety check: ensure all records are Draft
+    const nonDraftRecord = records.find(
+      (r) => r.invoice_status && r.invoice_status !== 'Draft',
+    );
+    if (nonDraftRecord) {
+      throw new BadRequestException(
+        `Invoice '${cleanNumber}' bukan merupakan draft (Status: ${nonDraftRecord.invoice_status || 'Generated'}). Invoice resmi yang telah terbit tidak dapat dihapus.`,
+      );
+    }
+
+    // Remove draft records from database
+    await this.invoiceRepository.remove(records);
+
+    return {
+      message: `Draft invoice '${cleanNumber}' berhasil dihapus. Nomor invoice dan slot GR terkait telah dibebaskan.`,
+      invoice_number: cleanNumber,
+      deleted_records: records.length,
+    };
+  }
 }

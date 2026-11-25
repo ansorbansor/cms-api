@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   Query,
   Body,
@@ -96,5 +97,17 @@ export class InvoicesController {
       user_id: userId,
     });
     return successResponse(data, data?.message || 'Invoice berhasil disimpan ke riwayat');
+  }
+
+  @Delete('draft')
+  async deleteDraft(@Query('invoice_number') invoiceNumber: string) {
+    const data = await this.invoicesService.deleteDraft(invoiceNumber);
+    return successResponse(data, data?.message || 'Draft invoice berhasil dihapus');
+  }
+
+  @Delete('draft/:invoiceNumber')
+  async deleteDraftParam(@Param('invoiceNumber') invoiceNumber: string) {
+    const data = await this.invoicesService.deleteDraft(invoiceNumber);
+    return successResponse(data, data?.message || 'Draft invoice berhasil dihapus');
   }
 }

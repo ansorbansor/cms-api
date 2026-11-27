@@ -367,6 +367,7 @@ export class WorkloadTicketsService {
       .select('wt.id', 'id')
       .addSelect('wt.ticket_id', 'ticket_id')
       .addSelect('wt.status', 'status')
+      .addSelect('wt.updated_at', 'updated_at')
       .addSelect('COALESCE(created_by_user.name, created_by_user.nik, \'System\')', 'creator');
 
     const rawTickets = await qbCreator.getRawMany();
@@ -378,6 +379,7 @@ export class WorkloadTicketsService {
           id: row.id,
           ticket_id: row.ticket_id,
           status: row.status,
+          updated_at: row.updated_at,
           creator: row.creator
         });
       }
@@ -395,7 +397,7 @@ export class WorkloadTicketsService {
     const pendingTicketsList = [];
 
     uniqueTickets.forEach(t => {
-      const tItem = { id: t.id, ticket_id: t.ticket_id, creator: t.creator, status: t.status };
+      const tItem = { id: t.id, ticket_id: t.ticket_id, creator: t.creator, status: t.status, updated_at: t.updated_at };
       totalTicketsList.push(tItem);
       if (t.status === 'Completed' || t.status === 'Confirmed Finished') {
         completedTickets++;
@@ -872,6 +874,10 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
       const completedTasks = allTasks.filter((t) => t.status === 'Completed').length;
       const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+      const ticketCompletedDate = (ticket.status === 'Completed' || ticket.status === 'Confirmed Finished') && ((ticket as any).completed_at || ticket.updated_at)
+        ? moment((ticket as any).completed_at || ticket.updated_at).format('YYYY-MM-DD HH:mm')
+        : '-';
+
       const row: any = {
         'No': idx + 1,
         'Ticket ID': ticket.ticket_id || '-',
@@ -883,6 +889,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
         'PO Numbers': poNumbers,
         'Biosron Unique IDs': uniqueIds,
         'Status Tiket': ticket.status || '-',
+        'Completed Date': ticketCompletedDate,
         'Progress (%)': `${progressPct}%`,
         'Total Tasks': totalTasks,
         'Completed Tasks': completedTasks,
@@ -893,7 +900,11 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
         const matchingTask = allTasks.find((t) => t.name === taskName);
         if (matchingTask) {
           const pic = matchingTask.assigned_to_user?.name || (matchingTask.assigned_multiple && matchingTask.assigned_multiple.length > 0 ? matchingTask.assigned_multiple.map((u: any) => u.name).join(', ') : '-');
-          row[taskName] = `[${matchingTask.status || 'Pending'}] ${pic}`;
+          const isDone = matchingTask.status === 'Completed';
+          const completedDateStr = isDone && ((matchingTask as any).completed_at || matchingTask.updated_at)
+            ? ` (Done: ${moment((matchingTask as any).completed_at || matchingTask.updated_at).format('YYYY-MM-DD HH:mm')})`
+            : '';
+          row[taskName] = `[${matchingTask.status || 'Pending'}] ${pic}${completedDateStr}`;
         } else {
           row[taskName] = '-';
         }
@@ -922,6 +933,9 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
 
           const pic = task.assigned_to_user?.name || '-';
           const multiplePics = (task.assigned_multiple || []).map((u: any) => u.name).filter(Boolean).join(', ') || '-';
+          const completedDate = task.status === 'Completed' && ((task as any).completed_at || task.updated_at)
+            ? moment((task as any).completed_at || task.updated_at).format('YYYY-MM-DD HH:mm')
+            : '-';
 
           taskRows.push({
             'No': taskIdx++,
@@ -935,6 +949,7 @@ async getUnassignedPos(siteId: number): Promise<any[]> {
             'Milestone': ms.name || '-',
             'Task Name': task.name || '-',
             'Task Status': task.status || '-',
+            'Completed Date': completedDate,
             'PIC (Lead)': pic,
             'Team / Multiple Assignees': multiplePics,
             'Deadline': task.deadline ? moment(task.deadline).format('YYYY-MM-DD') : '-',

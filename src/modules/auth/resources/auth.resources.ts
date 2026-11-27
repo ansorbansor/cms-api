@@ -34,6 +34,18 @@ export const AuthResource = (token: string, user: User): any => {
       status: user.status,
       employee_position_id: user.employeePosition?.id,
       employee_position_name: user.employeePosition?.name,
+      sub_roles: user.sub_roles || [],
+      position: {
+        id: user.employeePosition ? user.employeePosition.id : null,
+        name: user.employeePosition ? user.employeePosition.name : null,
+        code: user.employeePosition ? user.employeePosition.code : null,
+        grant_all_access: user.employeePosition ? user.employeePosition.grant_all_access : false,
+        sub_roles: user.employeePosition?.sub_roles || [],
+      },
+      effective_sub_roles: Array.from(new Set([
+        ...(Array.isArray(user.sub_roles) ? user.sub_roles : []),
+        ...(Array.isArray(user.employeePosition?.sub_roles) ? user.employeePosition.sub_roles : [])
+      ])),
       project: user.project, // <-- ADD THIS LINE
       notification_token: user.notification_token,
       access: mapAccess,

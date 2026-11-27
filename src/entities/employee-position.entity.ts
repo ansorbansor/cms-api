@@ -23,4 +23,7 @@ export class EmployeePosition extends EntityHelper {
   @Column({ nullable: true })
   @Transform(({ value }) => value === 1)
   grant_all_access?: boolean;
+
+  @Column({ type: 'json', nullable: true })
+  sub_roles?: string[];
 }

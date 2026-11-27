@@ -43,6 +43,9 @@ export class User extends EntityHelper {
   @Column({ nullable: true })
   employee_position_id: number | null;
 
+  @Column({ type: 'json', nullable: true })
+  sub_roles?: string[];
+
   @Column({ nullable: true })
   phone: string | null;
 

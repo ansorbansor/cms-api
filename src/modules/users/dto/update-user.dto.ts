@@ -64,6 +64,22 @@ export class UpdateUserDto {
   @IsOptional()
   employee_position_id?: number;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed;
+        return [parsed];
+      } catch (e) {
+        return value.trim() ? [value] : [];
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
+  sub_roles?: string[];
+
   hash?: string | null;
 
   @ApiProperty({

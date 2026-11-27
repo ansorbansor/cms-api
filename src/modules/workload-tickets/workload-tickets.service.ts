@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, HttpException } from '@nestjs/common';
+import { HttpStatus, Injectable, HttpException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getManager, IsNull, In, Brackets } from 'typeorm';
 import { WorkloadTicket } from 'src/entities/workload-ticket.entity';
@@ -24,8 +24,20 @@ import { ExportJob } from 'src/entities/export-job.entity';
 import * as async from 'async';
 
 @Injectable()
-export class WorkloadTicketsService {
+export class WorkloadTicketsService implements OnModuleInit {
   private exportQueue: async.QueueObject<any>;
+
+  async onModuleInit() {
+    try {
+      const manager = getManager();
+      await manager.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_roles jsonb DEFAULT '[]'::jsonb;
+        ALTER TABLE employee_positions ADD COLUMN IF NOT EXISTS sub_roles jsonb DEFAULT '[]'::jsonb;
+      `);
+    } catch (e) {
+      console.error('Failed to run sub_roles column migration', e);
+    }
+  }
 
   constructor(
     @InjectRepository(WorkloadTicket)

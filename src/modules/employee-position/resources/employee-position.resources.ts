@@ -7,6 +7,9 @@ export const EmployeePositionResource = (
     return {
       id: employeePosition.id,
       name: employeePosition.name,
+      code: employeePosition.code,
+      grant_all_access: employeePosition.grant_all_access,
+      sub_roles: employeePosition.sub_roles || [],
     };
   }
 

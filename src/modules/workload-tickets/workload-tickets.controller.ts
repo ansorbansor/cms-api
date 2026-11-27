@@ -44,6 +44,7 @@ export class WorkloadTicketsController {
   @Post('templates')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async createTemplate(@Body() body: { name: string }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     if (!body.name) {
       throw new HttpException('Template name is required', HttpStatus.BAD_REQUEST);
     }
@@ -56,6 +57,7 @@ export class WorkloadTicketsController {
   @Post('create/:siteId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Param('siteId') siteId: number, @Body() body: { poIds: number[], templateId: number, jobCategory?: string }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     if (!body.templateId) {
       throw new HttpException('Template ID is required', HttpStatus.BAD_REQUEST);
     }
@@ -67,7 +69,8 @@ export class WorkloadTicketsController {
 
   @Patch(':id/job-category')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async updateJobCategory(@Param('id') id: string, @Body() body: { jobCategory: string }) {
+  async updateJobCategory(@Param('id') id: string, @Body() body: { jobCategory: string }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     if (body.jobCategory === undefined) {
       throw new HttpException('Job category is required', HttpStatus.BAD_REQUEST);
     }
@@ -79,7 +82,8 @@ export class WorkloadTicketsController {
 
   @Patch(':id/site')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async updateSite(@Param('id') id: string, @Body() body: { siteId: number }) {
+  async updateSite(@Param('id') id: string, @Body() body: { siteId: number }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     if (body.siteId === undefined) {
       throw new HttpException('Site ID is required', HttpStatus.BAD_REQUEST);
     }
@@ -92,6 +96,7 @@ export class WorkloadTicketsController {
   @Post(':id/purchase-orders')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async addPurchaseOrders(@Param('id') id: string, @Body() body: { poIds: number[] }, @Request() req) {
+    await this.assertWorkloadPoAdmin(req);
     await this.ticketsService.addPurchaseOrders(+id, body.poIds, req.user.id);
     return successResponse(null, 'Purchase orders added successfully');
   }
@@ -99,6 +104,7 @@ export class WorkloadTicketsController {
   @Delete(':id/purchase-orders/:poId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async removePurchaseOrder(@Param('id') id: string, @Param('poId') poId: string, @Request() req) {
+    await this.assertWorkloadPoAdmin(req);
     await this.ticketsService.removePurchaseOrder(+id, +poId, req.user.id);
     return successResponse(null, 'Purchase order removed successfully');
   }
@@ -125,6 +131,7 @@ export class WorkloadTicketsController {
   @Post('mismatched-pos/detach')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async detachMismatchedPos(@Body() body: { poIds: number[] }, @Request() req) {
+    await this.assertWorkloadPoAdmin(req);
     await this.ticketsService.detachMismatchedPos(body.poIds, req.user.id);
     return successResponse(null, 'Purchase orders detached successfully');
   }
@@ -309,14 +316,16 @@ export class WorkloadTicketsController {
   @Post(':id/copy-milestones')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async copyMilestones(@Param('id') id: string, @Body() body: { source_ticket_id: number }) {
+  async copyMilestones(@Param('id') id: string, @Body() body: { source_ticket_id: number }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     await this.ticketsService.copyMilestones(+id, body.source_ticket_id);
     return successResponse(null, 'Milestones successfully copied from template');
   }
 
   @Post(':id/milestones')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async addMilestone(@Param('id') ticketId: string, @Body() body: { name: string }) {
+  async addMilestone(@Param('id') ticketId: string, @Body() body: { name: string }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.addMilestone(+ticketId, body.name),
       'Milestone added successfully'
@@ -325,7 +334,8 @@ export class WorkloadTicketsController {
 
   @Patch(':id/milestones/reorder')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async reorderMilestones(@Param('id') ticketId: string, @Body() body: { orderIds: number[] }) {
+  async reorderMilestones(@Param('id') ticketId: string, @Body() body: { orderIds: number[] }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.reorderMilestones(+ticketId, body.orderIds),
       'Milestones reordered successfully'
@@ -334,7 +344,8 @@ export class WorkloadTicketsController {
 
   @Patch('milestones/:id/tasks/reorder')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async reorderTasks(@Param('id') milestoneId: string, @Body() body: { orderIds: number[] }) {
+  async reorderTasks(@Param('id') milestoneId: string, @Body() body: { orderIds: number[] }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.reorderTasks(+milestoneId, body.orderIds),
       'Tasks reordered successfully'
@@ -343,7 +354,8 @@ export class WorkloadTicketsController {
 
   @Patch('milestones/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async editMilestone(@Param('id') id: string, @Body() body: { name: string }) {
+  async editMilestone(@Param('id') id: string, @Body() body: { name: string }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.editMilestone(+id, body.name),
       'Milestone updated successfully'
@@ -379,14 +391,16 @@ export class WorkloadTicketsController {
 
   @Delete('milestones/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async deleteMilestone(@Param('id') id: string) {
+  async deleteMilestone(@Param('id') id: string, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     await this.ticketsService.deleteMilestone(+id);
     return successResponse(null, 'Milestone deleted successfully');
   }
 
   @Post('milestones/:milestoneId/tasks')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async addTask(@Param('milestoneId') milestoneId: string, @Body() body: any) {
+  async addTask(@Param('milestoneId') milestoneId: string, @Body() body: any, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.addTask(+milestoneId, body),
       'Task added successfully'
@@ -395,14 +409,16 @@ export class WorkloadTicketsController {
 
   @Delete('tasks/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async deleteTask(@Param('id') id: string) {
+  async deleteTask(@Param('id') id: string, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     await this.ticketsService.deleteTask(+id);
     return successResponse(null, 'Task deleted successfully');
   }
 
   @Post('tasks/:id/predecessor')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async addPredecessorTask(@Param('id') taskId: string, @Body() body: any) {
+  async addPredecessorTask(@Param('id') taskId: string, @Body() body: any, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.addPredecessorTask(+taskId, body),
       'Predecessor task injected successfully'
@@ -420,7 +436,8 @@ export class WorkloadTicketsController {
 
   @Patch('tasks/:id/assignee')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async updateTaskAssignee(@Param('id') taskId: string, @Body() body: { assigned_to: number }) {
+  async updateTaskAssignee(@Param('id') taskId: string, @Body() body: { assigned_to: number }, @Request() req) {
+    await this.assertWorkloadTicketAdmin(req);
     return successResponse(
       await this.ticketsService.updateTaskAssignee(+taskId, body.assigned_to),
       'Task PIC updated successfully'
@@ -458,12 +475,64 @@ export class WorkloadTicketsController {
     return successResponse(null, 'Workload ticket deleted successfully');
   }
 
-  private async assertSuperAdmin(req: any) {
-    const user = await this.usersService.findOneFull({ id: req.user.id });
-    const isSuperAdmin =
+  private async getEffectiveUser(req: any) {
+    return await this.usersService.findOneFull({ id: req.user.id });
+  }
+
+  private getEffectiveSubRoles(user: any): string[] {
+    const userSubRoles = Array.isArray(user?.sub_roles) ? user.sub_roles : [];
+    const posSubRoles = Array.isArray(user?.employeePosition?.sub_roles) ? user.employeePosition.sub_roles : [];
+    return Array.from(new Set([...userSubRoles, ...posSubRoles]));
+  }
+
+  private isSuperAdmin(user: any): boolean {
+    return (
       user?.employeePosition?.grant_all_access === true ||
       user?.employee_position_id === 1 ||
-      String(user?.employee_position_id) === '1';
-    if (!isSuperAdmin) throw new HttpException('Only Super Admin can delete workload tickets', HttpStatus.FORBIDDEN);
+      String(user?.employee_position_id) === '1' ||
+      user?.employeePosition?.id === 1 ||
+      String(user?.employeePosition?.id) === '1' ||
+      user?.employee_position_id === 4 ||
+      String(user?.employee_position_id) === '4' ||
+      user?.employeePosition?.id === 4 ||
+      String(user?.employeePosition?.id) === '4'
+    );
+  }
+
+  private isRPM(user: any): boolean {
+    return (
+      user?.employeePosition?.name === 'RPM' ||
+      user?.employeePosition?.name === 'Regional Project Manager' ||
+      user?.employee_position_id === 9 ||
+      String(user?.employee_position_id) === '9' ||
+      user?.employeePosition?.id === 9 ||
+      String(user?.employeePosition?.id) === '9'
+    );
+  }
+
+  private async assertWorkloadTicketAdmin(req: any) {
+    const user = await this.getEffectiveUser(req);
+    const subRoles = this.getEffectiveSubRoles(user);
+    if (this.isSuperAdmin(user) || this.isRPM(user) || subRoles.includes('Workload Ticket Admin')) {
+      return user;
+    }
+    throw new HttpException('Forbidden: Requires Workload Ticket Admin access', HttpStatus.FORBIDDEN);
+  }
+
+  private async assertWorkloadPoAdmin(req: any) {
+    const user = await this.getEffectiveUser(req);
+    const subRoles = this.getEffectiveSubRoles(user);
+    if (this.isSuperAdmin(user) || this.isRPM(user) || subRoles.includes('Workload PO Admin')) {
+      return user;
+    }
+    throw new HttpException('Forbidden: Requires Workload PO Admin access', HttpStatus.FORBIDDEN);
+  }
+
+  private async assertSuperAdmin(req: any) {
+    const user = await this.getEffectiveUser(req);
+    if (!this.isSuperAdmin(user)) {
+      throw new HttpException('Forbidden: Only Super Admin can perform this action', HttpStatus.FORBIDDEN);
+    }
+    return user;
   }
 }

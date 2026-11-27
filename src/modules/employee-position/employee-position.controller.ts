@@ -1,6 +1,9 @@
 import {
   Controller,
   Get,
+  Patch,
+  Param,
+  Body,
   Query,
   DefaultValuePipe,
   ParseIntPipe,
@@ -10,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from 'src/utils/guards';
-import { successResponseList } from 'src/utils/responses';
+import { successResponse, successResponseList } from 'src/utils/responses';
 import { EmployeePositionService } from './employee-position.service';
 
 @ApiBearerAuth()
@@ -37,5 +40,16 @@ export class EmployeePositionController {
       }),
       'success',
     );
+  }
+
+  @Patch('employee-position/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() body: { sub_roles?: string[]; name?: string; grant_all_access?: boolean },
+  ) {
+    const updated = await this.employeePositionService.update(+id, body);
+    return successResponse(updated, 'Employee position updated successfully');
   }
 }

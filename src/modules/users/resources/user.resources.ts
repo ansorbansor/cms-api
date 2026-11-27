@@ -20,13 +20,9 @@ export const UserResource = (user: User): any => {
       name: user.employeePosition ? user.employeePosition.name : null,
       code: user.employeePosition ? user.employeePosition.code : null,
       grant_all_access: user.employeePosition ? user.employeePosition.grant_all_access : false,
-      sub_roles: user.employeePosition?.sub_roles || [],
     },
     sub_roles: user.sub_roles || [],
-    effective_sub_roles: Array.from(new Set([
-      ...(Array.isArray(user.sub_roles) ? user.sub_roles : []),
-      ...(Array.isArray(user.employeePosition?.sub_roles) ? user.employeePosition.sub_roles : [])
-    ])),
+    effective_sub_roles: Array.isArray(user.sub_roles) ? user.sub_roles : [],
     region: user.region,
     gm_region: user.gm_region,
     company: user.company,

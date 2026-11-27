@@ -32,7 +32,6 @@ export class WorkloadTicketsService implements OnModuleInit {
       const manager = getManager();
       await manager.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_roles jsonb DEFAULT '[]'::jsonb;
-        ALTER TABLE employee_positions ADD COLUMN IF NOT EXISTS sub_roles jsonb DEFAULT '[]'::jsonb;
       `);
     } catch (e) {
       console.error('Failed to run sub_roles column migration', e);

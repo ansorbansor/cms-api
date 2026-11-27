@@ -480,9 +480,7 @@ export class WorkloadTicketsController {
   }
 
   private getEffectiveSubRoles(user: any): string[] {
-    const userSubRoles = Array.isArray(user?.sub_roles) ? user.sub_roles : [];
-    const posSubRoles = Array.isArray(user?.employeePosition?.sub_roles) ? user.employeePosition.sub_roles : [];
-    return Array.from(new Set([...userSubRoles, ...posSubRoles]));
+    return Array.isArray(user?.sub_roles) ? user.sub_roles : [];
   }
 
   private isSuperAdmin(user: any): boolean {

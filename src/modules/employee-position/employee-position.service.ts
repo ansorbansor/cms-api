@@ -31,10 +31,4 @@ export class EmployeePositionService {
       paginationOptions,
     );
   }
-
-  async update(id: number, data: Partial<EmployeePosition>) {
-    await this.employeePositionRepository.update(id, data);
-    const updated = await this.employeePositionRepository.findOne(id);
-    return EmployeePositionResource(updated);
-  }
 }

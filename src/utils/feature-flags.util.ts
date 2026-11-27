@@ -4,7 +4,7 @@ import * as path from 'path';
 const FLAGS_FILE = path.join(process.cwd(), 'feature-flags.json');
 
 const DEFAULT_FLAGS = {
-  require_workload_ticket: true,
+  require_workload_ticket: false,
   enable_daily_reminder: true,
   daily_reminder_time: '08:00',
   show_workload_menu: true,
